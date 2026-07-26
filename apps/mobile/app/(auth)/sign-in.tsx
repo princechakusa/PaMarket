@@ -17,8 +17,12 @@ import { signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
 import { GoogleButton } from "../../components/GoogleButton";
 import { PasswordField } from "../../components/PasswordField";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 export default function SignInScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session, isLoading: sessionLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -98,7 +102,7 @@ export default function SignInScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor="#8A93A6"
+            placeholderTextColor={tones.textMuted}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
@@ -119,7 +123,7 @@ export default function SignInScreen() {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={tones.textOnBrand} />
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
@@ -137,98 +141,104 @@ export default function SignInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  brandBlock: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  brand: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#1A3A8F",
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "#5A6478",
-    marginTop: 6,
-    textAlign: "center",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E4E7EF",
-  },
-  dividerText: {
-    fontSize: 12,
-    color: "#8A93A6",
-  },
-  form: {
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#111827",
-  },
-  forgotLink: {
-    alignSelf: "flex-end",
-  },
-  forgotText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#1A3A8F",
-  },
-  button: {
-    backgroundColor: "#1A3A8F",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 14,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 28,
-  },
-  footerText: {
-    fontSize: 14,
-    color: "#5A6478",
-  },
-  footerLink: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1A3A8F",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { textOnBrand: color.textOnBrand, textMuted: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      paddingVertical: 40,
+    },
+    brandBlock: {
+      alignItems: "center",
+      marginBottom: 32,
+    },
+    brand: {
+      fontSize: 32,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: color.textSub,
+      marginTop: 6,
+      textAlign: "center",
+    },
+    divider: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginVertical: 20,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: color.border,
+    },
+    dividerText: {
+      fontSize: 12,
+      color: color.textMuted,
+    },
+    form: {
+      gap: 12,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: color.text,
+    },
+    forgotLink: {
+      alignSelf: "flex-end",
+    },
+    forgotText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: color.brand,
+    },
+    button: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 4,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: color.textOnBrand,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    error: {
+      color: color.danger,
+      fontSize: 14,
+    },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 28,
+    },
+    footerText: {
+      fontSize: 14,
+      color: color.textSub,
+    },
+    footerLink: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.brand,
+    },
+  });
+}

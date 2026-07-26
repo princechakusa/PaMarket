@@ -85,6 +85,14 @@ const STATUS: Record<string, ListingStatusInfo> = {
     message: "This ad was flagged and is being checked. It may be hidden from buyers until it is cleared.",
     publiclyVisible: false,
   },
+  paused: {
+    label: "Paused",
+    color: "#475569",
+    bg: "#F1F5F9",
+    border: "#E2E8F0",
+    message: "This ad is paused and hidden from buyers. Reactivate it any time.",
+    publiclyVisible: false,
+  },
   sold: {
     label: "Sold / Filled",
     color: "#64748b",

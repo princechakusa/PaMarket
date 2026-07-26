@@ -5,12 +5,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line, Polyline, Rect, Path, Circle } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import type { RentalAccess, RentalCompanyRecord, RentalFleetVehicle, RentalLead } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Mirrors www/js/rentals-business.js H.pages.RentalDashboard — the fleet
 // owner's landing screen. Access state machine (verified against
@@ -21,48 +22,48 @@ import { EmptyState } from "../../components/ui/EmptyState";
 //   pending                  -> read-only dashboard + pending banner
 //   active                   -> full dashboard
 
-function BackIcon() {
+function BackIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.5}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.5}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
-function PlusIcon() {
+function PlusIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={BRAND_BLUE} strokeWidth={2}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
       <Line x1="12" y1="5" x2="12" y2="19" />
       <Line x1="5" y1="12" x2="19" y2="12" />
     </Svg>
   );
 }
-function FleetIcon() {
+function FleetIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={BRAND_BLUE} strokeWidth={2}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
       <Rect x="1" y="3" width="22" height="13" rx="2" />
       <Path d="M8 21h8M12 17v4" />
     </Svg>
   );
 }
-function AnalyticsIcon() {
+function AnalyticsIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={BRAND_BLUE} strokeWidth={2}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
       <Line x1="18" y1="20" x2="18" y2="10" />
       <Line x1="12" y1="20" x2="12" y2="4" />
       <Line x1="6" y1="20" x2="6" y2="14" />
     </Svg>
   );
 }
-function ProfileIcon() {
+function ProfileIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={BRAND_BLUE} strokeWidth={2}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
       <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <Circle cx="12" cy="7" r="4" />
     </Svg>
   );
 }
 
-function StatCard({ num, label }: { num: string | number; label: string }) {
+function StatCard({ num, label, styles }: { num: string | number; label: string; styles: ReturnType<typeof buildStyles> }) {
   return (
     <View style={styles.statCard}>
       <Text style={styles.statNum}>{num}</Text>
@@ -77,12 +78,14 @@ function QuickAction({
   icon,
   disabled,
   onPress,
+  styles,
 }: {
   title: string;
   sub: string;
   icon: React.ReactNode;
   disabled?: boolean;
   onPress: () => void;
+  styles: ReturnType<typeof buildStyles>;
 }) {
   return (
     <Pressable
@@ -97,6 +100,8 @@ function QuickAction({
 }
 
 export default function RentalFleetDashboard() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -245,7 +250,7 @@ export default function RentalFleetDashboard() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -269,7 +274,7 @@ export default function RentalFleetDashboard() {
     router.replace(`/rental-fleet/setup?bizId=${biz.id}`);
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -279,7 +284,7 @@ export default function RentalFleetDashboard() {
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
-            <BackIcon />
+            <BackIcon stroke={tones.textOnBrand} />
           </Pressable>
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
@@ -301,7 +306,7 @@ export default function RentalFleetDashboard() {
   if (!company) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -321,7 +326,7 @@ export default function RentalFleetDashboard() {
     >
       <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
-          <BackIcon />
+          <BackIcon stroke={tones.textOnBrand} />
         </Pressable>
         <View style={styles.headerLogo}>
           <Text style={styles.headerLogoText}>{initial}</Text>
@@ -337,15 +342,15 @@ export default function RentalFleetDashboard() {
           hitSlop={8}
           style={styles.headerIconBtn}
         >
-          <ProfileIcon />
+          <ProfileIcon stroke={tones.textOnBrand} />
         </Pressable>
       </View>
 
       <View style={styles.statsRow}>
-        <StatCard num={fleet.length} label="Total Vehicles" />
-        <StatCard num={activeCount} label="Active Listings" />
-        <StatCard num={totalViews.toLocaleString()} label="Total Views" />
-        <StatCard num={newLeads} label="New Inquiries" />
+        <StatCard num={fleet.length} label="Total Vehicles" styles={styles} />
+        <StatCard num={activeCount} label="Active Listings" styles={styles} />
+        <StatCard num={totalViews.toLocaleString()} label="Total Views" styles={styles} />
+        <StatCard num={newLeads} label="New Inquiries" styles={styles} />
       </View>
 
       {isPending ? (
@@ -363,29 +368,33 @@ export default function RentalFleetDashboard() {
         <QuickAction
           title="Add Vehicle"
           sub="List a new rental"
-          icon={<PlusIcon />}
+          icon={<PlusIcon stroke={tones.brand} />}
           disabled={isPending}
           onPress={() => router.push(`/rental-fleet/add-vehicle?bizId=${biz.id}`)}
+          styles={styles}
         />
         <QuickAction
           title="Manage Fleet"
           sub="Edit or archive vehicles"
-          icon={<FleetIcon />}
+          icon={<FleetIcon stroke={tones.brand} />}
           disabled={isPending}
           onPress={() => router.push(`/rental-fleet/manage?bizId=${biz.id}`)}
+          styles={styles}
         />
         <QuickAction
           title="Analytics"
           sub="Views, leads, trends"
-          icon={<AnalyticsIcon />}
+          icon={<AnalyticsIcon stroke={tones.brand} />}
           disabled={isPending}
           onPress={() => router.push(`/rental-fleet/analytics?bizId=${biz.id}`)}
+          styles={styles}
         />
         <QuickAction
           title="Company Profile"
           sub="Update info and logo"
-          icon={<ProfileIcon />}
+          icon={<ProfileIcon stroke={tones.brand} />}
           onPress={() => router.push("/rental-fleet/profile")}
+          styles={styles}
         />
       </View>
 
@@ -418,120 +427,126 @@ export default function RentalFleetDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  headerBar: {
-    backgroundColor: BRAND_BLUE,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerIconBtn: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
-  headerLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerLogoText: { fontSize: 16, fontWeight: "800", color: "#ffffff" },
-  headerTitle: { fontSize: 16, fontWeight: "800", color: "#ffffff" },
-  headerSub: { fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 1 },
-  statsRow: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingVertical: 12 },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 12,
-  },
-  statNum: { fontSize: 20, fontWeight: "800", color: "#18181B" },
-  statLabel: { fontSize: 10.5, color: "#A1A1AA", fontWeight: "600", marginTop: 2 },
-  pendingBanner: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: "#FEF3C7",
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-    borderRadius: 16,
-    padding: 16,
-  },
-  pendingTitle: { fontSize: 14, fontWeight: "800", color: "#92400E", marginBottom: 4 },
-  pendingBody: { fontSize: 13, color: "#92400E", lineHeight: 19 },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#18181B",
-    marginTop: 16,
-    marginBottom: 10,
-    marginHorizontal: 16,
-  },
-  actionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16 },
-  actionCard: {
-    width: "47%",
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#E4E4E7",
-    borderRadius: 18,
-    padding: 16,
-  },
-  actionCardDisabled: { opacity: 0.5 },
-  actionIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#EEF2FF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  actionTitle: { fontSize: 14, fontWeight: "700", color: "#18181B" },
-  actionSub: { fontSize: 12, color: "#A1A1AA", marginTop: 2 },
-  leadsCard: { backgroundColor: "#ffffff", marginHorizontal: 16, borderRadius: 14, overflow: "hidden" },
-  leadRow: {
-    flexDirection: "row",
-    gap: 12,
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
-    alignItems: "center",
-  },
-  leadAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#DBEAFE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  leadAvatarText: { fontSize: 13, fontWeight: "700", color: BRAND_BLUE },
-  leadName: { fontSize: 14, fontWeight: "700", color: "#18181B" },
-  leadMeta: { fontSize: 12.5, color: "#A1A1AA", marginTop: 2 },
-  leadNewDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: BRAND_BLUE },
-  rejectedBox: {
-    margin: 16,
-    backgroundColor: "#FFF1F0",
-    borderWidth: 1,
-    borderColor: "#FECACA",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-  },
-  rejectedTitle: { fontSize: 16, fontWeight: "800", color: "#D92D20", marginBottom: 8 },
-  rejectedBody: { fontSize: 13, color: "#991B1B", lineHeight: 19, textAlign: "center" },
-  rejectedBtn: { marginTop: 20, backgroundColor: "#D92D20", borderRadius: 12, paddingHorizontal: 28, paddingVertical: 12 },
-  rejectedBtnText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+    headerBar: {
+      backgroundColor: color.brand,
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    backBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: "rgba(255,255,255,0.15)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    headerIconBtn: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
+    headerLogo: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: "rgba(255,255,255,0.15)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    headerLogoText: { fontSize: 16, fontWeight: "800", color: color.textOnBrand },
+    headerTitle: { fontSize: 16, fontWeight: "800", color: color.textOnBrand },
+    headerSub: { fontSize: 12, color: color.textOnBrandSub, marginTop: 1 },
+    statsRow: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingVertical: 12 },
+    statCard: {
+      flex: 1,
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 12,
+    },
+    statNum: { fontSize: 20, fontWeight: "800", color: color.text },
+    statLabel: { fontSize: 10.5, color: color.textMuted, fontWeight: "600", marginTop: 2 },
+    pendingBanner: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      backgroundColor: color.warningTint,
+      borderWidth: 1,
+      borderColor: color.warning,
+      borderRadius: 16,
+      padding: 16,
+    },
+    pendingTitle: { fontSize: 14, fontWeight: "800", color: color.warning, marginBottom: 4 },
+    pendingBody: { fontSize: 13, color: color.warning, lineHeight: 19 },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.text,
+      marginTop: 16,
+      marginBottom: 10,
+      marginHorizontal: 16,
+    },
+    actionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16 },
+    actionCard: {
+      width: "47%",
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 18,
+      padding: 16,
+    },
+    actionCardDisabled: { opacity: 0.5 },
+    actionIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: color.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+    actionTitle: { fontSize: 14, fontWeight: "700", color: color.text },
+    actionSub: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    leadsCard: { backgroundColor: color.surface, marginHorizontal: 16, borderRadius: 14, overflow: "hidden" },
+    leadRow: {
+      flexDirection: "row",
+      gap: 12,
+      padding: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: color.divider,
+      alignItems: "center",
+    },
+    leadAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: color.brandTintStrong,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    leadAvatarText: { fontSize: 13, fontWeight: "700", color: color.brand },
+    leadName: { fontSize: 14, fontWeight: "700", color: color.text },
+    leadMeta: { fontSize: 12.5, color: color.textMuted, marginTop: 2 },
+    leadNewDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.brand },
+    rejectedBox: {
+      margin: 16,
+      backgroundColor: color.dangerTint,
+      borderWidth: 1,
+      borderColor: color.danger,
+      borderRadius: 16,
+      padding: 24,
+      alignItems: "center",
+    },
+    rejectedTitle: { fontSize: 16, fontWeight: "800", color: color.danger, marginBottom: 8 },
+    rejectedBody: { fontSize: 13, color: color.danger, lineHeight: 19, textAlign: "center" },
+    rejectedBtn: { marginTop: 20, backgroundColor: color.danger, borderRadius: 12, paddingHorizontal: 28, paddingVertical: 12 },
+    rejectedBtnText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+  });
+}

@@ -11,11 +11,14 @@ import {
 } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useAuth } from "../lib/auth";
-import { BRAND_BLUE } from "../lib/constants";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/auth.js H.authShow2FA — the login-time TOTP gate shown when
 // a profile has two_factor_enabled.
 export default function TwoFactorVerifyScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { verifyPendingTwoFactor, cancelPendingTwoFactor } = useAuth();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +40,9 @@ export default function TwoFactorVerifyScreen() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.iconWrap}>
         <Svg width={28} height={28} viewBox="0 0 32 32" fill="none">
-          <Rect x={6} y={13} width={20} height={16} rx={3} stroke={BRAND_BLUE} strokeWidth={1.8} />
-          <Path d="M10 13V9a6 6 0 0112 0v4" stroke={BRAND_BLUE} strokeWidth={1.8} strokeLinecap="round" />
-          <Circle cx={16} cy={21} r={2} fill={BRAND_BLUE} />
+          <Rect x={6} y={13} width={20} height={16} rx={3} stroke={tones.brand} strokeWidth={1.8} />
+          <Path d="M10 13V9a6 6 0 0112 0v4" stroke={tones.brand} strokeWidth={1.8} strokeLinecap="round" />
+          <Circle cx={16} cy={21} r={2} fill={tones.brand} />
         </Svg>
       </View>
       <Text style={styles.title}>Two-factor auth</Text>
@@ -48,7 +51,7 @@ export default function TwoFactorVerifyScreen() {
       <TextInput
         style={styles.input}
         placeholder="000000"
-        placeholderTextColor="#C4C9D4"
+        placeholderTextColor={tones.muted}
         keyboardType="number-pad"
         maxLength={6}
         value={code}
@@ -59,7 +62,7 @@ export default function TwoFactorVerifyScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <Pressable style={[styles.button, isSubmitting && styles.buttonDisabled]} onPress={submit} disabled={isSubmitting}>
-        {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.buttonText}>Verify &amp; Continue</Text>}
+        {isSubmitting ? <ActivityIndicator color={tones.onBrand} /> : <Text style={styles.buttonText}>Verify &amp; Continue</Text>}
       </Pressable>
       <Pressable style={styles.cancelButton} onPress={cancelPendingTwoFactor}>
         <Text style={styles.cancelText}>Cancel</Text>
@@ -68,78 +71,84 @@ export default function TwoFactorVerifyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 32,
-  },
-  iconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: "#EEF2FF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#111827",
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#5A6478",
-    textAlign: "center",
-    marginTop: 8,
-    lineHeight: 20,
-  },
-  input: {
-    width: "100%",
-    marginTop: 28,
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingVertical: 14,
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: 8,
-    textAlign: "center",
-    color: "#111827",
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 13,
-    marginTop: 10,
-    textAlign: "center",
-  },
-  button: {
-    width: "100%",
-    backgroundColor: BRAND_BLUE,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 18,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  cancelButton: {
-    marginTop: 12,
-    paddingVertical: 8,
-  },
-  cancelText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#8A93A6",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, muted: color.textMuted, onBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 32,
+    },
+    iconWrap: {
+      width: 64,
+      height: 64,
+      borderRadius: 16,
+      backgroundColor: color.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: "800",
+      color: color.text,
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: 14,
+      color: color.textSub,
+      textAlign: "center",
+      marginTop: 8,
+      lineHeight: 20,
+    },
+    input: {
+      width: "100%",
+      marginTop: 28,
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingVertical: 14,
+      fontSize: 22,
+      fontWeight: "800",
+      letterSpacing: 8,
+      textAlign: "center",
+      color: color.text,
+    },
+    error: {
+      color: color.danger,
+      fontSize: 13,
+      marginTop: 10,
+      textAlign: "center",
+    },
+    button: {
+      width: "100%",
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 18,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: color.textOnBrand,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    cancelButton: {
+      marginTop: 12,
+      paddingVertical: 8,
+    },
+    cancelText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.textMuted,
+    },
+  });
+}

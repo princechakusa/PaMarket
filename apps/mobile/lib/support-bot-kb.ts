@@ -71,12 +71,12 @@ export const KB: KbEntry[] = [
   },
   {
     tags: ['delete listing','remove listing','take down','delete ad','remove ad','remove my listing'],
-    answer: 'To delete a listing:\n1. Go to My Listings (Profile icon)\n2. Tap the listing\n3. Tap "Remove"\n4. Confirm deletion\n\nThe listing is permanently removed from the marketplace.\n\nIf you just sold the item, use "Stop It" instead — it hides the listing while keeping your record.',
+    answer: 'To delete a listing:\n1. Go to My Listings (Profile icon)\n2. Find the listing — scroll its action row sideways\n3. Tap "Delete"\n4. Confirm deletion\n\nThe listing is permanently removed from the marketplace.\n\nIf you just sold the item, use "Mark sold" instead — it hides the listing while keeping your record.',
     chips: ['Post a Listing', 'Edit a Listing', 'Ask Another Question'],
   },
   {
-    tags: ['sold','mark sold','mark filled','filled','listing sold','close listing','item sold','job filled','position filled','stop listing'],
-    answer: 'To mark a listing as sold or filled:\n1. Go to My Listings\n2. Tap the listing\n3. Tap "Stop It" (items / rentals) or "Stop It" (job vacancies)\n\nThe listing is hidden from public search but kept in your account records. Tap "Remove" if you want it fully deleted.',
+    tags: ['sold','mark sold','mark filled','filled','listing sold','close listing','item sold','job filled','position filled','stop listing','pause listing','pause ad','hide listing'],
+    answer: 'To mark a listing as sold, or pause it temporarily:\n1. Go to My Listings\n2. Find the listing — scroll its action row sideways\n3. Tap "Mark sold" once it\'s sold, or "Pause" to hide it from buyers without deleting it\n\nA paused listing can be brought back any time with "Reactivate". Tap "Delete" if you want it fully removed instead.',
     chips: ['Post a Listing', 'Edit a Listing', 'Ask Another Question'],
   },
   {

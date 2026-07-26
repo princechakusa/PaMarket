@@ -17,9 +17,11 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { toast } from "../../components/ui/Toast";
-import { BRAND_BLUE, CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
+import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Owner/staff edit form for identity, media, contact, and location. Mirrors
 // www/js/business-profile.js pages.BusinessEditProfile. Shop-thumbnail
@@ -28,6 +30,8 @@ export default function BusinessEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [name, setName] = useState("");
@@ -138,7 +142,7 @@ export default function BusinessEditScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -179,11 +183,11 @@ export default function BusinessEditScreen() {
           </Pressable>
         </View>
 
-        <Field label="Business name">
+        <Field label="Business name" styles={styles}>
           <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={60} />
         </Field>
 
-        <Field label="Business type">
+        <Field label="Business type" styles={styles}>
           <View style={styles.rowGap}>
             {[
               { id: "individual", label: "Individual" },
@@ -197,11 +201,11 @@ export default function BusinessEditScreen() {
           </View>
         </Field>
 
-        <Field label="Description">
+        <Field label="Description" styles={styles}>
           <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} multiline maxLength={300} />
         </Field>
 
-        <Field label="Categories">
+        <Field label="Categories" styles={styles}>
           <View style={styles.chipsWrap}>
             {CATEGORIES.map((c) => {
               const active = categories.includes(c.id);
@@ -214,17 +218,17 @@ export default function BusinessEditScreen() {
           </View>
         </Field>
 
-        <Field label="Contact phone">
+        <Field label="Contact phone" styles={styles}>
           <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
         </Field>
-        <Field label="WhatsApp">
+        <Field label="WhatsApp" styles={styles}>
           <TextInput style={styles.input} value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
         </Field>
-        <Field label="Email">
+        <Field label="Email" styles={styles}>
           <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         </Field>
 
-        <Field label="Province">
+        <Field label="Province" styles={styles}>
           <View style={styles.chipsWrap}>
             {PROVINCES.map((p) => (
               <Pressable key={p} style={[styles.chip, province === p && styles.chipActive]} onPress={() => { setProvince(p); setCity(""); }}>
@@ -234,7 +238,7 @@ export default function BusinessEditScreen() {
           </View>
         </Field>
         {province ? (
-          <Field label="City / Town">
+          <Field label="City / Town" styles={styles}>
             <View style={styles.chipsWrap}>
               {cities.map((c) => (
                 <Pressable key={c} style={[styles.chip, city === c && styles.chipActive]} onPress={() => setCity(c)}>
@@ -244,12 +248,12 @@ export default function BusinessEditScreen() {
             </View>
           </Field>
         ) : null}
-        <Field label="Suburb / Area">
+        <Field label="Suburb / Area" styles={styles}>
           <TextInput style={styles.input} value={suburb} onChangeText={setSuburb} />
         </Field>
 
         <Pressable style={styles.primaryButton} onPress={save} disabled={isSaving}>
-          {isSaving ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>Save Profile</Text>}
+          {isSaving ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryButtonText}>Save Profile</Text>}
         </Pressable>
         <Pressable style={styles.secondaryButton} onPress={() => router.push(`/business-staff/${id}`)}>
           <Text style={styles.secondaryButtonText}>Manage Staff</Text>
@@ -259,7 +263,9 @@ export default function BusinessEditScreen() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+type Styles = ReturnType<typeof buildStyles>;
+
+function Field({ label, children, styles }: { label: string; children: React.ReactNode; styles: Styles }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -268,36 +274,42 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  notFoundTitle: { fontSize: 16, fontWeight: "700", color: "#111827", marginBottom: 8, textAlign: "center" },
-  notFoundSub: { fontSize: 13, color: "#8A93A6", textAlign: "center" },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  coverWrap: { marginBottom: 58 },
-  cover: { height: 120, borderRadius: 16, overflow: "hidden", backgroundColor: BRAND_BLUE },
-  coverImage: { width: "100%", height: "100%" },
-  coverButton: { position: "absolute", top: 10, right: 10, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
-  coverButtonText: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
-  logoWrap: { position: "absolute", left: 16, bottom: -44, width: 88, height: 88, borderRadius: 20, borderWidth: 3, borderColor: "#ffffff", backgroundColor: "#EEF2FB", overflow: "hidden", alignItems: "center", justifyContent: "center" },
-  logoImage: { width: "100%", height: "100%" },
-  logoInitial: { fontSize: 26, fontWeight: "800", color: BRAND_BLUE },
-  field: { marginBottom: 14 },
-  fieldLabel: { fontSize: 13, fontWeight: "700", color: "#111827", marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: "#D8DCE5", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: "#111827" },
-  textArea: { minHeight: 80, textAlignVertical: "top" },
-  rowGap: { flexDirection: "row", gap: 8 },
-  typeButton: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: "#E8ECF4", alignItems: "center" },
-  typeButtonActive: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FB" },
-  typeButtonText: { fontSize: 13, fontWeight: "700", color: "#111827" },
-  typeButtonTextActive: { color: BRAND_BLUE },
-  chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1.5, borderColor: "#E8ECF4", backgroundColor: "#ffffff" },
-  chipActive: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FB" },
-  chipText: { fontSize: 12.5, fontWeight: "700", color: "#111827" },
-  chipTextActive: { color: BRAND_BLUE },
-  primaryButton: { backgroundColor: BRAND_BLUE, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 6 },
-  primaryButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  secondaryButton: { borderRadius: 10, paddingVertical: 13, alignItems: "center", marginTop: 10, backgroundColor: "#F5F6F9" },
-  secondaryButtonText: { fontSize: 14, fontWeight: "700", color: "#111827" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.surface },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+    notFoundTitle: { fontSize: 16, fontWeight: "700", color: color.text, marginBottom: 8, textAlign: "center" },
+    notFoundSub: { fontSize: 13, color: color.textMuted, textAlign: "center" },
+    scrollContent: { padding: 16, paddingBottom: 40 },
+    coverWrap: { marginBottom: 58 },
+    cover: { height: 120, borderRadius: 16, overflow: "hidden", backgroundColor: color.brand },
+    coverImage: { width: "100%", height: "100%" },
+    coverButton: { position: "absolute", top: 10, right: 10, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+    coverButtonText: { color: color.textOnBrand, fontSize: 12, fontWeight: "700" },
+    logoWrap: { position: "absolute", left: 16, bottom: -44, width: 88, height: 88, borderRadius: 20, borderWidth: 3, borderColor: color.surface, backgroundColor: color.brandTint, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+    logoImage: { width: "100%", height: "100%" },
+    logoInitial: { fontSize: 26, fontWeight: "800", color: color.brand },
+    field: { marginBottom: 14 },
+    fieldLabel: { fontSize: 13, fontWeight: "700", color: color.text, marginBottom: 8 },
+    input: { borderWidth: 1, borderColor: color.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: color.text },
+    textArea: { minHeight: 80, textAlignVertical: "top" },
+    rowGap: { flexDirection: "row", gap: 8 },
+    typeButton: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: color.border, alignItems: "center" },
+    typeButtonActive: { borderColor: color.brand, backgroundColor: color.brandTint },
+    typeButtonText: { fontSize: 13, fontWeight: "700", color: color.text },
+    typeButtonTextActive: { color: color.brand },
+    chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface },
+    chipActive: { borderColor: color.brand, backgroundColor: color.brandTint },
+    chipText: { fontSize: 12.5, fontWeight: "700", color: color.text },
+    chipTextActive: { color: color.brand },
+    primaryButton: { backgroundColor: color.brand, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 6 },
+    primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    secondaryButton: { borderRadius: 10, paddingVertical: 13, alignItems: "center", marginTop: 10, backgroundColor: color.surfaceAlt },
+    secondaryButtonText: { fontSize: 14, fontWeight: "700", color: color.text },
+  });
+}

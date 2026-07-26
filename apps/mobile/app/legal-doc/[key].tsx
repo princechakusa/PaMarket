@@ -1,9 +1,11 @@
 import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
-import { BRAND_BLUE } from "../../lib/constants";
 import { LEGAL_DOCS, type LegalDocKey } from "../../lib/legal";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 export default function LegalDocScreen() {
+  const styles = useThemedStyles(buildStyles);
   const { key } = useLocalSearchParams<{ key: string }>();
   const doc = LEGAL_DOCS[key as LegalDocKey];
 
@@ -41,27 +43,28 @@ export default function LegalDocScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6F9",
+    backgroundColor: color.bg,
   },
   notFound: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F5F6F9",
+    backgroundColor: color.bg,
     padding: 32,
   },
   notFoundText: {
     fontSize: 14,
-    color: "#8A93A6",
+    color: color.textMuted,
   },
   updatedPill: {
     alignSelf: "flex-start",
-    backgroundColor: "#EEF2FF",
+    backgroundColor: color.brandTint,
     borderWidth: 1,
-    borderColor: "#C7D7FE",
+    borderColor: color.brandTintStrong,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -70,10 +73,10 @@ const styles = StyleSheet.create({
   updatedText: {
     fontSize: 11,
     fontWeight: "700",
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   section: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 10,
@@ -81,33 +84,34 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#111827",
+    color: color.text,
     marginBottom: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
+    borderBottomColor: color.divider,
   },
   paragraph: {
     fontSize: 13,
     lineHeight: 20,
-    color: "#5A6478",
+    color: color.textSub,
   },
   contactCard: {
     marginTop: 12,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: "#E4E7EE",
+    borderColor: color.border,
     alignItems: "center",
   },
   contactLabel: {
     fontSize: 12,
-    color: "#8A93A6",
+    color: color.textMuted,
     marginBottom: 6,
   },
   contactEmail: {
     fontSize: 13,
     fontWeight: "700",
-    color: BRAND_BLUE,
+    color: color.brand,
   },
-});
+  });
+}

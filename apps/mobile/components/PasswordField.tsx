@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { passwordStrength } from "../lib/validation";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 export function PasswordField({
   value,
@@ -15,6 +17,8 @@ export function PasswordField({
   showStrength?: boolean;
   autoComplete?: "password" | "password-new";
 }) {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const [visible, setVisible] = useState(false);
   const strength = showStrength ? passwordStrength(value) : null;
 
@@ -24,7 +28,7 @@ export function PasswordField({
         <TextInput
           style={styles.input}
           placeholder={placeholder}
-          placeholderTextColor="#8A93A6"
+          placeholderTextColor={tones.placeholder}
           secureTextEntry={!visible}
           autoCapitalize="none"
           autoComplete={autoComplete}
@@ -49,39 +53,47 @@ export function PasswordField({
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    position: "relative",
-    justifyContent: "center",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    paddingRight: 60,
-    fontSize: 16,
-    color: "#111827",
-  },
-  eyeButton: {
-    position: "absolute",
-    right: 12,
-  },
-  eyeLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#1A3A8F",
-  },
-  strengthTrack: {
-    height: 4,
-    backgroundColor: "#E4E7EF",
-    borderRadius: 2,
-    marginTop: 6,
-    overflow: "hidden",
-  },
-  strengthFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-});
+function buildTones(color: ColorPalette) {
+  return {
+    placeholder: color.textMuted,
+  };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    row: {
+      position: "relative",
+      justifyContent: "center",
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      paddingRight: 60,
+      fontSize: 16,
+      color: color.text,
+    },
+    eyeButton: {
+      position: "absolute",
+      right: 12,
+    },
+    eyeLabel: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: color.brand,
+    },
+    strengthTrack: {
+      height: 4,
+      backgroundColor: color.border,
+      borderRadius: 2,
+      marginTop: 6,
+      overflow: "hidden",
+    },
+    strengthFill: {
+      height: "100%",
+      borderRadius: 2,
+    },
+  });
+}

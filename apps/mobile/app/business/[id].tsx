@@ -14,19 +14,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE, BRAND_GOLD, CATEGORIES } from "../../lib/constants";
+import { CATEGORIES } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import { formatPrice, type Listing } from "../../lib/listings";
 import { averageRating } from "../../lib/sellers";
 import { StarRow } from "../../components/StarRow";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
 
-function BackIcon() {
+function BackIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
@@ -37,6 +39,8 @@ export default function BusinessShopScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Listing[]>([]);
@@ -99,7 +103,7 @@ export default function BusinessShopScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -118,7 +122,7 @@ export default function BusinessShopScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
+          <BackIcon stroke={tones.textOnBrand} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {business.name}
@@ -258,210 +262,216 @@ export default function BusinessShopScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  notFoundTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: BRAND_BLUE,
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  verifiedPill: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  verifiedPillText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  cover: {
-    height: 120,
-    backgroundColor: BRAND_BLUE,
-  },
-  coverImage: {
-    width: "100%",
-    height: "100%",
-  },
-  identity: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  logoWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#EEF0F4",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginTop: -32,
-    borderWidth: 3,
-    borderColor: "#ffffff",
-  },
-  logo: {
-    width: "100%",
-    height: "100%",
-  },
-  logoInitial: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: BRAND_BLUE,
-  },
-  name: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: "#111827",
-    marginTop: 10,
-  },
-  location: {
-    fontSize: 13,
-    color: "#8A93A6",
-    marginTop: 2,
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 8,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: "#8A93A6",
-  },
-  ratingDot: {
-    color: "#8A93A6",
-  },
-  description: {
-    fontSize: 13,
-    color: "#3A4258",
-    lineHeight: 19,
-    marginTop: 10,
-  },
-  contactRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 14,
-  },
-  contactPill: {
-    flex: 1,
-    backgroundColor: "#F5F6F9",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  contactPillWhatsapp: {
-    backgroundColor: "#E7F9EF",
-  },
-  contactPillMessage: {
-    backgroundColor: BRAND_GOLD,
-  },
-  contactPillText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  categoryChips: {
-    paddingHorizontal: 16,
-    gap: 8,
-    paddingBottom: 12,
-  },
-  categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#F5F6F9",
-  },
-  categoryChipActive: {
-    backgroundColor: BRAND_BLUE,
-  },
-  categoryChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  categoryChipTextActive: {
-    color: "#ffffff",
-  },
-  resultCount: {
-    fontSize: 12,
-    color: "#8A93A6",
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  productGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  productCard: {
-    width: "47%",
-    marginHorizontal: 4,
-    marginBottom: 12,
-  },
-  productPhotoWrap: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  productPhoto: {
-    width: "100%",
-    height: "100%",
-  },
-  productPhotoPlaceholder: {
-    backgroundColor: "#E4E7EF",
-  },
-  productPrice: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: BRAND_BLUE,
-  },
-  productTitle: {
-    fontSize: 12,
-    color: "#3A4258",
-    marginTop: 2,
-  },
-  ctaBar: {
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F1F5",
-    backgroundColor: "#ffffff",
-  },
-  ctaButton: {
-    backgroundColor: BRAND_GOLD,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  ctaButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.surface,
+    },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    notFoundTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: color.text,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: color.brand,
+      paddingHorizontal: 14,
+      paddingBottom: 12,
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+    verifiedPill: {
+      backgroundColor: "rgba(255,255,255,0.15)",
+      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    verifiedPillText: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+    cover: {
+      height: 120,
+      backgroundColor: color.brand,
+    },
+    coverImage: {
+      width: "100%",
+      height: "100%",
+    },
+    identity: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    logoWrap: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: color.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      marginTop: -32,
+      borderWidth: 3,
+      borderColor: color.surface,
+    },
+    logo: {
+      width: "100%",
+      height: "100%",
+    },
+    logoInitial: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    name: {
+      fontSize: 19,
+      fontWeight: "800",
+      color: color.text,
+      marginTop: 10,
+    },
+    location: {
+      fontSize: 13,
+      color: color.textMuted,
+      marginTop: 2,
+    },
+    ratingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 8,
+    },
+    ratingText: {
+      fontSize: 12,
+      color: color.textMuted,
+    },
+    ratingDot: {
+      color: color.textMuted,
+    },
+    description: {
+      fontSize: 13,
+      color: color.textSub,
+      lineHeight: 19,
+      marginTop: 10,
+    },
+    contactRow: {
+      flexDirection: "row",
+      gap: 8,
+      marginTop: 14,
+    },
+    contactPill: {
+      flex: 1,
+      backgroundColor: color.surfaceAlt,
+      borderRadius: 10,
+      paddingVertical: 10,
+      alignItems: "center",
+    },
+    contactPillWhatsapp: {
+      backgroundColor: color.successTint,
+    },
+    contactPillMessage: {
+      backgroundColor: color.gold,
+    },
+    contactPillText: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: color.text,
+    },
+    categoryChips: {
+      paddingHorizontal: 16,
+      gap: 8,
+      paddingBottom: 12,
+    },
+    categoryChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: color.surfaceAlt,
+    },
+    categoryChipActive: {
+      backgroundColor: color.brand,
+    },
+    categoryChipText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: color.text,
+    },
+    categoryChipTextActive: {
+      color: color.textOnBrand,
+    },
+    resultCount: {
+      fontSize: 12,
+      color: color.textMuted,
+      paddingHorizontal: 16,
+      marginBottom: 8,
+    },
+    productGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: 12,
+      gap: 8,
+    },
+    productCard: {
+      width: "47%",
+      marginHorizontal: 4,
+      marginBottom: 12,
+    },
+    productPhotoWrap: {
+      width: "100%",
+      aspectRatio: 1,
+      borderRadius: 12,
+      overflow: "hidden",
+      marginBottom: 6,
+    },
+    productPhoto: {
+      width: "100%",
+      height: "100%",
+    },
+    productPhotoPlaceholder: {
+      backgroundColor: color.skeleton,
+    },
+    productPrice: {
+      fontSize: 14,
+      fontWeight: "800",
+      color: color.brand,
+    },
+    productTitle: {
+      fontSize: 12,
+      color: color.textSub,
+      marginTop: 2,
+    },
+    ctaBar: {
+      padding: 12,
+      borderTopWidth: 1,
+      borderTopColor: color.divider,
+      backgroundColor: color.surface,
+    },
+    ctaButton: {
+      backgroundColor: color.gold,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    ctaButtonText: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+  });
+}

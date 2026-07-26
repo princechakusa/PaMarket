@@ -32,10 +32,10 @@ export async function touchPresence() {
   try {
     const uid = await authUid();
     if (!uid) return;
-    const { error } = await supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", uid);
+    const { error } = await supabase.from("profiles").update({ last_seen: new Date().toISOString() }).eq("id", uid);
     if (error) {
       const m = (error.message || "").toLowerCase();
-      if (m.includes("last_seen_at") || m.includes("column")) presenceOff = true;
+      if (m.includes("last_seen") || m.includes("column")) presenceOff = true;
     }
   } catch {
     // never surface

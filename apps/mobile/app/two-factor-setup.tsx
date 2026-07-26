@@ -13,12 +13,15 @@ import QRCode from "react-native-qrcode-svg";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import { BRAND_BLUE } from "../lib/constants";
 import { createTotpSecret, totpUri, verifyTotpCode } from "../lib/totp";
 import { toast } from "../components/ui/Toast";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/security_pages.js pages.TwoFactor / H._twoFactor.
 export default function TwoFactorSetupScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
   const router = useRouter();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -42,7 +45,7 @@ export default function TwoFactorSetupScreen() {
   if (!session?.user || enabled === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -202,69 +205,75 @@ export default function TwoFactorSetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  box: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-  },
-  activeBox: {
-    backgroundColor: "#DCFCE7",
-    alignItems: "center",
-  },
-  activeTitle: { fontSize: 17, fontWeight: "800", color: "#15803D", marginBottom: 4 },
-  activeSub: { fontSize: 13, color: "#166534", lineHeight: 19, textAlign: "center" },
-  boxTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 8 },
-  boxText: { fontSize: 13, color: "#5A6478", lineHeight: 19 },
-  boxTextCenter: { fontSize: 12, color: "#5A6478", textAlign: "center", marginTop: 4, marginBottom: 8 },
-  qrWrap: {
-    alignSelf: "center",
-    marginVertical: 12,
-    padding: 12,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-  },
-  secretBox: {
-    backgroundColor: "#EFF6FF",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(26,58,143,0.2)",
-    padding: 12,
-    alignItems: "center",
-  },
-  secretText: { fontSize: 15, fontWeight: "800", letterSpacing: 2, color: BRAND_BLUE },
-  codeInput: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    fontSize: 18,
-    fontWeight: "700",
-    letterSpacing: 4,
-    textAlign: "center",
-    marginTop: 12,
-    marginBottom: 12,
-    color: "#111827",
-  },
-  primaryButton: {
-    backgroundColor: BRAND_BLUE,
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: "center",
-  },
-  primaryButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  dangerButton: {
-    backgroundColor: "#DC2626",
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: "center",
-  },
-  dangerButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  buttonDisabled: { opacity: 0.6 },
-  backButton: { alignItems: "center", paddingVertical: 14 },
-  backButtonText: { fontSize: 14, fontWeight: "700", color: "#5A6478" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    box: {
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 12,
+    },
+    activeBox: {
+      backgroundColor: color.successTint,
+      alignItems: "center",
+    },
+    activeTitle: { fontSize: 17, fontWeight: "800", color: color.success, marginBottom: 4 },
+    activeSub: { fontSize: 13, color: color.success, lineHeight: 19, textAlign: "center" },
+    boxTitle: { fontSize: 14, fontWeight: "700", color: color.text, marginBottom: 8 },
+    boxText: { fontSize: 13, color: color.textSub, lineHeight: 19 },
+    boxTextCenter: { fontSize: 12, color: color.textSub, textAlign: "center", marginTop: 4, marginBottom: 8 },
+    qrWrap: {
+      alignSelf: "center",
+      marginVertical: 12,
+      padding: 12,
+      backgroundColor: color.surface,
+      borderRadius: 12,
+    },
+    secretBox: {
+      backgroundColor: color.brandTint,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: color.brandTintStrong,
+      padding: 12,
+      alignItems: "center",
+    },
+    secretText: { fontSize: 15, fontWeight: "800", letterSpacing: 2, color: color.brand },
+    codeInput: {
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      fontSize: 18,
+      fontWeight: "700",
+      letterSpacing: 4,
+      textAlign: "center",
+      marginTop: 12,
+      marginBottom: 12,
+      color: color.text,
+    },
+    primaryButton: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 13,
+      alignItems: "center",
+    },
+    primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    dangerButton: {
+      backgroundColor: color.danger,
+      borderRadius: 10,
+      paddingVertical: 13,
+      alignItems: "center",
+    },
+    dangerButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
+    buttonDisabled: { opacity: 0.6 },
+    backButton: { alignItems: "center", paddingVertical: 14 },
+    backButtonText: { fontSize: 14, fontWeight: "700", color: color.textSub },
+  });
+}

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import { BRAND_BLUE } from "../lib/constants";
 import { toast } from "../components/ui/Toast";
 import { EmptyState } from "../components/ui/EmptyState";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/settings.js pages.BlockedUsers / H._blockedUsers.unblock.
 // Blocks are enforced server-side via the real blocked_users table + RLS +
@@ -12,6 +13,8 @@ import { EmptyState } from "../components/ui/EmptyState";
 type BlockedRow = { blocked_id: string; name: string | null; phone: string | null };
 
 export default function BlockedUsersScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
   const [rows, setRows] = useState<BlockedRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +62,7 @@ export default function BlockedUsersScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -88,26 +91,32 @@ export default function BlockedUsersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F5F6F9" },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 10,
-  },
-  name: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  detail: { fontSize: 12, color: "#8A93A6", marginTop: 2 },
-  unblockButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-  },
-  unblockButtonText: { fontSize: 12.5, fontWeight: "700", color: "#111827" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: color.bg },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 10,
+    },
+    name: { fontSize: 14, fontWeight: "700", color: color.text },
+    detail: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    unblockButton: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+    },
+    unblockButtonText: { fontSize: 12.5, fontWeight: "700", color: color.text },
+  });
+}

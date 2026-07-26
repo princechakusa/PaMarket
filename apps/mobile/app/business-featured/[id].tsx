@@ -3,11 +3,12 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { isFeatured, type Listing } from "../../lib/listings";
 import { planEntitlements } from "../../lib/plan-entitlements";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const DAY = 86400000;
 const DURATIONS: [number, string][] = [
@@ -24,6 +25,8 @@ const DURATIONS: [number, string][] = [
 export default function BusinessFeaturedScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [slots, setSlots] = useState(0);
@@ -76,7 +79,7 @@ export default function BusinessFeaturedScreen() {
   if (isLoading || isOwner === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -150,28 +153,34 @@ export default function BusinessFeaturedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  hero: { backgroundColor: "#ffffff", borderRadius: 16, padding: 18, marginBottom: 16 },
-  heroLabel: { fontSize: 11, fontWeight: "800", color: "#8A93A6", letterSpacing: 0.5 },
-  heroCount: { fontSize: 26, fontWeight: "900", color: "#111827", marginTop: 6 },
-  heroCountSub: { fontSize: 14, fontWeight: "500", color: "#8A93A6" },
-  heroSub: { fontSize: 12.5, color: "#8A93A6", marginTop: 8, lineHeight: 18 },
-  sectionTitle: { fontSize: 12, fontWeight: "800", color: "#8A93A6", marginBottom: 10, textTransform: "uppercase" },
-  card: { backgroundColor: "#ffffff", borderWidth: 1, borderColor: "#E8ECF4", borderRadius: 14, padding: 12, marginBottom: 10 },
-  cardFeatured: { borderColor: BRAND_BLUE },
-  cardTop: { flexDirection: "row", gap: 12, alignItems: "center" },
-  thumbWrap: { width: 50, height: 50, borderRadius: 10, overflow: "hidden", backgroundColor: "#EEF2FF" },
-  thumb: { width: "100%", height: "100%" },
-  title: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  featuredText: { fontSize: 11.5, fontWeight: "700", color: BRAND_BLUE, marginTop: 3 },
-  notFeaturedText: { fontSize: 11.5, color: "#8A93A6", marginTop: 3 },
-  removeButton: { marginTop: 10, paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: "#E8ECF4", alignItems: "center" },
-  removeButtonText: { fontSize: 12.5, fontWeight: "700", color: "#8A93A6" },
-  durationRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-  durationButton: { flex: 1, paddingVertical: 9, borderRadius: 10, backgroundColor: BRAND_BLUE, alignItems: "center" },
-  buttonDisabled: { opacity: 0.5 },
-  durationButtonText: { fontSize: 12, fontWeight: "700", color: "#ffffff" },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 12.5, padding: 22 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    hero: { backgroundColor: color.surface, borderRadius: 16, padding: 18, marginBottom: 16 },
+    heroLabel: { fontSize: 11, fontWeight: "800", color: color.textMuted, letterSpacing: 0.5 },
+    heroCount: { fontSize: 26, fontWeight: "900", color: color.text, marginTop: 6 },
+    heroCountSub: { fontSize: 14, fontWeight: "500", color: color.textMuted },
+    heroSub: { fontSize: 12.5, color: color.textMuted, marginTop: 8, lineHeight: 18 },
+    sectionTitle: { fontSize: 12, fontWeight: "800", color: color.textMuted, marginBottom: 10, textTransform: "uppercase" },
+    card: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: 14, padding: 12, marginBottom: 10 },
+    cardFeatured: { borderColor: color.brand },
+    cardTop: { flexDirection: "row", gap: 12, alignItems: "center" },
+    thumbWrap: { width: 50, height: 50, borderRadius: 10, overflow: "hidden", backgroundColor: color.brandTint },
+    thumb: { width: "100%", height: "100%" },
+    title: { fontSize: 14, fontWeight: "700", color: color.text },
+    featuredText: { fontSize: 11.5, fontWeight: "700", color: color.brand, marginTop: 3 },
+    notFeaturedText: { fontSize: 11.5, color: color.textMuted, marginTop: 3 },
+    removeButton: { marginTop: 10, paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: color.border, alignItems: "center" },
+    removeButtonText: { fontSize: 12.5, fontWeight: "700", color: color.textMuted },
+    durationRow: { flexDirection: "row", gap: 8, marginTop: 10 },
+    durationButton: { flex: 1, paddingVertical: 9, borderRadius: 10, backgroundColor: color.brand, alignItems: "center" },
+    buttonDisabled: { opacity: 0.5 },
+    durationButtonText: { fontSize: 12, fontWeight: "700", color: color.textOnBrand },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 12.5, padding: 22 },
+  });
+}

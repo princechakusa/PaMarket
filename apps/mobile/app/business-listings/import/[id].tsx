@@ -3,11 +3,12 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../../../lib/auth";
 import { supabase } from "../../../lib/supabase";
-import { BRAND_BLUE } from "../../../lib/constants";
 import { formatPrice, type Listing } from "../../../lib/listings";
 import { planEntitlements } from "../../../lib/plan-entitlements";
 import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import type { ColorPalette } from "../../../lib/theme";
+import { useThemedStyles } from "../../../lib/theme-provider";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,attributes";
@@ -19,6 +20,8 @@ export default function BusinessImportListingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
   const router = useRouter();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [available, setAvailable] = useState<Listing[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -81,7 +84,7 @@ export default function BusinessImportListingsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -133,52 +136,58 @@ export default function BusinessImportListingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  intro: { fontSize: 13, color: "#5A6478", marginBottom: 14 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 11,
-    backgroundColor: "#ffffff",
-    borderWidth: 1.5,
-    borderColor: "#E8ECF4",
-    borderRadius: 13,
-    padding: 11,
-    marginBottom: 9,
-  },
-  rowSelected: { backgroundColor: "#EEF2FB", borderColor: BRAND_BLUE },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: "#CBD2E0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxOn: { backgroundColor: BRAND_BLUE, borderColor: BRAND_BLUE },
-  checkmark: { color: "#ffffff", fontSize: 13, fontWeight: "800" },
-  thumbWrap: { width: 46, height: 46, borderRadius: 9, overflow: "hidden", backgroundColor: "#EEF2FB" },
-  thumb: { width: "100%", height: "100%" },
-  title: { fontSize: 13.5, fontWeight: "700", color: "#111827" },
-  price: { fontSize: 12.5, fontWeight: "800", color: BRAND_BLUE, marginTop: 2 },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    gap: 9,
-    backgroundColor: "#ffffff",
-    borderTopWidth: 1,
-    borderTopColor: "#E8ECF4",
-    padding: 12,
-  },
-  footerButton: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: "center" },
-  copyButton: { backgroundColor: "#EEF2FF" },
-  copyButtonText: { color: BRAND_BLUE, fontSize: 13.5, fontWeight: "800" },
-  moveButton: { backgroundColor: BRAND_BLUE },
-  moveButtonText: { color: "#ffffff", fontSize: 13.5, fontWeight: "800" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    intro: { fontSize: 13, color: color.textSub, marginBottom: 14 },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 11,
+      backgroundColor: color.surface,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 13,
+      padding: 11,
+      marginBottom: 9,
+    },
+    rowSelected: { backgroundColor: color.brandTint, borderColor: color.brand },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 7,
+      borderWidth: 2,
+      borderColor: color.borderStrong,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    checkboxOn: { backgroundColor: color.brand, borderColor: color.brand },
+    checkmark: { color: color.textOnBrand, fontSize: 13, fontWeight: "800" },
+    thumbWrap: { width: 46, height: 46, borderRadius: 9, overflow: "hidden", backgroundColor: color.brandTint },
+    thumb: { width: "100%", height: "100%" },
+    title: { fontSize: 13.5, fontWeight: "700", color: color.text },
+    price: { fontSize: 12.5, fontWeight: "800", color: color.brand, marginTop: 2 },
+    footer: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      flexDirection: "row",
+      gap: 9,
+      backgroundColor: color.surface,
+      borderTopWidth: 1,
+      borderTopColor: color.border,
+      padding: 12,
+    },
+    footerButton: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: "center" },
+    copyButton: { backgroundColor: color.brandTint },
+    copyButtonText: { color: color.brand, fontSize: 13.5, fontWeight: "800" },
+    moveButton: { backgroundColor: color.brand },
+    moveButtonText: { color: color.textOnBrand, fontSize: 13.5, fontWeight: "800" },
+  });
+}

@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Polyline, Circle, Line } from "react-native-svg";
-import { BRAND_BLUE } from "../lib/constants";
 import { LEGAL_DOCS, LEGAL_SECTIONS, type LegalDocKey } from "../lib/legal";
+import { color, type ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 function ChevronRight() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#C4C9D4" strokeWidth={2.5}>
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color.textMuted} strokeWidth={2.5}>
       <Polyline points="9 18 15 12 9 6" />
     </Svg>
   );
@@ -15,14 +16,16 @@ function ChevronRight() {
 
 function SearchIcon() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#8A93A6" strokeWidth={2}>
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color.textMuted} strokeWidth={2}>
       <Circle cx={11} cy={11} r={8} />
       <Line x1={21} y1={21} x2={16.65} y2={16.65} />
     </Svg>
   );
 }
 
-function DocRow({ label, onPress }: { label: string; onPress: () => void }) {
+type Styles = ReturnType<typeof buildStyles>;
+
+function DocRow({ label, onPress, styles }: { label: string; onPress: () => void; styles: Styles }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -32,6 +35,7 @@ function DocRow({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 export default function LegalHubScreen() {
+  const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -69,7 +73,7 @@ export default function LegalHubScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Search legal documents..."
-          placeholderTextColor="#8A93A6"
+          placeholderTextColor={color.textMuted}
           value={query}
           onChangeText={setQuery}
           autoCorrect={false}
@@ -84,7 +88,7 @@ export default function LegalHubScreen() {
             <Text style={styles.sectionLabel}>{sec.title}</Text>
             <View style={styles.group}>
               {sec.docs.map((key) => (
-                <DocRow key={key} label={LEGAL_DOCS[key].title} onPress={() => openDoc(key)} />
+                <DocRow key={key} label={LEGAL_DOCS[key].title} onPress={() => openDoc(key)} styles={styles} />
               ))}
             </View>
           </View>
@@ -95,24 +99,24 @@ export default function LegalHubScreen() {
       <View style={styles.group}>
         <Pressable style={styles.row} onPress={() => Linking.openURL("mailto:support@pamarketzw.com")}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.rowLabel, { color: BRAND_BLUE }]}>support@pamarketzw.com</Text>
+            <Text style={[styles.rowLabel, { color: color.brand }]}>support@pamarketzw.com</Text>
             <Text style={styles.rowSub}>General &amp; Terms</Text>
           </View>
           <ChevronRight />
         </Pressable>
         <Pressable style={styles.row} onPress={() => Linking.openURL("mailto:info@pamarketzw.com")}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.rowLabel, { color: BRAND_BLUE }]}>info@pamarketzw.com</Text>
+            <Text style={[styles.rowLabel, { color: color.brand }]}>info@pamarketzw.com</Text>
             <Text style={styles.rowSub}>Privacy &amp; Data</Text>
           </View>
           <ChevronRight />
         </Pressable>
-        <DocRow label="Report a Problem" onPress={() => router.push("/report-problem")} />
+        <DocRow label="Report a Problem" onPress={() => router.push("/report-problem")} styles={styles} />
       </View>
 
       <Text style={styles.sectionLabel}>Company</Text>
       <View style={styles.group}>
-        <DocRow label="Help Center" onPress={() => router.push("/help")} />
+        <DocRow label="Help Center" onPress={() => router.push("/help")} styles={styles} />
       </View>
 
       <Text style={styles.footer}>© {new Date().getFullYear()} PaMarket Zimbabwe · Made in Zimbabwe</Text>
@@ -120,23 +124,24 @@ export default function LegalHubScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6F9",
+    backgroundColor: color.bg,
   },
   hero: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     paddingHorizontal: 16,
     paddingTop: 18,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
+    borderBottomColor: color.divider,
   },
   eyebrow: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#8A93A6",
+    color: color.textMuted,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     marginBottom: 4,
@@ -144,13 +149,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "900",
-    color: "#111827",
+    color: color.text,
     letterSpacing: -0.5,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 13,
-    color: "#5A6478",
+    color: color.textSub,
     lineHeight: 19,
   },
   countPill: {
@@ -159,9 +164,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     gap: 6,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: color.brandTint,
     borderWidth: 1,
-    borderColor: "#C7D7FE",
+    borderColor: color.brandTintStrong,
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -170,42 +175,42 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
   },
   countText: {
     fontSize: 11,
     fontWeight: "700",
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     marginHorizontal: 16,
     marginTop: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E4E7EE",
+    borderColor: color.border,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: "#111827",
+    color: color.text,
     padding: 0,
   },
   noResults: {
     textAlign: "center",
     fontSize: 13,
-    color: "#8A93A6",
+    color: color.textMuted,
     marginTop: 32,
   },
   sectionLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#8A93A6",
+    color: color.textMuted,
     textTransform: "uppercase",
     letterSpacing: 0.4,
     marginTop: 20,
@@ -213,7 +218,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   group: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     marginHorizontal: 16,
     borderRadius: 14,
     overflow: "hidden",
@@ -225,22 +230,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
+    borderBottomColor: color.divider,
   },
   rowLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: color.text,
   },
   rowSub: {
     fontSize: 12,
-    color: "#8A93A6",
+    color: color.textMuted,
     marginTop: 2,
   },
   footer: {
     textAlign: "center",
     fontSize: 11,
-    color: "#8A93A6",
+    color: color.textMuted,
     marginTop: 24,
   },
-});
+  });
+}

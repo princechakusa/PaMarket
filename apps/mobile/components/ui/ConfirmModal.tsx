@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { BRAND_BLUE } from "../../lib/constants";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Mirrors www/js/app.js H.modal — generic confirm/cancel dialog.
 export function ConfirmModal({
@@ -21,6 +22,7 @@ export function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const styles = useThemedStyles(buildStyles);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
@@ -41,62 +43,64 @@ export function ConfirmModal({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 20,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
-  },
-  body: {
-    fontSize: 13,
-    color: "#5A6478",
-    textAlign: "center",
-    marginTop: 8,
-    lineHeight: 19,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 20,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: BRAND_BLUE,
-    alignItems: "center",
-  },
-  confirmButtonDanger: {
-    backgroundColor: "#C0392B",
-  },
-  confirmText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-});
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: color.overlay,
+      justifyContent: "center",
+      paddingHorizontal: 28,
+    },
+    card: {
+      backgroundColor: color.surface,
+      borderRadius: 16,
+      padding: 20,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: color.text,
+      textAlign: "center",
+    },
+    body: {
+      fontSize: 13,
+      color: color.textSub,
+      textAlign: "center",
+      marginTop: 8,
+      lineHeight: 19,
+    },
+    buttonRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 20,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: color.border,
+      alignItems: "center",
+    },
+    cancelText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.text,
+    },
+    confirmButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      backgroundColor: color.brand,
+      alignItems: "center",
+    },
+    confirmButtonDanger: {
+      backgroundColor: color.danger,
+    },
+    confirmText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+  });
+}

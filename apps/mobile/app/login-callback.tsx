@@ -2,8 +2,15 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { supabase } from "../lib/supabase";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
+
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textOnBrand: color.textOnBrand };
+}
 
 export default function LoginCallback() {
+  const tones = useThemedStyles(buildTones);
   const params = useLocalSearchParams<{ code?: string }>();
 
   useEffect(() => {
@@ -17,8 +24,8 @@ export default function LoginCallback() {
   }
 
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#1A3A8F" }}>
-      <ActivityIndicator color="#ffffff" />
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: tones.brand }}>
+      <ActivityIndicator color={tones.textOnBrand} />
     </View>
   );
 }

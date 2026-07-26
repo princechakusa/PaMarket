@@ -2,6 +2,8 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-n
 import { useRouter } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/security_pages.js pages.ActiveSessions. The web version
 // tracks a locally-stored session list with revoke actions; RN has no
@@ -9,6 +11,7 @@ import { toast } from "../components/ui/Toast";
 // server-side), so this shows the current device and offers a real
 // "sign out everywhere" action via Supabase's global sign-out scope.
 export default function ActiveSessionsScreen() {
+  const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const deviceLabel = Platform.OS === "ios" ? "iPhone / iPad" : "Android Device";
 
@@ -50,41 +53,43 @@ export default function ActiveSessionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  box: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  boxTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 12 },
-  row: { flexDirection: "row", alignItems: "center", gap: 12 },
-  iconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 11,
-    backgroundColor: "#EFF6FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconText: { fontSize: 18 },
-  deviceName: { fontSize: 13, fontWeight: "700", color: "#111827" },
-  deviceMeta: { fontSize: 11, color: "#8A93A6", marginTop: 2 },
-  currentPill: {
-    backgroundColor: "#DCFCE7",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  currentPillText: { fontSize: 11, fontWeight: "700", color: "#16A34A" },
-  dangerButton: {
-    backgroundColor: "#FEE2E2",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  dangerButtonText: { color: "#C0392B", fontSize: 14, fontWeight: "700" },
-  cancelButton: { alignItems: "center", paddingVertical: 14 },
-  cancelButtonText: { fontSize: 14, fontWeight: "700", color: "#5A6478" },
-});
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    box: {
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 16,
+    },
+    boxTitle: { fontSize: 14, fontWeight: "700", color: color.text, marginBottom: 12 },
+    row: { flexDirection: "row", alignItems: "center", gap: 12 },
+    iconWrap: {
+      width: 38,
+      height: 38,
+      borderRadius: 11,
+      backgroundColor: color.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    iconText: { fontSize: 18 },
+    deviceName: { fontSize: 13, fontWeight: "700", color: color.text },
+    deviceMeta: { fontSize: 11, color: color.textMuted, marginTop: 2 },
+    currentPill: {
+      backgroundColor: color.successTint,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+    },
+    currentPillText: { fontSize: 11, fontWeight: "700", color: color.success },
+    dangerButton: {
+      backgroundColor: color.dangerTint,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    dangerButtonText: { color: color.danger, fontSize: 14, fontWeight: "700" },
+    cancelButton: { alignItems: "center", paddingVertical: 14 },
+    cancelButtonText: { fontSize: 14, fontWeight: "700", color: color.textSub },
+  });
+}

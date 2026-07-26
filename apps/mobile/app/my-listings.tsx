@@ -5,6 +5,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -12,9 +13,10 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import { BRAND_BLUE } from "../lib/constants";
 import { formatPrice, type Listing } from "../lib/listings";
 import { listingStatus } from "../lib/safety";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
@@ -32,6 +34,8 @@ function timeAgo(dateString: string): string {
 }
 
 export default function MyListingsScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
   const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -66,10 +70,20 @@ export default function MyListingsScreen() {
     ]);
   }
 
+  async function setStatus(listingId: string, status: "active" | "paused" | "sold") {
+    const previous = listings;
+    setListings((prev) => prev.map((l) => (l.id === listingId ? { ...l, status } : l)));
+    const { error } = await supabase.from("listings").update({ status }).eq("id", listingId);
+    if (error) {
+      setListings(previous);
+      Alert.alert("Couldn't update listing", error.message);
+    }
+  }
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -118,7 +132,7 @@ export default function MyListingsScreen() {
               </View>
             </View>
           </Pressable>
-          <View style={styles.actions}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actions}>
             <Pressable
               style={styles.actionButton}
               onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
@@ -132,126 +146,152 @@ export default function MyListingsScreen() {
               <Text style={styles.actionText}>Edit</Text>
             </Pressable>
             {item.status === "active" ? (
+              <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "paused")}>
+                <Text style={styles.actionText}>Pause</Text>
+              </Pressable>
+            ) : null}
+            {item.status === "paused" ? (
+              <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "active")}>
+                <Text style={styles.actionText}>Reactivate</Text>
+              </Pressable>
+            ) : null}
+            {item.status === "active" || item.status === "paused" ? (
+              <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "sold")}>
+                <Text style={styles.actionText}>Mark sold</Text>
+              </Pressable>
+            ) : null}
+            {item.status === "sold" ? (
+              <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "active")}>
+                <Text style={styles.actionText}>Relist</Text>
+              </Pressable>
+            ) : null}
+            {item.status === "active" ? (
               <Pressable style={[styles.actionButton, styles.actionButtonDanger]} onPress={() => confirmDelete(item)}>
                 <Text style={[styles.actionText, styles.actionTextDanger]}>Delete</Text>
               </Pressable>
             ) : null}
-          </View>
+          </ScrollView>
         </View>
       )}
     />
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F6F9",
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    paddingHorizontal: 32,
-  },
-  listContent: {
-    padding: 16,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 6,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: "#8A93A6",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  postButton: {
-    backgroundColor: BRAND_BLUE,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  postButtonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  cardBody: {
-    flexDirection: "row",
-  },
-  thumb: {
-    width: 88,
-    height: 88,
-  },
-  thumbPlaceholder: {
-    backgroundColor: "#E4E7EF",
-  },
-  info: {
-    flex: 1,
-    padding: 12,
-    gap: 4,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  price: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: BRAND_BLUE,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  statusPill: {
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  statusPillText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#ffffff",
-    textTransform: "capitalize",
-  },
-  metaText: {
-    fontSize: 11,
-    color: "#8A93A6",
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 8,
-    padding: 12,
-    paddingTop: 0,
-  },
-  actionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#F5F6F9",
-  },
-  actionButtonDanger: {
-    backgroundColor: "#FEE4E2",
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  actionTextDanger: {
-    color: "#C0392B",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+    },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 80,
+      paddingHorizontal: 32,
+    },
+    listContent: {
+      padding: 16,
+    },
+    emptyTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: color.text,
+      marginBottom: 6,
+    },
+    emptyText: {
+      fontSize: 13,
+      color: color.textMuted,
+      textAlign: "center",
+      marginBottom: 16,
+    },
+    postButton: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    postButtonText: {
+      color: color.textOnBrand,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    card: {
+      backgroundColor: color.surface,
+      borderRadius: 12,
+      overflow: "hidden",
+    },
+    cardBody: {
+      flexDirection: "row",
+    },
+    thumb: {
+      width: 88,
+      height: 88,
+    },
+    thumbPlaceholder: {
+      backgroundColor: color.skeleton,
+    },
+    info: {
+      flex: 1,
+      padding: 12,
+      gap: 4,
+    },
+    title: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.text,
+    },
+    price: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: color.brand,
+    },
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    statusPill: {
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    statusPillText: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: "#ffffff",
+      textTransform: "capitalize",
+    },
+    metaText: {
+      fontSize: 11,
+      color: color.textMuted,
+    },
+    actions: {
+      flexDirection: "row",
+      gap: 8,
+      padding: 12,
+      paddingTop: 0,
+    },
+    actionButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: color.surfaceAlt,
+    },
+    actionButtonDanger: {
+      backgroundColor: color.dangerTint,
+    },
+    actionText: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: color.text,
+    },
+    actionTextDanger: {
+      color: color.danger,
+    },
+  });
+}

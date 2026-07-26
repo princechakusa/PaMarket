@@ -3,26 +3,31 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { formatPrice, type Listing } from "../../lib/listings";
 import { planEntitlements } from "../../lib/plan-entitlements";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,views,business_id,created_at";
 
-const STATUS_STYLES: Record<string, { fg: string; bg: string; label: string }> = {
-  draft: { fg: "#475569", bg: "#E2E8F0", label: "Draft" },
-  pending: { fg: "#92400E", bg: "#FEF3C7", label: "Pending" },
-  active: { fg: "#166534", bg: "#DCFCE7", label: "Active" },
-  sold: { fg: "#1E3A8A", bg: "#DBEAFE", label: "Sold" },
-  archived: { fg: "#6B7280", bg: "#F3F4F6", label: "Archived" },
-};
+type Styles = ReturnType<typeof buildStyles>;
 
-function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLES[status] || STATUS_STYLES.active;
+function buildStatusTones(color: ColorPalette) {
+  return {
+    draft: { fg: color.textMuted, bg: color.surfaceAlt, label: "Draft" },
+    pending: { fg: color.warning, bg: color.warningTint, label: "Pending" },
+    active: { fg: color.success, bg: color.successTint, label: "Active" },
+    sold: { fg: color.info, bg: color.infoTint, label: "Sold" },
+    archived: { fg: color.textMuted, bg: color.surfaceAlt, label: "Archived" },
+  } as Record<string, { fg: string; bg: string; label: string }>;
+}
+
+function StatusPill({ status, styles, tones }: { status: string; styles: Styles; tones: ReturnType<typeof buildStatusTones> }) {
+  const s = tones[status] || tones.active;
   return (
     <View style={[styles.pill, { backgroundColor: s.bg }]}>
       <Text style={[styles.pillText, { color: s.fg }]}>{s.label}</Text>
@@ -37,6 +42,9 @@ export default function BusinessListingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
+  const statusTones = useThemedStyles(buildStatusTones);
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -96,7 +104,7 @@ export default function BusinessListingsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -146,7 +154,7 @@ export default function BusinessListingsScreen() {
                   {l.title || "Untitled"}
                 </Text>
                 <View style={styles.metaRow}>
-                  <StatusPill status={l.status} />
+                  <StatusPill status={l.status} styles={styles} tones={statusTones} />
                   <Text style={styles.price}>{formatPrice(l)}</Text>
                 </View>
                 <Text style={styles.viewsText}>{l.views ?? 0} views</Text>
@@ -180,71 +188,77 @@ export default function BusinessListingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  usageBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#EEF2FB",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 14,
-  },
-  usageLabel: { fontSize: 13, color: "#5A6478" },
-  usageValue: { fontSize: 14, fontWeight: "800", color: BRAND_BLUE },
-  addButton: {
-    backgroundColor: BRAND_BLUE,
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  buttonDisabled: { opacity: 0.5 },
-  addButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  limitWarning: { fontSize: 11.5, color: "#B45309", marginBottom: 12 },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
-  },
-  cardTop: { flexDirection: "row", gap: 12 },
-  thumbWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 10,
-    overflow: "hidden",
-    backgroundColor: "#EEF2FB",
-  },
-  thumb: { width: "100%", height: "100%" },
-  title: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
-  pill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  pillText: { fontSize: 10, fontWeight: "800" },
-  price: { fontSize: 12, fontWeight: "700", color: BRAND_BLUE },
-  viewsText: { fontSize: 11, color: "#8A93A6", marginTop: 4 },
-  actionsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: "#E8ECF4",
-    alignItems: "center",
-  },
-  actionButtonText: { fontSize: 12, fontWeight: "700", color: "#111827" },
-  removeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: "#FECACA",
-    backgroundColor: "#FFF1F0",
-    alignItems: "center",
-  },
-  removeButtonText: { fontSize: 12, fontWeight: "700", color: "#EF4444" },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 13, paddingVertical: 24 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    usageBar: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: color.brandTint,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      marginBottom: 14,
+    },
+    usageLabel: { fontSize: 13, color: color.textSub },
+    usageValue: { fontSize: 14, fontWeight: "800", color: color.brand },
+    addButton: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 13,
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    buttonDisabled: { opacity: 0.5 },
+    addButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    limitWarning: { fontSize: 11.5, color: color.warning, marginBottom: 12 },
+    card: {
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      padding: 12,
+      marginBottom: 10,
+    },
+    cardTop: { flexDirection: "row", gap: 12 },
+    thumbWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 10,
+      overflow: "hidden",
+      backgroundColor: color.brandTint,
+    },
+    thumb: { width: "100%", height: "100%" },
+    title: { fontSize: 14, fontWeight: "700", color: color.text },
+    metaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+    pill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+    pillText: { fontSize: 10, fontWeight: "800" },
+    price: { fontSize: 12, fontWeight: "700", color: color.brand },
+    viewsText: { fontSize: 11, color: color.textMuted, marginTop: 4 },
+    actionsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
+    actionButton: {
+      flex: 1,
+      paddingVertical: 8,
+      borderRadius: 9,
+      borderWidth: 1,
+      borderColor: color.border,
+      alignItems: "center",
+    },
+    actionButtonText: { fontSize: 12, fontWeight: "700", color: color.text },
+    removeButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 9,
+      borderWidth: 1,
+      borderColor: color.dangerTint,
+      backgroundColor: color.dangerTint,
+      alignItems: "center",
+    },
+    removeButtonText: { fontSize: 12, fontWeight: "700", color: color.danger },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 24 },
+  });
+}

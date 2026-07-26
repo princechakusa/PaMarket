@@ -1,5 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 function GoogleIcon() {
   return (
@@ -33,32 +35,42 @@ export function GoogleButton({
   isLoading?: boolean;
   label?: string;
 }) {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   return (
     <Pressable style={[styles.button, isLoading && styles.disabled]} onPress={onPress} disabled={isLoading}>
-      {isLoading ? <ActivityIndicator color="#1A3A8F" /> : <GoogleIcon />}
+      {isLoading ? <ActivityIndicator color={tones.spinner} /> : <GoogleIcon />}
       <Text style={styles.label}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingVertical: 13,
-    backgroundColor: "#ffffff",
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111827",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return {
+    spinner: color.brand,
+  };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 10,
+      paddingVertical: 13,
+      backgroundColor: color.surface,
+    },
+    disabled: {
+      opacity: 0.6,
+    },
+    label: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: color.text,
+    },
+  });
+}

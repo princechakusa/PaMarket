@@ -2,16 +2,27 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
 import type { RentalLookupOption } from "../../lib/rentals";
 import { RENTAL_DRIVE_TYPES, RENTAL_FUEL_TYPES, RENTAL_TRANSMISSIONS } from "../../lib/rentals";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Mirrors www/js/rentals-business.js H.pages.RentalAddVehicle — a single
 // scrollable form (RN chip/picker style) instead of the web's 4-step wizard,
 // covering the same required fields before an insert into
 // rental_vehicle_listings + rental_vehicle_specs.
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+function Chip({
+  label,
+  selected,
+  onPress,
+  styles,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  styles: ReturnType<typeof buildStyles>;
+}) {
   return (
     <Pressable style={[styles.chip, selected && styles.chipSelected]} onPress={onPress}>
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
@@ -20,6 +31,8 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
 }
 
 export default function RentalAddVehicleScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { bizId } = useLocalSearchParams<{ bizId: string }>();
   const router = useRouter();
 
@@ -154,76 +167,76 @@ export default function RentalAddVehicleScreen() {
       <Text style={styles.sectionLabel}>Category *</Text>
       <View style={styles.chipRow}>
         {categories.map((c) => (
-          <Chip key={c.slug} label={c.label} selected={categorySlug === c.slug} onPress={() => setCategorySlug(c.slug)} />
+          <Chip key={c.slug} label={c.label} selected={categorySlug === c.slug} onPress={() => setCategorySlug(c.slug)} styles={styles} />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>Brand *</Text>
       <View style={styles.chipRow}>
         {brands.map((b) => (
-          <Chip key={b.slug} label={b.label} selected={brandSlug === b.slug} onPress={() => setBrandSlug(b.slug)} />
+          <Chip key={b.slug} label={b.label} selected={brandSlug === b.slug} onPress={() => setBrandSlug(b.slug)} styles={styles} />
         ))}
       </View>
 
       <Text style={styles.label}>Model *</Text>
-      <TextInput style={styles.input} value={model} onChangeText={setModel} placeholder="e.g. Fortuner, Aqua, Hilux" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={model} onChangeText={setModel} placeholder="e.g. Fortuner, Aqua, Hilux" placeholderTextColor={tones.textMuted} />
 
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Year</Text>
-          <TextInput style={styles.input} value={year} onChangeText={setYear} placeholder="2022" keyboardType="number-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={year} onChangeText={setYear} placeholder="2022" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Seats</Text>
-          <TextInput style={styles.input} value={seats} onChangeText={setSeats} placeholder="5" keyboardType="number-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={seats} onChangeText={setSeats} placeholder="5" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
         </View>
       </View>
 
       <Text style={styles.sectionLabel}>Transmission *</Text>
       <View style={styles.chipRow}>
         {RENTAL_TRANSMISSIONS.map((t) => (
-          <Chip key={t} label={t[0].toUpperCase() + t.slice(1)} selected={transmission === t} onPress={() => setTransmission(t)} />
+          <Chip key={t} label={t[0].toUpperCase() + t.slice(1)} selected={transmission === t} onPress={() => setTransmission(t)} styles={styles} />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>Fuel Type *</Text>
       <View style={styles.chipRow}>
         {RENTAL_FUEL_TYPES.map((f) => (
-          <Chip key={f} label={f[0].toUpperCase() + f.slice(1)} selected={fuelType === f} onPress={() => setFuelType(f)} />
+          <Chip key={f} label={f[0].toUpperCase() + f.slice(1)} selected={fuelType === f} onPress={() => setFuelType(f)} styles={styles} />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>Drive Type</Text>
       <View style={styles.chipRow}>
         {RENTAL_DRIVE_TYPES.map((d) => (
-          <Chip key={d} label={d.toUpperCase()} selected={driveType === d} onPress={() => setDriveType(d)} />
+          <Chip key={d} label={d.toUpperCase()} selected={driveType === d} onPress={() => setDriveType(d)} styles={styles} />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>City / Location *</Text>
       <View style={styles.chipRow}>
         {cities.map((c) => (
-          <Chip key={c.slug} label={c.label} selected={citySlug === c.slug} onPress={() => setCitySlug(c.slug)} />
+          <Chip key={c.slug} label={c.label} selected={citySlug === c.slug} onPress={() => setCitySlug(c.slug)} styles={styles} />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>Pricing</Text>
       <Text style={styles.label}>Daily Rate (USD) *</Text>
-      <TextInput style={styles.input} value={dailyRate} onChangeText={setDailyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={dailyRate} onChangeText={setDailyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Weekly Rate</Text>
-          <TextInput style={styles.input} value={weeklyRate} onChangeText={setWeeklyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={weeklyRate} onChangeText={setWeeklyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Monthly Rate</Text>
-          <TextInput style={styles.input} value={monthlyRate} onChangeText={setMonthlyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={monthlyRate} onChangeText={setMonthlyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
         </View>
       </View>
       <Text style={styles.label}>Security Deposit</Text>
-      <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
       <Text style={styles.label}>Driver Rate / Day (leave blank for self-drive only)</Text>
-      <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
 
       <Text style={styles.label}>Description</Text>
       <TextInput
@@ -231,60 +244,66 @@ export default function RentalAddVehicleScreen() {
         value={description}
         onChangeText={setDescription}
         placeholder="Describe the vehicle condition, included accessories, rental terms..."
-        placeholderTextColor="#A1A1AA"
+        placeholderTextColor={tones.textMuted}
         multiline
         numberOfLines={4}
       />
 
       <Pressable style={[styles.primaryBtn, isSubmitting && styles.disabled]} onPress={submit} disabled={isSubmitting}>
-        {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryBtnText}>Create Vehicle</Text>}
+        {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Create Vehicle</Text>}
       </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  blockedTitle: { fontSize: 14, fontWeight: "700", color: "#52525B", marginBottom: 6, textAlign: "center" },
-  blockedBody: { fontSize: 12.5, color: "#A1A1AA", textAlign: "center", lineHeight: 18 },
-  sectionLabel: { fontSize: 13, fontWeight: "700", color: "#52525B", marginTop: 16, marginBottom: 8 },
-  label: { fontSize: 12, fontWeight: "700", color: "#52525B", marginBottom: 6, marginTop: 12 },
-  input: {
-    height: 46,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-  },
-  textarea: {
-    minHeight: 90,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 12,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-    textAlignVertical: "top",
-  },
-  row: { flexDirection: "row", gap: 10 },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    backgroundColor: "#ffffff",
-  },
-  chipSelected: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FF" },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#52525B" },
-  chipTextSelected: { color: BRAND_BLUE },
-  primaryBtn: { marginTop: 24, backgroundColor: BRAND_BLUE, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
-  primaryBtnText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  disabled: { opacity: 0.6 },
-});
+function buildTones(color: ColorPalette) {
+  return { textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+    blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 6, textAlign: "center" },
+    blockedBody: { fontSize: 12.5, color: color.textMuted, textAlign: "center", lineHeight: 18 },
+    sectionLabel: { fontSize: 13, fontWeight: "700", color: color.textSub, marginTop: 16, marginBottom: 8 },
+    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 12 },
+    input: {
+      height: 46,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+    },
+    textarea: {
+      minHeight: 90,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 12,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+      textAlignVertical: "top",
+    },
+    row: { flexDirection: "row", gap: 10 },
+    chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      backgroundColor: color.surface,
+    },
+    chipSelected: { borderColor: color.brand, backgroundColor: color.brandTint },
+    chipText: { fontSize: 13, fontWeight: "600", color: color.textSub },
+    chipTextSelected: { color: color.brand },
+    primaryBtn: { marginTop: 24, backgroundColor: color.brand, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
+    primaryBtnText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    disabled: { opacity: 0.6 },
+  });
+}

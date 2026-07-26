@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { BRAND_BLUE } from "../lib/constants";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 import { fetchActiveAds, subscribeToAds, trackAdClick, trackAdImpression, type PaidAd } from "../lib/ads";
 import { dismissAnnouncement, isAnnouncementDismissed } from "../lib/announcements";
 
@@ -9,6 +10,7 @@ import { dismissAnnouncement, isAnnouncementDismissed } from "../lib/announcemen
 // announcement card sourced from paid_ads (type='announcement'), dismissible
 // with a persisted "never show again" flag.
 export function AnnouncementModal() {
+  const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const [ad, setAd] = useState<PaidAd | null>(null);
   const trackedIdRef = { current: "" } as { current: string };
@@ -104,10 +106,11 @@ export function AnnouncementModal() {
   );
 }
 
-const styles = StyleSheet.create({
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: color.overlay,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
@@ -115,7 +118,7 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 380,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderRadius: 18,
     overflow: "hidden",
   },
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   header: {
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingVertical: 16,
     flexDirection: "row",
@@ -145,7 +148,7 @@ const styles = StyleSheet.create({
   headerLabel: {
     fontSize: 11,
     fontWeight: "800",
-    color: "rgba(255,255,255,0.75)",
+    color: color.textOnBrandSub,
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
@@ -158,7 +161,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   closeText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 18,
     lineHeight: 18,
   },
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
   kicker: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: color.textMuted,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -176,12 +179,12 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#1C2340",
+    color: color.text,
     lineHeight: 23,
   },
   tagline: {
     fontSize: 13.5,
-    color: "#5A6480",
+    color: color.textSub,
     marginTop: 7,
     lineHeight: 20,
   },
@@ -195,24 +198,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: color.surfaceAlt,
     alignItems: "center",
   },
   dismissText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: color.textSub,
   },
   viewBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     alignItems: "center",
   },
   viewText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#ffffff",
+    color: color.textOnBrand,
   },
-});
+  });
+}

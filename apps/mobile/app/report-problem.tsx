@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { BRAND_BLUE } from "../lib/constants";
 import { toast } from "../components/ui/Toast";
 import { bestMatch, CHIP_MAP, INIT_CHIPS } from "../lib/support-bot-kb";
+import { color, type ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 const HKEY = "pm_bot_h3";
 const WA = "https://wa.me/971589772645";
@@ -64,6 +65,7 @@ async function clearHistory() {
 }
 
 export default function ReportProblemScreen() {
+  const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chips, setChips] = useState<string[]>([]);
@@ -364,7 +366,7 @@ export default function ReportProblemScreen() {
           <TextInput
             style={styles.ticketInput}
             placeholder={ticketPrompt || undefined}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={color.textMuted}
             value={ticketText}
             onChangeText={setTicketText}
             multiline
@@ -399,7 +401,7 @@ export default function ReportProblemScreen() {
         <TextInput
           style={styles.textInput}
           placeholder="Type your question..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={color.textMuted}
           value={input}
           onChangeText={setInput}
           onSubmitEditing={handleSend}
@@ -413,13 +415,14 @@ export default function ReportProblemScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FC",
+    backgroundColor: color.bg,
   },
   header: {
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: "row",
@@ -435,7 +438,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   backButtonText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 22,
     lineHeight: 22,
   },
@@ -443,19 +446,19 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#3B6FE8",
+    backgroundColor: color.brand,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.25)",
   },
   avatarText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontWeight: "900",
     fontSize: 16,
   },
   headerTitle: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 15,
     fontWeight: "800",
   },
@@ -469,10 +472,10 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#4ADE80",
+    backgroundColor: color.online,
   },
   onlineText: {
-    color: "rgba(255,255,255,0.8)",
+    color: color.textOnBrandSub,
     fontSize: 11,
     fontWeight: "500",
   },
@@ -483,7 +486,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   clearButtonText: {
-    color: "rgba(255,255,255,0.85)",
+    color: color.textOnBrandSub,
     fontSize: 11,
     fontWeight: "600",
   },
@@ -503,17 +506,17 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarSmallText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontWeight: "900",
     fontSize: 12,
   },
   bubbleUser: {
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     borderRadius: 18,
     borderBottomRightRadius: 4,
     paddingHorizontal: 15,
@@ -521,21 +524,21 @@ const styles = StyleSheet.create({
     maxWidth: "82%",
   },
   bubbleUserText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 14,
     lineHeight: 21,
   },
   bubbleBot: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     borderRadius: 18,
     borderBottomLeftRadius: 4,
     paddingHorizontal: 15,
     paddingVertical: 11,
   },
   bubbleBotText: {
-    color: "#1C2340",
+    color: color.text,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -545,9 +548,9 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   feedbackButton: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -555,30 +558,30 @@ const styles = StyleSheet.create({
   feedbackButtonText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#5A6480",
+    color: color.textSub,
   },
   feedbackDone: {
     marginTop: 6,
     fontSize: 11,
-    color: "#6B7280",
+    color: color.textSub,
     fontWeight: "600",
   },
   typingBubble: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     borderRadius: 18,
     borderBottomLeftRadius: 4,
     paddingHorizontal: 18,
     paddingVertical: 13,
   },
   typingDots: {
-    color: "#9CA3AF",
+    color: color.textMuted,
     fontSize: 14,
   },
   contactHeading: {
     fontSize: 12,
-    color: "#9CA3AF",
+    color: color.textMuted,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.4,
@@ -589,93 +592,93 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   contactCardGreen: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#bbf7d0",
+    backgroundColor: color.successTint,
+    borderColor: color.success,
   },
   contactCardBlue: {
-    backgroundColor: "#EFF6FF",
-    borderColor: "#bfdbfe",
+    backgroundColor: color.infoTint,
+    borderColor: color.info,
   },
   contactCardTitleGreen: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#16a34a",
+    color: color.success,
   },
   contactCardTitleBlue: {
     fontSize: 13,
     fontWeight: "700",
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   contactCardSubtitle: {
     fontSize: 11,
-    color: "#6B7280",
+    color: color.textSub,
     marginTop: 2,
   },
   ticketForm: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     marginHorizontal: 14,
     marginBottom: 8,
     padding: 16,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
   },
   ticketLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#1C2340",
+    color: color.text,
     marginBottom: 10,
   },
   ticketInput: {
     minHeight: 90,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     borderRadius: 10,
     padding: 12,
     fontSize: 13,
-    color: "#1C2340",
-    backgroundColor: "#F5F7FC",
+    color: color.text,
+    backgroundColor: color.surfaceAlt,
     textAlignVertical: "top",
   },
   ticketSubmit: {
     marginTop: 10,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
   },
   ticketSubmitText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 14,
     fontWeight: "700",
   },
   chipRow: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderTopWidth: 1,
-    borderTopColor: "#E8EBF2",
+    borderTopColor: color.border,
     paddingVertical: 8,
     maxHeight: 52,
   },
   chip: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 7,
     justifyContent: "center",
   },
   chipHighlight: {
-    backgroundColor: "#EFF6FF",
-    borderColor: "#BFDBFE",
+    backgroundColor: color.infoTint,
+    borderColor: color.info,
   },
   chipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#374151",
+    color: color.textSub,
   },
   chipTextHighlight: {
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   inputBar: {
     flexDirection: "row",
@@ -684,31 +687,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     paddingBottom: 22,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderTopWidth: 1,
-    borderTopColor: "#E8EBF2",
+    borderTopColor: color.border,
   },
   textInput: {
     flex: 1,
-    backgroundColor: "#F5F7FC",
+    backgroundColor: color.surfaceAlt,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     borderRadius: 22,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#1C2340",
+    color: color.text,
   },
   sendButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     alignItems: "center",
     justifyContent: "center",
   },
   sendButtonText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 16,
   },
-});
+  });
+}

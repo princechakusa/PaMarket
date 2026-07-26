@@ -130,6 +130,15 @@ export default function EditListingScreen() {
     update({ photos: next });
   }
 
+  function movePhoto(index: number, direction: "left" | "right") {
+    if (!state) return;
+    const target = direction === "left" ? index - 1 : index + 1;
+    if (target < 0 || target >= state.photos.length) return;
+    const next = [...state.photos];
+    [next[index], next[target]] = [next[target], next[index]];
+    update({ photos: next });
+  }
+
   async function save() {
     if (!state || isSubmitting || !session?.user || !id) return;
     if (!state.category) return setError("Category is required");
@@ -303,6 +312,7 @@ export default function EditListingScreen() {
             onPickCamera={() => pickPhotos("camera")}
             onRemove={removePhoto}
             onSetCover={setCoverPhoto}
+            onMove={movePhoto}
             isProcessing={isProcessingPhotos}
           />
         </Card>

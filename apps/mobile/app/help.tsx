@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import { BRAND_BLUE } from "../lib/constants";
 import { TERMS, PRIVACY, type LegalDoc } from "../lib/legal";
 import { LegalDocSheet } from "../components/LegalDocSheet";
+import { color, type ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 const WHATSAPP_URL = "https://wa.me/971589772645";
 const EMAIL_URL = "mailto:support@pamarketzw.com";
@@ -77,7 +78,9 @@ const HELP_FAQS: Faq[] = [
 
 const HELP_GROUPS = ["Getting started", "Managing listings", "Buying & safety", "Jobs & account"];
 
-function FaqItem({ faq }: { faq: Faq }) {
+type Styles = ReturnType<typeof buildStyles>;
+
+function FaqItem({ faq, styles }: { faq: Faq; styles: Styles }) {
   const [open, setOpen] = useState(false);
   return (
     <Pressable style={styles.faqItem} onPress={() => setOpen((o) => !o)}>
@@ -91,6 +94,7 @@ function FaqItem({ faq }: { faq: Faq }) {
 }
 
 export default function HelpScreen() {
+  const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
   const [query, setQuery] = useState("");
@@ -126,7 +130,7 @@ export default function HelpScreen() {
         <TextInput
           style={styles.search}
           placeholder="Search help articles"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={color.textMuted}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
@@ -180,7 +184,7 @@ export default function HelpScreen() {
             <Text style={styles.faqGroupLabel}>{g}</Text>
             <View style={styles.faqStack}>
               {items.map((faq) => (
-                <FaqItem key={faq.q} faq={faq} />
+                <FaqItem key={faq.q} faq={faq} styles={styles} />
               ))}
             </View>
           </View>
@@ -188,8 +192,8 @@ export default function HelpScreen() {
       )}
 
       <View style={styles.group}>
-        <Row label="Terms of Service" onPress={() => setLegalDoc(TERMS)} />
-        <Row label="Privacy Policy" onPress={() => setLegalDoc(PRIVACY)} />
+        <Row label="Terms of Service" onPress={() => setLegalDoc(TERMS)} styles={styles} />
+        <Row label="Privacy Policy" onPress={() => setLegalDoc(PRIVACY)} styles={styles} />
       </View>
 
       <View style={styles.contactDock}>
@@ -212,7 +216,7 @@ export default function HelpScreen() {
   );
 }
 
-function Row({ label, onPress }: { label: string; onPress: () => void }) {
+function Row({ label, onPress, styles }: { label: string; onPress: () => void; styles: Styles }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -221,10 +225,11 @@ function Row({ label, onPress }: { label: string; onPress: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6F9",
+    backgroundColor: color.bg,
   },
   hero: {
     paddingHorizontal: 16,
@@ -240,37 +245,37 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#22C55E",
+    backgroundColor: color.online,
   },
   onlineText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#16A34A",
+    color: color.success,
   },
   heroTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: color.text,
     marginBottom: 6,
   },
   heroSubtitle: {
     fontSize: 13,
-    color: "#6B7280",
+    color: color.textSub,
     lineHeight: 19,
     marginBottom: 14,
   },
   search: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
-    color: "#111827",
+    color: color.text,
   },
   humanCard: {
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     marginHorizontal: 16,
     marginTop: 18,
     borderRadius: 16,
@@ -279,11 +284,11 @@ const styles = StyleSheet.create({
   humanTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#ffffff",
+    color: color.textOnBrand,
   },
   humanSubtitle: {
     fontSize: 12.5,
-    color: "rgba(255,255,255,0.8)",
+    color: color.textOnBrandSub,
     marginTop: 4,
     marginBottom: 14,
   },
@@ -299,17 +304,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.12)",
   },
   humanButtonPrimary: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
   },
   humanButtonPrimaryText: {
     fontSize: 13,
     fontWeight: "700",
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   humanButtonText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#ffffff",
+    color: color.textOnBrand,
   },
   faqHeadingRow: {
     flexDirection: "row",
@@ -322,11 +327,11 @@ const styles = StyleSheet.create({
   faqHeading: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#111827",
+    color: color.text,
   },
   faqCount: {
     fontSize: 12,
-    color: "#8A93A6",
+    color: color.textMuted,
   },
   filterRow: {
     marginBottom: 14,
@@ -335,21 +340,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderWidth: 1.5,
-    borderColor: "#E8EBF2",
+    borderColor: color.border,
   },
   filterChipActive: {
-    backgroundColor: BRAND_BLUE,
-    borderColor: BRAND_BLUE,
+    backgroundColor: color.brand,
+    borderColor: color.brand,
   },
   filterChipText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#374151",
+    color: color.textSub,
   },
   filterChipTextActive: {
-    color: "#ffffff",
+    color: color.textOnBrand,
   },
   faqGroup: {
     marginBottom: 18,
@@ -357,14 +362,14 @@ const styles = StyleSheet.create({
   faqGroupLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#8A93A6",
+    color: color.textMuted,
     textTransform: "uppercase",
     letterSpacing: 0.4,
     marginHorizontal: 16,
     marginBottom: 8,
   },
   faqStack: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     marginHorizontal: 16,
     borderRadius: 14,
     overflow: "hidden",
@@ -373,7 +378,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
+    borderBottomColor: color.divider,
   },
   faqQuestionRow: {
     flexDirection: "row",
@@ -385,19 +390,19 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13.5,
     fontWeight: "600",
-    color: "#111827",
+    color: color.text,
   },
   faqChevron: {
     fontSize: 16,
-    color: "#8A93A6",
+    color: color.textMuted,
   },
   faqChevronOpen: {
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   faqAnswer: {
     marginTop: 10,
     fontSize: 13,
-    color: "#5A6480",
+    color: color.textSub,
     lineHeight: 20,
   },
   emptyState: {
@@ -408,16 +413,16 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: color.text,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: 12.5,
-    color: "#8A93A6",
+    color: color.textMuted,
     textAlign: "center",
   },
   group: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 14,
@@ -430,19 +435,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
+    borderBottomColor: color.divider,
   },
   rowLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: color.text,
   },
   rowChevron: {
     fontSize: 18,
-    color: "#C4C9D4",
+    color: color.textMuted,
   },
   contactDock: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 14,
@@ -455,15 +460,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
+    borderBottomColor: color.divider,
   },
   contactLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: BRAND_BLUE,
+    color: color.brand,
   },
   contactValue: {
     fontSize: 12,
-    color: "#8A93A6",
+    color: color.textMuted,
   },
-});
+  });
+}

@@ -4,13 +4,16 @@ import { useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { uploadVerificationDoc } from "../../lib/verification";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const PHONE_RE = /^(\+263|0)[0-9]{9}$/;
+
+type Styles = ReturnType<typeof buildStyles>;
 
 function StepCard({
   number,
@@ -19,6 +22,7 @@ function StepCard({
   title,
   subtitle,
   children,
+  styles,
 }: {
   number: number;
   done: boolean;
@@ -26,6 +30,7 @@ function StepCard({
   title: string;
   subtitle: string;
   children?: React.ReactNode;
+  styles: Styles;
 }) {
   return (
     <View style={[styles.step, active && styles.stepActive]}>
@@ -49,6 +54,8 @@ function StepCard({
 export default function BusinessVerifyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
@@ -76,7 +83,7 @@ export default function BusinessVerifyScreen() {
   if (isLoading || isOwner === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -149,7 +156,7 @@ export default function BusinessVerifyScreen() {
         </View>
       ) : null}
 
-      <StepCard number={1} done={level >= 1} active={level < 1 && phoneOk} title="Phone Verified" subtitle={phoneOk ? business.phone || "" : "Add a valid phone in your profile first."}>
+      <StepCard number={1} done={level >= 1} active={level < 1 && phoneOk} title="Phone Verified" subtitle={phoneOk ? business.phone || "" : "Add a valid phone in your profile first."} styles={styles}>
         {level < 1 && phoneOk ? (
           <Pressable style={styles.confirmButton} onPress={confirmPhone}>
             <Text style={styles.confirmButtonText}>Confirm phone</Text>
@@ -157,7 +164,7 @@ export default function BusinessVerifyScreen() {
         ) : null}
       </StepCard>
 
-      <StepCard number={2} done={level >= 2} active={level === 1} title="Owner ID Verified" subtitle="National ID or passport of the owner.">
+      <StepCard number={2} done={level >= 2} active={level === 1} title="Owner ID Verified" subtitle="National ID or passport of the owner." styles={styles}>
         {level < 2 ? (
           <>
             <Pressable style={styles.uploadButton} onPress={() => pickImage("id")}>
@@ -168,7 +175,7 @@ export default function BusinessVerifyScreen() {
         ) : null}
       </StepCard>
 
-      <StepCard number={3} done={level >= 3} active={level === 2} title="Business Document" subtitle="Certificate of incorporation / registration.">
+      <StepCard number={3} done={level >= 3} active={level === 2} title="Business Document" subtitle="Certificate of incorporation / registration." styles={styles}>
         {level < 3 ? (
           <>
             <Pressable style={styles.uploadButton} onPress={() => pickImage("reg")}>
@@ -192,33 +199,39 @@ export default function BusinessVerifyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  hero: { backgroundColor: BRAND_BLUE, borderRadius: 18, padding: 20, marginBottom: 18 },
-  heroTitle: { fontSize: 18, fontWeight: "800", color: "#ffffff" },
-  heroSub: { fontSize: 12.5, color: "rgba(255,255,255,0.8)", marginTop: 4 },
-  pendingBanner: { backgroundColor: "#FFF8EC", borderRadius: 14, padding: 14, marginBottom: 14 },
-  pendingBannerText: { fontSize: 13, color: "#92400E" },
-  step: { backgroundColor: "#ffffff", borderWidth: 1, borderColor: "#E8ECF4", borderRadius: 16, padding: 16, marginBottom: 12 },
-  stepActive: { borderColor: "#C7D6F5" },
-  stepRow: { flexDirection: "row", gap: 13, alignItems: "flex-start" },
-  stepBadge: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  stepBadgeDone: { backgroundColor: "#16A34A" },
-  stepBadgeActive: { backgroundColor: BRAND_BLUE },
-  stepBadgeIdle: { backgroundColor: "#EEF2FB" },
-  stepCheck: { color: "#ffffff", fontWeight: "800" },
-  stepNumber: { color: "#94A3B8", fontWeight: "800" },
-  stepTitle: { fontSize: 15, fontWeight: "800", color: "#111827" },
-  stepSub: { fontSize: 12.5, color: "#8A93A6", marginTop: 3, lineHeight: 18 },
-  confirmButton: { marginTop: 10, backgroundColor: BRAND_BLUE, borderRadius: 11, paddingHorizontal: 16, paddingVertical: 10, alignSelf: "flex-start" },
-  confirmButtonText: { color: "#ffffff", fontSize: 13, fontWeight: "700" },
-  uploadButton: { marginTop: 10, backgroundColor: "#EEF2FB", borderRadius: 11, paddingHorizontal: 16, paddingVertical: 10, alignSelf: "flex-start" },
-  uploadButtonText: { color: BRAND_BLUE, fontSize: 13, fontWeight: "700" },
-  preview: { width: 220, height: 140, borderRadius: 12, marginTop: 10 },
-  submitButton: { backgroundColor: BRAND_BLUE, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
-  buttonDisabled: { opacity: 0.6 },
-  submitButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  noticeBox: { flexDirection: "row", backgroundColor: "#EEF2FB", borderRadius: 14, padding: 14, marginTop: 16 },
-  noticeText: { fontSize: 12, color: "#8A93A6", lineHeight: 18 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    hero: { backgroundColor: color.brand, borderRadius: 18, padding: 20, marginBottom: 18 },
+    heroTitle: { fontSize: 18, fontWeight: "800", color: color.textOnBrand },
+    heroSub: { fontSize: 12.5, color: color.textOnBrandSub, marginTop: 4 },
+    pendingBanner: { backgroundColor: color.goldTint, borderRadius: 14, padding: 14, marginBottom: 14 },
+    pendingBannerText: { fontSize: 13, color: color.goldDark },
+    step: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: 16, padding: 16, marginBottom: 12 },
+    stepActive: { borderColor: color.brandTintStrong },
+    stepRow: { flexDirection: "row", gap: 13, alignItems: "flex-start" },
+    stepBadge: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+    stepBadgeDone: { backgroundColor: color.success },
+    stepBadgeActive: { backgroundColor: color.brand },
+    stepBadgeIdle: { backgroundColor: color.brandTint },
+    stepCheck: { color: color.textOnBrand, fontWeight: "800" },
+    stepNumber: { color: color.textMuted, fontWeight: "800" },
+    stepTitle: { fontSize: 15, fontWeight: "800", color: color.text },
+    stepSub: { fontSize: 12.5, color: color.textMuted, marginTop: 3, lineHeight: 18 },
+    confirmButton: { marginTop: 10, backgroundColor: color.brand, borderRadius: 11, paddingHorizontal: 16, paddingVertical: 10, alignSelf: "flex-start" },
+    confirmButtonText: { color: color.textOnBrand, fontSize: 13, fontWeight: "700" },
+    uploadButton: { marginTop: 10, backgroundColor: color.brandTint, borderRadius: 11, paddingHorizontal: 16, paddingVertical: 10, alignSelf: "flex-start" },
+    uploadButtonText: { color: color.brand, fontSize: 13, fontWeight: "700" },
+    preview: { width: 220, height: 140, borderRadius: 12, marginTop: 10 },
+    submitButton: { backgroundColor: color.brand, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
+    buttonDisabled: { opacity: 0.6 },
+    submitButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    noticeBox: { flexDirection: "row", backgroundColor: color.brandTint, borderRadius: 14, padding: 14, marginTop: 16 },
+    noticeText: { fontSize: 12, color: color.textMuted, lineHeight: 18 },
+  });
+}

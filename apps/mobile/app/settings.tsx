@@ -4,33 +4,50 @@ import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { clearPushToken } from "../lib/push";
-import { BRAND_BLUE } from "../lib/constants";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
-function ChevronRight() {
+type Styles = ReturnType<typeof buildStyles>;
+
+function ChevronRight({ color }: { color: string }) {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#C4C9D4" strokeWidth={2.5}>
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.5}>
       <Polyline points="9 18 15 12 9 6" />
     </Svg>
   );
 }
 
-function Row({ label, value, onPress }: { label: string; value?: string; onPress: () => void }) {
+function Row({
+  label,
+  value,
+  onPress,
+  styles,
+  chevronColor,
+}: {
+  label: string;
+  value?: string;
+  onPress: () => void;
+  styles: Styles;
+  chevronColor: string;
+}) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <Text style={styles.rowLabel}>{label}</Text>
       <View style={styles.rowRight}>
         {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-        <ChevronRight />
+        <ChevronRight color={chevronColor} />
       </View>
     </Pressable>
   );
 }
 
-function SectionLabel({ children }: { children: string }) {
+function SectionLabel({ children, styles }: { children: string; styles: Styles }) {
   return <Text style={styles.sectionLabel}>{children}</Text>;
 }
 
 export default function SettingsScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const { session } = useAuth();
 
@@ -51,36 +68,52 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <SectionLabel>Appearance</SectionLabel>
+      <SectionLabel styles={styles}>Appearance</SectionLabel>
       <View style={styles.group}>
-        <Row label="Theme" onPress={() => router.push("/theme-settings")} />
+        <Row label="Theme" onPress={() => router.push("/theme-settings")} styles={styles} chevronColor={tones.chevron} />
       </View>
 
-      <SectionLabel>Notifications</SectionLabel>
+      <SectionLabel styles={styles}>Notifications</SectionLabel>
       <View style={styles.group}>
-        <Row label="Notification Preferences" onPress={() => router.push("/notification-preferences")} />
+        <Row
+          label="Notification Preferences"
+          onPress={() => router.push("/notification-preferences")}
+          styles={styles}
+          chevronColor={tones.chevron}
+        />
       </View>
 
-      <SectionLabel>Account &amp; Privacy</SectionLabel>
+      <SectionLabel styles={styles}>Account &amp; Privacy</SectionLabel>
       <View style={styles.group}>
-        <Row label="Privacy Settings" onPress={() => router.push("/privacy-settings")} />
-        <Row label="Change Password" onPress={() => router.push("/change-password")} />
-        <Row label="Two-Factor Authentication" onPress={() => router.push("/two-factor-setup")} />
-        <Row label="Active Sessions" onPress={() => router.push("/active-sessions")} />
-        <Row label="Language" value="English" onPress={() => router.push("/language-settings")} />
-        <Row label="Delete Account" onPress={() => router.push("/delete-account")} />
+        <Row label="Privacy Settings" onPress={() => router.push("/privacy-settings")} styles={styles} chevronColor={tones.chevron} />
+        <Row label="Change Password" onPress={() => router.push("/change-password")} styles={styles} chevronColor={tones.chevron} />
+        <Row
+          label="Two-Factor Authentication"
+          onPress={() => router.push("/two-factor-setup")}
+          styles={styles}
+          chevronColor={tones.chevron}
+        />
+        <Row label="Active Sessions" onPress={() => router.push("/active-sessions")} styles={styles} chevronColor={tones.chevron} />
+        <Row
+          label="Language"
+          value="English"
+          onPress={() => router.push("/language-settings")}
+          styles={styles}
+          chevronColor={tones.chevron}
+        />
+        <Row label="Delete Account" onPress={() => router.push("/delete-account")} styles={styles} chevronColor={tones.chevron} />
       </View>
 
-      <SectionLabel>Activity</SectionLabel>
+      <SectionLabel styles={styles}>Activity</SectionLabel>
       <View style={styles.group}>
-        <Row label="My Activity" onPress={() => router.push("/my-activity")} />
-        <Row label="Blocked Users" onPress={() => router.push("/blocked-users")} />
+        <Row label="My Activity" onPress={() => router.push("/my-activity")} styles={styles} chevronColor={tones.chevron} />
+        <Row label="Blocked Users" onPress={() => router.push("/blocked-users")} styles={styles} chevronColor={tones.chevron} />
       </View>
 
-      <SectionLabel>Legal</SectionLabel>
+      <SectionLabel styles={styles}>Legal</SectionLabel>
       <View style={styles.group}>
-        <Row label="Legal Hub" onPress={() => router.push("/legal-hub")} />
-        <Row label="About PaMarket" value="v1.29.0" onPress={() => router.push("/about")} />
+        <Row label="Legal Hub" onPress={() => router.push("/legal-hub")} styles={styles} chevronColor={tones.chevron} />
+        <Row label="About PaMarket" value="v1.29.0" onPress={() => router.push("/about")} styles={styles} chevronColor={tones.chevron} />
       </View>
 
       <Pressable style={styles.signOutButton} onPress={signOut}>
@@ -90,62 +123,68 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F6F9",
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#8A93A6",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-    marginTop: 20,
-    marginBottom: 8,
-    marginHorizontal: 16,
-  },
-  group: {
-    backgroundColor: "#ffffff",
-    marginHorizontal: 16,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
-  },
-  rowLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  rowRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  rowValue: {
-    fontSize: 13,
-    color: "#8A93A6",
-  },
-  signOutButton: {
-    marginHorizontal: 16,
-    marginTop: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#F3D6D3",
-    alignItems: "center",
-  },
-  signOutButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#C0392B",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { chevron: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+    },
+    sectionLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: color.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+      marginTop: 20,
+      marginBottom: 8,
+      marginHorizontal: 16,
+    },
+    group: {
+      backgroundColor: color.surface,
+      marginHorizontal: 16,
+      borderRadius: 14,
+      overflow: "hidden",
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: color.divider,
+    },
+    rowLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.text,
+    },
+    rowRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    rowValue: {
+      fontSize: 13,
+      color: color.textMuted,
+    },
+    signOutButton: {
+      marginHorizontal: 16,
+      marginTop: 24,
+      paddingVertical: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: color.dangerTint,
+      alignItems: "center",
+    },
+    signOutButtonText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.danger,
+    },
+  });
+}

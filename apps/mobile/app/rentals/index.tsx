@@ -4,18 +4,21 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
-import { BRAND_BLUE, BRAND_GOLD } from "../../lib/constants";
 import { brandLabel, categoryLabel, type RentalListingSummary } from "../../lib/rentals";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
-function BackIcon() {
+function BackIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
 
 export default function RentalsListScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [vehicles, setVehicles] = useState<RentalListingSummary[]>([]);
@@ -50,7 +53,7 @@ export default function RentalsListScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
+          <BackIcon stroke={tones.textOnBrand} />
         </Pressable>
         <Text style={styles.headerTitle}>Rentals</Text>
         <View style={{ width: 20 }} />
@@ -58,7 +61,7 @@ export default function RentalsListScreen() {
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={BRAND_BLUE} />
+          <ActivityIndicator color={tones.brand} />
         </View>
       ) : error ? (
         <View style={styles.centered}>
@@ -120,122 +123,128 @@ export default function RentalsListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F6F9",
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: "#8A93A6",
-  },
-  errorText: {
-    fontSize: 13,
-    color: "#C0392B",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: BRAND_BLUE,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  listContent: {
-    padding: 12,
-  },
-  row: {
-    gap: 10,
-  },
-  card: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 18,
-    overflow: "hidden",
-    marginBottom: 12,
-  },
-  photoWrap: {
-    width: "100%",
-    aspectRatio: 1.6,
-    position: "relative",
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-  },
-  photoPlaceholder: {
-    backgroundColor: "#E4E7EF",
-  },
-  featuredBadge: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    backgroundColor: BRAND_GOLD,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  featuredBadgeText: {
-    fontSize: 9,
-    fontWeight: "800",
-    color: "#ffffff",
-  },
-  availabilityPill: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
-    backgroundColor: "rgba(34,197,94,0.9)",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  availabilityPillBusy: {
-    backgroundColor: "rgba(239,68,68,0.9)",
-  },
-  availabilityPillText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#ffffff",
-  },
-  cardBody: {
-    padding: 10,
-    gap: 2,
-  },
-  cardTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  vehicleName: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  price: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: BRAND_BLUE,
-  },
-  meta: {
-    fontSize: 11,
-    color: "#8A93A6",
-    marginTop: 2,
-  },
-  company: {
-    fontSize: 11,
-    color: "#5A6478",
-    marginTop: 4,
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+    },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 60,
+    },
+    emptyText: {
+      fontSize: 13,
+      color: color.textMuted,
+    },
+    errorText: {
+      fontSize: 13,
+      color: color.danger,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: color.brand,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    headerTitle: {
+      fontSize: 17,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+    listContent: {
+      padding: 12,
+    },
+    row: {
+      gap: 10,
+    },
+    card: {
+      flex: 1,
+      backgroundColor: color.surface,
+      borderRadius: 18,
+      overflow: "hidden",
+      marginBottom: 12,
+    },
+    photoWrap: {
+      width: "100%",
+      aspectRatio: 1.6,
+      position: "relative",
+    },
+    photo: {
+      width: "100%",
+      height: "100%",
+    },
+    photoPlaceholder: {
+      backgroundColor: color.skeleton,
+    },
+    featuredBadge: {
+      position: "absolute",
+      top: 8,
+      left: 8,
+      backgroundColor: color.gold,
+      borderRadius: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    featuredBadgeText: {
+      fontSize: 9,
+      fontWeight: "800",
+      color: color.textOnBrand,
+    },
+    availabilityPill: {
+      position: "absolute",
+      bottom: 8,
+      left: 8,
+      backgroundColor: "rgba(34,197,94,0.9)",
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    availabilityPillBusy: {
+      backgroundColor: "rgba(239,68,68,0.9)",
+    },
+    availabilityPillText: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+    cardBody: {
+      padding: 10,
+      gap: 2,
+    },
+    cardTopRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    vehicleName: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+    },
+    price: {
+      fontSize: 12,
+      fontWeight: "800",
+      color: color.brand,
+    },
+    meta: {
+      fontSize: 11,
+      color: color.textMuted,
+      marginTop: 2,
+    },
+    company: {
+      fontSize: 11,
+      color: color.textSub,
+      marginTop: 4,
+    },
+  });
+}

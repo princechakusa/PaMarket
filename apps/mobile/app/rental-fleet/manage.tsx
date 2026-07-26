@@ -3,23 +3,34 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Rect, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { RentalFleetVehicle } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 type Tab = "all" | "active" | "paused" | "draft";
 
-const STATUS_STYLES: Record<string, { fg: string; bg: string; label: string }> = {
-  active: { fg: "#12B76A", bg: "#ECFDF5", label: "Active" },
-  paused: { fg: "#92400E", bg: "#FEF3C7", label: "Paused" },
-  draft: { fg: "#A1A1AA", bg: "#F4F4F5", label: "Draft" },
-  archived: { fg: "#A1A1AA", bg: "#F4F4F5", label: "Archived" },
-};
+function buildStatusStyles(color: ColorPalette): Record<string, { fg: string; bg: string; label: string }> {
+  return {
+    active: { fg: color.success, bg: color.successTint, label: "Active" },
+    paused: { fg: color.warning, bg: color.warningTint, label: "Paused" },
+    draft: { fg: color.textMuted, bg: color.surfaceAlt, label: "Draft" },
+    archived: { fg: color.textMuted, bg: color.surfaceAlt, label: "Archived" },
+  };
+}
 
-function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLES[status] || STATUS_STYLES.draft;
+function StatusPill({
+  status,
+  styles,
+  statusStyles,
+}: {
+  status: string;
+  styles: ReturnType<typeof buildStyles>;
+  statusStyles: Record<string, { fg: string; bg: string; label: string }>;
+}) {
+  const s = statusStyles[status] || statusStyles.draft;
   return (
     <View style={[styles.pill, { backgroundColor: s.bg }]}>
       <Text style={[styles.pillText, { color: s.fg }]}>{s.label}</Text>
@@ -27,9 +38,9 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function CarPlaceholderIcon() {
+function CarPlaceholderIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth={1.5}>
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={1.5}>
       <Rect x="1" y="3" width="22" height="13" rx="2" />
       <Path d="M8 21h8M12 17v4" />
     </Svg>
@@ -39,6 +50,9 @@ function CarPlaceholderIcon() {
 // Mirrors www/js/rentals-business.js H.pages.RentalManageFleet — owner's
 // vehicle list with status tabs, search, and per-vehicle actions.
 export default function RentalManageFleetScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
+  const statusStyles = useThemedStyles(buildStatusStyles);
   const { bizId } = useLocalSearchParams<{ bizId: string }>();
   const router = useRouter();
 
@@ -186,7 +200,7 @@ export default function RentalManageFleetScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -217,7 +231,7 @@ export default function RentalManageFleetScreen() {
           value={query}
           onChangeText={setQuery}
           placeholder="Search fleet..."
-          placeholderTextColor="#A1A1AA"
+          placeholderTextColor={tones.textMuted}
         />
       </View>
 
@@ -230,7 +244,7 @@ export default function RentalManageFleetScreen() {
               onPress={() => (canWrite ? showActions(v) : undefined)}
             >
               <View style={styles.thumbWrap}>
-                {v.cover_url ? <Image source={{ uri: v.cover_url }} style={styles.thumb} /> : <CarPlaceholderIcon />}
+                {v.cover_url ? <Image source={{ uri: v.cover_url }} style={styles.thumb} /> : <CarPlaceholderIcon stroke={tones.textMuted} />}
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.vehicleTitle} numberOfLines={1}>
@@ -238,7 +252,7 @@ export default function RentalManageFleetScreen() {
                 </Text>
                 <View style={styles.vehicleMetaRow}>
                   <Text style={styles.vehiclePrice}>${(v.daily_rate ?? 0).toLocaleString()}/day</Text>
-                  <StatusPill status={v.status} />
+                  <StatusPill status={v.status} styles={styles} statusStyles={statusStyles} />
                 </View>
               </View>
             </Pressable>
@@ -263,69 +277,75 @@ export default function RentalManageFleetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  blockedBox: {
-    margin: 16,
-    backgroundColor: "#F9F9FB",
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 16,
-    alignItems: "center",
-  },
-  blockedTitle: { fontSize: 14, fontWeight: "700", color: "#52525B", marginBottom: 4 },
-  blockedBody: { fontSize: 12, color: "#A1A1AA", textAlign: "center", lineHeight: 17 },
-  tabRow: { flexDirection: "row", backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#E4E4E7" },
-  tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
-  tabText: { fontSize: 12.5, fontWeight: "600", color: "#A1A1AA" },
-  tabTextActive: { fontWeight: "800", color: BRAND_BLUE },
-  tabUnderline: { height: 2.5, backgroundColor: BRAND_BLUE, width: "60%", borderRadius: 2, marginTop: 6 },
-  searchWrap: { padding: 10, paddingHorizontal: 16, backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#E4E4E7" },
-  searchInput: {
-    height: 38,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    fontSize: 13,
-    color: "#18181B",
-  },
-  vehicleRow: {
-    flexDirection: "row",
-    gap: 12,
-    padding: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E4E4E7",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-  },
-  thumbWrap: {
-    width: 72,
-    height: 52,
-    borderRadius: 10,
-    backgroundColor: "#E8ECF4",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  thumb: { width: "100%", height: "100%" },
-  vehicleTitle: { fontSize: 14, fontWeight: "700", color: "#18181B" },
-  vehicleYear: { fontWeight: "500", color: "#A1A1AA" },
-  vehicleMetaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
-  vehiclePrice: { fontSize: 14, fontWeight: "800", color: BRAND_BLUE },
-  pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  pillText: { fontSize: 11, fontWeight: "700" },
-  fab: {
-    position: "absolute",
-    right: 16,
-    bottom: 20,
-    backgroundColor: BRAND_BLUE,
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  fabText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    blockedBox: {
+      margin: 16,
+      backgroundColor: color.surfaceAlt,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 16,
+      alignItems: "center",
+    },
+    blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 4 },
+    blockedBody: { fontSize: 12, color: color.textMuted, textAlign: "center", lineHeight: 17 },
+    tabRow: { flexDirection: "row", backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
+    tabText: { fontSize: 12.5, fontWeight: "600", color: color.textMuted },
+    tabTextActive: { fontWeight: "800", color: color.brand },
+    tabUnderline: { height: 2.5, backgroundColor: color.brand, width: "60%", borderRadius: 2, marginTop: 6 },
+    searchWrap: { padding: 10, paddingHorizontal: 16, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    searchInput: {
+      height: 38,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      fontSize: 13,
+      color: color.text,
+    },
+    vehicleRow: {
+      flexDirection: "row",
+      gap: 12,
+      padding: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+      alignItems: "center",
+      backgroundColor: color.surface,
+    },
+    thumbWrap: {
+      width: 72,
+      height: 52,
+      borderRadius: 10,
+      backgroundColor: color.skeleton,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    thumb: { width: "100%", height: "100%" },
+    vehicleTitle: { fontSize: 14, fontWeight: "700", color: color.text },
+    vehicleYear: { fontWeight: "500", color: color.textMuted },
+    vehicleMetaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+    vehiclePrice: { fontSize: 14, fontWeight: "800", color: color.brand },
+    pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+    pillText: { fontSize: 11, fontWeight: "700" },
+    fab: {
+      position: "absolute",
+      right: 16,
+      bottom: 20,
+      backgroundColor: color.brand,
+      borderRadius: 24,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    fabText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+  });
+}

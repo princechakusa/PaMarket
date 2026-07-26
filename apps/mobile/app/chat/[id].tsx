@@ -5,9 +5,9 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -20,7 +20,16 @@ import * as ImagePicker from "expo-image-picker";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { displayText, otherMember, replyQuote, type ConversationRow, type MessageRow } from "../../lib/messages";
+import {
+  displayText,
+  getLocallyHiddenIds,
+  hideMessageLocally,
+  lastSeenLabel,
+  otherMember,
+  replyQuote,
+  type ConversationRow,
+  type MessageRow,
+} from "../../lib/messages";
 import type { Profile } from "../../lib/profiles";
 import { formatPrice } from "../../lib/listings";
 import { chatSafetyHint, REPORT_REASONS } from "../../lib/safety";
@@ -31,6 +40,13 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { Avatar, ListSkeleton, toast } from "../../components/ui";
 
 const EDIT_WINDOW_MS = 7 * 60 * 1000;
+
+type ForwardCandidate = {
+  conversationId: string;
+  otherId: string;
+  name: string;
+  avatar: string | null;
+};
 
 type ListingContext = {
   id: string;
@@ -103,6 +119,10 @@ export default function ChatScreen() {
   const [editTarget, setEditTarget] = useState<MessageRow | null>(null);
   const [otherOnline, setOtherOnline] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [forwardTarget, setForwardTarget] = useState<MessageRow | null>(null);
+  const [forwardCandidates, setForwardCandidates] = useState<ForwardCandidate[]>([]);
+  const [forwardLoading, setForwardLoading] = useState(false);
   const styles = useThemedStyles(buildStyles);
   const themeColor = useThemedStyles((c) => c);
   const listRef = useRef<any>(null);
@@ -111,6 +131,11 @@ export default function ChatScreen() {
   const otherId = useMemo(
     () => (conversation && myId ? otherMember(conversation, myId) ?? null : null),
     [conversation, myId]
+  );
+
+  const visibleMessages = useMemo(
+    () => (hiddenIds.size ? messages.filter((m) => !hiddenIds.has(m.id)) : messages),
+    [messages, hiddenIds]
   );
 
   const load = useCallback(async () => {
@@ -123,7 +148,7 @@ export default function ChatScreen() {
     if (oId) {
       const { data: profile } = await supabase
         .from("profiles_public")
-        .select("id,name,avatar,verified")
+        .select("id,name,avatar,verified,last_seen")
         .eq("id", oId)
         .maybeSingle();
       setOtherProfile((profile as Profile) ?? null);
@@ -164,6 +189,17 @@ export default function ChatScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  useEffect(() => {
+    if (!id) return;
+    getLocallyHiddenIds(id).then(setHiddenIds);
+  }, [id]);
+
+  async function deleteMessageForMe(target: MessageRow) {
+    if (!id) return;
+    const next = await hideMessageLocally(id, target.id);
+    setHiddenIds(new Set(next));
+  }
 
   // Realtime INSERT + UPDATE (read receipts / edits / deletes reflect live).
   useEffect(() => {
@@ -289,8 +325,50 @@ export default function ChatScreen() {
     toast("Copied to clipboard");
   }
 
-  async function forwardMessage(target: MessageRow) {
-    await Share.share({ message: displayText(target.text) || "" });
+  async function openForwardPicker(target: MessageRow) {
+    setForwardTarget(target);
+    if (!myId) return;
+    setForwardLoading(true);
+    try {
+      const { data: conversations } = await supabase
+        .from("conversations")
+        .select("id,members,listing_id")
+        .contains("members", [myId]);
+      const rows = ((conversations as ConversationRow[]) ?? []).filter((c) => c.id !== id);
+      const otherIds = Array.from(
+        new Set(rows.map((c) => otherMember(c, myId)).filter((oid): oid is string => !!oid))
+      );
+      const { data: profiles } = otherIds.length
+        ? await supabase.from("profiles_public").select("id,name,avatar").in("id", otherIds)
+        : { data: [] as Profile[] };
+      const profilesById = new Map((profiles as Profile[] | null ?? []).map((p) => [p.id, p]));
+      const candidates: ForwardCandidate[] = rows
+        .map((c) => {
+          const oId = otherMember(c, myId);
+          if (!oId) return null;
+          const profile = profilesById.get(oId);
+          return { conversationId: c.id, otherId: oId, name: profile?.name || "PaMarket User", avatar: profile?.avatar ?? null };
+        })
+        .filter((c): c is ForwardCandidate => c !== null);
+      setForwardCandidates(candidates);
+    } finally {
+      setForwardLoading(false);
+    }
+  }
+
+  async function forwardTo(candidate: ForwardCandidate) {
+    if (!forwardTarget || !myId) return;
+    const { data: profile } = await supabase.from("profiles").select("name").eq("id", myId).maybeSingle();
+    await supabase.from("messages").insert({
+      conversation_id: candidate.conversationId,
+      sender_id: myId,
+      sender_name: profile?.name ?? "",
+      text: forwardTarget.image ? null : displayText(forwardTarget.text),
+      image: forwardTarget.image ?? null,
+      read: false,
+    });
+    setForwardTarget(null);
+    toast(`Forwarded to ${candidate.name}`);
   }
 
   async function reportMessage(target: MessageRow, reason: string) {
@@ -334,8 +412,8 @@ export default function ChatScreen() {
     ];
     if (displayText(item.text)) {
       options.push({ label: "Copy", action: () => copyMessage(item) });
-      options.push({ label: "Forward", action: () => forwardMessage(item) });
     }
+    options.push({ label: "Forward", action: () => openForwardPicker(item) });
     if (isMine && isRecent) {
       options.push({
         label: "Edit",
@@ -346,8 +424,9 @@ export default function ChatScreen() {
         },
       });
     }
+    options.push({ label: "Delete for me", action: () => deleteMessageForMe(item), destructive: true });
     if (isMine) {
-      options.push({ label: "Delete", action: () => deleteMessage(item), destructive: true });
+      options.push({ label: "Delete for everyone", action: () => deleteMessage(item), destructive: true });
     } else {
       options.push({ label: "Report message", action: () => chooseReportReason(item), destructive: true });
     }
@@ -393,7 +472,7 @@ export default function ChatScreen() {
   const safetyHint = useMemo(() => chatSafetyHint(inputText), [inputText]);
   const canSend = !!inputText.trim() && !isSending;
 
-  const subtitle = otherTyping ? "Typing…" : otherOnline ? "Online" : "Offline";
+  const subtitle = otherTyping ? "Typing…" : otherOnline ? "Online" : lastSeenLabel(otherProfile?.last_seen);
 
   const openProfile = () => {
     if (otherId) router.push({ pathname: "/profile/[id]", params: { id: otherId } });
@@ -458,7 +537,7 @@ export default function ChatScreen() {
       ) : (
         <FlatList
           ref={listRef}
-          data={messages}
+          data={visibleMessages}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
@@ -466,8 +545,8 @@ export default function ChatScreen() {
             const isMine = item.sender_id === myId;
             const quote = replyQuote(item.text);
             const bodyText = displayText(item.text);
-            const prev = messages[index - 1];
-            const next = messages[index + 1];
+            const prev = visibleMessages[index - 1];
+            const next = visibleMessages[index + 1];
             const firstOfGroup = !prev || prev.sender_id !== item.sender_id;
             const lastOfGroup = !next || next.sender_id !== item.sender_id;
             return (
@@ -574,6 +653,33 @@ export default function ChatScreen() {
           <SendIcon color={themeColor} />
         </Pressable>
       </View>
+
+      <Modal visible={!!forwardTarget} animationType="slide" transparent onRequestClose={() => setForwardTarget(null)}>
+        <Pressable style={styles.modalScrim} onPress={() => setForwardTarget(null)}>
+          <Pressable style={styles.forwardSheet} onPress={() => {}}>
+            <Text style={styles.forwardTitle}>Forward to…</Text>
+            {forwardLoading ? (
+              <ListSkeleton count={4} />
+            ) : forwardCandidates.length === 0 ? (
+              <Text style={styles.forwardEmpty}>No other conversations to forward to yet.</Text>
+            ) : (
+              <FlatList
+                data={forwardCandidates}
+                keyExtractor={(c) => c.conversationId}
+                style={{ maxHeight: 380 }}
+                renderItem={({ item }) => (
+                  <Pressable style={styles.forwardRow} onPress={() => forwardTo(item)}>
+                    <Avatar uri={item.avatar} name={item.name} size={36} />
+                    <Text style={styles.forwardRowName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -838,6 +944,41 @@ function buildStyles(color: ColorPalette) {
   },
   sendButtonDisabled: {
     opacity: 0.45,
+  },
+  modalScrim: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: color.overlay,
+  },
+  forwardSheet: {
+    backgroundColor: color.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: space.lg,
+    paddingTop: space.lg,
+    paddingBottom: space.xxl,
+  },
+  forwardTitle: {
+    ...font.h3,
+    color: color.text,
+    marginBottom: space.md,
+  },
+  forwardEmpty: {
+    ...font.body,
+    color: color.textMuted,
+    paddingVertical: space.lg,
+    textAlign: "center",
+  },
+  forwardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    paddingVertical: space.sm,
+  },
+  forwardRowName: {
+    ...font.bodyStrong,
+    color: color.text,
+    flex: 1,
   },
   });
 }

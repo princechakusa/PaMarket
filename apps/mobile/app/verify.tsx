@@ -3,14 +3,17 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import { BRAND_BLUE, BRAND_GOLD } from "../lib/constants";
 import { uploadVerificationDoc } from "../lib/verification";
 import { toast } from "../components/ui/Toast";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/verify.js pages.Verify — 3-step identity verification
 // (phone auto-confirmed, ID document, face selfie) feeding the blue
 // verified badge. Uploads go to the private R2 verification/ prefix.
 export default function VerifyScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
 
   const [phone, setPhone] = useState<string | null>(null);
@@ -96,7 +99,7 @@ export default function VerifyScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -195,42 +198,48 @@ export default function VerifyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  successHero: { backgroundColor: "#16a34a", borderRadius: 20, padding: 26, alignItems: "center" },
-  successTitle: { fontSize: 19, fontWeight: "800", color: "#ffffff" },
-  successSub: { fontSize: 13, color: "rgba(255,255,255,0.85)", marginTop: 4, textAlign: "center" },
-  pendingHero: { backgroundColor: BRAND_BLUE, borderRadius: 20, padding: 26, alignItems: "center" },
-  pendingTitle: { fontSize: 19, fontWeight: "800", color: "#ffffff" },
-  pendingSub: { fontSize: 13, color: "rgba(255,255,255,0.85)", marginTop: 6, textAlign: "center", lineHeight: 19 },
-  cancelButton: { marginTop: 12, backgroundColor: "#ffffff", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  cancelButtonText: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  hero: { backgroundColor: BRAND_BLUE, borderRadius: 22, padding: 20, marginBottom: 18 },
-  heroTitle: { fontSize: 18, fontWeight: "800", color: "#ffffff" },
-  heroSub: { fontSize: 12.5, color: "rgba(255,255,255,0.82)", marginTop: 2 },
-  progressTrack: { height: 8, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 5, overflow: "hidden", marginTop: 14 },
-  progressFill: { height: "100%", backgroundColor: BRAND_GOLD },
-  progressLabel: { fontSize: 12, fontWeight: "800", color: BRAND_GOLD, marginTop: 6 },
-  step: { flexDirection: "row", gap: 14, backgroundColor: "#ffffff", borderRadius: 18, padding: 16, marginBottom: 12 },
-  stepDone: {},
-  badge: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  badgeDone: { backgroundColor: "#16a34a" },
-  badgeActive: { backgroundColor: BRAND_BLUE },
-  badgeIdle: { backgroundColor: "#EEF2FB" },
-  badgeCheck: { color: "#ffffff", fontWeight: "800" },
-  badgeNumber: { color: "#94a3b8", fontWeight: "800" },
-  stepTitle: { fontSize: 15, fontWeight: "800", color: "#111827" },
-  stepSub: { fontSize: 12.5, color: "#8A93A6", marginTop: 3, lineHeight: 18 },
-  actionButton: { marginTop: 10, alignSelf: "flex-start", backgroundColor: BRAND_BLUE, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
-  actionButtonText: { color: "#ffffff", fontSize: 13.5, fontWeight: "700" },
-  idPreview: { width: "100%", maxWidth: 240, height: 140, borderRadius: 12, marginTop: 10 },
-  selfiePreview: { width: 104, height: 104, borderRadius: 52, marginTop: 12, borderWidth: 3, borderColor: "#16a34a" },
-  submitButton: { backgroundColor: BRAND_BLUE, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 6 },
-  buttonDisabled: { opacity: 0.5 },
-  submitButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  footNote: { fontSize: 12, color: "#8A93A6", textAlign: "center", marginTop: 8 },
-  secureBox: { flexDirection: "row", backgroundColor: "#EEF2FB", borderRadius: 14, padding: 14, marginTop: 16 },
-  secureText: { fontSize: 12, color: "#8A93A6", lineHeight: 18 },
-  secureBold: { color: BRAND_BLUE, fontWeight: "700" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    successHero: { backgroundColor: color.success, borderRadius: 20, padding: 26, alignItems: "center" },
+    successTitle: { fontSize: 19, fontWeight: "800", color: color.textOnBrand },
+    successSub: { fontSize: 13, color: color.textOnBrandSub, marginTop: 4, textAlign: "center" },
+    pendingHero: { backgroundColor: color.brand, borderRadius: 20, padding: 26, alignItems: "center" },
+    pendingTitle: { fontSize: 19, fontWeight: "800", color: color.textOnBrand },
+    pendingSub: { fontSize: 13, color: color.textOnBrandSub, marginTop: 6, textAlign: "center", lineHeight: 19 },
+    cancelButton: { marginTop: 12, backgroundColor: color.surface, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+    cancelButtonText: { fontSize: 14, fontWeight: "700", color: color.text },
+    hero: { backgroundColor: color.brand, borderRadius: 22, padding: 20, marginBottom: 18 },
+    heroTitle: { fontSize: 18, fontWeight: "800", color: color.textOnBrand },
+    heroSub: { fontSize: 12.5, color: color.textOnBrandSub, marginTop: 2 },
+    progressTrack: { height: 8, backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 5, overflow: "hidden", marginTop: 14 },
+    progressFill: { height: "100%", backgroundColor: color.gold },
+    progressLabel: { fontSize: 12, fontWeight: "800", color: color.gold, marginTop: 6 },
+    step: { flexDirection: "row", gap: 14, backgroundColor: color.surface, borderRadius: 18, padding: 16, marginBottom: 12 },
+    stepDone: {},
+    badge: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
+    badgeDone: { backgroundColor: color.success },
+    badgeActive: { backgroundColor: color.brand },
+    badgeIdle: { backgroundColor: color.brandTint },
+    badgeCheck: { color: color.textOnBrand, fontWeight: "800" },
+    badgeNumber: { color: color.textMuted, fontWeight: "800" },
+    stepTitle: { fontSize: 15, fontWeight: "800", color: color.text },
+    stepSub: { fontSize: 12.5, color: color.textMuted, marginTop: 3, lineHeight: 18 },
+    actionButton: { marginTop: 10, alignSelf: "flex-start", backgroundColor: color.brand, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
+    actionButtonText: { color: color.textOnBrand, fontSize: 13.5, fontWeight: "700" },
+    idPreview: { width: "100%", maxWidth: 240, height: 140, borderRadius: 12, marginTop: 10 },
+    selfiePreview: { width: 104, height: 104, borderRadius: 52, marginTop: 12, borderWidth: 3, borderColor: color.success },
+    submitButton: { backgroundColor: color.brand, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 6 },
+    buttonDisabled: { opacity: 0.5 },
+    submitButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    footNote: { fontSize: 12, color: color.textMuted, textAlign: "center", marginTop: 8 },
+    secureBox: { flexDirection: "row", backgroundColor: color.brandTint, borderRadius: 14, padding: 14, marginTop: 16 },
+    secureText: { fontSize: 12, color: color.textMuted, lineHeight: 18 },
+    secureBold: { color: color.brand, fontWeight: "700" },
+  });
+}

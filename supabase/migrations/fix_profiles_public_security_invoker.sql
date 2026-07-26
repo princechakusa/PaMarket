@@ -19,13 +19,24 @@
 --
 -- Fix: add security_invoker = true so the view runs with the QUERYING
 -- user's own permissions and RLS policies apply normally, exactly as a
--- "safe public read" view is supposed to behave. Column list and grants
--- unchanged.
+-- "safe public read" view is supposed to behave.
+--
+-- NOTE: this migration is filename-sorted to apply AFTER
+-- fix_profiles_public_email_leak.sql, which drops `email` from this same
+-- view. `email` must stay excluded here too, otherwise applying both
+-- migrations in order silently re-exposes it. See that file for why `email`
+-- (unlike `phone`) has no load-bearing reason to be public.
+--
+-- CREATE OR REPLACE VIEW cannot drop a column in Postgres, so (as in
+-- fix_profiles_public_email_leak.sql) the view must be dropped and recreated
+-- rather than replaced in place.
 --
 -- Idempotent. Run once in the Supabase SQL Editor.
 -- ============================================================================
 
-create or replace view public.profiles_public
+drop view if exists public.profiles_public;
+
+create view public.profiles_public
   with (security_invoker = true, security_barrier = true)
 as
   select
@@ -47,9 +58,8 @@ as
     privacy,
     language,
     status,
-    phone,
-    email
-    -- Excluded: wallet_usd, cv, ban_reason, ban_until,
+    phone
+    -- Excluded: email, wallet_usd, cv, ban_reason, ban_until,
     --           verification_pending, two_factor_enabled,
     --           two_factor_secret, push_subscription
   from public.profiles;

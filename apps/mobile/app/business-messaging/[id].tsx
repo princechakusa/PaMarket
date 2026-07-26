@@ -3,9 +3,10 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 type QuickReply = { id: string; text: string };
 
@@ -15,6 +16,8 @@ type QuickReply = { id: string; text: string };
 export default function BusinessQuickRepliesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [replies, setReplies] = useState<QuickReply[]>([]);
@@ -58,7 +61,7 @@ export default function BusinessQuickRepliesScreen() {
   if (isLoading || isOwner === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -79,6 +82,7 @@ export default function BusinessQuickRepliesScreen() {
         <TextInput
           style={styles.input}
           placeholder="e.g. Yes, it's available!"
+          placeholderTextColor={tones.textMuted}
           maxLength={160}
           value={draft}
           onChangeText={setDraft}
@@ -104,36 +108,43 @@ export default function BusinessQuickRepliesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  intro: { fontSize: 13, color: "#5A6478", lineHeight: 19, marginBottom: 14 },
-  inputRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
-  input: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 14,
-  },
-  addButton: { backgroundColor: BRAND_BLUE, borderRadius: 10, paddingHorizontal: 18, justifyContent: "center" },
-  addButtonText: { color: "#ffffff", fontSize: 13, fontWeight: "700" },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#E8ECF4",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-  },
-  rowText: { flex: 1, fontSize: 13.5, color: "#111827" },
-  deleteButton: { backgroundColor: "#FFF1F0", borderRadius: 9, paddingHorizontal: 10, paddingVertical: 6 },
-  deleteButtonText: { fontSize: 11.5, fontWeight: "700", color: "#EF4444" },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 13, paddingVertical: 24 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    intro: { fontSize: 13, color: color.textSub, lineHeight: 19, marginBottom: 14 },
+    inputRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+    input: {
+      flex: 1,
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      fontSize: 14,
+      color: color.text,
+    },
+    addButton: { backgroundColor: color.brand, borderRadius: 10, paddingHorizontal: 18, justifyContent: "center" },
+    addButtonText: { color: color.textOnBrand, fontSize: 13, fontWeight: "700" },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 8,
+    },
+    rowText: { flex: 1, fontSize: 13.5, color: color.text },
+    deleteButton: { backgroundColor: color.dangerTint, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 6 },
+    deleteButtonText: { fontSize: 11.5, fontWeight: "700", color: color.danger },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 24 },
+  });
+}

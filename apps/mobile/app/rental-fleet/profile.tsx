@@ -4,10 +4,11 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, Text
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { businessInitials } from "../../lib/businesses";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -15,6 +16,8 @@ const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 // owner's editable company profile: logo/cover (R2 upload), bio, hours,
 // service locations, verification badge.
 export default function RentalCompanyProfileScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const { session } = useAuth();
 
@@ -155,7 +158,7 @@ export default function RentalCompanyProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -175,7 +178,7 @@ export default function RentalCompanyProfileScreen() {
       <View style={styles.coverWrap}>
         {coverUrl ? <Image source={{ uri: coverUrl }} style={styles.coverImage} /> : <View style={styles.coverPlaceholder} />}
         <Pressable style={styles.coverBtn} onPress={() => uploadImage("cover")} disabled={isUploadingCover}>
-          {isUploadingCover ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.coverBtnText}>Change Cover</Text>}
+          {isUploadingCover ? <ActivityIndicator size="small" color={tones.textOnBrand} /> : <Text style={styles.coverBtnText}>Change Cover</Text>}
         </Pressable>
       </View>
 
@@ -183,7 +186,7 @@ export default function RentalCompanyProfileScreen() {
         <View style={styles.logoWrap}>
           {logoUrl ? <Image source={{ uri: logoUrl }} style={styles.logoImage} /> : <Text style={styles.logoInitial}>{businessInitials(businessName)}</Text>}
           <Pressable style={styles.logoEditBtn} onPress={() => uploadImage("logo")} disabled={isUploadingLogo}>
-            {isUploadingLogo ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.logoEditText}>+</Text>}
+            {isUploadingLogo ? <ActivityIndicator size="small" color={tones.textOnBrand} /> : <Text style={styles.logoEditText}>+</Text>}
           </Pressable>
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -225,14 +228,14 @@ export default function RentalCompanyProfileScreen() {
           value={about}
           onChangeText={setAbout}
           placeholder="Tell customers about your rental services, coverage areas, and fleet..."
-          placeholderTextColor="#A1A1AA"
+          placeholderTextColor={tones.textMuted}
           multiline
           numberOfLines={4}
         />
         <Text style={styles.label}>Contact Phone</Text>
-        <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+263 77 000 0000" placeholderTextColor="#A1A1AA" keyboardType="phone-pad" />
+        <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+263 77 000 0000" placeholderTextColor={tones.textMuted} keyboardType="phone-pad" />
         <Text style={styles.label}>WhatsApp Number</Text>
-        <TextInput style={styles.input} value={whatsapp} onChangeText={setWhatsapp} placeholder="+263 77 000 0000" placeholderTextColor="#A1A1AA" keyboardType="phone-pad" />
+        <TextInput style={styles.input} value={whatsapp} onChangeText={setWhatsapp} placeholder="+263 77 000 0000" placeholderTextColor={tones.textMuted} keyboardType="phone-pad" />
 
         <Text style={styles.label}>Operating Days</Text>
         <View style={styles.chipRow}>
@@ -246,11 +249,11 @@ export default function RentalCompanyProfileScreen() {
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Opens At</Text>
-            <TextInput style={styles.input} value={opensAt} onChangeText={setOpensAt} placeholder="08:00" placeholderTextColor="#A1A1AA" />
+            <TextInput style={styles.input} value={opensAt} onChangeText={setOpensAt} placeholder="08:00" placeholderTextColor={tones.textMuted} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Closes At</Text>
-            <TextInput style={styles.input} value={closesAt} onChangeText={setClosesAt} placeholder="17:00" placeholderTextColor="#A1A1AA" />
+            <TextInput style={styles.input} value={closesAt} onChangeText={setClosesAt} placeholder="17:00" placeholderTextColor={tones.textMuted} />
           </View>
         </View>
 
@@ -264,100 +267,106 @@ export default function RentalCompanyProfileScreen() {
         </View>
 
         <Pressable style={[styles.primaryBtn, isSaving && styles.disabled]} onPress={save} disabled={isSaving}>
-          {isSaving ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryBtnText}>Save Changes</Text>}
+          {isSaving ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Save Changes</Text>}
         </Pressable>
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  emptyText: { fontSize: 13, color: "#A1A1AA", textAlign: "center" },
-  coverWrap: { width: "100%", aspectRatio: 3.1, backgroundColor: BRAND_BLUE },
-  coverImage: { width: "100%", height: "100%" },
-  coverPlaceholder: { width: "100%", height: "100%", backgroundColor: BRAND_BLUE },
-  coverBtn: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  coverBtnText: { color: "#ffffff", fontSize: 11, fontWeight: "700" },
-  identityRow: { flexDirection: "row", gap: 14, alignItems: "center", padding: 16, backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#E4E4E7" },
-  logoWrap: { width: 64, height: 64, borderRadius: 16, backgroundColor: "#EEF2FB", alignItems: "center", justifyContent: "center", overflow: "visible" },
-  logoImage: { width: 64, height: 64, borderRadius: 16 },
-  logoInitial: { fontSize: 22, fontWeight: "800", color: BRAND_BLUE },
-  logoEditBtn: {
-    position: "absolute",
-    bottom: -4,
-    right: -4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: BRAND_BLUE,
-    borderWidth: 2,
-    borderColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoEditText: { color: "#ffffff", fontSize: 13, fontWeight: "800" },
-  nameRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 },
-  bizName: { fontSize: 17, fontWeight: "800", color: "#18181B" },
-  bizSub: { fontSize: 12, color: "#A1A1AA", marginTop: 2 },
-  badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeVerified: { backgroundColor: "#ECFDF5" },
-  badgePending: { backgroundColor: "#FEF3C7" },
-  badgeText: { fontSize: 11, fontWeight: "800" },
-  badgeTextVerified: { color: "#16A34A" },
-  badgeTextPending: { color: "#92400E" },
-  statsRow: { flexDirection: "row", paddingVertical: 14, backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#E4E4E7" },
-  statItem: { flex: 1, alignItems: "center" },
-  statDivider: { width: 1, backgroundColor: "#E4E4E7" },
-  statNum: { fontSize: 20, fontWeight: "800", color: BRAND_BLUE },
-  statLabel: { fontSize: 11, color: "#A1A1AA", marginTop: 2 },
-  label: { fontSize: 12, fontWeight: "700", color: "#52525B", marginBottom: 6, marginTop: 14 },
-  input: {
-    height: 46,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-  },
-  textarea: {
-    minHeight: 90,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 12,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-    textAlignVertical: "top",
-  },
-  row: { flexDirection: "row", gap: 10 },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    backgroundColor: "#ffffff",
-  },
-  chipSelected: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FF" },
-  chipSelectedDark: { borderColor: BRAND_BLUE, backgroundColor: BRAND_BLUE },
-  chipText: { fontSize: 12.5, fontWeight: "700", color: "#18181B" },
-  chipTextSelected: { color: BRAND_BLUE },
-  chipTextDark: { color: "#ffffff" },
-  primaryBtn: { marginTop: 20, backgroundColor: BRAND_BLUE, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
-  primaryBtnText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  disabled: { opacity: 0.6 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+    emptyText: { fontSize: 13, color: color.textMuted, textAlign: "center" },
+    coverWrap: { width: "100%", aspectRatio: 3.1, backgroundColor: color.brand },
+    coverImage: { width: "100%", height: "100%" },
+    coverPlaceholder: { width: "100%", height: "100%", backgroundColor: color.brand },
+    coverBtn: {
+      position: "absolute",
+      bottom: 10,
+      right: 10,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    coverBtnText: { color: color.textOnBrand, fontSize: 11, fontWeight: "700" },
+    identityRow: { flexDirection: "row", gap: 14, alignItems: "center", padding: 16, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    logoWrap: { width: 64, height: 64, borderRadius: 16, backgroundColor: color.brandTint, alignItems: "center", justifyContent: "center", overflow: "visible" },
+    logoImage: { width: 64, height: 64, borderRadius: 16 },
+    logoInitial: { fontSize: 22, fontWeight: "800", color: color.brand },
+    logoEditBtn: {
+      position: "absolute",
+      bottom: -4,
+      right: -4,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: color.brand,
+      borderWidth: 2,
+      borderColor: color.surface,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    logoEditText: { color: color.textOnBrand, fontSize: 13, fontWeight: "800" },
+    nameRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 },
+    bizName: { fontSize: 17, fontWeight: "800", color: color.text },
+    bizSub: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+    badgeVerified: { backgroundColor: color.successTint },
+    badgePending: { backgroundColor: color.warningTint },
+    badgeText: { fontSize: 11, fontWeight: "800" },
+    badgeTextVerified: { color: color.success },
+    badgeTextPending: { color: color.warning },
+    statsRow: { flexDirection: "row", paddingVertical: 14, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    statItem: { flex: 1, alignItems: "center" },
+    statDivider: { width: 1, backgroundColor: color.border },
+    statNum: { fontSize: 20, fontWeight: "800", color: color.brand },
+    statLabel: { fontSize: 11, color: color.textMuted, marginTop: 2 },
+    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 14 },
+    input: {
+      height: 46,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+    },
+    textarea: {
+      minHeight: 90,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 12,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+      textAlignVertical: "top",
+    },
+    row: { flexDirection: "row", gap: 10 },
+    chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      backgroundColor: color.surface,
+    },
+    chipSelected: { borderColor: color.brand, backgroundColor: color.brandTint },
+    chipSelectedDark: { borderColor: color.brand, backgroundColor: color.brand },
+    chipText: { fontSize: 12.5, fontWeight: "700", color: color.text },
+    chipTextSelected: { color: color.brand },
+    chipTextDark: { color: color.textOnBrand },
+    primaryBtn: { marginTop: 20, backgroundColor: color.brand, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
+    primaryBtnText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    disabled: { opacity: 0.6 },
+  });
+}

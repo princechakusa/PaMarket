@@ -1,5 +1,7 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CATEGORIES } from "../../lib/constants";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
   property: require("../../assets/cats/cat_property.png"),
@@ -17,6 +19,7 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
 };
 
 export function CategoryPicker({ onSelect }: { onSelect: (id: string) => void }) {
+  const styles = useThemedStyles(buildStyles);
   return (
     <View>
       <Text style={styles.label}>What are you posting?</Text>
@@ -34,39 +37,41 @@ export function CategoryPicker({ onSelect }: { onSelect: (id: string) => void })
   );
 }
 
-const styles = StyleSheet.create({
-  label: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 14,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    rowGap: 8,
-  },
-  item: {
-    width: "32%",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#ffffff",
-    borderWidth: 1.5,
-    borderColor: "#E4E7EF",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-  },
-  itemLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#111827",
-    textAlign: "center",
-  },
-});
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    label: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+      marginBottom: 14,
+    },
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      rowGap: 8,
+    },
+    item: {
+      width: "32%",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: color.surface,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 4,
+    },
+    icon: {
+      width: 40,
+      height: 40,
+      resizeMode: "contain",
+    },
+    itemLabel: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: color.text,
+      textAlign: "center",
+    },
+  });
+}

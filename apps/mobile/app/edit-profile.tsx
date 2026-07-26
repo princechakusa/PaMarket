@@ -16,10 +16,13 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { uploadImageUriToR2 } from "../lib/uploadToR2";
-import { BRAND_BLUE } from "../lib/constants";
 import { sellerInitials } from "../lib/sellers";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 export default function EditProfileScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -105,7 +108,7 @@ export default function EditProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -137,7 +140,7 @@ export default function EditProfileScreen() {
           onChangeText={setPhone}
           keyboardType="phone-pad"
           placeholder="+263 77 123 4567"
-          placeholderTextColor="#8A93A6"
+          placeholderTextColor={tones.textMuted}
           maxLength={16}
         />
 
@@ -160,7 +163,7 @@ export default function EditProfileScreen() {
         {saved ? <Text style={styles.saved}>Saved!</Text> : null}
 
         <Pressable style={styles.saveButton} onPress={save} disabled={isSaving}>
-          {isSaving ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.saveButtonText}>Save Changes</Text>}
+          {isSaving ? <ActivityIndicator color={tones.onBrand} /> : <Text style={styles.saveButtonText}>Save Changes</Text>}
         </Pressable>
         <Pressable style={styles.cancelButton} onPress={() => router.back()}>
           <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -170,118 +173,124 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  avatarSection: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  avatar: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: "#EEF0F4",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-  },
-  avatarInitial: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: BRAND_BLUE,
-  },
-  avatarLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  changePhotoLink: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: BRAND_BLUE,
-    marginTop: 4,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: "#111827",
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  disabledInput: {
-    backgroundColor: "#F5F6F9",
-  },
-  disabledInputText: {
-    fontSize: 14,
-    color: "#8A93A6",
-  },
-  helperText: {
-    fontSize: 11,
-    color: "#8A93A6",
-    marginTop: 6,
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 13,
-    marginTop: 16,
-    textAlign: "center",
-  },
-  saved: {
-    color: "#0f7a3d",
-    fontSize: 13,
-    marginTop: 16,
-    textAlign: "center",
-    fontWeight: "700",
-  },
-  saveButton: {
-    backgroundColor: BRAND_BLUE,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 24,
-  },
-  saveButtonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  cancelButton: {
-    alignItems: "center",
-    marginTop: 12,
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#8A93A6",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted, onBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.surface,
+    },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    scrollContent: {
+      padding: 16,
+      paddingBottom: 40,
+    },
+    avatarSection: {
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    avatar: {
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      backgroundColor: color.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      marginBottom: 8,
+    },
+    avatarImage: {
+      width: "100%",
+      height: "100%",
+    },
+    avatarInitial: {
+      fontSize: 26,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    avatarLabel: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: color.text,
+    },
+    changePhotoLink: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.brand,
+      marginTop: 4,
+    },
+    fieldLabel: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+      marginBottom: 8,
+      marginTop: 16,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: color.text,
+    },
+    textArea: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    disabledInput: {
+      backgroundColor: color.surfaceAlt,
+    },
+    disabledInputText: {
+      fontSize: 14,
+      color: color.textMuted,
+    },
+    helperText: {
+      fontSize: 11,
+      color: color.textMuted,
+      marginTop: 6,
+    },
+    error: {
+      color: color.danger,
+      fontSize: 13,
+      marginTop: 16,
+      textAlign: "center",
+    },
+    saved: {
+      color: color.success,
+      fontSize: 13,
+      marginTop: 16,
+      textAlign: "center",
+      fontWeight: "700",
+    },
+    saveButton: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 24,
+    },
+    saveButtonText: {
+      color: color.textOnBrand,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    cancelButton: {
+      alignItems: "center",
+      marginTop: 12,
+    },
+    cancelButtonText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.textMuted,
+    },
+  });
+}

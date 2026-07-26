@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
-import { BRAND_BLUE } from "../lib/constants";
 import { deleteSavedSearch, fetchSavedSearches, type SavedSearch } from "../lib/saved-searches";
 import { EmptyState } from "../components/ui/EmptyState";
+import { color, type ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 function timeAgo(iso: string) {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -18,6 +19,7 @@ function timeAgo(iso: string) {
 
 // Mirrors www/js/browse.js pages.SavedSearches.
 export default function SavedSearchesScreen() {
+  const styles = useThemedStyles(buildStyles);
   const { session } = useAuth();
   const router = useRouter();
   const [searches, setSearches] = useState<SavedSearch[]>([]);
@@ -57,7 +59,7 @@ export default function SavedSearchesScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={color.brand} />
       </View>
     );
   }
@@ -95,24 +97,26 @@ export default function SavedSearchesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 10,
   },
   rowMain: { flex: 1, minWidth: 0 },
-  rowTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  rowSub: { fontSize: 12, color: "#8A93A6", marginTop: 1 },
-  searchButton: { backgroundColor: BRAND_BLUE, borderRadius: 9, paddingHorizontal: 13, paddingVertical: 8 },
-  searchButtonText: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
+  rowTitle: { fontSize: 14, fontWeight: "700", color: color.text },
+  rowSub: { fontSize: 12, color: color.textMuted, marginTop: 1 },
+  searchButton: { backgroundColor: color.brand, borderRadius: 9, paddingHorizontal: 13, paddingVertical: 8 },
+  searchButtonText: { color: color.textOnBrand, fontSize: 12, fontWeight: "700" },
   deleteButton: { padding: 6 },
-  deleteButtonText: { color: "#EF4444", fontSize: 16 },
-});
+  deleteButtonText: { color: color.danger, fontSize: 16 },
+  });
+}

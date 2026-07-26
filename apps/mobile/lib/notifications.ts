@@ -123,15 +123,45 @@ export type ExpoRoute = { pathname: string; params?: Record<string, string> };
 
 const SAFE_FALLBACK: ExpoRoute = { pathname: "/(tabs)" };
 
+// Legacy web-app deep links (see supabase/migrations/marketplace_notifications_*.sql
+// and fix_job_application_inapp_notify.sql, which still write these into
+// scheduled_notifications.deep_link): bare Capacitor page names, optionally
+// with a query string, e.g. "Detail?id=123", "JobApplications?jobId=123",
+// "AppliedJobs". These predate the "kind:id" convention below and are never
+// going to be rewritten at the DB layer for a shared-backend app, so the
+// mobile parser has to understand both formats.
+function parseLegacyWebRoute(s: string): ExpoRoute | null {
+  const [page, query] = s.split("?");
+  const params = new URLSearchParams(query || "");
+  const anyId = params.get("id") || params.get("jobId") || params.get("listingId") || undefined;
+  switch (page) {
+    case "Detail":
+      return anyId ? { pathname: "/listing/[id]", params: { id: anyId } } : null;
+    case "JobApplications":
+      return anyId ? { pathname: "/jobs/[id]", params: { id: anyId } } : { pathname: "/jobs/applications" };
+    case "AppliedJobs":
+      return { pathname: "/jobs/applications" };
+    case "Chat":
+      return anyId ? { pathname: "/chat/[id]", params: { id: anyId } } : { pathname: "/(tabs)/messages" };
+    case "Profile":
+      return anyId ? { pathname: "/profile/[id]", params: { id: anyId } } : null;
+    case "Business":
+      return anyId ? { pathname: "/business/[id]", params: { id: anyId } } : null;
+    default:
+      return null;
+  }
+}
+
 // Parse "chat:<id>" / "listing:<id>" / "profile:<id>" / "business:<id>"
-// style deepLink strings, plus already-valid "/route" paths.
+// style deepLink strings, plus already-valid "/route" paths, plus legacy
+// Capacitor-style "PageName?query" strings still emitted by some SQL triggers.
 function parseDeepLinkString(raw?: string | null): ExpoRoute | null {
   if (!raw) return null;
   const s = raw.trim();
   if (!s || /^https?:\/\//i.test(s)) return null; // external URLs are not in-app routes
   if (s.startsWith("/")) return { pathname: s }; // already a router path
   const m = s.match(/^([a-z_]+)\s*:\s*(.+)$/i);
-  if (!m) return null;
+  if (!m) return parseLegacyWebRoute(s);
   const kind = m[1].toLowerCase();
   const id = m[2].trim();
   switch (kind) {
@@ -156,7 +186,7 @@ function parseDeepLinkString(raw?: string | null): ExpoRoute | null {
     case "review":
       return { pathname: "/reviews/[id]", params: { id } };
     default:
-      return null;
+      return parseLegacyWebRoute(s);
   }
 }
 
@@ -194,6 +224,23 @@ export function resolveNotifRoute(n: {
 }): ExpoRoute {
   const type = (n.type || "").toLowerCase();
   const meta: Record<string, any> = { ...(n.meta || {}) };
+  // Some SQL triggers (e.g. fix_job_application_inapp_notify.sql) write
+  // meta as snake_case (job_id, application_id, ...) instead of the
+  // camelCase this resolver reads. Normalize before anything else touches meta.
+  const SNAKE_TO_CAMEL: Record<string, string> = {
+    deep_link: "deepLink",
+    image_url: "imageUrl",
+    conversation_id: "conversationId",
+    listing_id: "listingId",
+    business_id: "businessId",
+    profile_id: "profileId",
+    seller_id: "sellerId",
+    job_id: "jobId",
+    application_id: "applicationId",
+  };
+  for (const [snake, camel] of Object.entries(SNAKE_TO_CAMEL)) {
+    if (meta[snake] != null && meta[camel] == null) meta[camel] = meta[snake];
+  }
   // Merge any flat fields from an FCM data payload into meta.
   for (const k of ["deepLink", "conversationId", "listingId", "businessId", "profileId", "sellerId", "jobId", "applicationId"]) {
     if (n[k] != null && meta[k] == null) meta[k] = n[k];

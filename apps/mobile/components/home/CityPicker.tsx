@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ZW_CITIES, BRAND_BLUE } from "../../lib/constants";
+import { ZW_CITIES } from "../../lib/constants";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Matches www/css/styles.css .city-picker: an inline expanding panel directly
 // under the header (not a modal overlay), 2-column grid, solid-blue selected
@@ -15,6 +17,7 @@ export function CityPicker({
   onSelect: (city: string) => void;
   onClose: () => void;
 }) {
+  const styles = useThemedStyles(buildStyles);
   if (!visible) return null;
 
   return (
@@ -38,52 +41,54 @@ export function CityPicker({
   );
 }
 
-const styles = StyleSheet.create({
-  panel: {
-    backgroundColor: "#ffffff",
-    marginHorizontal: 12,
-    borderRadius: 14,
-    padding: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  title: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#8A93A6",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  option: {
-    width: "48.5%",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: "#F5F6F9",
-    borderWidth: 1.5,
-    borderColor: "transparent",
-    alignItems: "center",
-  },
-  optionSelected: {
-    backgroundColor: BRAND_BLUE,
-    borderColor: BRAND_BLUE,
-  },
-  optionText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#3A4258",
-  },
-  optionTextSelected: {
-    color: "#ffffff",
-    fontWeight: "700",
-  },
-});
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    panel: {
+      backgroundColor: color.surface,
+      marginHorizontal: 12,
+      borderRadius: 14,
+      padding: 14,
+      shadowColor: "#000",
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 8,
+    },
+    title: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: color.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+      marginBottom: 10,
+    },
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+    },
+    option: {
+      width: "48.5%",
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      backgroundColor: color.surfaceAlt,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      alignItems: "center",
+    },
+    optionSelected: {
+      backgroundColor: color.brand,
+      borderColor: color.brand,
+    },
+    optionText: {
+      fontSize: 13,
+      fontWeight: "500",
+      color: color.textSub,
+    },
+    optionTextSelected: {
+      color: color.textOnBrand,
+      fontWeight: "700",
+    },
+  });
+}

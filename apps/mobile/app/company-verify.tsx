@@ -3,9 +3,10 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, Text
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import { BRAND_BLUE } from "../lib/constants";
 import { uploadVerificationDoc } from "../lib/verification";
 import { toast } from "../components/ui/Toast";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 type VerifyType = "company" | "individual" | null;
 
@@ -22,6 +23,8 @@ const INDIVIDUAL_DOCS: [string, string, string][] = [
 // verification required to post jobs (separate from the personal ID+selfie
 // flow in app/verify.tsx).
 export default function CompanyVerifyScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
 
   const [verified, setVerified] = useState(false);
@@ -110,7 +113,7 @@ export default function CompanyVerifyScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -200,37 +203,43 @@ export default function CompanyVerifyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  successTitle: { fontSize: 18, fontWeight: "800", color: "#111827", marginBottom: 6 },
-  successSub: { fontSize: 13, color: "#8A93A6", textAlign: "center" },
-  pendingHero: { alignItems: "center", padding: 20 },
-  pendingTitle: { fontSize: 18, fontWeight: "800", color: "#111827", marginBottom: 6 },
-  pendingSub: { fontSize: 13, color: "#8A93A6", textAlign: "center", lineHeight: 19 },
-  cancelButton: { marginTop: 12, backgroundColor: "#ffffff", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  cancelButtonText: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  intro: { fontSize: 14, color: "#5A6478", lineHeight: 21, marginBottom: 24 },
-  typeCard: { backgroundColor: "#ffffff", borderWidth: 2, borderColor: "#E8ECF4", borderRadius: 16, padding: 20, marginBottom: 14 },
-  typeTitle: { fontSize: 16, fontWeight: "800", color: "#111827", marginBottom: 4 },
-  typeSub: { fontSize: 13, color: "#8A93A6", lineHeight: 19 },
-  changeTypeButton: { alignSelf: "flex-start", backgroundColor: "#EEF2FF", borderWidth: 1.5, borderColor: BRAND_BLUE, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 16 },
-  changeTypeText: { color: BRAND_BLUE, fontSize: 14, fontWeight: "700" },
-  label: { fontSize: 13, fontWeight: "600", color: "#111827", marginBottom: 6 },
-  input: { backgroundColor: "#ffffff", borderWidth: 1, borderColor: "#D8DCE5", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, marginBottom: 18 },
-  docStep: { flexDirection: "row", gap: 12, marginBottom: 16 },
-  docBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#EEF2FB", alignItems: "center", justifyContent: "center" },
-  docBadgeDone: { backgroundColor: "#16a34a" },
-  docBadgeCheck: { color: "#ffffff", fontWeight: "800" },
-  docBadgeNumber: { color: "#94a3b8", fontWeight: "700" },
-  docTitle: { fontSize: 14, fontWeight: "800", color: "#111827" },
-  docSub: { fontSize: 12, color: "#8A93A6", marginTop: 2 },
-  docButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: BRAND_BLUE, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  docButtonText: { color: "#ffffff", fontSize: 12.5, fontWeight: "700" },
-  docPreview: { width: "100%", maxWidth: 240, height: 140, borderRadius: 12, marginTop: 10 },
-  submitButton: { backgroundColor: BRAND_BLUE, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 6 },
-  buttonDisabled: { opacity: 0.5 },
-  submitButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  secureBox: { backgroundColor: "#EEF2FB", borderRadius: 14, padding: 14, marginTop: 16 },
-  secureText: { fontSize: 12, color: "#8A93A6", lineHeight: 18 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+    successTitle: { fontSize: 18, fontWeight: "800", color: color.text, marginBottom: 6 },
+    successSub: { fontSize: 13, color: color.textMuted, textAlign: "center" },
+    pendingHero: { alignItems: "center", padding: 20 },
+    pendingTitle: { fontSize: 18, fontWeight: "800", color: color.text, marginBottom: 6 },
+    pendingSub: { fontSize: 13, color: color.textMuted, textAlign: "center", lineHeight: 19 },
+    cancelButton: { marginTop: 12, backgroundColor: color.surface, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+    cancelButtonText: { fontSize: 14, fontWeight: "700", color: color.text },
+    intro: { fontSize: 14, color: color.textSub, lineHeight: 21, marginBottom: 24 },
+    typeCard: { backgroundColor: color.surface, borderWidth: 2, borderColor: color.border, borderRadius: 16, padding: 20, marginBottom: 14 },
+    typeTitle: { fontSize: 16, fontWeight: "800", color: color.text, marginBottom: 4 },
+    typeSub: { fontSize: 13, color: color.textMuted, lineHeight: 19 },
+    changeTypeButton: { alignSelf: "flex-start", backgroundColor: color.brandTint, borderWidth: 1.5, borderColor: color.brand, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 16 },
+    changeTypeText: { color: color.brand, fontSize: 14, fontWeight: "700" },
+    label: { fontSize: 13, fontWeight: "600", color: color.text, marginBottom: 6 },
+    input: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.borderStrong, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, marginBottom: 18, color: color.text },
+    docStep: { flexDirection: "row", gap: 12, marginBottom: 16 },
+    docBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: color.brandTint, alignItems: "center", justifyContent: "center" },
+    docBadgeDone: { backgroundColor: color.success },
+    docBadgeCheck: { color: color.textOnBrand, fontWeight: "800" },
+    docBadgeNumber: { color: color.textMuted, fontWeight: "700" },
+    docTitle: { fontSize: 14, fontWeight: "800", color: color.text },
+    docSub: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    docButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: color.brand, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+    docButtonText: { color: color.textOnBrand, fontSize: 12.5, fontWeight: "700" },
+    docPreview: { width: "100%", maxWidth: 240, height: 140, borderRadius: 12, marginTop: 10 },
+    submitButton: { backgroundColor: color.brand, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 6 },
+    buttonDisabled: { opacity: 0.5 },
+    submitButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    secureBox: { backgroundColor: color.brandTint, borderRadius: 14, padding: 14, marginTop: 16 },
+    secureText: { fontSize: 12, color: color.textMuted, lineHeight: 18 },
+  });
+}

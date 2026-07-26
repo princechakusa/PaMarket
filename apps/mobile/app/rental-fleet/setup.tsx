@@ -3,13 +3,16 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, Te
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Mirrors www/js/rentals-business.js H.pages.RentalCompanySetup — creates the
 // pending rental_companies row via the rental_setup_company() RPC (verified
 // signature in supabase/migrations/fix_rental_setup_rpc_v4.sql).
 export default function RentalCompanySetupScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { bizId } = useLocalSearchParams<{ bizId: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -63,7 +66,7 @@ export default function RentalCompanySetupScreen() {
         value={bio}
         onChangeText={setBio}
         placeholder="Tell customers about your rental services, coverage areas, and fleet..."
-        placeholderTextColor="#A1A1AA"
+        placeholderTextColor={tones.textMuted}
         multiline
         numberOfLines={4}
       />
@@ -74,7 +77,7 @@ export default function RentalCompanySetupScreen() {
         value={phone}
         onChangeText={setPhone}
         placeholder="+263 77 000 0000"
-        placeholderTextColor="#A1A1AA"
+        placeholderTextColor={tones.textMuted}
         keyboardType="phone-pad"
       />
 
@@ -84,7 +87,7 @@ export default function RentalCompanySetupScreen() {
         value={whatsapp}
         onChangeText={setWhatsapp}
         placeholder="+263 77 000 0000"
-        placeholderTextColor="#A1A1AA"
+        placeholderTextColor={tones.textMuted}
         keyboardType="phone-pad"
       />
 
@@ -102,64 +105,70 @@ export default function RentalCompanySetupScreen() {
       </View>
 
       <Pressable style={[styles.primaryBtn, isSubmitting && styles.disabled]} onPress={submit} disabled={isSubmitting}>
-        {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryBtnText}>Submit for Approval</Text>}
+        {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Submit for Approval</Text>}
       </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  introBox: {
-    backgroundColor: "#EEF2FF",
-    borderLeftWidth: 3,
-    borderLeftColor: BRAND_BLUE,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 20,
-  },
-  introText: { fontSize: 13, color: BRAND_BLUE, fontWeight: "600", lineHeight: 19 },
-  label: { fontSize: 12, fontWeight: "700", color: "#52525B", marginBottom: 6, marginTop: 14 },
-  input: {
-    height: 46,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-  },
-  textarea: {
-    minHeight: 90,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 12,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-    textAlignVertical: "top",
-  },
-  docsBox: {
-    marginTop: 20,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 14,
-  },
-  docsTitle: { fontSize: 13, fontWeight: "800", color: "#18181B", marginBottom: 6 },
-  docsBody: { fontSize: 12.5, color: "#52525B", lineHeight: 19, marginBottom: 12 },
-  secondaryBtn: {
-    borderWidth: 1.5,
-    borderColor: BRAND_BLUE,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  secondaryBtnText: { color: BRAND_BLUE, fontSize: 14, fontWeight: "700" },
-  primaryBtn: { marginTop: 20, backgroundColor: BRAND_BLUE, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
-  primaryBtnText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  disabled: { opacity: 0.6 },
-});
+function buildTones(color: ColorPalette) {
+  return { textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    introBox: {
+      backgroundColor: color.brandTint,
+      borderLeftWidth: 3,
+      borderLeftColor: color.brand,
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 20,
+    },
+    introText: { fontSize: 13, color: color.brand, fontWeight: "600", lineHeight: 19 },
+    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 14 },
+    input: {
+      height: 46,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+    },
+    textarea: {
+      minHeight: 90,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 12,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+      textAlignVertical: "top",
+    },
+    docsBox: {
+      marginTop: 20,
+      backgroundColor: color.surfaceAlt,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 14,
+    },
+    docsTitle: { fontSize: 13, fontWeight: "800", color: color.text, marginBottom: 6 },
+    docsBody: { fontSize: 12.5, color: color.textSub, lineHeight: 19, marginBottom: 12 },
+    secondaryBtn: {
+      borderWidth: 1.5,
+      borderColor: color.brand,
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: "center",
+    },
+    secondaryBtnText: { color: color.brand, fontSize: 14, fontWeight: "700" },
+    primaryBtn: { marginTop: 20, backgroundColor: color.brand, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
+    primaryBtnText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    disabled: { opacity: 0.6 },
+  });
+}

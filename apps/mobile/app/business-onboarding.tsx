@@ -13,8 +13,10 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
-import { BRAND_BLUE, BRAND_GOLD, CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../lib/constants";
+import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../lib/constants";
 import type { Business } from "../lib/businesses";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/business-onboarding.js STEPS. Payment/subscription is
 // deferred (Play Billing out of scope) — the wizard only ever submits the
@@ -111,6 +113,8 @@ function fromBusiness(b: Business): Draft {
 export default function BusinessOnboardingScreen() {
   const { session } = useAuth();
   const router = useRouter();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const [step, setStep] = useState<Step>("details");
   const [draft, setDraft] = useState<Draft>(blankDraft(undefined, session?.user?.email ?? undefined));
   const [businessId, setBusinessId] = useState<string | null>(null);
@@ -258,7 +262,7 @@ export default function BusinessOnboardingScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -278,10 +282,10 @@ export default function BusinessOnboardingScreen() {
         {step === "details" ? (
           <>
             <Text style={styles.intro}>Tell buyers who you are. You can refine everything later.</Text>
-            <Field label="Business name">
-              <TextInput style={styles.input} value={draft.name} onChangeText={(v) => update("name", v)} maxLength={60} placeholder="e.g. Tariro Electronics" placeholderTextColor="#8A93A6" />
+            <Field label="Business name" styles={styles}>
+              <TextInput style={styles.input} value={draft.name} onChangeText={(v) => update("name", v)} maxLength={60} placeholder="e.g. Tariro Electronics" placeholderTextColor={tones.textMuted} />
             </Field>
-            <Field label="Business type">
+            <Field label="Business type" styles={styles}>
               <View style={styles.rowGap}>
                 {BIZ_TYPES.map((t) => (
                   <Pressable key={t.id} style={[styles.typeButton, draft.bizType === t.id && styles.typeButtonActive]} onPress={() => update("bizType", t.id)}>
@@ -291,19 +295,19 @@ export default function BusinessOnboardingScreen() {
                 ))}
               </View>
             </Field>
-            <Field label="Short description">
-              <TextInput style={[styles.input, styles.textArea]} value={draft.description} onChangeText={(v) => update("description", v)} multiline maxLength={300} placeholder="What does your business sell or offer?" placeholderTextColor="#8A93A6" />
+            <Field label="Short description" styles={styles}>
+              <TextInput style={[styles.input, styles.textArea]} value={draft.description} onChangeText={(v) => update("description", v)} multiline maxLength={300} placeholder="What does your business sell or offer?" placeholderTextColor={tones.textMuted} />
             </Field>
-            <Field label="Contact phone">
-              <TextInput style={styles.input} value={draft.phone} onChangeText={(v) => update("phone", v)} keyboardType="phone-pad" placeholder="0771234567" placeholderTextColor="#8A93A6" />
+            <Field label="Contact phone" styles={styles}>
+              <TextInput style={styles.input} value={draft.phone} onChangeText={(v) => update("phone", v)} keyboardType="phone-pad" placeholder="0771234567" placeholderTextColor={tones.textMuted} />
             </Field>
-            <Field label="WhatsApp (optional)">
-              <TextInput style={styles.input} value={draft.whatsapp} onChangeText={(v) => update("whatsapp", v)} keyboardType="phone-pad" placeholder="0771234567" placeholderTextColor="#8A93A6" />
+            <Field label="WhatsApp (optional)" styles={styles}>
+              <TextInput style={styles.input} value={draft.whatsapp} onChangeText={(v) => update("whatsapp", v)} keyboardType="phone-pad" placeholder="0771234567" placeholderTextColor={tones.textMuted} />
             </Field>
-            <Field label="Contact email (optional)">
-              <TextInput style={styles.input} value={draft.email} onChangeText={(v) => update("email", v)} keyboardType="email-address" autoCapitalize="none" placeholder="you@business.com" placeholderTextColor="#8A93A6" />
+            <Field label="Contact email (optional)" styles={styles}>
+              <TextInput style={styles.input} value={draft.email} onChangeText={(v) => update("email", v)} keyboardType="email-address" autoCapitalize="none" placeholder="you@business.com" placeholderTextColor={tones.textMuted} />
             </Field>
-            <Field label="Province">
+            <Field label="Province" styles={styles}>
               <View style={styles.chipsWrap}>
                 {PROVINCES.map((p) => (
                   <Pressable key={p} style={[styles.chip, draft.province === p && styles.chipActive]} onPress={() => { update("province", p); update("city", ""); }}>
@@ -313,7 +317,7 @@ export default function BusinessOnboardingScreen() {
               </View>
             </Field>
             {draft.province ? (
-              <Field label="City / Town">
+              <Field label="City / Town" styles={styles}>
                 <View style={styles.chipsWrap}>
                   {cities.map((c) => (
                     <Pressable key={c} style={[styles.chip, draft.city === c && styles.chipActive]} onPress={() => update("city", c)}>
@@ -323,8 +327,8 @@ export default function BusinessOnboardingScreen() {
                 </View>
               </Field>
             ) : null}
-            <Field label="Suburb / Area (optional)">
-              <TextInput style={styles.input} value={draft.suburb} onChangeText={(v) => update("suburb", v)} placeholder="e.g. Avondale" placeholderTextColor="#8A93A6" />
+            <Field label="Suburb / Area (optional)" styles={styles}>
+              <TextInput style={styles.input} value={draft.suburb} onChangeText={(v) => update("suburb", v)} placeholder="e.g. Avondale" placeholderTextColor={tones.textMuted} />
             </Field>
             <Pressable style={styles.primaryButton} onPress={goNext}>
               <Text style={styles.primaryButtonText}>Continue</Text>
@@ -346,7 +350,7 @@ export default function BusinessOnboardingScreen() {
                 );
               })}
             </View>
-            <StepNav onBack={goBack} onNext={goNext} />
+            <StepNav onBack={goBack} onNext={goNext} styles={styles} />
           </>
         ) : null}
 
@@ -372,7 +376,7 @@ export default function BusinessOnboardingScreen() {
                 </Pressable>
               );
             })}
-            <StepNav onBack={goBack} onNext={goNext} />
+            <StepNav onBack={goBack} onNext={goNext} styles={styles} />
           </>
         ) : null}
 
@@ -380,19 +384,19 @@ export default function BusinessOnboardingScreen() {
           <>
             <Text style={styles.intro}>Review your details, then activate to get your business live on PaMarket.</Text>
             <View style={styles.reviewCard}>
-              <ReviewRow label="Name" value={draft.name || "—"} />
-              <ReviewRow label="Type" value={BIZ_TYPES.find((t) => t.id === draft.bizType)?.label ?? draft.bizType} />
-              <ReviewRow label="Categories" value={draft.categories.map((id) => CATEGORIES.find((c) => c.id === id)?.name ?? id).join(", ") || "—"} />
-              <ReviewRow label="Phone" value={draft.phone || "—"} />
-              <ReviewRow label="Location" value={[draft.suburb, draft.city, draft.province].filter(Boolean).join(", ") || "—"} />
-              <ReviewRow label="Plan" value={BIZ_PLANS.find((p) => p.id === draft.planId)?.name ?? "—"} last />
+              <ReviewRow label="Name" value={draft.name || "—"} styles={styles} />
+              <ReviewRow label="Type" value={BIZ_TYPES.find((t) => t.id === draft.bizType)?.label ?? draft.bizType} styles={styles} />
+              <ReviewRow label="Categories" value={draft.categories.map((id) => CATEGORIES.find((c) => c.id === id)?.name ?? id).join(", ") || "—"} styles={styles} />
+              <ReviewRow label="Phone" value={draft.phone || "—"} styles={styles} />
+              <ReviewRow label="Location" value={[draft.suburb, draft.city, draft.province].filter(Boolean).join(", ") || "—"} styles={styles} />
+              <ReviewRow label="Plan" value={BIZ_PLANS.find((p) => p.id === draft.planId)?.name ?? "—"} last styles={styles} />
             </View>
             <View style={styles.rowGap}>
               <Pressable style={styles.secondaryButton} onPress={goBack} disabled={isSubmitting}>
                 <Text style={styles.secondaryButtonText}>Back</Text>
               </Pressable>
               <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={activate} disabled={isSubmitting}>
-                {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryButtonText}>{existingStatus === "active" ? "Save Changes" : "Activate Business"}</Text>}
+                {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryButtonText}>{existingStatus === "active" ? "Save Changes" : "Activate Business"}</Text>}
               </Pressable>
             </View>
           </>
@@ -402,7 +406,9 @@ export default function BusinessOnboardingScreen() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+type Styles = ReturnType<typeof buildStyles>;
+
+function Field({ label, children, styles }: { label: string; children: React.ReactNode; styles: Styles }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -411,7 +417,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ReviewRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+function ReviewRow({ label, value, last, styles }: { label: string; value: string; last?: boolean; styles: Styles }) {
   return (
     <View style={[styles.reviewRow, last && { borderBottomWidth: 0 }]}>
       <Text style={styles.reviewRowLabel}>{label}</Text>
@@ -420,7 +426,7 @@ function ReviewRow({ label, value, last }: { label: string; value: string; last?
   );
 }
 
-function StepNav({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function StepNav({ onBack, onNext, styles }: { onBack: () => void; onNext: () => void; styles: Styles }) {
   return (
     <View style={styles.rowGap}>
       <Pressable style={styles.secondaryButton} onPress={onBack}>
@@ -433,55 +439,61 @@ function StepNav({ onBack, onNext }: { onBack: () => void; onNext: () => void })
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  centeredTitle: { fontSize: 16, fontWeight: "700", color: "#111827", marginBottom: 16 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  progressRow: { flexDirection: "row", gap: 6, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 4 },
-  progressCol: { flex: 1, alignItems: "center" },
-  progressBar: { height: 5, width: "100%", borderRadius: 4, backgroundColor: "#E8ECF4" },
-  progressBarActive: { backgroundColor: BRAND_GOLD },
-  progressLabel: { fontSize: 10.5, fontWeight: "600", color: "#8A93A6", marginTop: 5 },
-  progressLabelActive: { fontWeight: "800", color: BRAND_BLUE },
-  intro: { fontSize: 13, color: "#8A93A6", lineHeight: 19, marginBottom: 16 },
-  field: { marginBottom: 14 },
-  fieldLabel: { fontSize: 13, fontWeight: "700", color: "#111827", marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: "#D8DCE5", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: "#111827" },
-  textArea: { minHeight: 80, textAlignVertical: "top" },
-  rowGap: { flexDirection: "row", gap: 10 },
-  typeButton: { flex: 1, padding: 12, borderRadius: 14, borderWidth: 1.5, borderColor: "#E8ECF4", backgroundColor: "#ffffff" },
-  typeButtonActive: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FB" },
-  typeButtonLabel: { fontSize: 13.5, fontWeight: "800", color: "#111827" },
-  typeButtonLabelActive: { color: BRAND_BLUE },
-  typeButtonSub: { fontSize: 11, color: "#8A93A6", marginTop: 2 },
-  chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: "#E8ECF4", backgroundColor: "#ffffff" },
-  chipActive: { borderColor: BRAND_BLUE, backgroundColor: BRAND_BLUE },
-  chipText: { fontSize: 12.5, fontWeight: "700", color: "#111827" },
-  chipTextActive: { color: "#ffffff" },
-  selCount: { fontSize: 12, fontWeight: "700", color: BRAND_BLUE, marginBottom: 12 },
-  catGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 18 },
-  catButton: { width: "47%", padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: "#E8ECF4", backgroundColor: "#ffffff" },
-  catButtonActive: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FB" },
-  catButtonLabel: { fontSize: 13.5, fontWeight: "700", color: "#111827" },
-  catButtonLabelActive: { color: BRAND_BLUE },
-  planCard: { padding: 16, borderRadius: 16, borderWidth: 2, borderColor: "#E8ECF4", backgroundColor: "#ffffff", marginBottom: 12 },
-  planCardActive: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FB" },
-  planHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
-  planName: { fontSize: 16, fontWeight: "800", color: "#111827" },
-  planNameActive: { color: BRAND_BLUE },
-  planPrice: { fontSize: 15, fontWeight: "800", color: BRAND_BLUE },
-  planTagline: { fontSize: 12, color: "#8A93A6", marginBottom: 8 },
-  featurePill: { backgroundColor: "rgba(26,58,143,0.07)", borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
-  featurePillText: { fontSize: 11, fontWeight: "600", color: BRAND_BLUE },
-  reviewCard: { backgroundColor: "#ffffff", borderWidth: 1, borderColor: "#E8ECF4", borderRadius: 16, paddingHorizontal: 16, marginBottom: 18 },
-  reviewRow: { flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: "#E8ECF4" },
-  reviewRowLabel: { fontSize: 13, color: "#8A93A6" },
-  reviewRowValue: { fontSize: 13, fontWeight: "700", color: "#111827", textAlign: "right", flexShrink: 1 },
-  primaryButton: { backgroundColor: BRAND_BLUE, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
-  flexButton: { flex: 2, marginTop: 0 },
-  primaryButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  secondaryButton: { flex: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", backgroundColor: "#F5F6F9" },
-  secondaryButtonText: { fontSize: 14, fontWeight: "700", color: "#111827" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.surface },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+    centeredTitle: { fontSize: 16, fontWeight: "700", color: color.text, marginBottom: 16 },
+    scrollContent: { padding: 16, paddingBottom: 40 },
+    progressRow: { flexDirection: "row", gap: 6, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 4 },
+    progressCol: { flex: 1, alignItems: "center" },
+    progressBar: { height: 5, width: "100%", borderRadius: 4, backgroundColor: color.border },
+    progressBarActive: { backgroundColor: color.gold },
+    progressLabel: { fontSize: 10.5, fontWeight: "600", color: color.textMuted, marginTop: 5 },
+    progressLabelActive: { fontWeight: "800", color: color.brand },
+    intro: { fontSize: 13, color: color.textMuted, lineHeight: 19, marginBottom: 16 },
+    field: { marginBottom: 14 },
+    fieldLabel: { fontSize: 13, fontWeight: "700", color: color.text, marginBottom: 8 },
+    input: { borderWidth: 1, borderColor: color.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: color.text },
+    textArea: { minHeight: 80, textAlignVertical: "top" },
+    rowGap: { flexDirection: "row", gap: 10 },
+    typeButton: { flex: 1, padding: 12, borderRadius: 14, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface },
+    typeButtonActive: { borderColor: color.brand, backgroundColor: color.brandTint },
+    typeButtonLabel: { fontSize: 13.5, fontWeight: "800", color: color.text },
+    typeButtonLabelActive: { color: color.brand },
+    typeButtonSub: { fontSize: 11, color: color.textMuted, marginTop: 2 },
+    chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface },
+    chipActive: { borderColor: color.brand, backgroundColor: color.brand },
+    chipText: { fontSize: 12.5, fontWeight: "700", color: color.text },
+    chipTextActive: { color: color.textOnBrand },
+    selCount: { fontSize: 12, fontWeight: "700", color: color.brand, marginBottom: 12 },
+    catGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 18 },
+    catButton: { width: "47%", padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: color.border, backgroundColor: color.surface },
+    catButtonActive: { borderColor: color.brand, backgroundColor: color.brandTint },
+    catButtonLabel: { fontSize: 13.5, fontWeight: "700", color: color.text },
+    catButtonLabelActive: { color: color.brand },
+    planCard: { padding: 16, borderRadius: 16, borderWidth: 2, borderColor: color.border, backgroundColor: color.surface, marginBottom: 12 },
+    planCardActive: { borderColor: color.brand, backgroundColor: color.brandTint },
+    planHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
+    planName: { fontSize: 16, fontWeight: "800", color: color.text },
+    planNameActive: { color: color.brand },
+    planPrice: { fontSize: 15, fontWeight: "800", color: color.brand },
+    planTagline: { fontSize: 12, color: color.textMuted, marginBottom: 8 },
+    featurePill: { backgroundColor: color.brandTint, borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
+    featurePillText: { fontSize: 11, fontWeight: "600", color: color.brand },
+    reviewCard: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: 16, paddingHorizontal: 16, marginBottom: 18 },
+    reviewRow: { flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: color.border },
+    reviewRowLabel: { fontSize: 13, color: color.textMuted },
+    reviewRowValue: { fontSize: 13, fontWeight: "700", color: color.text, textAlign: "right", flexShrink: 1 },
+    primaryButton: { backgroundColor: color.brand, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
+    flexButton: { flex: 2, marginTop: 0 },
+    primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    secondaryButton: { flex: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", backgroundColor: color.surfaceAlt },
+    secondaryButtonText: { fontSize: 14, fontWeight: "700", color: color.text },
+  });
+}

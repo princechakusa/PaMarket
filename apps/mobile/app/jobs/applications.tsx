@@ -5,22 +5,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { JobApplication } from "../../lib/jobs";
+import { color, type ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 function BackIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "#F5A623",
-  shortlisted: "#22c55e",
-  declined: "#ef4444",
-};
+function buildStatusTones(color: ColorPalette): Record<string, string> {
+  return {
+    pending: color.gold,
+    shortlisted: color.success,
+    declined: color.danger,
+  };
+}
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
   shortlisted: "Shortlisted",
@@ -38,6 +41,8 @@ function timeAgo(dateString: string): string {
 // Mirrors www/js/jobs.js H.pages.AppliedJobs — "My Applications" for the
 // signed-in job seeker, reading directly from public.applications.
 export default function MyApplicationsScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const statusTones = useThemedStyles(buildStatusTones);
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
@@ -71,7 +76,7 @@ export default function MyApplicationsScreen() {
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={BRAND_BLUE} />
+          <ActivityIndicator color={color.brand} />
         </View>
       ) : (
         <FlatList
@@ -86,7 +91,7 @@ export default function MyApplicationsScreen() {
             </View>
           }
           renderItem={({ item }) => {
-            const color = STATUS_COLORS[item.status] || "#9CA3AF";
+            const statusColor = statusTones[item.status] || color.textMuted;
             const label = STATUS_LABELS[item.status] || item.status;
             return (
               <Pressable
@@ -97,8 +102,8 @@ export default function MyApplicationsScreen() {
                   <Text style={styles.jobTitle} numberOfLines={1}>
                     {item.job_title || "Job"}
                   </Text>
-                  <View style={[styles.statusPill, { backgroundColor: `${color}20` }]}>
-                    <Text style={[styles.statusPillText, { color }]}>{label}</Text>
+                  <View style={[styles.statusPill, { backgroundColor: `${statusColor}20` }]}>
+                    <Text style={[styles.statusPillText, { color: statusColor }]}>{label}</Text>
                   </View>
                 </View>
                 <Text style={styles.company}>{item.company}</Text>
@@ -112,26 +117,28 @@ export default function MyApplicationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 4 },
-  emptyText: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  emptySubtext: { fontSize: 12.5, color: "#8A93A6" },
+  emptyText: { fontSize: 14, fontWeight: "700", color: color.text },
+  emptySubtext: { fontSize: 12.5, color: color.textMuted },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#ffffff" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
   listContent: { padding: 16 },
-  card: { backgroundColor: "#ffffff", borderRadius: 14, padding: 16 },
+  card: { backgroundColor: color.surface, borderRadius: 14, padding: 16 },
   cardTopRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 },
-  jobTitle: { flex: 1, fontSize: 15, fontWeight: "700", color: "#111827" },
+  jobTitle: { flex: 1, fontSize: 15, fontWeight: "700", color: color.text },
   statusPill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3, flexShrink: 0 },
   statusPillText: { fontSize: 11, fontWeight: "700" },
-  company: { fontSize: 13, color: "#5A6478", marginBottom: 4 },
-  appliedAt: { fontSize: 12, color: "#8A93A6" },
-});
+  company: { fontSize: 13, color: color.textSub, marginBottom: 4 },
+  appliedAt: { fontSize: 12, color: color.textMuted },
+  });
+}

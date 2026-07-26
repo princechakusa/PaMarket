@@ -3,9 +3,10 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-nat
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { planEntitlements } from "../../lib/plan-entitlements";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 type PlaySubscription = {
   id: string;
@@ -25,23 +26,30 @@ type SlotPack = {
   created_at: string;
 };
 
-const SUB_BADGE: Record<string, [string, string, string]> = {
-  active: ["#EAF7EF", "#0f7a3d", "Active"],
-  in_grace_period: ["#FFF4D6", "#92670A", "Grace period"],
-  on_hold: ["#FFF4D6", "#92670A", "On hold"],
-  canceled: ["#FEE4E2", "#B42318", "Canceled"],
-  expired: ["#F1F5F9", "#64748B", "Expired"],
-  paused: ["#F1F5F9", "#64748B", "Paused"],
-  pending: ["#EEF2FF", "#1A3A8F", "Pending"],
-};
-const PACK_BADGE: Record<string, [string, string, string]> = {
-  consumed: ["#EAF7EF", "#0f7a3d", "Active"],
-  verified: ["#EEF2FF", "#1A3A8F", "Verifying"],
-  pending: ["#FFF4D6", "#92670A", "Pending"],
-  failed: ["#FEE4E2", "#B42318", "Failed"],
-};
+type Styles = ReturnType<typeof buildStyles>;
 
-function Badge({ tuple }: { tuple: [string, string, string] }) {
+function buildBadgeTones(color: ColorPalette) {
+  return {
+    brand: color.brand,
+    sub: {
+      active: [color.successTint, color.success, "Active"],
+      in_grace_period: [color.warningTint, color.warning, "Grace period"],
+      on_hold: [color.warningTint, color.warning, "On hold"],
+      canceled: [color.dangerTint, color.danger, "Canceled"],
+      expired: [color.surfaceAlt, color.textMuted, "Expired"],
+      paused: [color.surfaceAlt, color.textMuted, "Paused"],
+      pending: [color.brandTint, color.brand, "Pending"],
+    } as Record<string, [string, string, string]>,
+    pack: {
+      consumed: [color.successTint, color.success, "Active"],
+      verified: [color.brandTint, color.brand, "Verifying"],
+      pending: [color.warningTint, color.warning, "Pending"],
+      failed: [color.dangerTint, color.danger, "Failed"],
+    } as Record<string, [string, string, string]>,
+  };
+}
+
+function Badge({ tuple, styles }: { tuple: [string, string, string]; styles: Styles }) {
   return (
     <View style={[styles.badge, { backgroundColor: tuple[0] }]}>
       <Text style={[styles.badgeText, { color: tuple[1] }]}>{tuple[2]}</Text>
@@ -56,6 +64,8 @@ function Badge({ tuple }: { tuple: [string, string, string] }) {
 export default function BusinessBillingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildBadgeTones);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [subs, setSubs] = useState<PlaySubscription[]>([]);
@@ -96,7 +106,7 @@ export default function BusinessBillingScreen() {
   if (isLoading || isOwner === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -132,7 +142,7 @@ export default function BusinessBillingScreen() {
                   <Text style={styles.rowSub}>Renews/expires {new Date(s.expiry_time).toLocaleDateString()}</Text>
                 ) : null}
               </View>
-              <Badge tuple={SUB_BADGE[s.subscription_state] || SUB_BADGE.pending} />
+              <Badge tuple={tones.sub[s.subscription_state] || tones.sub.pending} styles={styles} />
             </View>
           ))
         ) : (
@@ -151,7 +161,7 @@ export default function BusinessBillingScreen() {
                 </Text>
                 <Text style={styles.rowSub}>{new Date(p.created_at).toLocaleDateString()}</Text>
               </View>
-              <Badge tuple={PACK_BADGE[p.status] || PACK_BADGE.pending} />
+              <Badge tuple={tones.pack[p.status] || tones.pack.pending} styles={styles} />
             </View>
           ))
         ) : (
@@ -162,26 +172,28 @@ export default function BusinessBillingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  infoBox: { backgroundColor: "#EEF2FB", borderWidth: 1, borderColor: "#C7D7F8", borderRadius: 14, padding: 16, marginBottom: 18 },
-  infoTitle: { fontSize: 13, fontWeight: "800", color: BRAND_BLUE, marginBottom: 4 },
-  infoText: { fontSize: 12.5, color: "#475569", lineHeight: 19 },
-  sectionTitle: { fontSize: 13, fontWeight: "800", color: "#111827", marginBottom: 6 },
-  box: { backgroundColor: "#ffffff", borderRadius: 16, paddingHorizontal: 16, marginBottom: 18 },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8ECF4",
-  },
-  rowTitle: { fontSize: 13.5, fontWeight: "700", color: "#111827" },
-  rowSub: { fontSize: 11.5, color: "#8A93A6", marginTop: 2 },
-  badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { fontSize: 9.5, fontWeight: "800" },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 13, paddingVertical: 20 },
-});
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    infoBox: { backgroundColor: color.brandTint, borderWidth: 1, borderColor: color.brandTintStrong, borderRadius: 14, padding: 16, marginBottom: 18 },
+    infoTitle: { fontSize: 13, fontWeight: "800", color: color.brand, marginBottom: 4 },
+    infoText: { fontSize: 12.5, color: color.textSub, lineHeight: 19 },
+    sectionTitle: { fontSize: 13, fontWeight: "800", color: color.text, marginBottom: 6 },
+    box: { backgroundColor: color.surface, borderRadius: 16, paddingHorizontal: 16, marginBottom: 18 },
+    row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+    },
+    rowTitle: { fontSize: 13.5, fontWeight: "700", color: color.text },
+    rowSub: { fontSize: 11.5, color: color.textMuted, marginTop: 2 },
+    badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+    badgeText: { fontSize: 9.5, fontWeight: "800" },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 20 },
+  });
+}

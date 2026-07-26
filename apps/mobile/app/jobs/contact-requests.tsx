@@ -5,23 +5,26 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { ContactRequest } from "../../lib/jobs";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { color, type ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 function BackIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
 
-const STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
-  pending: { color: "#F5A623", bg: "#F5A62318", label: "Pending review" },
-  approved: { color: "#15803d", bg: "#22c55e1a", label: "Approved" },
-  declined: { color: "#ef4444", bg: "#ef444418", label: "Declined" },
-};
+function buildStatusMeta(color: ColorPalette): Record<string, { color: string; bg: string; label: string }> {
+  return {
+    pending: { color: color.gold, bg: color.goldTint, label: "Pending review" },
+    approved: { color: color.success, bg: color.successTint, label: "Approved" },
+    declined: { color: color.danger, bg: color.dangerTint, label: "Declined" },
+  };
+}
 
 function timeAgo(dateString: string): string {
   const days = Math.floor((Date.now() - new Date(dateString).getTime()) / 86400000);
@@ -35,6 +38,8 @@ function timeAgo(dateString: string): string {
 // candidate contact-unlock requests, reading directly from
 // public.contact_requests (RLS: requester can read their own rows).
 export default function MyContactRequestsScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const statusMeta = useThemedStyles(buildStatusMeta);
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
@@ -68,7 +73,7 @@ export default function MyContactRequestsScreen() {
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={BRAND_BLUE} />
+          <ActivityIndicator color={color.brand} />
         </View>
       ) : (
         <FlatList
@@ -87,7 +92,7 @@ export default function MyContactRequestsScreen() {
             </View>
           }
           renderItem={({ item }) => {
-            const meta = STATUS_META[item.status] || STATUS_META.pending;
+            const meta = statusMeta[item.status] || statusMeta.pending;
             const approved = item.status === "approved";
             const name = approved ? item.candidate_name || "Candidate" : "Candidate";
             return (
@@ -127,25 +132,27 @@ export default function MyContactRequestsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 60 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#ffffff" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
   listContent: { padding: 14, paddingBottom: 40, flexGrow: 1 },
-  card: { backgroundColor: "#ffffff", borderRadius: 14, padding: 16, borderWidth: 1, borderColor: "#E8ECF4" },
+  card: { backgroundColor: color.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: color.border },
   cardTopRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 },
-  candName: { fontSize: 15, fontWeight: "800", color: "#111827" },
-  roleText: { fontSize: 12, color: "#8A93A6", marginTop: 1 },
+  candName: { fontSize: 15, fontWeight: "800", color: color.text },
+  roleText: { fontSize: 12, color: color.textMuted, marginTop: 1 },
   statusPill: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, flexShrink: 0 },
   statusPillText: { fontSize: 11, fontWeight: "800" },
-  statusBody: { fontSize: 12, color: "#5A6478", lineHeight: 18 },
-  requestedAt: { fontSize: 11, color: "#9CA3AF", marginTop: 8 },
-});
+  statusBody: { fontSize: 12, color: color.textSub, lineHeight: 18 },
+  requestedAt: { fontSize: 11, color: color.textMuted, marginTop: 8 },
+  });
+}

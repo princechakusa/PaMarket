@@ -3,11 +3,12 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
 import type { RentalLead } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const SOURCE_LABEL: Record<string, string> = {
   chat: "Chat",
@@ -34,6 +35,8 @@ function timeAgo(iso: string) {
 // lookup, then to a "biz_" conversations.members-contains lookup, matching
 // the web app's three-tier fallback so a chat still opens whenever one exists.
 export default function RentalLeadsScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { bizId } = useLocalSearchParams<{ bizId: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -153,7 +156,7 @@ export default function RentalLeadsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -186,16 +189,22 @@ export default function RentalLeadsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  card: { backgroundColor: "#ffffff", borderRadius: 14, padding: 14, marginBottom: 10 },
-  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  userName: { fontSize: 14, fontWeight: "700", color: "#18181B" },
-  sourcePill: { backgroundColor: "#EEF2FF", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  sourcePillText: { fontSize: 10.5, fontWeight: "800", color: BRAND_BLUE },
-  meta: { fontSize: 12.5, color: "#A1A1AA", marginTop: 4 },
-  statusRow: { marginTop: 8 },
-  statusText: { fontSize: 11.5, fontWeight: "700", color: "#A1A1AA" },
-  statusNew: { color: BRAND_BLUE },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    card: { backgroundColor: color.surface, borderRadius: 14, padding: 14, marginBottom: 10 },
+    cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    userName: { fontSize: 14, fontWeight: "700", color: color.text },
+    sourcePill: { backgroundColor: color.brandTint, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+    sourcePillText: { fontSize: 10.5, fontWeight: "800", color: color.brand },
+    meta: { fontSize: 12.5, color: color.textMuted, marginTop: 4 },
+    statusRow: { marginTop: 8 },
+    statusText: { fontSize: 11.5, fontWeight: "700", color: color.textMuted },
+    statusNew: { color: color.brand },
+  });
+}

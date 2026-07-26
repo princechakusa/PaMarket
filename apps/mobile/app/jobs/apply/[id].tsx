@@ -5,17 +5,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
-import { BRAND_BLUE, BRAND_GOLD } from "../../../lib/constants";
 import { jobCompany } from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
+import { color, type ColorPalette } from "../../../lib/theme";
+import { useThemedStyles } from "../../../lib/theme-provider";
 
 function BackIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
+
+type Styles = ReturnType<typeof buildStyles>;
 
 type JobListing = {
   id: string;
@@ -32,6 +35,7 @@ type JobListing = {
 // screening-question "answers" column isn't in the real schema, so it's
 // left out here rather than guessed at.
 export default function ApplyJobScreen() {
+  const styles = useThemedStyles(buildStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -112,7 +116,7 @@ export default function ApplyJobScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={color.brand} />
       </View>
     );
   }
@@ -152,9 +156,9 @@ export default function ApplyJobScreen() {
         ) : (
           <>
             <Text style={styles.sectionLabel}>About you</Text>
-            <Field label="Full name" required value={name} onChangeText={setName} placeholder="e.g. Tendai Moyo" />
-            <Field label="Email address" required value={email} onChangeText={setEmail} placeholder="you@gmail.com" keyboardType="email-address" />
-            <Field label="Phone number" required value={phone} onChangeText={setPhone} placeholder="077 123 4567" keyboardType="phone-pad" />
+            <Field label="Full name" required value={name} onChangeText={setName} placeholder="e.g. Tendai Moyo" styles={styles} />
+            <Field label="Email address" required value={email} onChangeText={setEmail} placeholder="you@gmail.com" keyboardType="email-address" styles={styles} />
+            <Field label="Phone number" required value={phone} onChangeText={setPhone} placeholder="077 123 4567" keyboardType="phone-pad" styles={styles} />
 
             <Text style={styles.sectionLabel}>Why are you a good fit?</Text>
             <TextInput
@@ -162,7 +166,7 @@ export default function ApplyJobScreen() {
               value={message}
               onChangeText={setMessage}
               placeholder="Tell the employer a bit about yourself — optional but recommended."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={color.textMuted}
               multiline
               numberOfLines={4}
             />
@@ -188,6 +192,7 @@ function Field({
   placeholder,
   required,
   keyboardType,
+  styles,
 }: {
   label: string;
   value: string;
@@ -195,19 +200,20 @@ function Field({
   placeholder: string;
   required?: boolean;
   keyboardType?: "email-address" | "phone-pad";
+  styles: Styles;
 }) {
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={styles.label}>
         {label}
-        {required ? <Text style={{ color: "#EF4444" }}> *</Text> : null}
+        {required ? <Text style={{ color: color.danger }}> *</Text> : null}
       </Text>
       <TextInput
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={color.textMuted}
         keyboardType={keyboardType}
         autoCapitalize={keyboardType === "email-address" ? "none" : "words"}
       />
@@ -215,36 +221,37 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  notFoundText: { fontSize: 15, fontWeight: "600", color: "#111827" },
+  notFoundText: { fontSize: 15, fontWeight: "600", color: color.text },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerTitle: { flex: 1, fontSize: 15, fontWeight: "700", color: "#ffffff", textAlign: "center" },
-  jobCard: { backgroundColor: "#ffffff", borderRadius: 14, padding: 14, marginBottom: 16 },
-  jobTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  jobCompany: { fontSize: 13, color: "#5A6478", marginTop: 3 },
-  appliedBanner: { backgroundColor: "#EEF2FB", borderRadius: 12, padding: 16, alignItems: "center" },
-  appliedBannerText: { fontSize: 14, fontWeight: "600", color: BRAND_BLUE },
-  sectionLabel: { fontSize: 13, fontWeight: "700", color: "#111827", marginTop: 8, marginBottom: 12 },
-  label: { fontSize: 12.5, fontWeight: "700", color: "#111827", marginBottom: 7 },
+  headerTitle: { flex: 1, fontSize: 15, fontWeight: "700", color: color.textOnBrand, textAlign: "center" },
+  jobCard: { backgroundColor: color.surface, borderRadius: 14, padding: 14, marginBottom: 16 },
+  jobTitle: { fontSize: 15, fontWeight: "700", color: color.text },
+  jobCompany: { fontSize: 13, color: color.textSub, marginTop: 3 },
+  appliedBanner: { backgroundColor: color.brandTint, borderRadius: 12, padding: 16, alignItems: "center" },
+  appliedBannerText: { fontSize: 14, fontWeight: "600", color: color.brand },
+  sectionLabel: { fontSize: 13, fontWeight: "700", color: color.text, marginTop: 8, marginBottom: 12 },
+  label: { fontSize: 12.5, fontWeight: "700", color: color.text, marginBottom: 7 },
   input: {
     borderWidth: 1.5,
-    borderColor: "#E8ECF4",
+    borderColor: color.border,
     borderRadius: 12,
     paddingHorizontal: 13,
     paddingVertical: 12,
     fontSize: 14,
-    color: "#111827",
-    backgroundColor: "#ffffff",
+    color: color.text,
+    backgroundColor: color.surface,
   },
   textarea: { minHeight: 100, textAlignVertical: "top" },
   footer: {
@@ -252,11 +259,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderTopWidth: 1,
-    borderTopColor: "#F0F1F5",
+    borderTopColor: color.divider,
     padding: 12,
   },
-  submitButton: { backgroundColor: BRAND_GOLD, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  submitButton: { backgroundColor: color.gold, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
   submitButtonText: { fontSize: 15, fontWeight: "700", color: "#ffffff" },
-});
+  });
+}

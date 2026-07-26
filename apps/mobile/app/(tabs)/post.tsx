@@ -145,6 +145,14 @@ export default function PostScreen() {
     update({ photos: next });
   }
 
+  function movePhoto(index: number, direction: "left" | "right") {
+    const target = direction === "left" ? index - 1 : index + 1;
+    if (target < 0 || target >= state.photos.length) return;
+    const next = [...state.photos];
+    [next[index], next[target]] = [next[target], next[index]];
+    update({ photos: next });
+  }
+
   const showCondition = categoryHasCondition(state.category);
 
   function goNext() {
@@ -379,6 +387,7 @@ export default function PostScreen() {
               onPickCamera={() => pickPhotos("camera")}
               onRemove={removePhoto}
               onSetCover={setCoverPhoto}
+              onMove={movePhoto}
               isProcessing={isProcessingPhotos}
             />
             <View style={styles.tipBox}>

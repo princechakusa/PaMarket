@@ -18,8 +18,12 @@ import { PasswordField } from "../../components/PasswordField";
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { isValidEmail, isValidPhone, isStrongEnoughPassword } from "../../lib/validation";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 export default function SignUpScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -118,7 +122,7 @@ export default function SignUpScreen() {
           <TextInput
             style={styles.input}
             placeholder="Full name"
-            placeholderTextColor="#8A93A6"
+            placeholderTextColor={tones.textMuted}
             autoComplete="name"
             value={fullName}
             onChangeText={setFullName}
@@ -126,7 +130,7 @@ export default function SignUpScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor="#8A93A6"
+            placeholderTextColor={tones.textMuted}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
@@ -136,7 +140,7 @@ export default function SignUpScreen() {
           <TextInput
             style={styles.input}
             placeholder="Phone (optional)"
-            placeholderTextColor="#8A93A6"
+            placeholderTextColor={tones.textMuted}
             autoComplete="tel"
             keyboardType="phone-pad"
             value={phone}
@@ -180,7 +184,7 @@ export default function SignUpScreen() {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={tones.textOnBrand} />
             ) : (
               <Text style={styles.buttonText}>Create Account</Text>
             )}
@@ -200,125 +204,131 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  brandBlock: {
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  brand: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#1A3A8F",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#5A6478",
-    marginTop: 6,
-    textAlign: "center",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E4E7EF",
-  },
-  dividerText: {
-    fontSize: 12,
-    color: "#8A93A6",
-  },
-  form: {
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#111827",
-  },
-  consentRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    marginTop: 4,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: "#D8DCE5",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
-  },
-  checkboxChecked: {
-    backgroundColor: "#1A3A8F",
-    borderColor: "#1A3A8F",
-  },
-  checkboxMark: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  consentText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
-    color: "#3A4258",
-  },
-  consentLink: {
-    color: "#1A3A8F",
-    fontWeight: "600",
-  },
-  button: {
-    backgroundColor: "#1A3A8F",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 4,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 14,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 24,
-  },
-  footerText: {
-    fontSize: 14,
-    color: "#5A6478",
-  },
-  footerLink: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1A3A8F",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { textOnBrand: color.textOnBrand, textMuted: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      paddingVertical: 40,
+    },
+    brandBlock: {
+      alignItems: "center",
+      marginBottom: 28,
+    },
+    brand: {
+      fontSize: 26,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: color.textSub,
+      marginTop: 6,
+      textAlign: "center",
+    },
+    divider: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginVertical: 20,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: color.border,
+    },
+    dividerText: {
+      fontSize: 12,
+      color: color.textMuted,
+    },
+    form: {
+      gap: 12,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: color.text,
+    },
+    consentRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+      marginTop: 4,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 5,
+      borderWidth: 1.5,
+      borderColor: color.borderStrong,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 1,
+    },
+    checkboxChecked: {
+      backgroundColor: color.brand,
+      borderColor: color.brand,
+    },
+    checkboxMark: {
+      color: color.textOnBrand,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    consentText: {
+      flex: 1,
+      fontSize: 13,
+      lineHeight: 19,
+      color: color.textSub,
+    },
+    consentLink: {
+      color: color.brand,
+      fontWeight: "600",
+    },
+    button: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 4,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: color.textOnBrand,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    error: {
+      color: color.danger,
+      fontSize: 14,
+    },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 24,
+    },
+    footerText: {
+      fontSize: 14,
+      color: color.textSub,
+    },
+    footerLink: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.brand,
+    },
+  });
+}

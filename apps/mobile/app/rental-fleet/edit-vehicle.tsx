@@ -14,12 +14,23 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { RENTAL_DRIVE_TYPES, RENTAL_FUEL_TYPES, RENTAL_TRANSMISSIONS } from "../../lib/rentals";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+function Chip({
+  label,
+  selected,
+  onPress,
+  styles,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  styles: ReturnType<typeof buildStyles>;
+}) {
   return (
     <Pressable style={[styles.chip, selected && styles.chipSelected]} onPress={onPress}>
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
@@ -30,6 +41,8 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
 // Mirrors www/js/rentals-business.js H.pages.RentalEditVehicle — pricing,
 // specs, availability toggle, description, and photo upload for one vehicle.
 export default function RentalEditVehicleScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { id, bizId } = useLocalSearchParams<{ id: string; bizId: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -179,7 +192,7 @@ export default function RentalEditVehicleScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -204,62 +217,62 @@ export default function RentalEditVehicleScreen() {
           <Image key={p.id} source={{ uri: p.url }} style={styles.photoThumb} />
         ))}
         <Pressable style={styles.addPhotoBtn} onPress={pickAndUploadPhoto} disabled={isUploading}>
-          {isUploading ? <ActivityIndicator color={BRAND_BLUE} /> : <Text style={styles.addPhotoText}>+ Photo</Text>}
+          {isUploading ? <ActivityIndicator color={tones.brand} /> : <Text style={styles.addPhotoText}>+ Photo</Text>}
         </Pressable>
       </ScrollView>
 
       <Text style={styles.sectionLabel}>Pricing</Text>
       <Text style={styles.label}>Daily Rate</Text>
-      <TextInput style={styles.input} value={dailyRate} onChangeText={setDailyRate} keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={dailyRate} onChangeText={setDailyRate} keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Weekly Rate</Text>
-          <TextInput style={styles.input} value={weeklyRate} onChangeText={setWeeklyRate} keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={weeklyRate} onChangeText={setWeeklyRate} keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Monthly Rate</Text>
-          <TextInput style={styles.input} value={monthlyRate} onChangeText={setMonthlyRate} keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={monthlyRate} onChangeText={setMonthlyRate} keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
         </View>
       </View>
       <Text style={styles.label}>Security Deposit</Text>
-      <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
       <Text style={styles.label}>Minimum Rental Days</Text>
-      <TextInput style={styles.input} value={minDays} onChangeText={setMinDays} keyboardType="number-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={minDays} onChangeText={setMinDays} keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
       <Text style={styles.label}>Driver Rate / Day</Text>
-      <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} keyboardType="decimal-pad" placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
 
       <Text style={styles.sectionLabel}>Specs</Text>
       <Text style={styles.label}>Transmission</Text>
       <View style={styles.chipRow}>
         {RENTAL_TRANSMISSIONS.map((t) => (
-          <Chip key={t} label={t[0].toUpperCase() + t.slice(1)} selected={transmission === t} onPress={() => setTransmission(t)} />
+          <Chip key={t} label={t[0].toUpperCase() + t.slice(1)} selected={transmission === t} onPress={() => setTransmission(t)} styles={styles} />
         ))}
       </View>
       <Text style={styles.label}>Fuel Type</Text>
       <View style={styles.chipRow}>
         {RENTAL_FUEL_TYPES.map((f) => (
-          <Chip key={f} label={f[0].toUpperCase() + f.slice(1)} selected={fuelType === f} onPress={() => setFuelType(f)} />
+          <Chip key={f} label={f[0].toUpperCase() + f.slice(1)} selected={fuelType === f} onPress={() => setFuelType(f)} styles={styles} />
         ))}
       </View>
       <Text style={styles.label}>Drive Type</Text>
       <View style={styles.chipRow}>
         {RENTAL_DRIVE_TYPES.map((d) => (
-          <Chip key={d} label={d.toUpperCase()} selected={driveType === d} onPress={() => setDriveType(d)} />
+          <Chip key={d} label={d.toUpperCase()} selected={driveType === d} onPress={() => setDriveType(d)} styles={styles} />
         ))}
       </View>
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Seats</Text>
-          <TextInput style={styles.input} value={seats} onChangeText={setSeats} keyboardType="number-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={seats} onChangeText={setSeats} keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>Mileage (km)</Text>
-          <TextInput style={styles.input} value={mileage} onChangeText={setMileage} keyboardType="number-pad" placeholderTextColor="#A1A1AA" />
+          <TextInput style={styles.input} value={mileage} onChangeText={setMileage} keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
         </View>
       </View>
 
       <Text style={styles.sectionLabel}>Description</Text>
-      <TextInput style={styles.textarea} value={description} onChangeText={setDescription} multiline numberOfLines={4} placeholderTextColor="#A1A1AA" />
+      <TextInput style={styles.textarea} value={description} onChangeText={setDescription} multiline numberOfLines={4} placeholderTextColor={tones.textMuted} />
 
       <Text style={styles.sectionLabel}>Availability</Text>
       <View style={styles.availRow}>
@@ -267,7 +280,7 @@ export default function RentalEditVehicleScreen() {
           <Text style={styles.availTitle}>Mark as available</Text>
           <Text style={styles.availSub}>Customers can see and enquire about this vehicle</Text>
         </View>
-        <Switch value={isAvailable} onValueChange={setIsAvailable} trackColor={{ true: BRAND_BLUE }} />
+        <Switch value={isAvailable} onValueChange={setIsAvailable} trackColor={{ true: tones.brand }} />
       </View>
 
       <View style={styles.row}>
@@ -275,81 +288,87 @@ export default function RentalEditVehicleScreen() {
           <Text style={styles.secondaryBtnText}>Cancel</Text>
         </Pressable>
         <Pressable style={[styles.primaryBtn, { flex: 2 }, isSaving && styles.disabled]} onPress={save} disabled={isSaving}>
-          {isSaving ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.primaryBtnText}>Save Changes</Text>}
+          {isSaving ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Save Changes</Text>}
         </Pressable>
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  blockedTitle: { fontSize: 14, fontWeight: "700", color: "#52525B", marginBottom: 6, textAlign: "center" },
-  blockedBody: { fontSize: 12.5, color: "#A1A1AA", textAlign: "center", lineHeight: 18, marginBottom: 16 },
-  sectionLabel: { fontSize: 13, fontWeight: "700", color: "#52525B", textTransform: "uppercase", letterSpacing: 0.4, marginTop: 16, marginBottom: 10 },
-  label: { fontSize: 12, fontWeight: "700", color: "#52525B", marginBottom: 6, marginTop: 12 },
-  input: {
-    height: 46,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-  },
-  textarea: {
-    minHeight: 90,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 12,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-    textAlignVertical: "top",
-  },
-  row: { flexDirection: "row", gap: 10 },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    backgroundColor: "#ffffff",
-  },
-  chipSelected: { borderColor: BRAND_BLUE, backgroundColor: "#EEF2FF" },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#52525B" },
-  chipTextSelected: { color: BRAND_BLUE },
-  photoThumb: { width: 90, height: 66, borderRadius: 10, marginRight: 8, backgroundColor: "#E8ECF4" },
-  addPhotoBtn: {
-    width: 90,
-    height: 66,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: BRAND_BLUE,
-    borderStyle: "dashed",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addPhotoText: { fontSize: 11, fontWeight: "700", color: BRAND_BLUE },
-  availRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    padding: 14,
-  },
-  availTitle: { fontSize: 14, fontWeight: "700", color: "#18181B" },
-  availSub: { fontSize: 12, color: "#A1A1AA", marginTop: 2 },
-  primaryBtn: { backgroundColor: BRAND_BLUE, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
-  primaryBtnText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  secondaryBtn: { borderWidth: 1.5, borderColor: BRAND_BLUE, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  secondaryBtnText: { color: BRAND_BLUE, fontSize: 14, fontWeight: "700" },
-  disabled: { opacity: 0.6 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+    blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 6, textAlign: "center" },
+    blockedBody: { fontSize: 12.5, color: color.textMuted, textAlign: "center", lineHeight: 18, marginBottom: 16 },
+    sectionLabel: { fontSize: 13, fontWeight: "700", color: color.textSub, textTransform: "uppercase", letterSpacing: 0.4, marginTop: 16, marginBottom: 10 },
+    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 12 },
+    input: {
+      height: 46,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+    },
+    textarea: {
+      minHeight: 90,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 12,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+      textAlignVertical: "top",
+    },
+    row: { flexDirection: "row", gap: 10 },
+    chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      backgroundColor: color.surface,
+    },
+    chipSelected: { borderColor: color.brand, backgroundColor: color.brandTint },
+    chipText: { fontSize: 13, fontWeight: "600", color: color.textSub },
+    chipTextSelected: { color: color.brand },
+    photoThumb: { width: 90, height: 66, borderRadius: 10, marginRight: 8, backgroundColor: color.skeleton },
+    addPhotoBtn: {
+      width: 90,
+      height: 66,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: color.brand,
+      borderStyle: "dashed",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    addPhotoText: { fontSize: 11, fontWeight: "700", color: color.brand },
+    availRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 14,
+      padding: 14,
+    },
+    availTitle: { fontSize: 14, fontWeight: "700", color: color.text },
+    availSub: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    primaryBtn: { backgroundColor: color.brand, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
+    primaryBtnText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    secondaryBtn: { borderWidth: 1.5, borderColor: color.brand, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+    secondaryBtnText: { color: color.brand, fontSize: 14, fontWeight: "700" },
+    disabled: { opacity: 0.6 },
+  });
+}

@@ -7,11 +7,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.29.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
-  userInterfaceStyle: "light",
+  // "automatic" (not "light") so the OS actually reports dark-mode changes to
+  // useColorScheme() — the in-app "System Default" theme preference
+  // (lib/theme-provider.tsx) relies on that to detect dark mode at all. With
+  // "light" hardcoded, iOS in particular never delivers a dark appearance
+  // event to an app that has opted out of dark mode support.
+  userInterfaceStyle: "automatic",
   scheme: "com.pamarket.app",
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.pamarket.app",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     package: "com.pamarket.app",
@@ -48,6 +56,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-image",
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "PaMarket uses your photos to add pictures to listings, profiles, and chat messages.",
+        cameraPermission: "PaMarket uses your camera to take photos for listings, verification, and chat messages.",
+      },
+    ],
   ],
   extra: {
     router: {},

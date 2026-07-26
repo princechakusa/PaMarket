@@ -14,38 +14,39 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE, BRAND_GOLD } from "../../lib/constants";
 import { brandLabel, type RentalSpecs, type RentalVehicleDetail } from "../../lib/rentals";
 import { businessInitials } from "../../lib/businesses";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
-function BackIcon() {
+function BackIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
 
-function PhoneIcon() {
+function PhoneIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2}>
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
       <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z" />
     </Svg>
   );
 }
 
-function WhatsAppIcon() {
+function WhatsAppIcon({ fill }: { fill: string }) {
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="#ffffff">
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill={fill}>
       <Path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
       <Path d="M11.99 0C5.364 0 0 5.372 0 11.994c0 2.116.554 4.1 1.524 5.822L.057 24l6.304-1.654A11.978 11.978 0 0 0 11.99 24C18.626 24 24 18.628 24 12.006 24 5.372 18.626 0 11.99 0z" />
     </Svg>
   );
 }
 
-function MessageIcon() {
+function MessageIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2}>
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
       <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </Svg>
   );
@@ -69,6 +70,8 @@ const DETAIL_COLUMNS =
   "id,model,year,daily_rate,weekly_rate,monthly_rate,deposit,min_rental_days,driver_rate,description,is_available,company_id,brand_id,location_id";
 
 export default function RentalVehicleDetailScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -170,7 +173,7 @@ export default function RentalVehicleDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -187,7 +190,7 @@ export default function RentalVehicleDetailScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
+          <BackIcon stroke={tones.textOnBrand} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {brandLabel(brandSlug)} {vehicle.model}
@@ -244,10 +247,10 @@ export default function RentalVehicleDetailScreen() {
           {specs ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Car Overview</Text>
-              {specs.transmission ? <InfoRow label="Transmission" value={specs.transmission} /> : null}
-              {specs.fuel_type ? <InfoRow label="Fuel Type" value={specs.fuel_type} /> : null}
-              {specs.drive_type ? <InfoRow label="Drive Type" value={specs.drive_type} /> : null}
-              {specs.mileage_km != null ? <InfoRow label="Mileage" value={`${specs.mileage_km.toLocaleString()} km`} /> : null}
+              {specs.transmission ? <InfoRow label="Transmission" value={specs.transmission} styles={styles} /> : null}
+              {specs.fuel_type ? <InfoRow label="Fuel Type" value={specs.fuel_type} styles={styles} /> : null}
+              {specs.drive_type ? <InfoRow label="Drive Type" value={specs.drive_type} styles={styles} /> : null}
+              {specs.mileage_km != null ? <InfoRow label="Mileage" value={`${specs.mileage_km.toLocaleString()} km`} styles={styles} /> : null}
             </View>
           ) : null}
 
@@ -274,11 +277,11 @@ export default function RentalVehicleDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Rental Terms</Text>
             <View style={styles.termsGrid}>
-              {vehicle.deposit != null ? <InfoRow label="Security Deposit" value={`$${vehicle.deposit}`} /> : null}
+              {vehicle.deposit != null ? <InfoRow label="Security Deposit" value={`$${vehicle.deposit}`} styles={styles} /> : null}
               {vehicle.min_rental_days != null ? (
-                <InfoRow label="Minimum Rental" value={`${vehicle.min_rental_days} days`} />
+                <InfoRow label="Minimum Rental" value={`${vehicle.min_rental_days} days`} styles={styles} />
               ) : null}
-              {vehicle.driver_rate != null ? <InfoRow label="Driver Rate" value={`$${vehicle.driver_rate}/day`} /> : null}
+              {vehicle.driver_rate != null ? <InfoRow label="Driver Rate" value={`$${vehicle.driver_rate}/day`} styles={styles} /> : null}
             </View>
           </View>
 
@@ -306,16 +309,16 @@ export default function RentalVehicleDetailScreen() {
         <View style={styles.ctaBar}>
           {business.phone ? (
             <Pressable style={styles.ctaIconButton} onPress={callCompany}>
-              <PhoneIcon />
+              <PhoneIcon stroke={tones.textOnBrand} />
             </Pressable>
           ) : null}
           {business.whatsapp ? (
             <Pressable style={[styles.ctaIconButton, styles.ctaWhatsapp]} onPress={whatsappCompany}>
-              <WhatsAppIcon />
+              <WhatsAppIcon fill={tones.textOnBrand} />
             </Pressable>
           ) : null}
           <Pressable style={styles.ctaMessageButton} onPress={contactViaChat}>
-            <MessageIcon />
+            <MessageIcon stroke={tones.textOnBrand} />
             <Text style={styles.ctaMessageText}>Chat</Text>
           </Pressable>
         </View>
@@ -324,7 +327,7 @@ export default function RentalVehicleDetailScreen() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value, styles }: { label: string; value: string; styles: ReturnType<typeof buildStyles> }) {
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -333,211 +336,217 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F6F9",
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  notFoundText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-    backgroundColor: BRAND_BLUE,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#ffffff",
-    textAlign: "center",
-  },
-  photoWrap: {
-    width: "100%",
-    aspectRatio: 1.6,
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-  },
-  photoPlaceholder: {
-    backgroundColor: "#E4E7EF",
-  },
-  content: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  subMeta: {
-    fontSize: 13,
-    color: "#8A93A6",
-    marginTop: 4,
-  },
-  priceRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 16,
-  },
-  priceCell: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
-  },
-  priceValue: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: BRAND_BLUE,
-  },
-  priceLabel: {
-    fontSize: 11,
-    color: "#8A93A6",
-    marginTop: 2,
-  },
-  availabilityBanner: {
-    marginTop: 12,
-    backgroundColor: "#EAF7EF",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  availabilityBannerBusy: {
-    backgroundColor: "#FEE4E2",
-  },
-  availabilityBannerText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0f7a3d",
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 10,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
-  },
-  infoLabel: {
-    fontSize: 13,
-    color: "#8A93A6",
-  },
-  infoValue: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  termsGrid: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 12,
-  },
-  featureWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  featureChip: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  featureChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#3A4258",
-  },
-  dealerCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 12,
-  },
-  dealerLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#EEF0F4",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dealerLogoText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: BRAND_BLUE,
-  },
-  dealerName: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  dealerMeta: {
-    fontSize: 12,
-    color: "#8A93A6",
-    marginTop: 2,
-  },
-  ctaBar: {
-    flexDirection: "row",
-    gap: 10,
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F1F5",
-    backgroundColor: "#ffffff",
-  },
-  ctaIconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: BRAND_BLUE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ctaWhatsapp: {
-    backgroundColor: "#25D366",
-  },
-  ctaMessageButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: BRAND_GOLD,
-    borderRadius: 12,
-  },
-  ctaMessageText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+    },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    notFoundText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: color.text,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 10,
+      backgroundColor: color.brand,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: "700",
+      color: color.textOnBrand,
+      textAlign: "center",
+    },
+    photoWrap: {
+      width: "100%",
+      aspectRatio: 1.6,
+    },
+    photo: {
+      width: "100%",
+      height: "100%",
+    },
+    photoPlaceholder: {
+      backgroundColor: color.skeleton,
+    },
+    content: {
+      padding: 16,
+    },
+    title: {
+      fontSize: 19,
+      fontWeight: "800",
+      color: color.text,
+    },
+    subMeta: {
+      fontSize: 13,
+      color: color.textMuted,
+      marginTop: 4,
+    },
+    priceRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 16,
+    },
+    priceCell: {
+      flex: 1,
+      backgroundColor: color.surface,
+      borderRadius: 12,
+      padding: 12,
+      alignItems: "center",
+    },
+    priceValue: {
+      fontSize: 17,
+      fontWeight: "800",
+      color: color.brand,
+    },
+    priceLabel: {
+      fontSize: 11,
+      color: color.textMuted,
+      marginTop: 2,
+    },
+    availabilityBanner: {
+      marginTop: 12,
+      backgroundColor: color.successTint,
+      borderRadius: 10,
+      paddingVertical: 10,
+      alignItems: "center",
+    },
+    availabilityBannerBusy: {
+      backgroundColor: color.dangerTint,
+    },
+    availabilityBannerText: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.success,
+    },
+    section: {
+      marginTop: 20,
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+      marginBottom: 10,
+    },
+    infoRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: color.divider,
+    },
+    infoLabel: {
+      fontSize: 13,
+      color: color.textMuted,
+    },
+    infoValue: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+    },
+    termsGrid: {
+      backgroundColor: color.surface,
+      borderRadius: 12,
+      padding: 12,
+    },
+    featureWrap: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    featureChip: {
+      backgroundColor: color.surface,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    featureChipText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: color.text,
+    },
+    description: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: color.textSub,
+    },
+    dealerCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      padding: 12,
+    },
+    dealerLogo: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: color.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dealerLogoText: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    dealerName: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.text,
+    },
+    dealerMeta: {
+      fontSize: 12,
+      color: color.textMuted,
+      marginTop: 2,
+    },
+    ctaBar: {
+      flexDirection: "row",
+      gap: 10,
+      padding: 12,
+      borderTopWidth: 1,
+      borderTopColor: color.divider,
+      backgroundColor: color.surface,
+    },
+    ctaIconButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: color.brand,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    ctaWhatsapp: {
+      backgroundColor: "#25D366",
+    },
+    ctaMessageButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: color.gold,
+      borderRadius: 12,
+    },
+    ctaMessageText: {
+      color: color.textOnBrand,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+  });
+}

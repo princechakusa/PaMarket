@@ -2,15 +2,18 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
-import { BRAND_BLUE } from "../../lib/constants";
 import { toast } from "../../components/ui/Toast";
 import type { RentalAvailabilityBlock } from "../../lib/rentals";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Mirrors www/js/rentals-business.js H.pages.RentalAvailability — block/
 // unblock date ranges in rental_vehicle_availability (display-only calendar,
 // no booking engine, per rental_marketplace_schema.sql TABLE 10 comments).
 export default function RentalAvailabilityScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [canWrite, setCanWrite] = useState(true);
@@ -85,7 +88,7 @@ export default function RentalAvailabilityScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -103,7 +106,7 @@ export default function RentalAvailabilityScreen() {
                 value={startDate}
                 onChangeText={setStartDate}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#A1A1AA"
+                placeholderTextColor={tones.textMuted}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -113,7 +116,7 @@ export default function RentalAvailabilityScreen() {
                 value={endDate}
                 onChangeText={setEndDate}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#A1A1AA"
+                placeholderTextColor={tones.textMuted}
               />
             </View>
           </View>
@@ -123,10 +126,10 @@ export default function RentalAvailabilityScreen() {
             value={reason}
             onChangeText={setReason}
             placeholder="Maintenance, personal use..."
-            placeholderTextColor="#A1A1AA"
+            placeholderTextColor={tones.textMuted}
           />
           <Pressable style={[styles.secondaryBtn, isSubmitting && styles.disabled]} onPress={addBlock} disabled={isSubmitting}>
-            {isSubmitting ? <ActivityIndicator color={BRAND_BLUE} /> : <Text style={styles.secondaryBtnText}>Block Selected Dates</Text>}
+            {isSubmitting ? <ActivityIndicator color={tones.brand} /> : <Text style={styles.secondaryBtnText}>Block Selected Dates</Text>}
           </Pressable>
         </>
       ) : (
@@ -160,38 +163,44 @@ export default function RentalAvailabilityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  sectionLabel: { fontSize: 14, fontWeight: "700", color: "#18181B", marginTop: 20, marginBottom: 10 },
-  label: { fontSize: 12, fontWeight: "700", color: "#52525B", marginBottom: 6, marginTop: 10 },
-  input: {
-    height: 46,
-    borderWidth: 1.5,
-    borderColor: "#E4E4E7",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: "#18181B",
-    backgroundColor: "#ffffff",
-  },
-  row: { flexDirection: "row", gap: 10 },
-  secondaryBtn: { marginTop: 14, borderWidth: 2, borderColor: BRAND_BLUE, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  secondaryBtnText: { color: BRAND_BLUE, fontSize: 14, fontWeight: "700" },
-  disabled: { opacity: 0.6 },
-  blockedBox: { backgroundColor: "#F9F9FB", borderWidth: 1.5, borderColor: "#E4E4E7", borderRadius: 14, padding: 20, alignItems: "center" },
-  blockedTitle: { fontSize: 14, fontWeight: "700", color: "#52525B", marginBottom: 4 },
-  blockedBody: { fontSize: 12, color: "#A1A1AA", textAlign: "center", lineHeight: 17 },
-  blockRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#ffffff",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  blockDates: { fontSize: 13, fontWeight: "700", color: "#18181B" },
-  blockReason: { fontSize: 12, color: "#A1A1AA", marginTop: 2 },
-  removeText: { fontSize: 12, fontWeight: "700", color: "#D92D20" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    sectionLabel: { fontSize: 14, fontWeight: "700", color: color.text, marginTop: 20, marginBottom: 10 },
+    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 10 },
+    input: {
+      height: 46,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+    },
+    row: { flexDirection: "row", gap: 10 },
+    secondaryBtn: { marginTop: 14, borderWidth: 2, borderColor: color.brand, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+    secondaryBtnText: { color: color.brand, fontSize: 14, fontWeight: "700" },
+    disabled: { opacity: 0.6 },
+    blockedBox: { backgroundColor: color.surfaceAlt, borderWidth: 1.5, borderColor: color.border, borderRadius: 14, padding: 20, alignItems: "center" },
+    blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 4 },
+    blockedBody: { fontSize: 12, color: color.textMuted, textAlign: "center", lineHeight: 17 },
+    blockRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: color.surface,
+      padding: 14,
+      borderRadius: 12,
+      marginBottom: 8,
+    },
+    blockDates: { fontSize: 13, fontWeight: "700", color: color.text },
+    blockReason: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    removeText: { fontSize: 12, fontWeight: "700", color: color.danger },
+  });
+}

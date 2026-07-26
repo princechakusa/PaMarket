@@ -3,13 +3,16 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { Listing } from "../../lib/listings";
 import { fetchBusinessLeads, type BusinessLead } from "../../lib/business-leads";
 import { planEntitlements } from "../../lib/plan-entitlements";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
-function StatCard({ value, label }: { value: string | number; label: string }) {
+type Styles = ReturnType<typeof buildStyles>;
+
+function StatCard({ value, label, styles }: { value: string | number; label: string; styles: Styles }) {
   return (
     <View style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
@@ -24,6 +27,8 @@ export default function BusinessAnalyticsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
   const router = useRouter();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [tier, setTier] = useState<"none" | "basic" | "full">("none");
@@ -76,7 +81,7 @@ export default function BusinessAnalyticsScreen() {
   if (isLoading || isOwner === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -106,13 +111,13 @@ export default function BusinessAnalyticsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       <View style={styles.statsRow}>
-        <StatCard value={views} label="Views" />
-        <StatCard value={clicks} label="Clicks" />
-        <StatCard value={leads.length} label="Leads" />
+        <StatCard value={views} label="Views" styles={styles} />
+        <StatCard value={clicks} label="Clicks" styles={styles} />
+        <StatCard value={leads.length} label="Leads" styles={styles} />
       </View>
       <View style={styles.statsRow}>
-        <StatCard value={`${conversion}%`} label="Conversion" />
-        <StatCard value={listings.length} label="Listings" />
+        <StatCard value={`${conversion}%`} label="Conversion" styles={styles} />
+        <StatCard value={listings.length} label="Listings" styles={styles} />
         <View style={styles.statCard} />
       </View>
 
@@ -170,36 +175,42 @@ export default function BusinessAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  gateWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  gateTitle: { fontSize: 18, fontWeight: "800", color: "#111827", marginBottom: 6 },
-  gateSub: { fontSize: 13, color: "#5A6478", textAlign: "center", lineHeight: 19, marginBottom: 22 },
-  gateButton: { backgroundColor: BRAND_BLUE, borderRadius: 10, paddingHorizontal: 28, paddingVertical: 13 },
-  gateButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  statsRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
-  statCard: { flex: 1, backgroundColor: "#ffffff", borderRadius: 14, padding: 16, alignItems: "center" },
-  statValue: { fontSize: 20, fontWeight: "800", color: BRAND_BLUE },
-  statLabel: { fontSize: 11, color: "#8A93A6", fontWeight: "600", marginTop: 2 },
-  box: { backgroundColor: "#ffffff", borderRadius: 16, padding: 16, marginTop: 6, marginBottom: 16 },
-  boxTitle: { fontSize: 13, fontWeight: "800", color: "#111827", marginBottom: 12 },
-  barRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
-  barLabel: { fontSize: 12.5, color: "#111827", maxWidth: "70%" },
-  barValue: { fontSize: 12.5, fontWeight: "700", color: "#8A93A6" },
-  barTrack: { height: 7, backgroundColor: "#E8ECF4", borderRadius: 5, overflow: "hidden" },
-  barFill: { height: "100%", backgroundColor: BRAND_BLUE },
-  typeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8ECF4",
-  },
-  typeLabel: { fontSize: 13, color: "#8A93A6" },
-  typeValue: { fontSize: 13, fontWeight: "700", color: "#111827" },
-  tipBox: { backgroundColor: "#EEF2FB", borderRadius: 14, padding: 14 },
-  tipBoxWarn: { backgroundColor: "#FFF8EC" },
-  tipText: { fontSize: 12.5, color: "#5A6478", lineHeight: 19 },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 13, paddingVertical: 14 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    gateWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+    gateTitle: { fontSize: 18, fontWeight: "800", color: color.text, marginBottom: 6 },
+    gateSub: { fontSize: 13, color: color.textSub, textAlign: "center", lineHeight: 19, marginBottom: 22 },
+    gateButton: { backgroundColor: color.brand, borderRadius: 10, paddingHorizontal: 28, paddingVertical: 13 },
+    gateButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    statsRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
+    statCard: { flex: 1, backgroundColor: color.surface, borderRadius: 14, padding: 16, alignItems: "center" },
+    statValue: { fontSize: 20, fontWeight: "800", color: color.brand },
+    statLabel: { fontSize: 11, color: color.textMuted, fontWeight: "600", marginTop: 2 },
+    box: { backgroundColor: color.surface, borderRadius: 16, padding: 16, marginTop: 6, marginBottom: 16 },
+    boxTitle: { fontSize: 13, fontWeight: "800", color: color.text, marginBottom: 12 },
+    barRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+    barLabel: { fontSize: 12.5, color: color.text, maxWidth: "70%" },
+    barValue: { fontSize: 12.5, fontWeight: "700", color: color.textMuted },
+    barTrack: { height: 7, backgroundColor: color.border, borderRadius: 5, overflow: "hidden" },
+    barFill: { height: "100%", backgroundColor: color.brand },
+    typeRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 9,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+    },
+    typeLabel: { fontSize: 13, color: color.textMuted },
+    typeValue: { fontSize: 13, fontWeight: "700", color: color.text },
+    tipBox: { backgroundColor: color.brandTint, borderRadius: 14, padding: 14 },
+    tipBoxWarn: { backgroundColor: color.goldTint },
+    tipText: { fontSize: 12.5, color: color.textSub, lineHeight: 19 },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 14 },
+  });
+}

@@ -5,19 +5,22 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { RECRUITER_PLAN_ENTITLEMENTS, recruiterPlanEntitlements } from "../../lib/jobs";
 import { toast } from "../../components/ui/Toast";
+import { color, type ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const PLAN_ORDER = ["free", "recruiter"];
 
 function BackIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
+
+type Styles = ReturnType<typeof buildStyles>;
 
 // Mirrors www/js/jobs.js H.pages.RecruiterSubscription — plan comparison
 // only, matching the app/business-subscription/[id].tsx precedent: real
@@ -29,6 +32,7 @@ function BackIcon() {
 // flow. Current plan is read from recruiter_profiles.plan_id (defaults to
 // 'free' — the row is only created lazily at first purchase).
 export default function RecruiterSubscriptionScreen() {
+  const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
@@ -60,7 +64,7 @@ export default function RecruiterSubscriptionScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={color.brand} />
       </View>
     );
   }
@@ -107,9 +111,9 @@ export default function RecruiterSubscriptionScreen() {
               </View>
               <View style={styles.divider} />
               <View style={styles.featuresBlock}>
-                <Feature text={`${plan.activeJobPosts < 0 ? "Unlimited" : plan.activeJobPosts} active job posts`} />
-                <Feature text={`${plan.candidateAccess} candidate access`} />
-                <Feature text={`${plan.profileVisibility} profile visibility`} />
+                <Feature text={`${plan.activeJobPosts < 0 ? "Unlimited" : plan.activeJobPosts} active job posts`} styles={styles} />
+                <Feature text={`${plan.candidateAccess} candidate access`} styles={styles} />
+                <Feature text={`${plan.profileVisibility} profile visibility`} styles={styles} />
               </View>
               {!isCurrent && higher && plan.price > 0 ? (
                 <Pressable
@@ -127,10 +131,10 @@ export default function RecruiterSubscriptionScreen() {
   );
 }
 
-function Feature({ text }: { text: string }) {
+function Feature({ text, styles }: { text: string; styles: Styles }) {
   return (
     <View style={styles.featureRow}>
-      <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={BRAND_BLUE} strokeWidth={2}>
+      <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={color.brand} strokeWidth={2}>
         <Polyline points="20 6 9 17 4 12" />
       </Svg>
       <Text style={styles.featureText}>{text}</Text>
@@ -138,35 +142,37 @@ function Feature({ text }: { text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#ffffff" },
-  hero: { backgroundColor: "#ffffff", borderRadius: 16, padding: 18, marginBottom: 20 },
-  heroLabel: { fontSize: 11, fontWeight: "800", color: "#8A93A6", letterSpacing: 0.6 },
-  heroPlan: { fontSize: 22, fontWeight: "800", color: "#111827", marginTop: 4 },
-  heroMeta: { fontSize: 12.5, color: "#5A6478", marginTop: 6 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 10 },
-  planCard: { backgroundColor: "#ffffff", borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1.5, borderColor: "#E8ECF4" },
-  planCardCurrent: { borderColor: BRAND_BLUE },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
+  hero: { backgroundColor: color.surface, borderRadius: 16, padding: 18, marginBottom: 20 },
+  heroLabel: { fontSize: 11, fontWeight: "800", color: color.textMuted, letterSpacing: 0.6 },
+  heroPlan: { fontSize: 22, fontWeight: "800", color: color.text, marginTop: 4 },
+  heroMeta: { fontSize: 12.5, color: color.textSub, marginTop: 6 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: color.text, marginBottom: 10 },
+  planCard: { backgroundColor: color.surface, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1.5, borderColor: color.border },
+  planCardCurrent: { borderColor: color.brand },
   planHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   planNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  planName: { fontSize: 16, fontWeight: "800", color: "#111827" },
-  planPrice: { fontSize: 15, fontWeight: "800", color: "#111827" },
-  currentTag: { backgroundColor: BRAND_BLUE, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  currentTagText: { fontSize: 9.5, fontWeight: "800", color: "#ffffff" },
-  divider: { height: 1, backgroundColor: "#F0F0F0", marginVertical: 12 },
+  planName: { fontSize: 16, fontWeight: "800", color: color.text },
+  planPrice: { fontSize: 15, fontWeight: "800", color: color.text },
+  currentTag: { backgroundColor: color.brand, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  currentTagText: { fontSize: 9.5, fontWeight: "800", color: color.textOnBrand },
+  divider: { height: 1, backgroundColor: color.divider, marginVertical: 12 },
   featuresBlock: { gap: 8 },
   featureRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  featureText: { fontSize: 12.5, color: "#111827" },
-  upgradeButton: { backgroundColor: BRAND_BLUE, borderRadius: 12, paddingVertical: 12, alignItems: "center", marginTop: 14 },
-  upgradeButtonText: { color: "#ffffff", fontSize: 13.5, fontWeight: "700" },
-});
+  featureText: { fontSize: 12.5, color: color.text },
+  upgradeButton: { backgroundColor: color.brand, borderRadius: 12, paddingVertical: 12, alignItems: "center", marginTop: 14 },
+  upgradeButtonText: { color: color.textOnBrand, fontSize: 13.5, fontWeight: "700" },
+  });
+}

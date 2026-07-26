@@ -8,4 +8,5 @@ export type Profile = {
   bio: string | null;
   city: string | null;
   created_at: string;
+  last_seen?: string | null;
 };

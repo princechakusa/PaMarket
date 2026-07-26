@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { attrSchema, SUBCATEGORIES } from "../../lib/attributes";
-import { BRAND_BLUE } from "../../lib/constants";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 export type AttrValues = Record<string, string | number | string[]>;
 
@@ -13,6 +14,8 @@ export function AttrFields({
   values: AttrValues;
   onChange: (next: AttrValues) => void;
 }) {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const schema = attrSchema(category);
   const subcats = SUBCATEGORIES[category];
   if (!schema.length && !subcats) return null;
@@ -89,7 +92,7 @@ export function AttrFields({
             <TextInput
               style={styles.input}
               placeholder={field.placeholder}
-              placeholderTextColor="#8A93A6"
+              placeholderTextColor={tones.placeholder}
               keyboardType={field.type === "number" ? "numeric" : "default"}
               value={values[field.key] != null ? String(values[field.key]) : ""}
               onChangeText={(text) => setValue(field.key, field.type === "number" ? Number(text) || 0 : text)}
@@ -101,56 +104,64 @@ export function AttrFields({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 4,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 12,
-  },
-  field: {
-    marginBottom: 14,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#5A6478",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: "#111827",
-  },
-  chipWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-  },
-  chipSelected: {
-    backgroundColor: BRAND_BLUE,
-    borderColor: BRAND_BLUE,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  chipTextSelected: {
-    color: "#ffffff",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return {
+    placeholder: color.textMuted,
+  };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 4,
+    },
+    title: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: color.text,
+      marginBottom: 12,
+    },
+    field: {
+      marginBottom: 14,
+    },
+    fieldLabel: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: color.textSub,
+      marginBottom: 8,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: color.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: color.text,
+    },
+    chipWrap: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: color.border,
+    },
+    chipSelected: {
+      backgroundColor: color.brand,
+      borderColor: color.brand,
+    },
+    chipText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: color.text,
+    },
+    chipTextSelected: {
+      color: color.textOnBrand,
+    },
+  });
+}

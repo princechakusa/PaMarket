@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { RentalFleetVehicle } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 type Analytics = { views_30d: number; chats_30d: number; whatsapp_30d: number; calls_30d: number };
 
-function KpiCard({ num, label }: { num: string | number; label: string }) {
+function KpiCard({ num, label, styles }: { num: string | number; label: string; styles: ReturnType<typeof buildStyles> }) {
   return (
     <View style={styles.kpiCard}>
       <Text style={styles.kpiNum}>{num}</Text>
@@ -17,7 +18,17 @@ function KpiCard({ num, label }: { num: string | number; label: string }) {
   );
 }
 
-function SourceBar({ label, pct, color }: { label: string; pct: number; color: string }) {
+function SourceBar({
+  label,
+  pct,
+  barColor,
+  styles,
+}: {
+  label: string;
+  pct: number;
+  barColor: string;
+  styles: ReturnType<typeof buildStyles>;
+}) {
   return (
     <View style={{ marginBottom: 10 }}>
       <View style={styles.sourceBarHeader}>
@@ -25,7 +36,7 @@ function SourceBar({ label, pct, color }: { label: string; pct: number; color: s
         <Text style={styles.sourceBarPct}>{pct}%</Text>
       </View>
       <View style={styles.sourceBarTrack}>
-        <View style={[styles.sourceBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+        <View style={[styles.sourceBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
       </View>
     </View>
   );
@@ -36,6 +47,8 @@ function SourceBar({ label, pct, color }: { label: string; pct: number; color: s
 // the rental_business_analytics() RPC with a client-side fleet-derived
 // fallback when the RPC is unavailable (matches the web app's behaviour).
 export default function RentalAnalyticsScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { bizId } = useLocalSearchParams<{ bizId: string }>();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +94,7 @@ export default function RentalAnalyticsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -102,10 +115,10 @@ export default function RentalAnalyticsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       <View style={styles.kpiGrid}>
-        <KpiCard num={totalViews.toLocaleString()} label="Total Views" />
-        <KpiCard num={totalInquiries.toLocaleString()} label="Inquiries" />
-        <KpiCard num={`${convRate}%`} label="Inquiry Rate" />
-        <KpiCard num={activeCount} label="Active Listings" />
+        <KpiCard num={totalViews.toLocaleString()} label="Total Views" styles={styles} />
+        <KpiCard num={totalInquiries.toLocaleString()} label="Inquiries" styles={styles} />
+        <KpiCard num={`${convRate}%`} label="Inquiry Rate" styles={styles} />
+        <KpiCard num={activeCount} label="Active Listings" styles={styles} />
       </View>
 
       {topByViews.length ? (
@@ -128,9 +141,9 @@ export default function RentalAnalyticsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Inquiry Sources</Text>
-        <SourceBar label="In-app Chat" pct={chatPct} color={BRAND_BLUE} />
-        <SourceBar label="WhatsApp" pct={waPct} color="#25D366" />
-        <SourceBar label="Direct Call" pct={callPct} color="#12B76A" />
+        <SourceBar label="In-app Chat" pct={chatPct} barColor={tones.brand} styles={styles} />
+        <SourceBar label="WhatsApp" pct={waPct} barColor="#25D366" styles={styles} />
+        <SourceBar label="Direct Call" pct={callPct} barColor={tones.success} styles={styles} />
       </View>
 
       {rating.avg ? (
@@ -146,31 +159,37 @@ export default function RentalAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  kpiGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, padding: 16, backgroundColor: "#ffffff" },
-  kpiCard: { width: "47%", backgroundColor: "#F9F9FB", borderWidth: 1, borderColor: "#E4E4E7", borderRadius: 14, padding: 12 },
-  kpiNum: { fontSize: 20, fontWeight: "800", color: "#18181B" },
-  kpiLabel: { fontSize: 11, color: "#A1A1AA", fontWeight: "600", marginTop: 2 },
-  section: { padding: 16, backgroundColor: "#ffffff", marginTop: 8 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#18181B", marginBottom: 10 },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E4E4E7",
-  },
-  topVehicleName: { fontSize: 13, fontWeight: "700", color: "#18181B" },
-  topVehiclePrice: { fontSize: 12, color: "#A1A1AA", marginTop: 2 },
-  topViews: { fontSize: 13, fontWeight: "800", color: BRAND_BLUE },
-  topInquiries: { fontSize: 12, color: "#A1A1AA", marginTop: 2 },
-  sourceBarHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
-  sourceBarLabel: { fontSize: 13, fontWeight: "600", color: "#18181B" },
-  sourceBarPct: { fontSize: 13, fontWeight: "800", color: "#18181B" },
-  sourceBarTrack: { height: 8, backgroundColor: "#E4E4E7", borderRadius: 999, overflow: "hidden" },
-  sourceBarFill: { height: "100%", borderRadius: 999 },
-  ratingNum: { fontSize: 32, fontWeight: "800", color: BRAND_BLUE },
-  ratingSub: { fontSize: 13, color: "#A1A1AA" },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, success: color.success };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    kpiGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, padding: 16, backgroundColor: color.surface },
+    kpiCard: { width: "47%", backgroundColor: color.surfaceAlt, borderWidth: 1, borderColor: color.border, borderRadius: 14, padding: 12 },
+    kpiNum: { fontSize: 20, fontWeight: "800", color: color.text },
+    kpiLabel: { fontSize: 11, color: color.textMuted, fontWeight: "600", marginTop: 2 },
+    section: { padding: 16, backgroundColor: color.surface, marginTop: 8 },
+    sectionTitle: { fontSize: 14, fontWeight: "700", color: color.text, marginBottom: 10 },
+    topRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+    },
+    topVehicleName: { fontSize: 13, fontWeight: "700", color: color.text },
+    topVehiclePrice: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    topViews: { fontSize: 13, fontWeight: "800", color: color.brand },
+    topInquiries: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    sourceBarHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+    sourceBarLabel: { fontSize: 13, fontWeight: "600", color: color.text },
+    sourceBarPct: { fontSize: 13, fontWeight: "800", color: color.text },
+    sourceBarTrack: { height: 8, backgroundColor: color.border, borderRadius: 999, overflow: "hidden" },
+    sourceBarFill: { height: "100%", borderRadius: 999 },
+    ratingNum: { fontSize: 32, fontWeight: "800", color: color.brand },
+    ratingSub: { fontSize: 13, color: color.textMuted },
+  });
+}

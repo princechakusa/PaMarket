@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
+import type { ColorPalette } from "../lib/theme";
+import { useThemedStyles } from "../lib/theme-provider";
 
 // Mirrors www/js/security_pages.js pages.DeleteAccount / H.purgeMyAccount.
 // Primary path is the server-side delete_my_account() RPC; falls back to
@@ -48,6 +50,7 @@ const DELETED_ITEMS = [
 ];
 
 export default function DeleteAccountScreen() {
+  const styles = useThemedStyles(buildStyles);
   const { session } = useAuth();
   const router = useRouter();
   const [confirmText, setConfirmText] = useState("");
@@ -106,55 +109,57 @@ export default function DeleteAccountScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  warnBox: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1.5,
-    borderColor: "rgba(192,57,43,0.2)",
-    borderRadius: 14,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  warnTitle: { fontSize: 18, fontWeight: "800", color: "#C0392B", marginBottom: 8 },
-  warnSub: { fontSize: 13, color: "#5A6478", textAlign: "center", lineHeight: 19 },
-  box: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  boxTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 10 },
-  itemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F1F5",
-  },
-  itemLabel: { fontSize: 13, color: "#5A6478" },
-  itemValue: { fontSize: 12, fontWeight: "700", color: "#C0392B" },
-  label: { fontSize: 13, fontWeight: "600", color: "#111827", marginBottom: 6 },
-  input: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: "#111827",
-  },
-  deleteButton: {
-    backgroundColor: "#C0392B",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  deleteButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
-  cancelButton: { alignItems: "center", paddingVertical: 14 },
-  cancelButtonText: { fontSize: 14, fontWeight: "700", color: "#5A6478" },
-});
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    warnBox: {
+      backgroundColor: color.surface,
+      borderWidth: 1.5,
+      borderColor: color.dangerTint,
+      borderRadius: 14,
+      padding: 24,
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    warnTitle: { fontSize: 18, fontWeight: "800", color: color.danger, marginBottom: 8 },
+    warnSub: { fontSize: 13, color: color.textSub, textAlign: "center", lineHeight: 19 },
+    box: {
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 16,
+    },
+    boxTitle: { fontSize: 14, fontWeight: "700", color: color.text, marginBottom: 10 },
+    itemRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: color.divider,
+    },
+    itemLabel: { fontSize: 13, color: color.textSub },
+    itemValue: { fontSize: 12, fontWeight: "700", color: color.danger },
+    label: { fontSize: 13, fontWeight: "600", color: color.text, marginBottom: 6 },
+    input: {
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: color.text,
+    },
+    deleteButton: {
+      backgroundColor: color.danger,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 20,
+    },
+    buttonDisabled: { opacity: 0.6 },
+    deleteButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
+    cancelButton: { alignItems: "center", paddingVertical: 14 },
+    cancelButtonText: { fontSize: 14, fontWeight: "700", color: color.textSub },
+  });
+}

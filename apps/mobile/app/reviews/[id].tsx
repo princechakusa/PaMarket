@@ -15,8 +15,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polygon, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { StarRow } from "../../components/StarRow";
+import { color, type ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 type Review = {
   reviewer_id: string;
@@ -28,13 +29,15 @@ type Review = {
 
 function BackIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
 
-function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+type Styles = ReturnType<typeof buildStyles>;
+
+function StarPicker({ value, onChange, styles }: { value: number; onChange: (n: number) => void; styles: Styles }) {
   return (
     <View style={styles.starPickerRow}>
       {[1, 2, 3, 4, 5].map((n) => (
@@ -42,8 +45,8 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
           <Svg width={32} height={32} viewBox="0 0 24 24">
             <Polygon
               points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-              fill={n <= value ? "#f59e0b" : "none"}
-              stroke={n <= value ? "#f59e0b" : "#8A93A6"}
+              fill={n <= value ? color.star : "none"}
+              stroke={n <= value ? color.star : color.textMuted}
               strokeWidth={2}
             />
           </Svg>
@@ -62,6 +65,7 @@ function timeAgo(dateString: string): string {
 }
 
 export default function ReviewsScreen() {
+  const styles = useThemedStyles(buildStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -138,7 +142,7 @@ export default function ReviewsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={color.brand} />
       </View>
     );
   }
@@ -214,11 +218,11 @@ export default function ReviewsScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Leave a Review</Text>
             <Text style={styles.modalSubtitle}>Tap to rate your experience</Text>
-            <StarPicker value={draftRating} onChange={setDraftRating} />
+            <StarPicker value={draftRating} onChange={setDraftRating} styles={styles} />
             <TextInput
               style={styles.modalTextArea}
               placeholder="Share your experience with this seller…"
-              placeholderTextColor="#8A93A6"
+              placeholderTextColor={color.textMuted}
               multiline
               value={draftText}
               onChangeText={setDraftText}
@@ -229,7 +233,7 @@ export default function ReviewsScreen() {
               </Pressable>
               <Pressable style={styles.modalSubmitButton} onPress={submitReview} disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <ActivityIndicator color="#ffffff" />
+                  <ActivityIndicator color={color.textOnBrand} />
                 ) : (
                   <Text style={styles.modalSubmitText}>Submit Review</Text>
                 )}
@@ -242,10 +246,11 @@ export default function ReviewsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6F9",
+    backgroundColor: color.bg,
   },
   centered: {
     flex: 1,
@@ -256,7 +261,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
@@ -264,11 +269,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: "700",
-    color: "#ffffff",
+    color: color.textOnBrand,
     textAlign: "center",
   },
   summaryCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     padding: 20,
   },
   summaryRow: {
@@ -282,12 +287,12 @@ const styles = StyleSheet.create({
   avgValue: {
     fontSize: 44,
     fontWeight: "900",
-    color: "#111827",
+    color: color.text,
     lineHeight: 48,
   },
   avgCount: {
     fontSize: 12,
-    color: "#8A93A6",
+    color: color.textMuted,
     marginTop: 4,
   },
   distColumn: {
@@ -301,43 +306,43 @@ const styles = StyleSheet.create({
   },
   distLabel: {
     fontSize: 11,
-    color: "#8A93A6",
+    color: color.textMuted,
     width: 8,
   },
   distTrack: {
     flex: 1,
     height: 6,
-    backgroundColor: "#E4E7EF",
+    backgroundColor: color.border,
     borderRadius: 3,
     overflow: "hidden",
   },
   distFill: {
     height: "100%",
-    backgroundColor: "#f59e0b",
+    backgroundColor: color.star,
     borderRadius: 3,
   },
   distCount: {
     fontSize: 11,
-    color: "#8A93A6",
+    color: color.textMuted,
     width: 16,
     textAlign: "right",
   },
   leaveReviewButton: {
     marginTop: 16,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
   },
   leaveReviewButtonText: {
-    color: "#ffffff",
+    color: color.textOnBrand,
     fontSize: 14,
     fontWeight: "700",
   },
   alreadyReviewedText: {
     textAlign: "center",
     fontSize: 13,
-    color: "#8A93A6",
+    color: color.textMuted,
     marginTop: 14,
   },
   listContent: {
@@ -345,7 +350,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   reviewCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
@@ -358,15 +363,15 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111827",
+    color: color.text,
   },
   reviewTime: {
     fontSize: 12,
-    color: "#8A93A6",
+    color: color.textMuted,
   },
   reviewText: {
     fontSize: 13,
-    color: "#3A4258",
+    color: color.textSub,
     lineHeight: 19,
     marginTop: 8,
   },
@@ -377,21 +382,21 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#111827",
+    color: color.text,
     marginBottom: 6,
   },
   emptyText: {
     fontSize: 13,
-    color: "#8A93A6",
+    color: color.textMuted,
     textAlign: "center",
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: color.overlay,
     justifyContent: "flex-end",
   },
   modalCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -399,12 +404,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: color.text,
     textAlign: "center",
   },
   modalSubtitle: {
     fontSize: 13,
-    color: "#8A93A6",
+    color: color.textMuted,
     textAlign: "center",
     marginTop: 4,
     marginBottom: 14,
@@ -417,11 +422,11 @@ const styles = StyleSheet.create({
   },
   modalTextArea: {
     borderWidth: 1,
-    borderColor: "#D8DCE5",
+    borderColor: color.borderStrong,
     borderRadius: 12,
     padding: 12,
     fontSize: 13,
-    color: "#111827",
+    color: color.text,
     minHeight: 80,
     textAlignVertical: "top",
   },
@@ -435,24 +440,25 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D8DCE5",
+    borderColor: color.borderStrong,
     alignItems: "center",
   },
   modalCancelText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#111827",
+    color: color.text,
   },
   modalSubmitButton: {
     flex: 1,
     paddingVertical: 13,
     borderRadius: 10,
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     alignItems: "center",
   },
   modalSubmitText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#ffffff",
+    color: color.textOnBrand,
   },
-});
+  });
+}

@@ -4,8 +4,9 @@ import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { toast } from "../../components/ui/Toast";
-import { BRAND_BLUE } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 // Staff seats per plan — mirrors www/js/business-profile.js STAFF_LIMIT.
 // Full plan entitlements (H.planEntitlements) are out of scope here since
@@ -24,6 +25,8 @@ type StaffRow = {
 export default function BusinessStaffScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const [business, setBusiness] = useState<Business | null>(null);
   const [staff, setStaff] = useState<StaffRow[]>([]);
   const [contact, setContact] = useState("");
@@ -103,7 +106,7 @@ export default function BusinessStaffScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -147,11 +150,11 @@ export default function BusinessStaffScreen() {
               value={contact}
               onChangeText={setContact}
               placeholder="0771234567 or name@email.com"
-              placeholderTextColor="#8A93A6"
+              placeholderTextColor={tones.textMuted}
               editable={!full}
             />
             <Pressable style={[styles.inviteButton, full && styles.inviteButtonDisabled]} onPress={invite} disabled={full || isInviting}>
-              {isInviting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.inviteButtonText}>Invite</Text>}
+              {isInviting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.inviteButtonText}>Invite</Text>}
             </Pressable>
           </View>
           {full ? <Text style={styles.limitWarning}>Seat limit reached — upgrade your plan for more.</Text> : null}
@@ -190,41 +193,47 @@ export default function BusinessStaffScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  notFoundTitle: { fontSize: 16, fontWeight: "700", color: "#111827", marginBottom: 8, textAlign: "center" },
-  notFoundSub: { fontSize: 13, color: "#8A93A6", textAlign: "center" },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  seatsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#EEF2FB", borderRadius: 12, padding: 14, marginBottom: 16 },
-  seatsLabel: { fontSize: 13, color: "#8A93A6" },
-  seatsValue: { fontSize: 14, fontWeight: "800", color: BRAND_BLUE },
-  seatsPlan: { fontWeight: "600", color: "#8A93A6" },
-  upgradeNotice: { backgroundColor: "#FFF8EC", borderRadius: 14, padding: 16 },
-  upgradeNoticeText: { fontSize: 13, color: "#8A93A6", lineHeight: 19 },
-  field: { marginBottom: 14 },
-  fieldLabel: { fontSize: 13, fontWeight: "700", color: "#111827", marginBottom: 8 },
-  inviteRow: { flexDirection: "row", gap: 8 },
-  input: { borderWidth: 1, borderColor: "#D8DCE5", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: "#111827" },
-  inviteInput: { flex: 1 },
-  inviteButton: { backgroundColor: BRAND_BLUE, borderRadius: 10, paddingHorizontal: 18, alignItems: "center", justifyContent: "center" },
-  inviteButtonDisabled: { opacity: 0.5 },
-  inviteButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
-  limitWarning: { fontSize: 11.5, color: "#b45309", marginTop: 5 },
-  staffRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#E8ECF4", flexWrap: "wrap" },
-  staffAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#EEF2FB", alignItems: "center", justifyContent: "center" },
-  staffAvatarText: { fontWeight: "800", color: BRAND_BLUE },
-  staffName: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  staffMetaRow: { flexDirection: "row", gap: 6, alignItems: "center", marginTop: 3 },
-  statusPill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  statusPillActive: { backgroundColor: "#dcfce7" },
-  statusPillActiveText: { fontSize: 10, fontWeight: "800", color: "#166534" },
-  statusPillInvited: { backgroundColor: "#fef3c7" },
-  statusPillInvitedText: { fontSize: 10, fontWeight: "800", color: "#92400e" },
-  staffRole: { fontSize: 11, color: "#8A93A6", textTransform: "capitalize" },
-  roleButton: { backgroundColor: "#EEF2FB", borderRadius: 9, paddingHorizontal: 10, paddingVertical: 6 },
-  roleButtonText: { color: BRAND_BLUE, fontSize: 11.5, fontWeight: "700" },
-  removeButton: { backgroundColor: "#FEE2E2", borderRadius: 9, paddingHorizontal: 10, paddingVertical: 6 },
-  removeButtonText: { color: "#991b1b", fontSize: 11.5, fontWeight: "700" },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 13, paddingVertical: 24 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand, textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.surface },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+    notFoundTitle: { fontSize: 16, fontWeight: "700", color: color.text, marginBottom: 8, textAlign: "center" },
+    notFoundSub: { fontSize: 13, color: color.textMuted, textAlign: "center" },
+    scrollContent: { padding: 16, paddingBottom: 40 },
+    seatsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: color.brandTint, borderRadius: 12, padding: 14, marginBottom: 16 },
+    seatsLabel: { fontSize: 13, color: color.textMuted },
+    seatsValue: { fontSize: 14, fontWeight: "800", color: color.brand },
+    seatsPlan: { fontWeight: "600", color: color.textMuted },
+    upgradeNotice: { backgroundColor: color.goldTint, borderRadius: 14, padding: 16 },
+    upgradeNoticeText: { fontSize: 13, color: color.textMuted, lineHeight: 19 },
+    field: { marginBottom: 14 },
+    fieldLabel: { fontSize: 13, fontWeight: "700", color: color.text, marginBottom: 8 },
+    inviteRow: { flexDirection: "row", gap: 8 },
+    input: { borderWidth: 1, borderColor: color.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: color.text },
+    inviteInput: { flex: 1 },
+    inviteButton: { backgroundColor: color.brand, borderRadius: 10, paddingHorizontal: 18, alignItems: "center", justifyContent: "center" },
+    inviteButtonDisabled: { opacity: 0.5 },
+    inviteButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    limitWarning: { fontSize: 11.5, color: color.warning, marginTop: 5 },
+    staffRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.border, flexWrap: "wrap" },
+    staffAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: color.brandTint, alignItems: "center", justifyContent: "center" },
+    staffAvatarText: { fontWeight: "800", color: color.brand },
+    staffName: { fontSize: 14, fontWeight: "700", color: color.text },
+    staffMetaRow: { flexDirection: "row", gap: 6, alignItems: "center", marginTop: 3 },
+    statusPill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+    statusPillActive: { backgroundColor: color.successTint },
+    statusPillActiveText: { fontSize: 10, fontWeight: "800", color: color.success },
+    statusPillInvited: { backgroundColor: color.warningTint },
+    statusPillInvitedText: { fontSize: 10, fontWeight: "800", color: color.warning },
+    staffRole: { fontSize: 11, color: color.textMuted, textTransform: "capitalize" },
+    roleButton: { backgroundColor: color.brandTint, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 6 },
+    roleButtonText: { color: color.brand, fontSize: 11.5, fontWeight: "700" },
+    removeButton: { backgroundColor: color.dangerTint, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 6 },
+    removeButtonText: { color: color.danger, fontSize: 11.5, fontWeight: "700" },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 24 },
+  });
+}

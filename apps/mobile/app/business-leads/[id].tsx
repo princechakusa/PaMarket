@@ -3,9 +3,10 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { BRAND_BLUE } from "../../lib/constants";
 import { fetchBusinessLeads, type BusinessLead, type LeadStatus } from "../../lib/business-leads";
 import { EmptyState } from "../../components/ui/EmptyState";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const TYPE_LABEL: Record<string, string> = { whatsapp: "WhatsApp", call: "Call", chat: "Chat" };
 
@@ -24,6 +25,8 @@ function timeAgo(iso: string) {
 export default function BusinessLeadsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
 
   const [leads, setLeads] = useState<BusinessLead[]>([]);
   const [listingTitles, setListingTitles] = useState<Record<string, string>>({});
@@ -73,7 +76,7 @@ export default function BusinessLeadsScreen() {
   if (isLoading || isOwner === null) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={tones.brand} />
       </View>
     );
   }
@@ -138,24 +141,30 @@ export default function BusinessLeadsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  tabRow: { flexDirection: "row", backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#E8ECF4" },
-  tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
-  tabText: { fontSize: 13, fontWeight: "600", color: "#8A93A6" },
-  tabTextActive: { fontWeight: "800", color: BRAND_BLUE },
-  tabUnderline: { height: 2.5, backgroundColor: BRAND_BLUE, width: "60%", borderRadius: 2, marginTop: 6 },
-  card: { backgroundColor: "#ffffff", borderRadius: 14, padding: 14, marginBottom: 10 },
-  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  userName: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  typePill: { backgroundColor: "#1A3A8F1A", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  typePillText: { fontSize: 10.5, fontWeight: "800", color: BRAND_BLUE },
-  meta: { fontSize: 12.5, color: "#8A93A6", marginTop: 4 },
-  actionsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-  primaryAction: { flex: 1, paddingVertical: 8, borderRadius: 9, backgroundColor: BRAND_BLUE, alignItems: "center" },
-  primaryActionText: { fontSize: 12, fontWeight: "700", color: "#ffffff" },
-  secondaryAction: { flex: 1, paddingVertical: 8, borderRadius: 9, borderWidth: 1, borderColor: "#E8ECF4", alignItems: "center" },
-  secondaryActionText: { fontSize: 12, fontWeight: "700", color: "#111827" },
-  emptyText: { textAlign: "center", color: "#8A93A6", fontSize: 13, paddingVertical: 30 },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    tabRow: { flexDirection: "row", backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
+    tabText: { fontSize: 13, fontWeight: "600", color: color.textMuted },
+    tabTextActive: { fontWeight: "800", color: color.brand },
+    tabUnderline: { height: 2.5, backgroundColor: color.brand, width: "60%", borderRadius: 2, marginTop: 6 },
+    card: { backgroundColor: color.surface, borderRadius: 14, padding: 14, marginBottom: 10 },
+    cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    userName: { fontSize: 14, fontWeight: "700", color: color.text },
+    typePill: { backgroundColor: color.brandTint, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+    typePillText: { fontSize: 10.5, fontWeight: "800", color: color.brand },
+    meta: { fontSize: 12.5, color: color.textMuted, marginTop: 4 },
+    actionsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
+    primaryAction: { flex: 1, paddingVertical: 8, borderRadius: 9, backgroundColor: color.brand, alignItems: "center" },
+    primaryActionText: { fontSize: 12, fontWeight: "700", color: color.textOnBrand },
+    secondaryAction: { flex: 1, paddingVertical: 8, borderRadius: 9, borderWidth: 1, borderColor: color.border, alignItems: "center" },
+    secondaryActionText: { fontSize: 12, fontWeight: "700", color: color.text },
+    emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 30 },
+  });
+}

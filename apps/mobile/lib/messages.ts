@@ -1,3 +1,31 @@
+import * as SecureStore from "expo-secure-store";
+
+// "Delete for me" only hides a message on THIS device/account — the other
+// party and the server-side row are untouched (unlike "delete for everyone",
+// which soft-deletes the shared row). There's no per-user visibility column
+// on `messages`, and adding one is a backend schema change outside this
+// screen's scope, so the hidden-id set is tracked locally instead.
+function hiddenIdsKey(conversationId: string): string {
+  return `pamarket.chat-hidden.${conversationId}`;
+}
+
+export async function getLocallyHiddenIds(conversationId: string): Promise<Set<string>> {
+  try {
+    const raw = await SecureStore.getItemAsync(hiddenIdsKey(conversationId));
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+export async function hideMessageLocally(conversationId: string, messageId: string): Promise<Set<string>> {
+  const current = await getLocallyHiddenIds(conversationId);
+  current.add(messageId);
+  await SecureStore.setItemAsync(hiddenIdsKey(conversationId), JSON.stringify([...current]));
+  return current;
+}
+
 export type ConversationRow = {
   id: string;
   members: string[];
@@ -30,12 +58,35 @@ export function otherMember(conversation: ConversationRow, myUserId: string): st
   return conversation.members.find((m) => m !== myUserId);
 }
 
+// WhatsApp-style "last seen" text for a chat header subtitle when the other
+// user is currently offline.
+export function lastSeenLabel(iso: string | null | undefined): string {
+  if (!iso) return "Offline";
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "Offline";
+  const now = new Date();
+  const diffMs = now.getTime() - then.getTime();
+  if (diffMs < 60_000) return "Last seen just now";
+  const time = then.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  if (sameDay(then, now)) return `Last seen today at ${time}`;
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (sameDay(then, yesterday)) return `Last seen yesterday at ${time}`;
+  const dateLabel = then.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return `Last seen ${dateLabel} at ${time}`;
+}
+
 export function messagePreview(message: MessageRow | undefined): string {
   if (!message) return "";
   if (message.deleted) return "This message was deleted";
   if (message.image) return "📷 Photo";
   return displayText(message.text);
 }
+
+// Mobile has no "make an offer" composer yet — offers only ever arrive from
+// the web client — so chat/list rendering only needs to unwrap them safely,
+// not render an interactive accept/decline card. Tracked as a follow-up.
 
 type ReplyEnvelope = { _reply: { i: string; n: string; t: string }; t: string };
 
@@ -49,6 +100,23 @@ function isReplyEnvelope(value: unknown): value is ReplyEnvelope {
   );
 }
 
+type OfferEnvelope = {
+  _offer: { k: "offer" | "counter" | "accept" | "decline"; price?: number; cur?: string; listingTitle?: string };
+};
+
+function isOfferEnvelope(value: unknown): value is OfferEnvelope {
+  return !!value && typeof value === "object" && "_offer" in value;
+}
+
+// Matches the web client's offer summary wording (www/js/messages.js previewBody).
+function offerSummary(offer: OfferEnvelope["_offer"]): string {
+  if (offer.k === "accept") return "Offer accepted";
+  if (offer.k === "decline") return "Offer declined";
+  const amount = Number(offer.price || 0).toLocaleString();
+  const label = offer.k === "counter" ? "Counter-offer" : "Offer";
+  return `💰 ${label}: $${amount}`;
+}
+
 // Messages can be JSON-encoded envelopes (reply quotes, offer cards — see
 // www/js/messages.js parseReply/parseOffer) rather than plain text. Unwrap to
 // the actual message body for display; falls back to the raw text if it
@@ -59,6 +127,7 @@ export function displayText(text: string | null | undefined): string {
   try {
     const parsed = JSON.parse(text);
     if (isReplyEnvelope(parsed)) return parsed.t;
+    if (isOfferEnvelope(parsed)) return offerSummary(parsed._offer);
   } catch {
     // not JSON — fall through to raw text
   }

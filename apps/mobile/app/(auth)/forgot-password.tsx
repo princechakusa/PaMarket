@@ -13,8 +13,12 @@ import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { isValidEmail } from "../../lib/validation";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 export default function ForgotPasswordScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +68,7 @@ export default function ForgotPasswordScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#8A93A6"
+          placeholderTextColor={tones.textMuted}
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
@@ -80,7 +84,7 @@ export default function ForgotPasswordScreen() {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color={tones.textOnBrand} />
           ) : (
             <Text style={styles.buttonText}>Send Reset Link</Text>
           )}
@@ -94,72 +98,78 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  formBlock: {
-    gap: 12,
-  },
-  centeredBlock: {
-    alignItems: "center",
-    gap: 8,
-  },
-  checkmark: {
-    fontSize: 40,
-    color: "#22c55e",
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#5A6478",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: "#111827",
-  },
-  button: {
-    backgroundColor: "#1A3A8F",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 14,
-  },
-  backLink: {
-    alignItems: "center",
-    marginTop: 8,
-  },
-  backLinkText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1A3A8F",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { textOnBrand: color.textOnBrand, textMuted: color.textMuted };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    formBlock: {
+      gap: 12,
+    },
+    centeredBlock: {
+      alignItems: "center",
+      gap: 8,
+    },
+    checkmark: {
+      fontSize: 40,
+      color: color.success,
+      marginBottom: 4,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: color.text,
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: 14,
+      color: color.textSub,
+      textAlign: "center",
+      marginBottom: 12,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: color.text,
+    },
+    button: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 8,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: color.textOnBrand,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    error: {
+      color: color.danger,
+      fontSize: 14,
+    },
+    backLink: {
+      alignItems: "center",
+      marginTop: 8,
+    },
+    backLinkText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.brand,
+    },
+  });
+}

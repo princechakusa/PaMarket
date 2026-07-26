@@ -9,11 +9,15 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
+import type { ColorPalette } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_MS = 60_000;
 
 export default function VerifyOtpScreen() {
+  const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles(buildTones);
   const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,7 +101,7 @@ export default function VerifyOtpScreen() {
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {isSubmitting ? <ActivityIndicator color="#1A3A8F" style={{ marginTop: 8 }} /> : null}
+      {isSubmitting ? <ActivityIndicator color={tones.brand} style={{ marginTop: 8 }} /> : null}
 
       <Pressable onPress={handleResend} disabled={isResending} style={styles.resendLink}>
         <Text style={styles.resendText}>{isResending ? "Sending…" : "Resend code"}</Text>
@@ -106,55 +110,61 @@ export default function VerifyOtpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    gap: 8,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#5A6478",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  otpRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  otpBox: {
-    width: 44,
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#D8DCE5",
-    borderRadius: 10,
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#111827",
-  },
-  error: {
-    color: "#C0392B",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  resendLink: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  resendText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1A3A8F",
-  },
-});
+function buildTones(color: ColorPalette) {
+  return { brand: color.brand };
+}
+
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: color.bg,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      gap: 8,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: color.text,
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: 14,
+      color: color.textSub,
+      textAlign: "center",
+      marginBottom: 20,
+    },
+    otpRow: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 8,
+    },
+    otpBox: {
+      width: 44,
+      height: 52,
+      borderWidth: 1,
+      borderColor: color.borderStrong,
+      borderRadius: 10,
+      textAlign: "center",
+      fontSize: 20,
+      fontWeight: "600",
+      color: color.text,
+    },
+    error: {
+      color: color.danger,
+      fontSize: 14,
+      textAlign: "center",
+      marginTop: 12,
+    },
+    resendLink: {
+      alignItems: "center",
+      marginTop: 20,
+    },
+    resendText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: color.brand,
+    },
+  });
+}

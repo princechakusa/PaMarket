@@ -5,18 +5,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
-import { BRAND_BLUE, BRAND_GOLD } from "../../../lib/constants";
 import { JOB_CATEGORIES, JOB_TYPES, parseJobField } from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { color, type ColorPalette } from "../../../lib/theme";
+import { useThemedStyles } from "../../../lib/theme-provider";
 
 function BackIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.4}>
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
+
+type Styles = ReturnType<typeof buildStyles>;
 
 const SALARY_RE = /^(\d+(\.\d+)?(\s*-\s*\d+(\.\d+)?)?|negotiable|competitive|tbd)$/i;
 
@@ -72,6 +75,7 @@ function buildDescription(opts: {
 // seller_id = auth.uid(), so the ownership check here is defense-in-depth /
 // UX, not the security boundary.
 export default function EditJobScreen() {
+  const styles = useThemedStyles(buildStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -173,7 +177,7 @@ export default function EditJobScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={BRAND_BLUE} />
+        <ActivityIndicator color={color.brand} />
       </View>
     );
   }
@@ -197,8 +201,8 @@ export default function EditJobScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
-        <Field label="Company Name *" value={company} onChangeText={setCompany} placeholder="Your company or organisation name" />
-        <Field label="Job Title *" value={title} onChangeText={setTitle} placeholder="e.g. Accountant, Driver, Sales Representative" />
+        <Field label="Company Name *" value={company} onChangeText={setCompany} placeholder="Your company or organisation name" styles={styles} />
+        <Field label="Job Title *" value={title} onChangeText={setTitle} placeholder="e.g. Accountant, Driver, Sales Representative" styles={styles} />
 
         <Text style={styles.label}>Job Category *</Text>
         <View style={styles.chipsWrap}>
@@ -209,7 +213,7 @@ export default function EditJobScreen() {
           ))}
         </View>
 
-        <Field label="City / Town *" value={city} onChangeText={setCity} placeholder="e.g. Harare, or Remote" />
+        <Field label="City / Town *" value={city} onChangeText={setCity} placeholder="e.g. Harare, or Remote" styles={styles} />
 
         <Text style={styles.label}>Job Type</Text>
         <View style={styles.chipsWrap}>
@@ -220,7 +224,7 @@ export default function EditJobScreen() {
           ))}
         </View>
 
-        <Field label="Salary (USD)" value={salary} onChangeText={setSalary} placeholder="e.g. 500, 500-1000, or Negotiable" />
+        <Field label="Salary (USD)" value={salary} onChangeText={setSalary} placeholder="e.g. 500, 500-1000, or Negotiable" styles={styles} />
 
         <Text style={styles.label}>Job Description *</Text>
         <TextInput
@@ -228,7 +232,7 @@ export default function EditJobScreen() {
           value={description}
           onChangeText={setDescription}
           placeholder="Describe the role, responsibilities, company culture…"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={color.textMuted}
           multiline
           numberOfLines={6}
         />
@@ -239,7 +243,7 @@ export default function EditJobScreen() {
           value={requirements}
           onChangeText={setRequirements}
           placeholder="List qualifications, experience, skills required…"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={color.textMuted}
           multiline
           numberOfLines={4}
         />
@@ -250,13 +254,13 @@ export default function EditJobScreen() {
           value={responsibilities}
           onChangeText={setResponsibilities}
           placeholder="List the main duties and responsibilities…"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={color.textMuted}
           multiline
           numberOfLines={4}
         />
 
-        <Field label="Application Email" value={email} onChangeText={setEmail} placeholder="Email to receive applications" />
-        <Field label="WhatsApp Number" value={phone} onChangeText={setPhone} placeholder="e.g. +263771234567" />
+        <Field label="Application Email" value={email} onChangeText={setEmail} placeholder="Email to receive applications" styles={styles} />
+        <Field label="WhatsApp Number" value={phone} onChangeText={setPhone} placeholder="e.g. +263771234567" styles={styles} />
 
         <Pressable style={[styles.submitButton, isSaving && { opacity: 0.6 }]} onPress={save} disabled={isSaving}>
           <Text style={styles.submitButtonText}>{isSaving ? "Saving…" : "Save Changes"}</Text>
@@ -271,11 +275,13 @@ function Field({
   value,
   onChangeText,
   placeholder,
+  styles,
 }: {
   label: string;
   value: string;
   onChangeText: (v: string) => void;
   placeholder: string;
+  styles: Styles;
 }) {
   return (
     <View style={{ marginBottom: 14 }}>
@@ -285,34 +291,35 @@ function Field({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={color.textMuted}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F6F9" },
+function buildStyles(color: ColorPalette) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: BRAND_BLUE,
+    backgroundColor: color.brand,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#ffffff" },
-  label: { fontSize: 12, fontWeight: "700", color: "#111827", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
+  label: { fontSize: 12, fontWeight: "700", color: color.text, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 },
   input: {
-    backgroundColor: "#ffffff",
+    backgroundColor: color.surface,
     borderWidth: 1.5,
-    borderColor: "#E8ECF4",
+    borderColor: color.border,
     borderRadius: 12,
     paddingHorizontal: 13,
     paddingVertical: 12,
     fontSize: 14,
-    color: "#111827",
+    color: color.text,
     marginBottom: 14,
   },
   textarea: { minHeight: 90, textAlignVertical: "top" },
@@ -322,12 +329,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: "#E8ECF4",
-    backgroundColor: "#ffffff",
+    borderColor: color.border,
+    backgroundColor: color.surface,
   },
-  chipActive: { backgroundColor: BRAND_BLUE, borderColor: BRAND_BLUE },
-  chipText: { fontSize: 12.5, fontWeight: "600", color: "#111827" },
-  chipTextActive: { color: "#ffffff" },
-  submitButton: { backgroundColor: BRAND_GOLD, borderRadius: 14, paddingVertical: 15, alignItems: "center", marginTop: 6 },
+  chipActive: { backgroundColor: color.brand, borderColor: color.brand },
+  chipText: { fontSize: 12.5, fontWeight: "600", color: color.text },
+  chipTextActive: { color: color.textOnBrand },
+  submitButton: { backgroundColor: color.gold, borderRadius: 14, paddingVertical: 15, alignItems: "center", marginTop: 6 },
   submitButtonText: { color: "#ffffff", fontSize: 15, fontWeight: "800" },
-});
+  });
+}
