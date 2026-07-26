@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import Svg, { Polyline } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../lib/auth";
@@ -24,7 +23,7 @@ import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "
 import { CategoryPicker } from "../../components/post/CategoryPicker";
 import { AttrFields, type AttrValues } from "../../components/post/AttrFields";
 import { PhotoGrid } from "../../components/post/PhotoGrid";
-import { Button, Card, Chip } from "../../components/ui";
+import { Button, Card, Chip, GlassBackButton } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 
@@ -243,11 +242,7 @@ export default function PostScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
-        <Pressable style={styles.topbarBack} onPress={handleHeaderBack} hitSlop={10}>
-          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.5}>
-            <Polyline points="15 18 9 12 15 6" />
-          </Svg>
-        </Pressable>
+        <GlassBackButton onPress={handleHeaderBack} tone="light" size={34} />
         <Text style={styles.topbarTitle} numberOfLines={1}>
           Post a Free Ad
         </Text>
@@ -458,7 +453,6 @@ function buildStyles(color: ColorPalette) {
     paddingHorizontal: space.md,
     paddingBottom: space.md,
   },
-  topbarBack: { width: 34, height: 34, alignItems: "center", justifyContent: "center" },
   topbarTitle: { flex: 1, ...font.title, color: color.textOnBrand, textAlign: "center" },
   topbarSpacer: { width: 34 },
   stepsBar: {
