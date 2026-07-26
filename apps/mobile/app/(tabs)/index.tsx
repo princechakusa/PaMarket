@@ -237,7 +237,10 @@ export default function HomeScreen() {
 
   const featured = useMemo(() => filtered.filter(isFeatured).slice(0, 12), [filtered]);
 
-  const recent = useMemo(() => filtered.slice(0, 12), [filtered]);
+  const recent = useMemo(() => {
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    return filtered.filter((l) => new Date(l.created_at).getTime() >= dayAgo).slice(0, 12);
+  }, [filtered]);
 
   const nearCity = useMemo(() => {
     if (cityFilter === "All Zimbabwe") return [];
