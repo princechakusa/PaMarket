@@ -103,7 +103,11 @@ export default function FavouritesScreen() {
           listing={item}
           saved={savedIds.has(item.id)}
           onToggleSave={() => onToggleSave(item.id)}
-          onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
+          onPress={() =>
+            item.category === "jobs"
+              ? router.push({ pathname: "/jobs/[id]", params: { id: item.id } })
+              : router.push({ pathname: "/listing/[id]", params: { id: item.id } })
+          }
         />
       )}
     />
