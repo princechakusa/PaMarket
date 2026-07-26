@@ -272,7 +272,7 @@ export default function AccountScreen() {
     >
       {/* Brand-tinted profile header */}
       <View style={[styles.hero, { paddingTop: insets.top + space.xl }]}>
-        <Pressable style={styles.gear} onPress={() => router.push("/settings")} hitSlop={10}>
+        <Pressable style={[styles.gear, { top: insets.top + space.sm }]} onPress={() => router.push("/settings")} hitSlop={10}>
           <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrandSub} strokeWidth={2}>
             <Path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
             <Path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H22a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -432,7 +432,11 @@ function buildStyles(color: ColorPalette) {
     borderBottomLeftRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
   },
-  gear: { position: "absolute", top: 0, right: space.lg, padding: space.sm },
+  // top is set inline with insets.top — do not rely on the parent hero's
+  // paddingTop alone for absolutely-positioned children; RN's containing-block
+  // behavior for `position: absolute` here previously left this sitting at the
+  // very top edge on some devices, colliding with the status bar / battery icon.
+  gear: { position: "absolute", right: space.lg, padding: space.sm },
   nameRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.md },
   name: { ...font.h2, color: color.textOnBrand, maxWidth: 260 },
   email: { ...font.sub, color: color.textOnBrandSub, marginTop: 2 },

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { toast } from "../components/ui/Toast";
 import { bestMatch, CHIP_MAP, INIT_CHIPS } from "../lib/support-bot-kb";
@@ -67,6 +68,7 @@ async function clearHistory() {
 export default function ReportProblemScreen() {
   const styles = useThemedStyles(buildStyles);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chips, setChips] = useState<string[]>([]);
   const [input, setInput] = useState("");
@@ -257,7 +259,7 @@ export default function ReportProblemScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>{"‹"}</Text>
         </Pressable>

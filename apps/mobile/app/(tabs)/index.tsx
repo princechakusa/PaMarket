@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import Svg, { Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { filterListings, isFeatured, type Listing } from "../../lib/listings";
@@ -35,6 +36,7 @@ const BUSINESS_COLUMNS =
   "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at";
 
 const RAIL_CARD_WIDTH = 160;
+const CITY_STORAGE_KEY = "pamarket.home-city-filter";
 
 // Horizontal rail of ListingCards with a SectionHeader — used for Featured,
 // Recently posted, and Near-<city> sections.
@@ -109,6 +111,19 @@ export default function HomeScreen() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  // Persist the selected city across app restarts, same SecureStore pattern
+  // as lib/theme-provider.tsx's theme preference.
+  useEffect(() => {
+    SecureStore.getItemAsync(CITY_STORAGE_KEY).then((stored) => {
+      if (stored) setCityFilter(stored);
+    });
+  }, []);
+
+  function selectCity(city: string) {
+    setCityFilter(city);
+    SecureStore.setItemAsync(CITY_STORAGE_KEY, city).catch(() => {});
+  }
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -274,7 +289,7 @@ export default function HomeScreen() {
       <CityPicker
         visible={cityPickerVisible}
         selected={cityFilter}
-        onSelect={setCityFilter}
+        onSelect={selectCity}
         onClose={() => setCityPickerVisible(false)}
       />
     </>

@@ -47,6 +47,7 @@ function LinkRow({
 export default function AboutScreen() {
   const router = useRouter();
   const version = Constants.expoConfig?.version ?? "1.29.0";
+  const buildNumber = Constants.expoConfig?.android?.versionCode ?? Constants.expoConfig?.ios?.buildNumber ?? null;
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
@@ -63,7 +64,10 @@ export default function AboutScreen() {
           Pa<Text style={styles.brandAccent}>Market</Text>
         </Text>
         <Text style={styles.tagline}>Zimbabwe's marketplace — buy, sell, hire, and rent.</Text>
-        <Text style={styles.version}>Version {version}</Text>
+        <Text style={styles.version}>
+          Version {version}
+          {buildNumber ? ` (Build ${buildNumber})` : ""}
+        </Text>
       </View>
 
       <Card style={{ marginTop: space.xl }}>
