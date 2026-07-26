@@ -2,21 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import type { ContactRequest } from "../../lib/jobs";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
+import { GlassBackButton } from "../../components/ui";
 
 function buildStatusMeta(color: ColorPalette): Record<string, { color: string; bg: string; label: string }> {
   return {
@@ -64,9 +56,7 @@ export default function MyContactRequestsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle}>My Requests</Text>
         <View style={{ width: 20 }} />
       </View>

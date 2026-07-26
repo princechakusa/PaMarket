@@ -7,15 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { Badge } from "../../components/ui";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.text} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
+import { Badge, GlassBackButton } from "../../components/ui";
 
 function ChevronIcon() {
   return (
@@ -105,9 +97,7 @@ export default function JobsHubScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: space.huge }}>
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="dark" />
         <Text style={styles.headerTitle}>Jobs</Text>
       </View>
 
@@ -221,14 +211,6 @@ function buildStyles(color: ColorPalette) {
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
-  },
-  backButton: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.pill,
-    backgroundColor: "rgba(255,255,255,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   headerTitle: { ...font.h3, color: color.text },
   intro: { paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: space.sm },

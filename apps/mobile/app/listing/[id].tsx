@@ -32,6 +32,7 @@ import {
   Button,
   Card,
   ErrorState,
+  GlassBackButton,
   ListSkeleton,
   SectionHeader,
   Skeleton,
@@ -97,13 +98,6 @@ function ClockIcon({ c }: { c: string }) {
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2}>
       <Circle cx={12} cy={12} r={9} />
       <Polyline points="12 7 12 12 15 14" />
-    </Svg>
-  );
-}
-function BackIcon() {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2.2}>
-      <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
@@ -434,9 +428,7 @@ export default function ListingDetailScreen() {
           )}
 
           <View style={[styles.topBar, { top: insets.top + 10 }]}>
-            <Pressable style={styles.iconButton} onPress={() => router.back()} hitSlop={hitSlop}>
-              <BackIcon />
-            </Pressable>
+            <GlassBackButton onPress={() => router.back()} tone="light" />
             <View style={{ flex: 1 }} />
             <Pressable style={styles.iconButton} onPress={shareListing} hitSlop={hitSlop}>
               <ShareIcon />

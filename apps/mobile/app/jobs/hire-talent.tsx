@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Circle, Line, Polyline } from "react-native-svg";
+import Svg, { Circle, Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -19,17 +19,10 @@ import {
   Chip,
   EmptyState,
   ErrorState,
+  GlassBackButton,
   Skeleton,
   VerifiedBadge,
 } from "../../components/ui";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function SearchIcon() {
   return (
@@ -187,9 +180,7 @@ export default function HireTalentScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} hitSlop={10}>
-            <BackIcon />
-          </Pressable>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
           <Text style={styles.headerTitle}>Find candidates</Text>
           <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
             <Text style={styles.headerLink}>Requests</Text>

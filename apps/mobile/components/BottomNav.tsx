@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs/types";
 import Svg, { Circle, Line, Path, Polyline } from "react-native-svg";
-import type { ColorPalette } from "../lib/theme";
-import { useThemedStyles } from "../lib/theme-provider";
+import { glass, type ColorPalette } from "../lib/theme";
+import { useThemePreference, useThemedStyles } from "../lib/theme-provider";
 
 type Route = BottomTabBarProps["state"]["routes"][number];
 
@@ -58,6 +60,7 @@ const LABELS: Record<string, string> = {
 export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
+  const { resolvedScheme } = useThemePreference();
   const routes = state.routes.filter((r: Route) => r.name !== "post");
   const postRoute = state.routes.find((r: Route) => r.name === "post");
   const leftRoutes = routes.slice(0, 2);
@@ -74,6 +77,7 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
         key={route.key}
         style={styles.tabButton}
         onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
           const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
           if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
         }}
@@ -87,12 +91,21 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
 
   return (
     <View style={[styles.container, { height: 64 + insets.bottom, paddingBottom: insets.bottom }]}>
+      <BlurView
+        intensity={glass.intensity.standard}
+        tint={resolvedScheme === "dark" ? "dark" : "light"}
+        experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+        style={StyleSheet.absoluteFill}
+      />
       {leftRoutes.map(renderTab)}
 
       <View style={styles.fabWrap}>
         <Pressable
           style={styles.fab}
-          onPress={() => postRoute && navigation.navigate(postRoute.name)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+            postRoute && navigation.navigate(postRoute.name);
+          }}
         >
           <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={tones.active} strokeWidth={2.5}>
             <Line x1={12} y1={5} x2={12} y2={19} />
@@ -117,11 +130,16 @@ function buildTones(color: ColorPalette) {
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
       flexDirection: "row",
       height: 64,
-      backgroundColor: color.surface,
-      borderTopWidth: 0.5,
-      borderTopColor: color.border,
+      backgroundColor: color.glassOverlay,
+      borderTopWidth: StyleSheet.hairlineWidth * 1.5,
+      borderTopColor: color.glassBorder,
+      overflow: "hidden",
     },
     tabButton: {
       flex: 1,

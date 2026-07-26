@@ -12,21 +12,14 @@ import {
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path, Polyline } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { brandLabel, type RentalSpecs, type RentalVehicleDetail } from "../../lib/rentals";
 import { businessInitials } from "../../lib/businesses";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-
-function BackIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
+import { GlassBackButton } from "../../components/ui";
 
 function PhoneIcon({ stroke }: { stroke: string }) {
   return (
@@ -298,9 +291,7 @@ export default function RentalVehicleDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon stroke={tones.textOnBrand} />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {brandLabel(brandSlug)} {vehicle.model}
         </Text>

@@ -227,7 +227,7 @@ export default function MessagesScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.conversation.id}
-          contentContainerStyle={filtered.length ? undefined : styles.emptyContent}
+          contentContainerStyle={filtered.length ? { paddingBottom: space.xxxl + space.lg } : styles.emptyContent}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             query.trim() ? (

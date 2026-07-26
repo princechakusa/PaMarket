@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path, Polyline } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
@@ -12,7 +12,7 @@ import { businessInitials } from "../../lib/businesses";
 import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { toast } from "../../components/ui/Toast";
-import { Badge, Button, Card, EmptyState } from "../../components/ui";
+import { Badge, Button, Card, EmptyState, GlassBackButton } from "../../components/ui";
 
 type JobListing = {
   id: string;
@@ -27,14 +27,6 @@ type JobListing = {
 };
 
 const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
@@ -153,9 +145,7 @@ export default function JobDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {company}
         </Text>

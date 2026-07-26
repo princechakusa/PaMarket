@@ -2,13 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { conversationIdFor } from "../../lib/messages";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
 import { formatPrice, type Listing } from "../../lib/listings";
-import { Avatar, EmptyState, ListSkeleton, VerifiedBadge } from "../../components/ui";
+import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge } from "../../components/ui";
 import { ListingCard } from "../../components/ListingCard";
 import { StarRow } from "../../components/StarRow";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -21,14 +20,6 @@ type FullProfile = PublicProfile & {
 };
 
 type BusinessLite = { id: string; name: string | null };
-
-function BackIcon({ color }: { color: string }) {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function memberSince(dateString: string | null | undefined): string {
   if (!dateString) return "";
@@ -106,9 +97,7 @@ export default function UserProfileScreen() {
   if (!profile) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtnAlone}>
-          <BackIcon color={styles.backIconColor.color} />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} />
         <EmptyState title="Profile not found" subtitle="This user profile doesn't exist or was removed." />
       </View>
     );
@@ -125,9 +114,7 @@ export default function UserProfileScreen() {
       ListHeaderComponent={
         <View>
           <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
-            <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-              <BackIcon color={styles.backIconColor.color} />
-            </Pressable>
+            <GlassBackButton onPress={() => router.back()} />
           </View>
 
           <View style={styles.identity}>
@@ -196,23 +183,6 @@ function buildStyles(color: ColorPalette) {
     header: {
       paddingHorizontal: space.lg,
       paddingBottom: space.sm,
-    },
-    backBtn: {
-      width: 36,
-      height: 36,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    backBtnAlone: {
-      width: 36,
-      height: 36,
-      alignItems: "center",
-      justifyContent: "center",
-      marginLeft: space.md,
-      marginTop: space.sm,
-    },
-    backIconColor: {
-      color: color.text,
     },
     identity: {
       alignItems: "center",

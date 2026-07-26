@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
 import { JOB_CATEGORIES, JOB_TYPES, parseJobField } from "../../../lib/jobs";
@@ -10,14 +9,7 @@ import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { color, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
+import { GlassBackButton } from "../../../components/ui";
 
 type Styles = ReturnType<typeof buildStyles>;
 
@@ -193,9 +185,7 @@ export default function EditJobScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle}>Edit Job</Text>
         <View style={{ width: 20 }} />
       </View>

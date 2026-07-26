@@ -11,7 +11,6 @@ import {
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
@@ -22,17 +21,10 @@ import { averageRating } from "../../lib/sellers";
 import { StarRow } from "../../components/StarRow";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { GlassBackButton } from "../../components/ui";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
-
-function BackIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 export default function BusinessShopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -168,9 +160,7 @@ export default function BusinessShopScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon stroke={tones.textOnBrand} />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {business.name}
         </Text>

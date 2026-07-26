@@ -47,6 +47,11 @@ export type ColorPalette = {
   online: string;
   skeleton: string;
   skeletonHighlight: string;
+
+  // Glass / translucent materials (GlassBackButton, GlassHeader, GlassTabBar)
+  glassOverlay: string;
+  glassBorder: string;
+  glassScrim: string;
 };
 
 export const LIGHT_COLORS: ColorPalette = {
@@ -92,6 +97,10 @@ export const LIGHT_COLORS: ColorPalette = {
   online: "#22C55E",
   skeleton: "#E7EAF1",
   skeletonHighlight: "#F1F3F8",
+
+  glassOverlay: "rgba(255,255,255,0.55)",
+  glassBorder: "rgba(255,255,255,0.65)",
+  glassScrim: "rgba(16,24,40,0.42)",
 };
 
 export const DARK_COLORS: ColorPalette = {
@@ -137,6 +146,10 @@ export const DARK_COLORS: ColorPalette = {
   online: "#22C55E",
   skeleton: "#1F222C",
   skeletonHighlight: "#282C38",
+
+  glassOverlay: "rgba(21,23,31,0.55)",
+  glassBorder: "rgba(255,255,255,0.12)",
+  glassScrim: "rgba(0,0,0,0.6)",
 };
 
 // Mutable, shared by reference everywhere `color` is imported. See header
@@ -218,5 +231,17 @@ export const shadow = {
 // ── Hit slop / touch ───────────────────────────────────────────────────────
 export const hitSlop = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 
-export const theme = { color, space, radius, font, shadow, hitSlop } as const;
+// ── Glass / translucent materials ───────────────────────────────────────────
+// Tuning shared by GlassBackButton, GlassHeader and the tab bar so every
+// frosted surface in the app reads as one consistent material rather than
+// per-screen guesses at blur amount. `experimentalBlurMethod:
+// "dimezisBlurView"` is what makes expo-blur render a REAL blur on Android
+// (the default otherwise silently degrades to a flat tint with no blur) —
+// see https://docs.expo.dev/versions/v57.0.0/sdk/blur-view/.
+export const glass = {
+  intensity: { subtle: 32, standard: 55, strong: 80 },
+  androidBlurMethod: "dimezisBlurView" as const,
+} as const;
+
+export const theme = { color, space, radius, font, shadow, hitSlop, glass } as const;
 export default theme;

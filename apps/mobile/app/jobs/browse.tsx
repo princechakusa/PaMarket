@@ -3,13 +3,13 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, Vi
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Circle, Line, Polyline } from "react-native-svg";
+import Svg, { Circle, Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { jobCompany, jobSalary, jobType, JOB_TYPES } from "../../lib/jobs";
 import { businessInitials } from "../../lib/businesses";
-import { Badge, Chip, EmptyState, ErrorState, ListingRowSkeleton } from "../../components/ui";
+import { Badge, Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton } from "../../components/ui";
 
 type JobListing = {
   id: string;
@@ -25,14 +25,6 @@ type JobListing = {
 
 const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at";
 const PAGE_SIZE = 30;
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function SearchIcon() {
   return (
@@ -126,9 +118,7 @@ export default function JobsListScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} hitSlop={10}>
-            <BackIcon />
-          </Pressable>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
           <Text style={styles.headerTitle}>Jobs</Text>
           <View style={{ width: 20 }} />
         </View>

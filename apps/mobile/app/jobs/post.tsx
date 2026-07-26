@@ -18,16 +18,8 @@ import { color, font, radius, shadow, space, type ColorPalette } from "../../lib
 import { useThemedStyles } from "../../lib/theme-provider";
 import { JOB_CATEGORIES, JOB_TYPES } from "../../lib/jobs";
 import { friendlyError } from "../../lib/safety";
-import { Badge, Button, Card, Chip, SectionHeader } from "../../components/ui";
+import { Badge, Button, Card, Chip, GlassBackButton, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function ShieldIcon() {
   return (
@@ -490,9 +482,7 @@ type Styles = ReturnType<typeof buildStyles>;
 function Header({ title, onBack, insetTop, styles }: { title: string; onBack: () => void; insetTop: number; styles: Styles }) {
   return (
     <View style={[styles.header, { paddingTop: insetTop + 10 }]}>
-      <Pressable onPress={onBack} hitSlop={10}>
-        <BackIcon />
-      </Pressable>
+      <GlassBackButton onPress={onBack} tone="light" />
       <Text style={styles.headerTitle}>{title}</Text>
       <View style={{ width: 20 }} />
     </View>

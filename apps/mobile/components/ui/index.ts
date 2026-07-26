@@ -1,3 +1,5 @@
+export { GlassBackButton } from "./GlassBackButton";
+export { GlassHeader } from "./GlassHeader";
 export { Card } from "./Card";
 export { Button } from "./Button";
 export { Chip } from "./Chip";

@@ -13,7 +13,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path, Polyline } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -31,7 +31,7 @@ import {
   type JobSeekerCv,
 } from "../../lib/jobs";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
-import { Avatar, Button, Card, Chip, SectionHeader } from "../../components/ui";
+import { Avatar, Button, Card, Chip, GlassBackButton, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
 // Mirrors www/js/jobs.js CandidateProfile ("Get Hired" CV builder). The flat
@@ -68,14 +68,6 @@ const EXP_LEVELS: Array<[string, string]> = [
   ["senior", "Senior (5-10 yrs)"],
   ["expert", "Expert (10+ yrs)"],
 ];
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function CameraIcon() {
   return (
@@ -257,9 +249,7 @@ export default function CvProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle}>My CV / Job Profile</Text>
         <View style={{ width: 20 }} />
       </View>

@@ -12,12 +12,13 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polygon, Polyline } from "react-native-svg";
+import Svg, { Polygon } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { StarRow } from "../../components/StarRow";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { GlassBackButton } from "../../components/ui";
 
 type Review = {
   reviewer_id: string;
@@ -26,14 +27,6 @@ type Review = {
   text: string | null;
   created_at: string;
 };
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 type Styles = ReturnType<typeof buildStyles>;
 
@@ -179,9 +172,7 @@ export default function ReviewsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {isOwn ? "My Reviews" : `${sellerName || (isBusiness ? "Shop" : "Seller")}'s Reviews`}
         </Text>

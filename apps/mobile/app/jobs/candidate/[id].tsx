@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path, Polyline } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../../lib/theme";
@@ -14,15 +14,7 @@ import {
   type ContactRequest,
 } from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
-import { Avatar, Badge, Button, Card, EmptyState, VerifiedBadge } from "../../../components/ui";
-
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
+import { Avatar, Badge, Button, Card, EmptyState, GlassBackButton, VerifiedBadge } from "../../../components/ui";
 
 function LockIcon() {
   return (
@@ -144,9 +136,7 @@ export default function CandidateCvScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <Text style={styles.headerTitle}>Candidate profile</Text>
         <View style={{ width: 20 }} />
       </View>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Line, Polyline, Rect, Path, Circle } from "react-native-svg";
+import Svg, { Line, Rect, Path, Circle } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import type { Business } from "../../lib/businesses";
@@ -10,6 +10,7 @@ import { businessInitials } from "../../lib/businesses";
 import type { RentalAccess, RentalCompanyRecord, RentalFleetVehicle, RentalLead } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { GlassBackButton } from "../../components/ui";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -22,13 +23,6 @@ import { useThemedStyles } from "../../lib/theme-provider";
 //   pending                  -> read-only dashboard + pending banner
 //   active                   -> full dashboard
 
-function BackIcon({ stroke }: { stroke: string }) {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.5}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 function PlusIcon({ stroke }: { stroke: string }) {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
@@ -283,9 +277,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
-            <BackIcon stroke={tones.textOnBrand} />
-          </Pressable>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -325,9 +317,7 @@ export default function RentalFleetDashboard() {
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
       <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBtn}>
-          <BackIcon stroke={tones.textOnBrand} />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <View style={styles.headerLogo}>
           <Text style={styles.headerLogoText}>{initial}</Text>
         </View>
@@ -442,14 +432,6 @@ function buildStyles(color: ColorPalette) {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-    },
-    backBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: "rgba(255,255,255,0.15)",
-      alignItems: "center",
-      justifyContent: "center",
     },
     headerIconBtn: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
     headerLogo: {

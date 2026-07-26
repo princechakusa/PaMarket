@@ -39,7 +39,7 @@ import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { initPresence, isUserOnline, joinChatChannel } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { Avatar, ListSkeleton, toast } from "../../components/ui";
+import { Avatar, GlassBackButton, ListSkeleton, toast } from "../../components/ui";
 
 const EDIT_WINDOW_MS = 7 * 60 * 1000;
 
@@ -57,14 +57,6 @@ type ListingContext = {
   currency: string | null;
   photos: string[] | null;
 };
-
-function BackIcon({ color }: { color: ColorPalette }) {
-  return (
-    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color.brand} strokeWidth={2.2}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
 
 function AttachIcon({ color }: { color: ColorPalette }) {
   return (
@@ -581,9 +573,7 @@ export default function ChatScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
     >
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <BackIcon color={themeColor} />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} />
         <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
           <Avatar uri={displayAvatar} name={displayName} size={38} online={!conversationBusiness && otherOnline} />
           <View style={{ flex: 1, minWidth: 0 }}>
@@ -810,9 +800,6 @@ function buildStyles(color: ColorPalette) {
     backgroundColor: color.surface,
     borderBottomWidth: 1,
     borderBottomColor: color.border,
-  },
-  backBtn: {
-    padding: space.xxs,
   },
   headerIdentity: {
     flex: 1,

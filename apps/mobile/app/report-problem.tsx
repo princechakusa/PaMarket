@@ -13,22 +13,11 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
-import Svg, { Polyline } from "react-native-svg";
 import { toast } from "../components/ui/Toast";
 import { bestMatch, CHIP_MAP, INIT_CHIPS } from "../lib/support-bot-kb";
 import { color, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
-
-// Matches the BackIcon used on every other custom-header screen (chevron
-// polyline, not a plain text "‹" glyph) — this screen was the one
-// inconsistent one.
-function BackIcon() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
-      <Polyline points="15 18 9 12 15 6" />
-    </Svg>
-  );
-}
+import { GlassBackButton } from "../components/ui";
 
 const HKEY = "pm_bot_h3";
 const WA = "https://wa.me/971589772645";
@@ -272,9 +261,7 @@ export default function ReportProblemScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <BackIcon />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} tone="light" />
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>P</Text>
         </View>
@@ -442,14 +429,6 @@ function buildStyles(color: ColorPalette) {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   avatar: {
     width: 38,
