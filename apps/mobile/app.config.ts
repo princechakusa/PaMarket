@@ -64,7 +64,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission: "PaMarket uses your camera to take photos for listings, verification, and chat messages.",
       },
     ],
-    "@sentry/react-native",
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: "pamarket",
+        project: "react-native",
+        // Auth token is deliberately NOT here — never commit it. It comes
+        // from the SENTRY_AUTH_TOKEN EAS environment variable at build time
+        // (same pattern as EXPO_PUBLIC_SUPABASE_URL etc.), which is what
+        // actually lets the build upload de-minified source maps so crashes
+        // show real file/line stack traces in the Sentry dashboard instead
+        // of unreadable minified JS.
+      },
+    ],
   ],
   extra: {
     router: {},
