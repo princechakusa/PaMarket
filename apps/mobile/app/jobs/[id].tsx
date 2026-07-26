@@ -3,13 +3,15 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
+import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { businessInitials } from "../../lib/businesses";
 import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
+import { isListingSaved, toggleSave } from "../../lib/saves";
+import { toast } from "../../components/ui/Toast";
 import { Badge, Button, Card, EmptyState } from "../../components/ui";
 
 type JobListing = {
@@ -30,6 +32,14 @@ function BackIcon() {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.4}>
       <Polyline points="15 18 9 12 15 6" />
+    </Svg>
+  );
+}
+
+function HeartIcon({ filled }: { filled: boolean }) {
+  return (
+    <Svg width={19} height={19} viewBox="0 0 24 24" fill={filled ? color.gold : "none"} stroke={color.textOnBrand} strokeWidth={2}>
+      <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </Svg>
   );
 }
@@ -66,6 +76,8 @@ export default function JobDetailScreen() {
   const styles = useThemedStyles(buildStyles);
   const [job, setJob] = useState<JobListing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingBusy, setSavingBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -77,6 +89,31 @@ export default function JobDetailScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  useEffect(() => {
+    if (!session?.user || !id) return;
+    isListingSaved(session.user.id, id).then(setIsSaved);
+  }, [session?.user?.id, id]);
+
+  async function handleToggleSave() {
+    if (!session?.user) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    if (!id || savingBusy) return;
+    const next = !isSaved;
+    setIsSaved(next);
+    setSavingBusy(true);
+    try {
+      await toggleSave(session.user.id, id, isSaved);
+      toast(next ? "Saved job" : "Removed from saved jobs");
+    } catch {
+      setIsSaved(!next);
+      toast("Couldn't update saved jobs", 3000, true);
+    } finally {
+      setSavingBusy(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -122,7 +159,13 @@ export default function JobDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {company}
         </Text>
-        <View style={{ width: 20 }} />
+        {isOwner ? (
+          <View style={{ width: 20 }} />
+        ) : (
+          <Pressable onPress={handleToggleSave} hitSlop={10}>
+            <HeartIcon filled={isSaved} />
+          </Pressable>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 110 }}>
