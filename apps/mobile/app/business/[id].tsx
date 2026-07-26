@@ -204,7 +204,10 @@ export default function BusinessShopScreen() {
             <Text style={styles.location}>{[business.city, business.province].filter(Boolean).join(", ")}</Text>
           ) : null}
 
-          <View style={styles.ratingRow}>
+          <Pressable
+            style={styles.ratingRow}
+            onPress={() => router.push({ pathname: "/reviews/[id]", params: { id: business.id, type: "business" } })}
+          >
             <StarRow rating={avgRating} />
             <Text style={styles.ratingText}>
               {reviews.length ? `${avgRating.toFixed(1)} (${reviews.length})` : "No reviews yet"}
@@ -217,7 +220,7 @@ export default function BusinessShopScreen() {
             <Text style={styles.ratingText}>
               {followerCount} {followerCount === 1 ? "follower" : "followers"}
             </Text>
-          </View>
+          </Pressable>
 
           {business.description ? <Text style={styles.description}>{business.description}</Text> : null}
 

@@ -66,24 +66,41 @@ function timeAgo(dateString: string): string {
 
 export default function ReviewsScreen() {
   const styles = useThemedStyles(buildStyles);
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, type } = useLocalSearchParams<{ id: string; type?: string }>();
+  const isBusiness = type === "business";
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [sellerName, setSellerName] = useState<string>("");
+  const [businessOwnerId, setBusinessOwnerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [draftRating, setDraftRating] = useState(0);
   const [draftText, setDraftText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isOwn = session?.user?.id === id;
+  const isOwn = isBusiness ? session?.user?.id === businessOwnerId : session?.user?.id === id;
   const alreadyReviewed = reviews.some((r) => r.reviewer_id === session?.user?.id);
 
   const load = useCallback(async () => {
     if (!id) return;
+    if (isBusiness) {
+      const [reviewsRes, businessRes] = await Promise.all([
+        supabase
+          .from("business_reviews")
+          .select("reviewer_id,reviewer_name,rating,text,created_at")
+          .eq("business_id", id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase.from("businesses").select("name,owner_user_id").eq("id", id).maybeSingle(),
+      ]);
+      setReviews((reviewsRes.data as Review[]) ?? []);
+      setSellerName((businessRes.data as { name: string } | null)?.name ?? "");
+      setBusinessOwnerId((businessRes.data as { owner_user_id: string } | null)?.owner_user_id ?? null);
+      return;
+    }
     const [reviewsRes, profileRes] = await Promise.all([
       supabase
         .from("reviews")
@@ -95,7 +112,7 @@ export default function ReviewsScreen() {
     ]);
     setReviews((reviewsRes.data as Review[]) ?? []);
     setSellerName((profileRes.data as { name: string } | null)?.name ?? "");
-  }, [id]);
+  }, [id, isBusiness]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -117,17 +134,29 @@ export default function ReviewsScreen() {
     }
     setIsSubmitting(true);
     const { data: profile } = await supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle();
-    const { error } = await supabase.from("reviews").upsert(
-      {
-        seller_id: id,
-        reviewer_id: session.user.id,
-        reviewer_name: profile?.name ?? "User",
-        rating: draftRating,
-        text: draftText || "",
-        created_at: new Date().toISOString(),
-      },
-      { onConflict: "seller_id,reviewer_id" }
-    );
+    const { error } = isBusiness
+      ? await supabase.from("business_reviews").upsert(
+          {
+            business_id: id,
+            reviewer_id: session.user.id,
+            reviewer_name: profile?.name ?? "User",
+            rating: draftRating,
+            text: draftText || "",
+            created_at: new Date().toISOString(),
+          },
+          { onConflict: "business_id,reviewer_id" }
+        )
+      : await supabase.from("reviews").upsert(
+          {
+            seller_id: id,
+            reviewer_id: session.user.id,
+            reviewer_name: profile?.name ?? "User",
+            rating: draftRating,
+            text: draftText || "",
+            created_at: new Date().toISOString(),
+          },
+          { onConflict: "seller_id,reviewer_id" }
+        );
     setIsSubmitting(false);
     if (error) {
       Alert.alert("Could not submit review", error.message);
@@ -154,7 +183,7 @@ export default function ReviewsScreen() {
           <BackIcon />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {isOwn ? "My Reviews" : `${sellerName || "Seller"}'s Reviews`}
+          {isOwn ? "My Reviews" : `${sellerName || (isBusiness ? "Shop" : "Seller")}'s Reviews`}
         </Text>
         <View style={{ width: 20 }} />
       </View>
@@ -187,7 +216,9 @@ export default function ReviewsScreen() {
           </Pressable>
         ) : null}
         {!isOwn && session?.user && alreadyReviewed ? (
-          <Text style={styles.alreadyReviewedText}>You have already reviewed this seller</Text>
+          <Text style={styles.alreadyReviewedText}>
+            You have already reviewed this {isBusiness ? "shop" : "seller"}
+          </Text>
         ) : null}
       </View>
 
@@ -221,7 +252,7 @@ export default function ReviewsScreen() {
             <StarPicker value={draftRating} onChange={setDraftRating} styles={styles} />
             <TextInput
               style={styles.modalTextArea}
-              placeholder="Share your experience with this seller…"
+              placeholder={`Share your experience with this ${isBusiness ? "shop" : "seller"}…`}
               placeholderTextColor={color.textMuted}
               multiline
               value={draftText}
