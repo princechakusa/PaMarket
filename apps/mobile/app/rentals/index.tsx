@@ -1,11 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
+import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
-import { brandLabel, categoryLabel, type RentalListingSummary } from "../../lib/rentals";
+import {
+  BRAND_LABELS,
+  CATEGORY_LABELS,
+  RENTAL_FUEL_TYPES,
+  RENTAL_TRANSMISSIONS,
+  brandLabel,
+  categoryLabel,
+  type RentalListingSummary,
+} from "../../lib/rentals";
+import { Chip } from "../../components/ui";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -17,6 +26,34 @@ function BackIcon({ stroke }: { stroke: string }) {
   );
 }
 
+function FilterIcon({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
+      <Path d="M4 6h16M4 12h16M4 18h16" />
+    </Svg>
+  );
+}
+
+type RentalFilters = {
+  category: string | null;
+  brand: string | null;
+  transmission: string | null;
+  fuelType: string | null;
+  availableOnly: boolean;
+};
+
+const DEFAULT_FILTERS: RentalFilters = {
+  category: null,
+  brand: null,
+  transmission: null,
+  fuelType: null,
+  availableOnly: false,
+};
+
+function countActive(f: RentalFilters): number {
+  return (f.category ? 1 : 0) + (f.brand ? 1 : 0) + (f.transmission ? 1 : 0) + (f.fuelType ? 1 : 0) + (f.availableOnly ? 1 : 0);
+}
+
 export default function RentalsListScreen() {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
@@ -25,25 +62,28 @@ export default function RentalsListScreen() {
   const [vehicles, setVehicles] = useState<RentalListingSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<RentalFilters>(DEFAULT_FILTERS);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const activeCount = useMemo(() => countActive(filters), [filters]);
 
   const load = useCallback(async () => {
     setError(null);
     const { data, error: rpcError } = await supabase.rpc("rental_search_listings", {
-      p_category_slug: null,
+      p_category_slug: filters.category,
       p_city: null,
-      p_brand_slug: null,
+      p_brand_slug: filters.brand,
       p_price_min: null,
       p_price_max: null,
-      p_transmission: null,
-      p_fuel_type: null,
-      p_available_only: false,
+      p_transmission: filters.transmission,
+      p_fuel_type: filters.fuelType,
+      p_available_only: filters.availableOnly,
       p_featured_first: true,
       p_limit: 30,
       p_offset: 0,
     });
     if (rpcError) setError(rpcError.message);
     else setVehicles((data as RentalListingSummary[]) ?? []);
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -57,7 +97,14 @@ export default function RentalsListScreen() {
           <BackIcon stroke={tones.textOnBrand} />
         </Pressable>
         <Text style={styles.headerTitle}>Rentals</Text>
-        <View style={{ width: 20 }} />
+        <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
+          <FilterIcon stroke={tones.textOnBrand} />
+          {activeCount ? (
+            <View style={styles.filterCountDot}>
+              <Text style={styles.filterCountDotText}>{activeCount}</Text>
+            </View>
+          ) : null}
+        </Pressable>
       </View>
 
       {isLoading ? (
@@ -120,6 +167,86 @@ export default function RentalsListScreen() {
           )}
         />
       )}
+
+      <Modal visible={filterVisible} animationType="slide" transparent onRequestClose={() => setFilterVisible(false)}>
+        <View style={styles.filterBackdrop}>
+          <Pressable style={styles.filterBackdropTouch} onPress={() => setFilterVisible(false)} />
+          <View style={styles.filterSheet}>
+            <View style={styles.filterHeader}>
+              <Text style={styles.filterTitle}>Filter Rentals</Text>
+              <Pressable onPress={() => setFilterVisible(false)} hitSlop={12}>
+                <Text style={styles.filterClose}>Close</Text>
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={styles.filterBody}>
+              <Text style={styles.filterSectionTitle}>Vehicle Type</Text>
+              <View style={styles.filterChipWrap}>
+                {Object.entries(CATEGORY_LABELS).map(([slug, label]) => (
+                  <Chip
+                    key={slug}
+                    label={label}
+                    active={filters.category === slug}
+                    onPress={() => setFilters((f) => ({ ...f, category: f.category === slug ? null : slug }))}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.filterSectionTitle}>Brand</Text>
+              <View style={styles.filterChipWrap}>
+                {Object.entries(BRAND_LABELS).map(([slug, label]) => (
+                  <Chip
+                    key={slug}
+                    label={label}
+                    active={filters.brand === slug}
+                    onPress={() => setFilters((f) => ({ ...f, brand: f.brand === slug ? null : slug }))}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.filterSectionTitle}>Transmission</Text>
+              <View style={styles.filterChipWrap}>
+                {RENTAL_TRANSMISSIONS.map((t) => (
+                  <Chip
+                    key={t}
+                    label={t === "automatic" ? "Automatic" : "Manual"}
+                    active={filters.transmission === t}
+                    onPress={() => setFilters((f) => ({ ...f, transmission: f.transmission === t ? null : t }))}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.filterSectionTitle}>Fuel Type</Text>
+              <View style={styles.filterChipWrap}>
+                {RENTAL_FUEL_TYPES.map((t) => (
+                  <Chip
+                    key={t}
+                    label={t.charAt(0).toUpperCase() + t.slice(1)}
+                    active={filters.fuelType === t}
+                    onPress={() => setFilters((f) => ({ ...f, fuelType: f.fuelType === t ? null : t }))}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.filterSectionTitle}>Availability</Text>
+              <View style={styles.filterChipWrap}>
+                <Chip
+                  label="Available now only"
+                  active={filters.availableOnly}
+                  onPress={() => setFilters((f) => ({ ...f, availableOnly: !f.availableOnly }))}
+                />
+              </View>
+            </ScrollView>
+            <View style={styles.filterFooter}>
+              <Pressable style={styles.filterResetBtn} onPress={() => setFilters(DEFAULT_FILTERS)}>
+                <Text style={styles.filterResetText}>Reset</Text>
+              </Pressable>
+              <Pressable style={styles.filterApplyBtn} onPress={() => setFilterVisible(false)}>
+                <Text style={styles.filterApplyText}>Show results</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -155,6 +282,112 @@ function buildStyles(color: ColorPalette) {
       backgroundColor: color.brand,
       paddingHorizontal: 16,
       paddingBottom: 12,
+    },
+    filterBtn: {
+      width: 20,
+      height: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    filterCountDot: {
+      position: "absolute",
+      top: -6,
+      right: -8,
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: color.gold,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 3,
+    },
+    filterCountDotText: {
+      fontSize: 9,
+      fontWeight: "800",
+      color: color.text,
+    },
+    filterBackdrop: {
+      flex: 1,
+      justifyContent: "flex-end",
+      backgroundColor: color.overlay,
+    },
+    filterBackdropTouch: {
+      flex: 1,
+    },
+    filterSheet: {
+      backgroundColor: color.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: "80%",
+    },
+    filterHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: color.divider,
+    },
+    filterTitle: {
+      fontSize: 17,
+      fontWeight: "800",
+      color: color.text,
+    },
+    filterClose: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    filterBody: {
+      padding: 20,
+      gap: 4,
+    },
+    filterSectionTitle: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: color.textMuted,
+      textTransform: "uppercase",
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    filterChipWrap: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    filterFooter: {
+      flexDirection: "row",
+      gap: 12,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: color.divider,
+    },
+    filterResetBtn: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: color.surfaceAlt,
+    },
+    filterResetText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.text,
+    },
+    filterApplyBtn: {
+      flex: 2,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: color.brand,
+    },
+    filterApplyText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.textOnBrand,
     },
     headerTitle: {
       fontSize: 17,
