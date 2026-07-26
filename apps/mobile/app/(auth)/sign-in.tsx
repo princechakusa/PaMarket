@@ -16,6 +16,7 @@ import { supabase } from "../../lib/supabase";
 import { signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
 import { GoogleButton } from "../../components/GoogleButton";
+import { BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -86,7 +87,7 @@ export default function SignInScreen() {
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.brandBlock}>
-          <Text style={styles.brand}>PaMarket</Text>
+          <BrandWordmark style={styles.brand} />
           <Text style={styles.subtitle}>Sign in to continue buying and selling</Text>
         </View>
 

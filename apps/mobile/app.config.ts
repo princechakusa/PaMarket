@@ -18,6 +18,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.pamarket.app",
+    icon: {
+      light: "./assets/icon.png",
+      dark: "./assets/icon-dark.png",
+      tinted: "./assets/icon-tinted.png",
+    },
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -27,9 +32,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     versionCode: 110,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
-      backgroundColor: "#1A3A8F",
+      backgroundColor: "#F4F6FA",
       foregroundImage: "./assets/android-icon-foreground.png",
-      backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
@@ -44,15 +48,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-splash-screen",
       {
-        backgroundColor: "#1A3A8F",
+        backgroundColor: "#FFFFFF",
         image: "./assets/splash-icon.png",
+        dark: {
+          backgroundColor: "#0B0D12",
+          image: "./assets/splash-icon-dark.png",
+        },
+        imageWidth: 280,
         resizeMode: "contain",
       },
     ],
     [
       "expo-notifications",
       {
-        icon: "./assets/android-icon-foreground.png",
+        icon: "./assets/notification-icon.png",
         color: "#1A3A8F",
       },
     ],

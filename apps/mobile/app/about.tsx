@@ -2,9 +2,10 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-na
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import Svg, { Path, Polyline } from "react-native-svg";
-import { DARK_COLORS, LIGHT_COLORS, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
+import { DARK_COLORS, LIGHT_COLORS, font, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles, useThemePreference } from "../lib/theme-provider";
 import { Card } from "../components/ui";
+import { BrandSymbol, BrandWordmark } from "../components/BrandLogo";
 
 const SUPPORT_EMAIL = "support@pamarketzw.com";
 const SUPPORT_PHONE = "+971589772645";
@@ -56,13 +57,9 @@ export default function AboutScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: space.lg, paddingBottom: space.huge }}>
       <View style={styles.hero}>
         <View style={styles.logoMark}>
-          <Text style={styles.logoText}>
-            Pa<Text style={styles.logoAccent}>M</Text>
-          </Text>
+          <BrandSymbol size={72} />
         </View>
-        <Text style={styles.brand}>
-          Pa<Text style={styles.brandAccent}>Market</Text>
-        </Text>
+        <BrandWordmark size={24} style={styles.brand} />
         <Text style={styles.tagline}>Zimbabwe's marketplace — buy, sell, hire, and rent.</Text>
         <Text style={styles.version}>
           Version {version}
@@ -126,16 +123,10 @@ function buildStyles(color: ColorPalette) {
   logoMark: {
     width: 72,
     height: 72,
-    borderRadius: radius.xl,
-    backgroundColor: color.brand,
     alignItems: "center",
     justifyContent: "center",
-    ...shadow.md,
   },
-  logoText: { fontSize: 32, fontWeight: "900", color: color.textOnBrand },
-  logoAccent: { color: color.gold },
-  brand: { fontSize: 24, fontWeight: "900", color: color.text, marginTop: space.md, letterSpacing: -0.5 },
-  brandAccent: { color: color.gold },
+  brand: { marginTop: space.md },
   tagline: { ...font.sub, color: color.textMuted, marginTop: space.xs, textAlign: "center" },
   version: { ...font.caption, color: color.textMuted, marginTop: space.sm },
   sectionTitle: { ...font.title, color: color.text, marginBottom: space.sm },
