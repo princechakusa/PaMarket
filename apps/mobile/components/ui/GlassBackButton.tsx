@@ -1,22 +1,23 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Polyline } from "react-native-svg";
-import { hitSlop as defaultHitSlop } from "../../lib/theme";
+import { font, hitSlop as defaultHitSlop } from "../../lib/theme";
 import { useThemePreference } from "../../lib/theme-provider";
 
-// One shared back button — a plain chevron, no background/circle/blur,
-// matching the plain native back arrow used everywhere a screen relies on
-// the default Stack header (e.g. My Listings). `tone` only controls icon
-// color for legibility over photo heroes / brand-colored banners; it no
-// longer implies any background treatment.
+// One shared back button — a chevron plus a text label, matching the plain
+// native back button style used everywhere a screen relies on the default
+// Stack header (e.g. My Listings shows "‹ Account" when reached from the
+// Account tab). No background/circle/blur. `tone` only controls color for
+// legibility over photo heroes / brand-colored banners.
 export type GlassTone = "auto" | "light" | "dark";
 
 type GlassBackButtonProps = {
   onPress?: () => void;
   tone?: GlassTone;
   size?: number;
+  label?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -28,18 +29,22 @@ function ChevronIcon({ color, size }: { color: string; size: number }) {
   );
 }
 
-export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: GlassBackButtonProps) {
+// Defaults to "Back" (matching iOS's own "generic" back-button mode) rather
+// than leaving every one of the ~20 custom-header screens to work out
+// exactly which screen a user would have come from — pass `label` to
+// override with something more specific where it's known and useful.
+export function GlassBackButton({ onPress, tone = "auto", size = 38, label = "Back", style }: GlassBackButtonProps) {
   const router = useRouter();
   const { resolvedScheme } = useThemePreference();
   const isDark = resolvedScheme === "dark";
 
   // "auto" follows the active theme; "light"/"dark" let a screen force a
-  // legible icon color when the surface behind it is a photo or a
-  // brand-colored banner rather than the app's own background. `tone`
-  // names the ICON's rendered tone — "light" means a light/white icon (for
-  // a dark backdrop), "dark" means a dark icon (for a light backdrop).
+  // legible color when the surface behind it is a photo or a brand-colored
+  // banner rather than the app's own background. `tone` names the icon/text
+  // tone — "light" means white (for a dark backdrop), "dark" means near-
+  // black (for a light backdrop).
   const effectiveDark = tone === "light" ? true : tone === "dark" ? false : isDark;
-  const iconColor = effectiveDark ? "#FFFFFF" : "#111827";
+  const tint = effectiveDark ? "#FFFFFF" : "#111827";
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -60,10 +65,15 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: Gl
         onPress={handlePress}
         hitSlop={defaultHitSlop}
         accessibilityRole="button"
-        accessibilityLabel="Go back"
-        style={({ pressed }) => [styles.wrap, { width: size, height: size, opacity: pressed ? 0.5 : 1 }, style]}
+        accessibilityLabel={label ? `Go back to ${label}` : "Go back"}
+        style={({ pressed }) => [styles.wrap, { height: size, opacity: pressed ? 0.5 : 1 }, style]}
       >
-        <ChevronIcon color={iconColor} size={Math.round(size * 0.58)} />
+        <ChevronIcon color={tint} size={Math.round(size * 0.58)} />
+        {label ? (
+          <Text style={[styles.label, { color: tint }]} numberOfLines={1}>
+            {label}
+          </Text>
+        ) : null}
       </Pressable>
     </>
   );
@@ -71,7 +81,12 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, style }: Gl
 
 const styles = StyleSheet.create({
   wrap: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 2,
+  },
+  label: {
+    ...font.body,
+    marginLeft: -2,
   },
 });
