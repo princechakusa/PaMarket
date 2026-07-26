@@ -21,6 +21,7 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { Avatar, EmptyState, ListSkeleton } from "../../components/ui";
 
 type ListingLite = { id: string; title: string | null; photos: string[] | null };
+type BusinessLite = { id: string; name: string | null; logo: string | null };
 
 type ConversationSummary = {
   conversation: ConversationRow;
@@ -28,6 +29,7 @@ type ConversationSummary = {
   lastMessage: MessageRow | null;
   unreadCount: number;
   listing: ListingLite | null;
+  business: BusinessLite | null;
 };
 
 function timeAgo(dateString: string): string {
@@ -68,7 +70,7 @@ export default function MessagesScreen() {
 
     const { data: conversations } = await supabase
       .from("conversations")
-      .select("id,members,listing_id")
+      .select("id,members,listing_id,business_id")
       .contains("members", [myId]);
 
     const rows = (conversations as ConversationRow[]) ?? [];
@@ -94,6 +96,17 @@ export default function MessagesScreen() {
       ? await supabase.from("listings").select("id,title,photos").in("id", listingIds)
       : { data: [] as ListingLite[] };
     const listingsById = new Map((listingsRes.data as ListingLite[] | null ?? []).map((l) => [l.id, l]));
+
+    // Business conversations (business_id set) show the shop's identity
+    // instead of the owner's personal profile — see
+    // supabase/migrations/add_conversation_business_id.sql for why.
+    const businessIds = Array.from(
+      new Set(rows.map((c) => c.business_id).filter((bid): bid is string => !!bid))
+    );
+    const businessesRes = businessIds.length
+      ? await supabase.from("businesses").select("id,name,logo").in("id", businessIds)
+      : { data: [] as BusinessLite[] };
+    const businessesById = new Map((businessesRes.data as BusinessLite[] | null ?? []).map((b) => [b.id, b]));
 
     const summariesList = await Promise.all(
       rows.map(async (conversation): Promise<ConversationSummary> => {
@@ -121,6 +134,7 @@ export default function MessagesScreen() {
           lastMessage: (lastMessageRes.data as MessageRow) ?? null,
           unreadCount: unreadRes.count ?? 0,
           listing: (conversation.listing_id ? listingsById.get(conversation.listing_id) : undefined) ?? null,
+          business: (conversation.business_id ? businessesById.get(conversation.business_id) : undefined) ?? null,
         };
       })
     );
@@ -164,7 +178,7 @@ export default function MessagesScreen() {
     const q = query.trim().toLowerCase();
     if (!q) return summaries;
     return summaries.filter((s) => {
-      const name = (s.otherProfile?.name || "").toLowerCase();
+      const name = (s.business?.name || s.otherProfile?.name || "").toLowerCase();
       const listing = (s.listing?.title || "").toLowerCase();
       return name.includes(q) || listing.includes(q);
     });
@@ -230,16 +244,22 @@ export default function MessagesScreen() {
             const online = isUserOnline(otherId);
             const unread = item.unreadCount > 0;
             const thumb = item.listing?.photos?.[0] ?? null;
+            // Business conversations show the shop's identity, not the
+            // owner's personal profile — see lib/messages.ts ConversationRow
+            // and supabase/migrations/add_conversation_business_id.sql.
+            const displayName = item.business?.name || item.otherProfile?.name || "PaMarket User";
+            const displayAvatar = item.business?.logo || item.otherProfile?.avatar;
             return (
               <Pressable
                 style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
                 onPress={() => router.push({ pathname: "/chat/[id]", params: { id: item.conversation.id } })}
               >
-                <Avatar uri={item.otherProfile?.avatar} name={item.otherProfile?.name} size={52} online={online} />
+                <Avatar uri={displayAvatar} name={displayName} size={52} online={!item.business && online} />
                 <View style={styles.rowBody}>
                   <View style={styles.rowTop}>
                     <Text style={[styles.name, unread && styles.nameUnread]} numberOfLines={1}>
-                      {item.otherProfile?.name || "PaMarket User"}
+                      {displayName}
+                      {item.business ? " · Shop" : ""}
                     </Text>
                     {item.lastMessage ? (
                       <Text style={[styles.time, unread && styles.timeUnread]}>

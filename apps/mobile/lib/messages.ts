@@ -30,6 +30,7 @@ export type ConversationRow = {
   id: string;
   members: string[];
   listing_id: string | null;
+  business_id?: string | null;
 };
 
 export type MessageRow = {

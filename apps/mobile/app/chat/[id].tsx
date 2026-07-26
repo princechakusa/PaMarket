@@ -112,6 +112,7 @@ export default function ChatScreen() {
 
   const [conversation, setConversation] = useState<ConversationRow | null>(null);
   const [otherProfile, setOtherProfile] = useState<Profile | null>(null);
+  const [conversationBusiness, setConversationBusiness] = useState<{ id: string; name: string | null; logo: string | null } | null>(null);
   const [listing, setListing] = useState<ListingContext | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,7 +157,7 @@ export default function ChatScreen() {
 
   const load = useCallback(async () => {
     if (!id || !myId) return;
-    const { data: conv } = await supabase.from("conversations").select("id,members,listing_id").eq("id", id).maybeSingle();
+    const { data: conv } = await supabase.from("conversations").select("id,members,listing_id,business_id").eq("id", id).maybeSingle();
     if (!conv) return;
     setConversation(conv as ConversationRow);
 
@@ -168,6 +169,16 @@ export default function ChatScreen() {
         .eq("id", oId)
         .maybeSingle();
       setOtherProfile((profile as Profile) ?? null);
+    }
+
+    // Business conversation — show the shop's identity, not the owner's
+    // personal profile (see supabase/migrations/add_conversation_business_id.sql).
+    const businessId = (conv as ConversationRow).business_id;
+    if (businessId) {
+      const { data: biz } = await supabase.from("businesses").select("id,name,logo").eq("id", businessId).maybeSingle();
+      setConversationBusiness((biz as { id: string; name: string | null; logo: string | null }) ?? null);
+    } else {
+      setConversationBusiness(null);
     }
 
     // Listing context strip — fetch the attached listing on load.
@@ -515,10 +526,23 @@ export default function ChatScreen() {
   const safetyHint = useMemo(() => chatSafetyHint(inputText), [inputText]);
   const canSend = (!!inputText.trim() || pendingImages.length > 0) && !isSending && !isSendingImages;
 
-  const subtitle = otherTyping ? "Typing…" : otherOnline ? "Online" : lastSeenLabel(otherProfile?.last_seen);
+  const subtitle = conversationBusiness
+    ? "Shop"
+    : otherTyping
+      ? "Typing…"
+      : otherOnline
+        ? "Online"
+        : lastSeenLabel(otherProfile?.last_seen);
+
+  const displayName = conversationBusiness?.name || otherProfile?.name || "PaMarket User";
+  const displayAvatar = conversationBusiness?.logo || otherProfile?.avatar;
 
   const openProfile = () => {
-    if (otherId) router.push({ pathname: "/profile/[id]", params: { id: otherId } });
+    if (conversationBusiness) {
+      router.push({ pathname: "/business/[id]", params: { id: conversationBusiness.id } });
+    } else if (otherId) {
+      router.push({ pathname: "/profile/[id]", params: { id: otherId } });
+    }
   };
 
   return (
@@ -531,11 +555,11 @@ export default function ChatScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
           <BackIcon color={themeColor} />
         </Pressable>
-        <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId}>
-          <Avatar uri={otherProfile?.avatar} name={otherProfile?.name} size={38} online={otherOnline} />
+        <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
+          <Avatar uri={displayAvatar} name={displayName} size={38} online={!conversationBusiness && otherOnline} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.headerName} numberOfLines={1}>
-              {otherProfile?.name || "PaMarket User"}
+              {displayName}
             </Text>
             <Text
               style={[styles.headerSubtitle, otherTyping ? styles.subtitleTyping : otherOnline ? styles.subtitleOnline : styles.subtitleOffline]}

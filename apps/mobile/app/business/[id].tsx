@@ -54,15 +54,28 @@ export default function BusinessShopScreen() {
   const load = useCallback(async () => {
     if (!id) return;
     const myId = session?.user?.id;
-    const [businessRes, productsRes, reviewsRes, followerCountRes, myFollowRes] = await Promise.all([
+    const businessRes = await supabase
+      .from("businesses")
+      .select(
+        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at"
+      )
+      .eq("id", id)
+      .maybeSingle();
+    const ownerUserId = (businessRes.data as Business | null)?.owner_user_id;
+    // Match components/home/ShopsRail.tsx's product-count logic exactly
+    // (business_id OR owner's personal seller_id) — the storefront page was
+    // previously stricter (business_id only), so it could show "0 items"
+    // for the same shop Home's rail showed with real products, whenever a
+    // listing was posted under the owner's personal account without
+    // business_id set.
+    const productsFilter = ownerUserId ? `business_id.eq.${id},seller_id.eq.${ownerUserId}` : `business_id.eq.${id}`;
+    const [productsRes, reviewsRes, followerCountRes, myFollowRes] = await Promise.all([
       supabase
-        .from("businesses")
-        .select(
-          "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at"
-        )
-        .eq("id", id)
-        .maybeSingle(),
-      supabase.from("listings").select(LISTING_COLUMNS).eq("business_id", id).eq("status", "active").neq("category", "jobs"),
+        .from("listings")
+        .select(LISTING_COLUMNS)
+        .or(productsFilter)
+        .eq("status", "active")
+        .neq("category", "jobs"),
       supabase.from("business_reviews").select("rating").eq("business_id", id),
       supabase.from("business_followers").select("user_id", { count: "exact", head: true }).eq("business_id", id),
       myId
@@ -128,6 +141,7 @@ export default function BusinessShopScreen() {
         id: convId,
         members: [session.user.id, business.owner_user_id],
         listing_id: null,
+        business_id: business.id,
       });
     }
     router.push({ pathname: "/chat/[id]", params: { id: convId } });
@@ -236,18 +250,14 @@ export default function BusinessShopScreen() {
                 </Text>
               </Pressable>
             ) : null}
-            {!isOwner ? (
-              <Pressable style={[styles.contactPill, styles.contactPillMessage]} onPress={messageShop}>
-                <Text style={styles.contactPillText}>Message</Text>
-              </Pressable>
-            ) : (
+            {isOwner ? (
               <Pressable
                 style={[styles.contactPill, styles.contactPillMessage]}
                 onPress={() => router.push(`/business-manage/${business.id}`)}
               >
                 <Text style={styles.contactPillText}>Manage Shop</Text>
               </Pressable>
-            )}
+            ) : null}
           </View>
         </View>
 
