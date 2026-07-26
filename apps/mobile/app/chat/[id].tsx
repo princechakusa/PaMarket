@@ -3,10 +3,12 @@ import {
   ActionSheetIOS,
   Alert,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -123,6 +125,20 @@ export default function ChatScreen() {
   const [forwardTarget, setForwardTarget] = useState<MessageRow | null>(null);
   const [forwardCandidates, setForwardCandidates] = useState<ForwardCandidate[]>([]);
   const [forwardLoading, setForwardLoading] = useState(false);
+  const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [isSendingImages, setIsSendingImages] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
   const styles = useThemedStyles(buildStyles);
   const themeColor = useThemedStyles((c) => c);
   const listRef = useRef<any>(null);
@@ -299,6 +315,12 @@ export default function ChatScreen() {
 
   async function handleSend() {
     const trimmed = inputText.trim();
+    if (pendingImages.length) {
+      await sendPendingImages();
+      if (trimmed) await sendMessage(trimmed);
+      setInputText("");
+      return;
+    }
     if (!trimmed || isSending) return;
     typingRef.current?.stopTyping();
     setIsSending(true);
@@ -457,20 +479,41 @@ export default function ChatScreen() {
   async function handleAttach() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted || !myId) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+      allowsMultipleSelection: true,
+    });
     if (result.canceled || !result.assets?.length) return;
-    const uri = result.assets[0].uri;
-    const key = `chat/${myId}/${Date.now()}.jpg`;
+    setPendingImages((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+  }
+
+  function removePendingImage(uri: string) {
+    setPendingImages((prev) => prev.filter((u) => u !== uri));
+  }
+
+  // Each message row holds exactly one `image` (no multi-image column), so a
+  // multi-select send fans out into one message per photo, in order.
+  async function sendPendingImages() {
+    if (!myId || !pendingImages.length || isSendingImages) return;
+    setIsSendingImages(true);
+    const images = pendingImages;
+    setPendingImages([]);
     try {
-      const url = await uploadImageUriToR2(uri, key);
-      await sendMessage("", url);
+      for (const uri of images) {
+        const key = `chat/${myId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const url = await uploadImageUriToR2(uri, key);
+        await sendMessage("", url);
+      }
     } catch {
-      toast("Couldn't send photo. Try again.", 4000, true);
+      toast("Couldn't send one or more photos. Try again.", 4000, true);
+    } finally {
+      setIsSendingImages(false);
     }
   }
 
   const safetyHint = useMemo(() => chatSafetyHint(inputText), [inputText]);
-  const canSend = !!inputText.trim() && !isSending;
+  const canSend = (!!inputText.trim() || pendingImages.length > 0) && !isSending && !isSendingImages;
 
   const subtitle = otherTyping ? "Typing…" : otherOnline ? "Online" : lastSeenLabel(otherProfile?.last_seen);
 
@@ -626,13 +669,26 @@ export default function ChatScreen() {
         </View>
       ) : null}
 
+      {pendingImages.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagePreviewRow} contentContainerStyle={{ gap: space.sm, paddingHorizontal: space.lg }}>
+          {pendingImages.map((uri) => (
+            <View key={uri} style={styles.imagePreviewItem}>
+              <Image source={{ uri }} style={styles.imagePreviewThumb} contentFit="cover" />
+              <Pressable style={styles.imagePreviewRemove} onPress={() => removePendingImage(uri)} hitSlop={8}>
+                <Text style={styles.imagePreviewRemoveText}>×</Text>
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      ) : null}
+
       {safetyHint ? (
         <View style={styles.safetyHint}>
           <Text style={styles.safetyHintText}>{safetyHint}</Text>
         </View>
       ) : null}
 
-      <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, space.md) }]}>
+      <View style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.md : Math.max(insets.bottom, space.md) }]}>
         <Pressable style={styles.attachButton} onPress={handleAttach} hitSlop={6}>
           <AttachIcon color={themeColor} />
         </Pressable>
@@ -892,6 +948,38 @@ function buildStyles(color: ColorPalette) {
   composerPreviewCloseText: {
     fontSize: 20,
     color: color.textMuted,
+  },
+  imagePreviewRow: {
+    backgroundColor: color.surface,
+    paddingVertical: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+  },
+  imagePreviewItem: {
+    position: "relative",
+  },
+  imagePreviewThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.md,
+    backgroundColor: color.surfaceAlt,
+  },
+  imagePreviewRemove: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePreviewRemoveText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 15,
   },
   safetyHint: {
     backgroundColor: color.warningTint,
