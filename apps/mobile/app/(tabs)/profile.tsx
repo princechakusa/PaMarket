@@ -267,7 +267,7 @@ export default function AccountScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: space.xxxl }}
+      contentContainerStyle={{ paddingBottom: 64 + insets.bottom + space.xxxl }}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
       {/* Brand-tinted profile header */}

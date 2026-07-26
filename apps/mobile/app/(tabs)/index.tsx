@@ -287,7 +287,7 @@ export default function HomeScreen() {
         onSubmitSearch={submitSearch}
         onPressNotifications={() => router.push("/notifications")}
         onPressMessages={() => router.push("/(tabs)/messages")}
-        onPressCity={() => setCityPickerVisible(true)}
+        onPressCity={() => setCityPickerVisible((v) => !v)}
       />
       <CityPicker
         visible={cityPickerVisible}

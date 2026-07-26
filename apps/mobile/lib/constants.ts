@@ -35,6 +35,9 @@ export const CAT_COLORS: Record<string, string> = {
   kids: "#E91E63",
 };
 
+// Was only 7 real cities (missing 4 of Zimbabwe's 10 provinces entirely).
+// Expanded to cover every province, using each province's capital/largest
+// town from lib/cities-by-province.json, plus a few other well-known towns.
 export const ZW_CITIES = [
   "All Zimbabwe",
   "Harare",
@@ -45,6 +48,13 @@ export const ZW_CITIES = [
   "Chinhoyi",
   "Kwekwe",
   "Kadoma",
+  "Marondera",
+  "Bindura",
+  "Victoria Falls",
+  "Hwange",
+  "Gwanda",
+  "Beitbridge",
+  "Chitungwiza",
 ];
 
 export const BRAND_BLUE = "#1A3A8F";
