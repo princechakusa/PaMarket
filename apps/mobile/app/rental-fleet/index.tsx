@@ -235,29 +235,50 @@ export default function RentalFleetDashboard() {
 
   if (!session?.user) {
     return (
-      <View style={styles.centered}>
-        <EmptyState title="Sign in required" subtitle="Sign in to manage your rental fleet." buttonLabel="Sign In" onPressButton={() => router.push("/(auth)/sign-in")} />
+      <View style={styles.container}>
+        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <Text style={styles.headerTitle}>Rental Dashboard</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={styles.centered}>
+          <EmptyState title="Sign in required" subtitle="Sign in to manage your rental fleet." buttonLabel="Sign In" onPressButton={() => router.push("/(auth)/sign-in")} />
+        </View>
       </View>
     );
   }
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={tones.brand} />
+      <View style={styles.container}>
+        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <Text style={styles.headerTitle}>Rental Dashboard</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={tones.brand} />
+        </View>
       </View>
     );
   }
 
   if (!businesses.length) {
     return (
-      <View style={styles.centered}>
-        <EmptyState
-          title="Business account required"
-          subtitle="Register a business to manage rental vehicles."
-          buttonLabel="Register Business"
-          onPressButton={() => router.push("/business-onboarding")}
-        />
+      <View style={styles.container}>
+        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <Text style={styles.headerTitle}>Rental Dashboard</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={styles.centered}>
+          <EmptyState
+            title="Business account required"
+            subtitle="Register a business to manage rental vehicles."
+            buttonLabel="Register Business"
+            onPressButton={() => router.push("/business-onboarding")}
+          />
+        </View>
       </View>
     );
   }
@@ -267,8 +288,15 @@ export default function RentalFleetDashboard() {
   if (!access || (access.has_rental_company === false && !company)) {
     router.replace(`/rental-fleet/setup?bizId=${biz.id}`);
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={tones.brand} />
+      <View style={styles.container}>
+        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <Text style={styles.headerTitle}>Rental Dashboard</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={tones.brand} />
+        </View>
       </View>
     );
   }
@@ -297,8 +325,15 @@ export default function RentalFleetDashboard() {
 
   if (!company) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={tones.brand} />
+      <View style={styles.container}>
+        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <Text style={styles.headerTitle}>Rental Dashboard</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={tones.brand} />
+        </View>
       </View>
     );
   }

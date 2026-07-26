@@ -141,16 +141,26 @@ export default function BusinessShopScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={tones.brand} />
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={tones.brand} />
+        </View>
       </View>
     );
   }
 
   if (!business) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.notFoundTitle}>Shop not found</Text>
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <Text style={styles.notFoundTitle}>Shop not found</Text>
+        </View>
       </View>
     );
   }

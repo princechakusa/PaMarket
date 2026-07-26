@@ -87,6 +87,7 @@ export default function UserProfileScreen() {
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <GlassBackButton onPress={() => router.back()} />
         <View style={{ padding: space.lg }}>
           <ListSkeleton count={5} />
         </View>

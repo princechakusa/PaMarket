@@ -97,19 +97,29 @@ export default function CandidateCvScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={color.brand} />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={color.brand} />
+        </View>
       </View>
     );
   }
 
   if (!candidate) {
     return (
-      <View style={styles.centered}>
-        <EmptyState
-          title="Profile unavailable"
-          subtitle="This candidate may have hidden their CV or closed their account."
-        />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <EmptyState
+            title="Profile unavailable"
+            subtitle="This candidate may have hidden their CV or closed their account."
+          />
+        </View>
       </View>
     );
   }

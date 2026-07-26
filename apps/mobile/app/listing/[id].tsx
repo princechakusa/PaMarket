@@ -354,6 +354,9 @@ export default function ListingDetailScreen() {
     return (
       <View style={styles.container}>
         <Skeleton width={width} height={330} radius={0} />
+        <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
         <View style={styles.content}>
           <Skeleton width={140} height={30} style={{ marginTop: space.md }} />
           <Skeleton width="80%" height={22} style={{ marginTop: space.sm }} />
@@ -369,6 +372,9 @@ export default function ListingDetailScreen() {
   if (error === "not-found" || !listing) {
     return (
       <View style={[styles.container, styles.centered]}>
+        <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
         <ErrorState
           title="Listing not found"
           subtitle="This listing may have been removed or is no longer available."
@@ -380,6 +386,9 @@ export default function ListingDetailScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
+        <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
         <ErrorState
           onRetry={() => {
             setIsLoading(true);

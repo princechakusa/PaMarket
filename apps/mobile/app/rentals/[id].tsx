@@ -274,16 +274,26 @@ export default function RentalVehicleDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={tones.brand} />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={tones.brand} />
+        </View>
       </View>
     );
   }
 
   if (!vehicle) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.notFoundText}>Vehicle not found</Text>
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <Text style={styles.notFoundText}>Vehicle not found</Text>
+        </View>
       </View>
     );
   }

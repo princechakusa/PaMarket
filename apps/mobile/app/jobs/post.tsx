@@ -207,8 +207,11 @@ export default function PostJobScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={color.brand} />
+      <View style={styles.container}>
+        <Header title="Post a Job" onBack={() => router.back()} insetTop={insets.top} styles={styles} />
+        <View style={styles.centered}>
+          <ActivityIndicator color={color.brand} />
+        </View>
       </View>
     );
   }

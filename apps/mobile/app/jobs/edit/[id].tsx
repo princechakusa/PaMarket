@@ -168,16 +168,26 @@ export default function EditJobScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={color.brand} />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={color.brand} />
+        </View>
       </View>
     );
   }
 
   if (notFound) {
     return (
-      <View style={styles.centered}>
-        <EmptyState title="Job not found" subtitle="This posting may have been removed." />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <EmptyState title="Job not found" subtitle="This posting may have been removed." />
+        </View>
       </View>
     );
   }

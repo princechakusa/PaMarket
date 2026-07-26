@@ -107,16 +107,26 @@ export default function ApplyJobScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={color.brand} />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={color.brand} />
+        </View>
       </View>
     );
   }
 
   if (!job) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.notFoundText}>Job not found</Text>
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" />
+        </View>
+        <View style={styles.centered}>
+          <Text style={styles.notFoundText}>Job not found</Text>
+        </View>
       </View>
     );
   }
