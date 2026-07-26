@@ -3,7 +3,6 @@ import {
   ActionSheetIOS,
   Alert,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -510,7 +510,7 @@ export default function ChatScreen() {
           onPress={() => router.push({ pathname: "/listing/[id]", params: { id: listing.id } })}
         >
           {listing.photos?.[0] ? (
-            <Image source={{ uri: listing.photos[0] }} style={styles.listingImage} />
+            <Image source={{ uri: listing.photos[0] }} style={styles.listingImage} contentFit="cover" cachePolicy="memory-disk" />
           ) : (
             <View style={[styles.listingImage, styles.listingImageEmpty]} />
           )}
@@ -567,7 +567,9 @@ export default function ChatScreen() {
                     !isMine && lastOfGroup && styles.bubbleTheirsTail,
                   ]}
                 >
-                  {item.image ? <Image source={{ uri: item.image }} style={styles.bubbleImage} /> : null}
+                  {item.image ? (
+                    <Image source={{ uri: item.image }} style={styles.bubbleImage} contentFit="cover" cachePolicy="memory-disk" />
+                  ) : null}
                   {quote ? (
                     <View style={[styles.replyQuote, isMine && styles.replyQuoteMine]}>
                       <Text style={[styles.replyQuoteName, isMine && styles.replyQuoteNameMine]} numberOfLines={1}>

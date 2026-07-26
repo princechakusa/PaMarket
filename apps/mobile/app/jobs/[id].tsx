@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
@@ -129,7 +130,7 @@ export default function JobDetailScreen() {
           <View style={styles.headRow}>
             <View style={styles.logoWrap}>
               {job.photos?.[0] ? (
-                <Image source={{ uri: job.photos[0] }} style={styles.logo} />
+                <Image source={{ uri: job.photos[0] }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
               ) : (
                 <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
               )}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -113,7 +114,11 @@ export default function BusinessFeaturedScreen() {
               <View key={l.id} style={[styles.card, feat && styles.cardFeatured]}>
                 <View style={styles.cardTop}>
                   <View style={styles.thumbWrap}>
-                    {l.photos?.[0] ? <Image source={{ uri: l.photos[0] }} style={styles.thumb} /> : <View style={styles.thumb} />}
+                    {l.photos?.[0] ? (
+                      <Image source={{ uri: l.photos[0] }} style={styles.thumb} contentFit="cover" cachePolicy="memory-disk" />
+                    ) : (
+                      <View style={styles.thumb} />
+                    )}
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.title} numberOfLines={1}>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
@@ -86,7 +87,7 @@ export default function RentalsListScreen() {
             >
               <View style={styles.photoWrap}>
                 {item.cover_url ? (
-                  <Image source={{ uri: item.cover_url }} style={styles.photo} />
+                  <Image source={{ uri: item.cover_url }} style={styles.photo} contentFit="cover" transition={150} cachePolicy="memory-disk" />
                 ) : (
                   <View style={[styles.photo, styles.photoPlaceholder]} />
                 )}

@@ -7,23 +7,35 @@ import { supabase } from "./supabase";
 
 let presenceChannel: ReturnType<typeof supabase.channel> | null = null;
 let onlineUserIds = new Set<string>();
+// React Navigation keeps previous screens mounted underneath the active one,
+// so more than one screen (e.g. the Messages list AND an open chat thread)
+// can call initPresence() at the same time. A single shared channel is
+// correct, but every subscriber's onChange must still fire — a single
+// "first caller owns it" guard silently drops every later screen's updates.
+const subscribers = new Set<(online: Set<string>) => void>();
 
 export function initPresence(userId: string, onChange: (online: Set<string>) => void) {
-  if (presenceChannel) return () => {};
-  presenceChannel = supabase.channel("online-users", { config: { presence: { key: userId } } });
-  presenceChannel
-    .on("presence", { event: "sync" }, () => {
-      const state = presenceChannel!.presenceState();
-      onlineUserIds = new Set(Object.keys(state));
-      onChange(onlineUserIds);
-    })
-    .subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        presenceChannel!.track({ online_at: new Date().toISOString() });
-      }
-    });
+  subscribers.add(onChange);
+  if (!presenceChannel) {
+    presenceChannel = supabase.channel("online-users", { config: { presence: { key: userId } } });
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel!.presenceState();
+        onlineUserIds = new Set(Object.keys(state));
+        subscribers.forEach((fn) => fn(onlineUserIds));
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          presenceChannel!.track({ online_at: new Date().toISOString() });
+        }
+      });
+  } else {
+    // Channel already live — hand the new subscriber the current state immediately.
+    onChange(onlineUserIds);
+  }
   return () => {
-    if (presenceChannel) {
+    subscribers.delete(onChange);
+    if (subscribers.size === 0 && presenceChannel) {
       supabase.removeChannel(presenceChannel);
       presenceChannel = null;
       onlineUserIds = new Set();

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Rect, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
@@ -244,7 +245,11 @@ export default function RentalManageFleetScreen() {
               onPress={() => (canWrite ? showActions(v) : undefined)}
             >
               <View style={styles.thumbWrap}>
-                {v.cover_url ? <Image source={{ uri: v.cover_url }} style={styles.thumb} /> : <CarPlaceholderIcon stroke={tones.textMuted} />}
+                {v.cover_url ? (
+                  <Image source={{ uri: v.cover_url }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+                ) : (
+                  <CarPlaceholderIcon stroke={tones.textMuted} />
+                )}
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.vehicleTitle} numberOfLines={1}>

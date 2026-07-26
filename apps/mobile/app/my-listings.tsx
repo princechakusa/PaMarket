@@ -3,13 +3,13 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
@@ -111,7 +111,7 @@ export default function MyListingsScreen() {
             onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
           >
             {item.photos?.[0] ? (
-              <Image source={{ uri: item.photos[0] }} style={styles.thumb} />
+              <Image source={{ uri: item.photos[0] }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
             ) : (
               <View style={[styles.thumb, styles.thumbPlaceholder]} />
             )}

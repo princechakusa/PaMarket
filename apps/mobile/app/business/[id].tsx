@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
@@ -47,10 +47,14 @@ export default function BusinessShopScreen() {
   const [reviews, setReviews] = useState<{ rating: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
-    const [businessRes, productsRes, reviewsRes] = await Promise.all([
+    const myId = session?.user?.id;
+    const [businessRes, productsRes, reviewsRes, followerCountRes, myFollowRes] = await Promise.all([
       supabase
         .from("businesses")
         .select(
@@ -60,12 +64,18 @@ export default function BusinessShopScreen() {
         .maybeSingle(),
       supabase.from("listings").select(LISTING_COLUMNS).eq("business_id", id).eq("status", "active"),
       supabase.from("business_reviews").select("rating").eq("business_id", id),
+      supabase.from("business_followers").select("user_id", { count: "exact", head: true }).eq("business_id", id),
+      myId
+        ? supabase.from("business_followers").select("user_id").eq("business_id", id).eq("user_id", myId).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
     if (businessRes.data) setBusiness(businessRes.data as Business);
     setProducts((productsRes.data as Listing[]) ?? []);
     setReviews((reviewsRes.data as { rating: number }[]) ?? []);
-  }, [id]);
+    setFollowerCount(followerCountRes.count ?? 0);
+    setIsFollowing(!!myFollowRes.data);
+  }, [id, session?.user?.id]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -81,6 +91,29 @@ export default function BusinessShopScreen() {
   }, [products]);
 
   const filteredProducts = activeCategory ? products.filter((p) => p.category === activeCategory) : products;
+
+  async function toggleFollow() {
+    if (!session?.user || !business) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    if (followBusy) return;
+    setFollowBusy(true);
+    const wasFollowing = isFollowing;
+    setIsFollowing(!wasFollowing);
+    setFollowerCount((c) => Math.max(0, c + (wasFollowing ? -1 : 1)));
+    const query = wasFollowing
+      ? supabase.from("business_followers").delete().eq("business_id", business.id).eq("user_id", session.user.id)
+      : supabase
+          .from("business_followers")
+          .upsert({ business_id: business.id, user_id: session.user.id }, { onConflict: "business_id,user_id", ignoreDuplicates: true });
+    const { error } = await query;
+    if (error) {
+      setIsFollowing(wasFollowing);
+      setFollowerCount((c) => Math.max(0, c + (wasFollowing ? 1 : -1)));
+    }
+    setFollowBusy(false);
+  }
 
   async function messageShop() {
     if (!session?.user || !business) {
@@ -137,12 +170,16 @@ export default function BusinessShopScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: isOwner ? 24 : 90 }}>
-        <View style={styles.cover}>{business.cover ? <Image source={{ uri: business.cover }} style={styles.coverImage} /> : null}</View>
+        <View style={styles.cover}>
+          {business.cover ? (
+            <Image source={{ uri: business.cover }} style={styles.coverImage} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+          ) : null}
+        </View>
 
         <View style={styles.identity}>
           <View style={styles.logoWrap}>
             {business.logo ? (
-              <Image source={{ uri: business.logo }} style={styles.logo} />
+              <Image source={{ uri: business.logo }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
             ) : (
               <Text style={styles.logoInitial}>{businessInitials(business.name)}</Text>
             )}
@@ -162,6 +199,10 @@ export default function BusinessShopScreen() {
             <Text style={styles.ratingText}>
               {products.length} {products.length === 1 ? "item" : "items"}
             </Text>
+            <Text style={styles.ratingDot}>·</Text>
+            <Text style={styles.ratingText}>
+              {followerCount} {followerCount === 1 ? "follower" : "followers"}
+            </Text>
           </View>
 
           {business.description ? <Text style={styles.description}>{business.description}</Text> : null}
@@ -178,6 +219,21 @@ export default function BusinessShopScreen() {
                 onPress={() => Linking.openURL(`https://wa.me/${business.whatsapp!.replace(/[^0-9]/g, "")}`)}
               >
                 <Text style={styles.contactPillText}>WhatsApp</Text>
+              </Pressable>
+            ) : null}
+            {!isOwner ? (
+              <Pressable
+                style={[styles.contactPill, isFollowing ? styles.contactPillFollowing : styles.contactPillFollow]}
+                onPress={toggleFollow}
+              >
+                <Text
+                  style={[
+                    styles.contactPillText,
+                    isFollowing ? styles.contactPillFollowingText : styles.contactPillFollowText,
+                  ]}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Text>
               </Pressable>
             ) : null}
             {!isOwner ? (
@@ -228,7 +284,7 @@ export default function BusinessShopScreen() {
             >
               <View style={styles.productPhotoWrap}>
                 {product.photos?.[0] ? (
-                  <Image source={{ uri: product.photos[0] }} style={styles.productPhoto} />
+                  <Image source={{ uri: product.photos[0] }} style={styles.productPhoto} contentFit="cover" cachePolicy="memory-disk" />
                 ) : (
                   <View style={[styles.productPhoto, styles.productPhotoPlaceholder]} />
                 )}
@@ -388,10 +444,24 @@ function buildStyles(color: ColorPalette) {
     contactPillMessage: {
       backgroundColor: color.gold,
     },
+    contactPillFollow: {
+      backgroundColor: color.brand,
+    },
+    contactPillFollowing: {
+      backgroundColor: color.brandTint,
+      borderWidth: 1.5,
+      borderColor: color.brand,
+    },
     contactPillText: {
       fontSize: 12,
       fontWeight: "700",
       color: color.text,
+    },
+    contactPillFollowText: {
+      color: color.textOnBrand,
+    },
+    contactPillFollowingText: {
+      color: color.brand,
     },
     categoryChips: {
       paddingHorizontal: 16,

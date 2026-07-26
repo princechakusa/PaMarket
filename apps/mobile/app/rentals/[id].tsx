@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
@@ -201,7 +201,7 @@ export default function RentalVehicleDetailScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
         <View style={styles.photoWrap}>
           {photos[0] ? (
-            <Image source={{ uri: photos[0] }} style={styles.photo} />
+            <Image source={{ uri: photos[0] }} style={styles.photo} contentFit="cover" transition={150} cachePolicy="memory-disk" />
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder]} />
           )}

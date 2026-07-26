@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
-  Image,
   Linking,
   Modal,
   Pressable,
@@ -14,6 +13,7 @@ import {
   type NativeSyntheticEvent,
   useWindowDimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path, Polyline } from "react-native-svg";
@@ -413,7 +413,7 @@ export default function ListingDetailScreen() {
               scrollEventThrottle={16}
               renderItem={({ item }) => (
                 <Pressable onPress={() => setViewerOpen(true)}>
-                  <Image source={{ uri: item }} style={[styles.photo, { width }]} resizeMode="cover" />
+                  <Image source={{ uri: item }} style={[styles.photo, { width }]} contentFit="cover" transition={150} cachePolicy="memory-disk" />
                 </Pressable>
               )}
             />
@@ -534,7 +534,7 @@ export default function ListingDetailScreen() {
             >
               <View style={styles.sellerAvatar}>
                 {seller?.avatar ? (
-                  <Image source={{ uri: seller.avatar }} style={styles.sellerAvatarImage} />
+                  <Image source={{ uri: seller.avatar }} style={styles.sellerAvatarImage} contentFit="cover" cachePolicy="memory-disk" />
                 ) : (
                   <Text style={styles.sellerAvatarInitial}>{sellerInitials(seller?.name || listing.seller_name)}</Text>
                 )}
@@ -669,7 +669,7 @@ export default function ListingDetailScreen() {
             getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
             renderItem={({ item }) => (
               <View style={{ width, justifyContent: "center" }}>
-                <Image source={{ uri: item }} style={{ width, height: "100%" }} resizeMode="contain" />
+                <Image source={{ uri: item }} style={{ width, height: "100%" }} contentFit="contain" cachePolicy="memory-disk" />
               </View>
             )}
           />

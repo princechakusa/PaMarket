@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
@@ -109,7 +109,7 @@ function BizCard({
           <Card style={styles.bizRow}>
             <View style={styles.bizLogo}>
               {activeBiz.logo ? (
-                <Image source={{ uri: activeBiz.logo }} style={styles.bizLogoImage} />
+                <Image source={{ uri: activeBiz.logo }} style={styles.bizLogoImage} contentFit="cover" cachePolicy="memory-disk" />
               ) : (
                 <Text style={styles.bizLogoInitial}>{businessInitials(activeBiz.name)}</Text>
               )}

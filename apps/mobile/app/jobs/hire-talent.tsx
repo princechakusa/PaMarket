@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Polyline } from "react-native-svg";
@@ -41,6 +41,7 @@ function SearchIcon() {
 }
 
 const CANDIDATE_COLUMNS = "id,name,avatar,verified,job_title,skills,sector,exp,city,open_to_work,cv";
+const PAGE_SIZE = 40;
 
 const EXP_FILTERS: Array<[string, string]> = [
   ["entry", "Entry"],
@@ -61,6 +62,8 @@ export default function HireTalentScreen() {
   const styles = useThemedStyles(buildStyles);
   const [candidates, setCandidates] = useState<CandidateProfileRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [query, setQuery] = useState("");
   const [sectorFilter, setSectorFilter] = useState<string>("all");
@@ -68,25 +71,48 @@ export default function HireTalentScreen() {
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [openOnly, setOpenOnly] = useState(false);
   const [tab, setTab] = useState<FilterTab>("sector");
+  const pageRef = useRef(0);
 
-  const load = useCallback(async () => {
-    setHasError(false);
-    const { data, error } = await supabase
+  const buildQuery = useCallback((from: number, to: number) => {
+    return supabase
       .from("profiles")
       .select(CANDIDATE_COLUMNS)
       .or("open_to_work.eq.true,cv->>visible.eq.true")
-      .limit(60);
+      .range(from, to);
+  }, []);
+
+  const load = useCallback(async () => {
+    setHasError(false);
+    pageRef.current = 0;
+    const { data, error } = await buildQuery(0, PAGE_SIZE - 1);
     if (error) {
       setHasError(true);
       return;
     }
-    setCandidates((data as unknown as CandidateProfileRow[]) ?? []);
-  }, []);
+    const page = (data as unknown as CandidateProfileRow[]) ?? [];
+    setCandidates(page);
+    setHasMore(page.length === PAGE_SIZE);
+  }, [buildQuery]);
 
   useEffect(() => {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || isLoading || !hasMore || hasError) return;
+    setIsLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const { data, error } = await buildQuery(from, from + PAGE_SIZE - 1);
+    if (!error) {
+      const page = (data as unknown as CandidateProfileRow[]) ?? [];
+      pageRef.current = nextPage;
+      setCandidates((prev) => [...prev, ...page]);
+      setHasMore(page.length === PAGE_SIZE);
+    }
+    setIsLoadingMore(false);
+  }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError]);
 
   // Only surface profiles that are genuinely searchable — open to work, or a
   // visible CV with real content behind it.
@@ -295,6 +321,15 @@ export default function HireTalentScreen() {
               styles={styles}
             />
           )}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <View style={styles.footer}>
+                <ActivityIndicator color={color.brand} />
+              </View>
+            ) : null
+          }
         />
       )}
     </View>
@@ -431,6 +466,7 @@ function buildStyles(color: ColorPalette) {
   clearLink: { ...font.caption, color: color.brand },
 
   listContent: { padding: space.lg },
+  footer: { paddingVertical: space.lg, alignItems: "center" },
   countText: { ...font.caption, color: color.textMuted, marginBottom: space.md },
   cardPressed: { opacity: 0.9, transform: [{ scale: 0.995 }] },
   cardRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },

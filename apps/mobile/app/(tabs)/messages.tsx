@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
@@ -262,7 +262,7 @@ export default function MessagesScreen() {
                   {item.listing ? (
                     <View style={styles.listingChip}>
                       {thumb ? (
-                        <Image source={{ uri: thumb }} style={styles.listingThumb} />
+                        <Image source={{ uri: thumb }} style={styles.listingThumb} contentFit="cover" cachePolicy="memory-disk" />
                       ) : (
                         <View style={[styles.listingThumb, styles.listingThumbEmpty]} />
                       )}

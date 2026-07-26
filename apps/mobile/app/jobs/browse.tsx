@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Polyline } from "react-native-svg";
@@ -23,6 +24,7 @@ type JobListing = {
 };
 
 const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at";
+const PAGE_SIZE = 30;
 
 function BackIcon() {
   return (
@@ -55,30 +57,55 @@ export default function JobsListScreen() {
   const styles = useThemedStyles(buildStyles);
   const [jobs, setJobs] = useState<JobListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const pageRef = useRef(0);
 
-  const load = useCallback(async () => {
-    setHasError(false);
-    const { data, error } = await supabase
+  const buildQuery = useCallback((from: number, to: number) => {
+    return supabase
       .from("listings")
       .select(JOB_COLUMNS)
       .eq("category", "jobs")
       .eq("status", "active")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .range(from, to);
+  }, []);
+
+  const load = useCallback(async () => {
+    setHasError(false);
+    pageRef.current = 0;
+    const { data, error } = await buildQuery(0, PAGE_SIZE - 1);
     if (error) {
       setHasError(true);
       return;
     }
-    setJobs((data as JobListing[]) ?? []);
-  }, []);
+    const page = (data as JobListing[]) ?? [];
+    setJobs(page);
+    setHasMore(page.length === PAGE_SIZE);
+  }, [buildQuery]);
 
   useEffect(() => {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || isLoading || !hasMore || hasError) return;
+    setIsLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const from = nextPage * PAGE_SIZE;
+    const { data, error } = await buildQuery(from, from + PAGE_SIZE - 1);
+    if (!error) {
+      const page = (data as JobListing[]) ?? [];
+      pageRef.current = nextPage;
+      setJobs((prev) => [...prev, ...page]);
+      setHasMore(page.length === PAGE_SIZE);
+    }
+    setIsLoadingMore(false);
+  }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError]);
 
   const filtered = useMemo(() => {
     let list = jobs;
@@ -180,7 +207,7 @@ export default function JobsListScreen() {
               >
                 <View style={styles.logoWrap}>
                   {item.photos?.[0] ? (
-                    <Image source={{ uri: item.photos[0] }} style={styles.logo} />
+                    <Image source={{ uri: item.photos[0] }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
                   ) : (
                     <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
                   )}
@@ -204,6 +231,15 @@ export default function JobsListScreen() {
               </Pressable>
             );
           }}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <View style={styles.footer}>
+                <ActivityIndicator color={color.brand} />
+              </View>
+            ) : null
+          }
         />
       )}
     </View>
@@ -240,6 +276,7 @@ function buildStyles(color: ColorPalette) {
   filterContent: { paddingHorizontal: space.lg, gap: space.sm },
   countText: { ...font.caption, color: color.textMuted, marginBottom: space.md },
   listContent: { padding: space.lg, paddingBottom: space.huge },
+  footer: { paddingVertical: space.lg, alignItems: "center" },
   card: {
     flexDirection: "row",
     gap: space.md,

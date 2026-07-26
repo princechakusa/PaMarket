@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../../../lib/auth";
 import { supabase } from "../../../lib/supabase";
@@ -106,7 +107,11 @@ export default function BusinessImportListingsScreen() {
                   {isSelected ? <Text style={styles.checkmark}>✓</Text> : null}
                 </View>
                 <View style={styles.thumbWrap}>
-                  {l.photos?.[0] ? <Image source={{ uri: l.photos[0] }} style={styles.thumb} /> : <View style={styles.thumb} />}
+                  {l.photos?.[0] ? (
+                    <Image source={{ uri: l.photos[0] }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+                  ) : (
+                    <View style={styles.thumb} />
+                  )}
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.title} numberOfLines={1}>
