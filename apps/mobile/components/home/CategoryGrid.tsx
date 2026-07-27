@@ -1,6 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CATEGORIES } from "../../lib/constants";
-import { font, shadow, space, type ColorPalette } from "../../lib/theme";
+import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
@@ -23,6 +23,14 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
 // "Browse Categories" heading over a 4x3 grid of the real category cover
 // images. The earlier card-with-eyebrow-and-8-icons version didn't match
 // the app at all.
+//
+// The cat_*.png assets are fully opaque (no alpha channel) with a white
+// square baked into every image — they only look seamless/boxless when
+// placed on a pure white background matching that baked-in white. This is
+// hardcoded to #FFFFFF (not color.surface) because the images themselves
+// are static and always white regardless of theme — in dark mode
+// color.surface is near-black, which would make the white boxes far more
+// visible, not less.
 export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory: (id: string) => void; onSeeAll: () => void }) {
   const styles = useThemedStyles(buildStyles);
   return (
@@ -50,6 +58,7 @@ export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory:
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     section: {
+      backgroundColor: "#FFFFFF",
       paddingHorizontal: space.lg,
       paddingTop: space.lg,
       paddingBottom: space.md,
@@ -62,11 +71,11 @@ function buildStyles(color: ColorPalette) {
     },
     title: {
       ...font.h3,
-      color: color.text,
+      color: "#111827",
     },
     seeAll: {
       ...font.caption,
-      color: color.brand,
+      color: "#1A3A8F",
     },
     grid: {
       flexDirection: "row",
@@ -82,11 +91,10 @@ function buildStyles(color: ColorPalette) {
       width: 64,
       height: 64,
       resizeMode: "contain",
-      ...shadow.sm,
     },
     label: {
       ...font.caption,
-      color: color.text,
+      color: "#111827",
       textAlign: "center",
       paddingHorizontal: 2,
     },
