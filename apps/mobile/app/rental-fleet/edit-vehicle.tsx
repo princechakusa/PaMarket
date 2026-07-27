@@ -14,6 +14,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
+import { GlassBackButton } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { RENTAL_DRIVE_TYPES, RENTAL_FUEL_TYPES, RENTAL_TRANSMISSIONS } from "../../lib/rentals";
@@ -202,9 +203,7 @@ export default function RentalEditVehicleScreen() {
       <View style={styles.centered}>
         <Text style={styles.blockedTitle}>Editing locked</Text>
         <Text style={styles.blockedBody}>Your company must be active to edit vehicles.</Text>
-        <Pressable style={styles.secondaryBtn} onPress={() => router.back()}>
-          <Text style={styles.secondaryBtnText}>Go Back</Text>
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} />
       </View>
     );
   }

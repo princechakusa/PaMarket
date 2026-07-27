@@ -1,5 +1,6 @@
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { GlassBackButton } from "../components/ui";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
@@ -46,9 +47,9 @@ export default function ActiveSessionsScreen() {
       <Pressable style={styles.dangerButton} onPress={signOutEverywhere}>
         <Text style={styles.dangerButtonText}>Sign Out All Other Devices</Text>
       </Pressable>
-      <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={styles.cancelButtonText}>Back</Text>
-      </Pressable>
+      <View style={styles.backRow}>
+        <GlassBackButton onPress={() => router.back()} />
+      </View>
     </ScrollView>
   );
 }
@@ -89,7 +90,6 @@ function buildStyles(color: ColorPalette) {
       alignItems: "center",
     },
     dangerButtonText: { color: color.danger, fontSize: 14, fontWeight: "700" },
-    cancelButton: { alignItems: "center", paddingVertical: 14 },
-    cancelButtonText: { fontSize: 14, fontWeight: "700", color: color.textSub },
+    backRow: { alignSelf: "flex-start", paddingTop: 14 },
   });
 }

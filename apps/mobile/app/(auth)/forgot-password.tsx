@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
+import { GlassBackButton } from "../../components/ui";
 import { supabase } from "../../lib/supabase";
 import { isValidEmail } from "../../lib/validation";
 import type { ColorPalette } from "../../lib/theme";
@@ -51,9 +52,7 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.subtitle}>
             We&apos;ve sent a password reset link to {email.trim()}.
           </Text>
-          <Pressable style={styles.button} onPress={() => router.replace("/(auth)/sign-in")}>
-            <Text style={styles.buttonText}>Back to Sign In</Text>
-          </Pressable>
+          <GlassBackButton onPress={() => router.replace("/(auth)/sign-in")} label="Sign In" />
         </View>
       </View>
     );
@@ -90,9 +89,9 @@ export default function ForgotPasswordScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={() => router.back()} style={styles.backLink}>
-          <Text style={styles.backLinkText}>Back to Sign In</Text>
-        </Pressable>
+        <View style={styles.backLink}>
+          <GlassBackButton onPress={() => router.back()} label="Sign In" />
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -165,11 +164,6 @@ function buildStyles(color: ColorPalette) {
     backLink: {
       alignItems: "center",
       marginTop: 8,
-    },
-    backLinkText: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: color.brand,
     },
   });
 }

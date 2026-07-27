@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { conversationIdFor } from "../../lib/messages";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
-import { formatPrice, type Listing } from "../../lib/listings";
+import { formatPrice, isFeatured, isNew, listingLocation, type Listing } from "../../lib/listings";
 import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge } from "../../components/ui";
-import { ListingCard } from "../../components/ListingCard";
 import { StarRow } from "../../components/StarRow";
-import { font, radius, space, type ColorPalette } from "../../lib/theme";
+import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 type FullProfile = PublicProfile & {
@@ -26,6 +27,84 @@ function memberSince(dateString: string | null | undefined): string {
   const d = new Date(dateString);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+}
+
+function joinedYear(dateString: string | null | undefined): string {
+  if (!dateString) return "New";
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return "New";
+  return String(d.getFullYear());
+}
+
+function listingTag(listing: Listing): string {
+  if (isFeatured(listing)) return "Featured";
+  if (isNew(listing)) return "New";
+  return listing.category ? listing.category.charAt(0).toUpperCase() + listing.category.slice(1) : "Listing";
+}
+
+function PinIcon({ size = 17, stroke = color.textMuted }: { size?: number; stroke?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.3} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0Z" />
+      <Circle cx={12} cy={10} r={3} />
+    </Svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <Svg width={25} height={25} viewBox="0 0 24 24" fill="none" stroke={color.brand} strokeWidth={2.35} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
+    </Svg>
+  );
+}
+
+function SellerListingRow({ listing, onPress }: { listing: Listing; onPress: () => void }) {
+  const styles = useThemedStyles(buildStyles);
+  const photo = listing.photos?.[0];
+
+  return (
+    <Pressable style={[styles.listingRow, shadow.md]} onPress={onPress}>
+      <View style={styles.rowPhotoWrap}>
+        {photo ? (
+          <Image source={{ uri: photo }} style={styles.rowPhoto} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+        ) : (
+          <View style={[styles.rowPhoto, styles.rowPhotoPlaceholder]} />
+        )}
+        <View style={styles.rowTag}>
+          <Text style={styles.rowTagText} numberOfLines={1}>
+            {listingTag(listing)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.rowBody}>
+        <View style={styles.rowTop}>
+          <View style={styles.rowTextBlock}>
+            <Text style={styles.rowPrice} numberOfLines={1}>
+              {formatPrice(listing)}
+            </Text>
+            <Text style={styles.rowTitle} numberOfLines={2}>
+              {listing.title}
+            </Text>
+          </View>
+          <View style={styles.rowSave}>
+            <HeartIcon />
+          </View>
+        </View>
+        <View style={styles.locationRow}>
+          <PinIcon />
+          <Text style={styles.rowLocation} numberOfLines={1}>
+            {listingLocation(listing)}
+          </Text>
+        </View>
+        <View style={styles.rowFooter}>
+          <View style={styles.rowDivider} />
+          <Text style={styles.viewText}>Tap to view</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
 }
 
 export default function UserProfileScreen() {
@@ -88,7 +167,7 @@ export default function UserProfileScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <GlassBackButton onPress={() => router.back()} />
-        <View style={{ padding: space.lg }}>
+        <View style={styles.skeletonWrap}>
           <ListSkeleton count={5} />
         </View>
       </View>
@@ -109,67 +188,95 @@ export default function UserProfileScreen() {
       style={styles.container}
       data={listings}
       keyExtractor={(item) => item.id}
-      numColumns={2}
-      columnWrapperStyle={styles.gridRow}
-      contentContainerStyle={{ paddingBottom: space.xxl }}
+      contentContainerStyle={styles.content}
       ListHeaderComponent={
         <View>
-          <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
-            <GlassBackButton onPress={() => router.back()} />
+          <View style={styles.hero}>
+            <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
+              <GlassBackButton onPress={() => router.back()} tone="light" />
+            </View>
+            <Text style={styles.headerTitle}>Seller profile</Text>
           </View>
 
-          <View style={styles.identity}>
-            <Avatar uri={profile.avatar} name={profile.name} size={84} />
+          <View style={[styles.profileCard, shadow.lg]}>
+            <View style={styles.avatarShell}>
+              <Avatar uri={profile.avatar} name={profile.name} size={96} />
+            </View>
+
             <View style={styles.nameRow}>
               <Text style={styles.name} numberOfLines={1}>
                 {profile.name || sellerInitials(profile.name)}
               </Text>
               {profile.verified ? <VerifiedBadge compact /> : null}
             </View>
-            {profile.city ? <Text style={styles.meta}>{profile.city}</Text> : null}
-            {memberSince(profile.created_at) ? (
-              <Text style={styles.meta}>Member since {memberSince(profile.created_at)}</Text>
-            ) : null}
 
-            <Pressable style={styles.ratingRow} onPress={() => router.push({ pathname: "/reviews/[id]", params: { id } })}>
-              <StarRow rating={avgRating} />
+            {memberSince(profile.created_at) ? <Text style={styles.meta}>Member since {memberSince(profile.created_at)}</Text> : null}
+            {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+
+            <View style={styles.statsCard}>
+              <Pressable style={styles.statItem} onPress={() => router.push({ pathname: "/reviews/[id]", params: { id } })}>
+                <Text style={[styles.statValue, styles.statGold]}>{reviews.length ? avgRating.toFixed(1) : "0"}</Text>
+                <Text style={styles.statLabel}>{reviews.length ? `${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "No reviews"}</Text>
+              </Pressable>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{listings.length}</Text>
+                <Text style={styles.statLabel}>active listings</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue} numberOfLines={1}>
+                  {profile.city || joinedYear(profile.created_at)}
+                </Text>
+                <Text style={styles.statLabel}>{profile.city ? "location" : "joined"}</Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.ratingLine} onPress={() => router.push({ pathname: "/reviews/[id]", params: { id } })}>
+              <StarRow rating={avgRating} size={13} />
               <Text style={styles.ratingText}>
-                {reviews.length ? `${avgRating.toFixed(1)} (${reviews.length} review${reviews.length === 1 ? "" : "s"})` : "No reviews yet"}
+                {reviews.length ? `${avgRating.toFixed(1)} from ${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "No reviews yet"}
               </Text>
             </Pressable>
 
-            {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-
-            {!isOwn ? (
-              <Pressable style={styles.messageButton} onPress={messageUser}>
-                <Text style={styles.messageButtonText}>Message</Text>
+            <View style={styles.actionRow}>
+              {!isOwn ? (
+                <Pressable style={styles.messageButton} onPress={messageUser}>
+                  <Text style={styles.messageButtonText}>Message</Text>
+                </Pressable>
+              ) : (
+                <Pressable style={styles.messageButton} onPress={() => router.push("/edit-profile")}>
+                  <Text style={styles.messageButtonText}>Edit profile</Text>
+                </Pressable>
+              )}
+              <Pressable style={styles.reviewsButton} onPress={() => router.push({ pathname: "/reviews/[id]", params: { id } })}>
+                <Text style={styles.reviewsButtonText}>Reviews</Text>
               </Pressable>
-            ) : null}
+            </View>
 
             {business ? (
               <Pressable style={styles.shopLink} onPress={() => router.push({ pathname: "/business/[id]", params: { id: business.id } })}>
-                <Text style={styles.shopLinkText}>Visit {business.name || "Shop"} →</Text>
+                <Text style={styles.shopLinkText}>{`Visit ${business.name || "Shop"} ->`}</Text>
               </Pressable>
             ) : null}
           </View>
 
-          <Text style={styles.sectionTitle}>
-            {listings.length ? `Listings (${listings.length})` : "Listings"}
-          </Text>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTextBlock}>
+              <Text style={styles.sectionTitle}>Available from seller</Text>
+              <Text style={styles.sectionSubtitle}>Browse their active PaMarket listings</Text>
+            </View>
+            {listings.length ? <Text style={styles.countText}>{listings.length} active</Text> : null}
+          </View>
         </View>
       }
       ListEmptyComponent={
-        <View style={{ paddingHorizontal: space.lg }}>
+        <View style={styles.emptyWrap}>
           <EmptyState title="No active listings" subtitle="This user has no listings live right now." />
         </View>
       }
       renderItem={({ item }) => (
-        <View style={styles.gridItem}>
-          <ListingCard
-            listing={item}
-            onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
-          />
-        </View>
+        <SellerListingRow listing={item} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} />
       )}
     />
   );
@@ -181,56 +288,152 @@ function buildStyles(color: ColorPalette) {
       flex: 1,
       backgroundColor: color.bg,
     },
+    content: {
+      paddingBottom: space.xxl,
+    },
+    skeletonWrap: {
+      padding: space.lg,
+    },
+    hero: {
+      minHeight: 260,
+      backgroundColor: color.brand,
+      overflow: "hidden",
+    },
     header: {
       paddingHorizontal: space.lg,
       paddingBottom: space.sm,
+      zIndex: 2,
     },
-    identity: {
+    headerTitle: {
+      ...font.title,
+      position: "absolute",
+      top: 54,
+      alignSelf: "center",
+      color: color.textOnBrand,
+    },
+    profileCard: {
+      marginHorizontal: space.lg,
+      marginTop: -74,
+      borderRadius: 28,
+      backgroundColor: color.surface,
+      paddingHorizontal: space.xl,
+      paddingTop: 70,
+      paddingBottom: space.xl,
       alignItems: "center",
-      paddingHorizontal: space.lg,
-      paddingBottom: space.lg,
-      gap: 4,
+    },
+    avatarShell: {
+      position: "absolute",
+      top: -58,
+      width: 116,
+      height: 116,
+      borderRadius: 58,
+      backgroundColor: color.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 6,
+      borderColor: color.surface,
+      ...shadow.md,
     },
     nameRow: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
       gap: space.sm,
-      marginTop: space.md,
+      maxWidth: "100%",
     },
     name: {
-      ...font.h2,
+      ...font.h1,
       color: color.text,
+      flexShrink: 1,
+      textAlign: "center",
     },
     meta: {
-      ...font.sub,
-      color: color.textMuted,
+      ...font.bodyStrong,
+      color: color.textSub,
+      marginTop: 2,
+      textAlign: "center",
     },
-    ratingRow: {
+    bio: {
+      ...font.bodyStrong,
+      color: color.textSub,
+      textAlign: "center",
+      marginTop: space.lg,
+    },
+    statsCard: {
+      width: "100%",
+      marginTop: space.xl,
+      borderRadius: 22,
+      backgroundColor: color.surfaceAlt,
+      paddingVertical: space.md,
+      paddingHorizontal: space.xs,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    statItem: {
+      flex: 1,
+      alignItems: "center",
+      gap: 2,
+    },
+    statValue: {
+      ...font.h2,
+      color: color.brand,
+    },
+    statGold: {
+      color: color.gold,
+    },
+    statLabel: {
+      ...font.caption,
+      color: color.textSub,
+      textAlign: "center",
+    },
+    statDivider: {
+      width: 1,
+      height: 42,
+      backgroundColor: color.border,
+    },
+    ratingLine: {
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
-      marginTop: space.sm,
+      marginTop: space.md,
     },
     ratingText: {
       ...font.caption,
       color: color.textMuted,
     },
-    bio: {
-      ...font.body,
-      color: color.textSub,
-      textAlign: "center",
-      marginTop: space.md,
+    actionRow: {
+      width: "100%",
+      flexDirection: "row",
+      gap: space.md,
+      marginTop: space.xl,
     },
     messageButton: {
-      marginTop: space.lg,
+      flex: 1,
+      minHeight: 54,
       backgroundColor: color.brand,
-      borderRadius: radius.lg,
-      paddingHorizontal: space.xxl,
-      paddingVertical: space.sm + 4,
+      borderRadius: radius.xl,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: space.md,
     },
     messageButtonText: {
       ...font.bodyStrong,
       color: color.textOnBrand,
+      fontSize: 16,
+    },
+    reviewsButton: {
+      flex: 1,
+      minHeight: 54,
+      backgroundColor: color.gold,
+      borderRadius: radius.xl,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: space.md,
+    },
+    reviewsButtonText: {
+      ...font.bodyStrong,
+      color: color.brandDark,
+      fontSize: 16,
     },
     shopLink: {
       marginTop: space.md,
@@ -239,19 +442,126 @@ function buildStyles(color: ColorPalette) {
       ...font.bodyStrong,
       color: color.brand,
     },
-    sectionTitle: {
-      ...font.h3,
-      color: color.text,
-      paddingHorizontal: space.lg,
-      marginBottom: space.md,
-    },
-    gridRow: {
-      paddingHorizontal: space.lg,
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
       gap: space.md,
-    },
-    gridItem: {
-      flex: 1,
+      paddingHorizontal: space.lg,
+      marginTop: space.xxxl,
       marginBottom: space.md,
+    },
+    sectionTextBlock: {
+      flex: 1,
+    },
+    sectionTitle: {
+      ...font.h2,
+      color: color.text,
+    },
+    sectionSubtitle: {
+      ...font.sub,
+      color: color.textSub,
+      marginTop: 2,
+      fontWeight: "700",
+    },
+    countText: {
+      ...font.bodyStrong,
+      color: color.brand,
+      marginBottom: 1,
+    },
+    emptyWrap: {
+      paddingHorizontal: space.lg,
+    },
+    listingRow: {
+      minHeight: 170,
+      marginHorizontal: space.lg,
+      marginBottom: space.md,
+      borderRadius: 24,
+      backgroundColor: color.surface,
+      flexDirection: "row",
+      overflow: "hidden",
+    },
+    rowPhotoWrap: {
+      width: 142,
+      backgroundColor: color.surfaceAlt,
+      position: "relative",
+    },
+    rowPhoto: {
+      width: "100%",
+      height: "100%",
+    },
+    rowPhotoPlaceholder: {
+      backgroundColor: color.skeleton,
+    },
+    rowTag: {
+      position: "absolute",
+      top: space.sm,
+      left: space.sm,
+      maxWidth: 104,
+      borderRadius: radius.pill,
+      backgroundColor: "rgba(17,24,39,0.58)",
+      paddingHorizontal: space.sm,
+      paddingVertical: 4,
+    },
+    rowTagText: {
+      ...font.micro,
+      color: color.textOnBrand,
+    },
+    rowBody: {
+      flex: 1,
+      padding: space.lg,
+      gap: space.sm,
+    },
+    rowTop: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: space.sm,
+    },
+    rowTextBlock: {
+      flex: 1,
+      minWidth: 0,
+    },
+    rowPrice: {
+      ...font.h2,
+      color: color.brand,
+    },
+    rowTitle: {
+      ...font.title,
+      color: color.text,
+      marginTop: space.xs,
+    },
+    rowSave: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: color.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    locationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.xs,
+      marginTop: "auto",
+    },
+    rowLocation: {
+      ...font.bodyStrong,
+      color: color.textMuted,
+      flex: 1,
+    },
+    rowFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.lg,
+    },
+    rowDivider: {
+      flex: 1,
+      height: 1,
+      backgroundColor: color.border,
+    },
+    viewText: {
+      ...font.caption,
+      color: color.goldDark,
     },
   });
 }

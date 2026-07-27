@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
+import { GlassBackButton } from "../components/ui";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
 import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../lib/constants";
@@ -392,9 +393,9 @@ export default function BusinessOnboardingScreen() {
               <ReviewRow label="Plan" value={BIZ_PLANS.find((p) => p.id === draft.planId)?.name ?? "—"} last styles={styles} />
             </View>
             <View style={styles.rowGap}>
-              <Pressable style={styles.secondaryButton} onPress={goBack} disabled={isSubmitting}>
-                <Text style={styles.secondaryButtonText}>Back</Text>
-              </Pressable>
+              <View style={[styles.backNavSlot, isSubmitting && styles.disabledNav]}>
+                <GlassBackButton onPress={goBack} />
+              </View>
               <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={activate} disabled={isSubmitting}>
                 {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryButtonText}>{existingStatus === "active" ? "Save Changes" : "Activate Business"}</Text>}
               </Pressable>
@@ -429,9 +430,9 @@ function ReviewRow({ label, value, last, styles }: { label: string; value: strin
 function StepNav({ onBack, onNext, styles }: { onBack: () => void; onNext: () => void; styles: Styles }) {
   return (
     <View style={styles.rowGap}>
-      <Pressable style={styles.secondaryButton} onPress={onBack}>
-        <Text style={styles.secondaryButtonText}>Back</Text>
-      </Pressable>
+      <View style={styles.backNavSlot}>
+        <GlassBackButton onPress={onBack} />
+      </View>
       <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={onNext}>
         <Text style={styles.primaryButtonText}>Continue</Text>
       </Pressable>
@@ -493,6 +494,8 @@ function buildStyles(color: ColorPalette) {
     primaryButton: { backgroundColor: color.brand, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
     flexButton: { flex: 2, marginTop: 0 },
     primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
+    backNavSlot: { flex: 1, justifyContent: "center" },
+    disabledNav: { opacity: 0.45, pointerEvents: "none" },
     secondaryButton: { flex: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", backgroundColor: color.surfaceAlt },
     secondaryButtonText: { fontSize: 14, fontWeight: "700", color: color.text },
   });

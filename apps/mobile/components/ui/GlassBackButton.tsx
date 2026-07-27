@@ -1,16 +1,12 @@
-import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import Svg, { Polyline } from "react-native-svg";
-import { font, hitSlop as defaultHitSlop } from "../../lib/theme";
-import { useThemePreference } from "../../lib/theme-provider";
+import { hitSlop as defaultHitSlop } from "../../lib/theme";
 
-// One shared back button — a chevron plus a text label, matching the plain
-// native back button style used everywhere a screen relies on the default
-// Stack header (e.g. My Listings shows "‹ Account" when reached from the
-// Account tab). No background/circle/blur. `tone` only controls color for
-// legibility over photo heroes / brand-colored banners.
+// One shared custom back button. It mirrors the rounded iOS-style control
+// used by the app's native Stack headers: a floating circular surface with a
+// single chevron. `label` is kept for accessibility only.
 export type GlassTone = "auto" | "light" | "dark";
 
 type GlassBackButtonProps = {
@@ -29,22 +25,9 @@ function ChevronIcon({ color, size }: { color: string; size: number }) {
   );
 }
 
-// Defaults to "Back" (matching iOS's own "generic" back-button mode) rather
-// than leaving every one of the ~20 custom-header screens to work out
-// exactly which screen a user would have come from — pass `label` to
-// override with something more specific where it's known and useful.
-export function GlassBackButton({ onPress, tone = "auto", size = 38, label = "Back", style }: GlassBackButtonProps) {
+export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Back", style }: GlassBackButtonProps) {
   const router = useRouter();
-  const { resolvedScheme } = useThemePreference();
-  const isDark = resolvedScheme === "dark";
-
-  // "auto" follows the active theme; "light"/"dark" let a screen force a
-  // legible color when the surface behind it is a photo or a brand-colored
-  // banner rather than the app's own background. `tone` names the icon/text
-  // tone — "light" means white (for a dark backdrop), "dark" means near-
-  // black (for a light backdrop).
-  const effectiveDark = tone === "light" ? true : tone === "dark" ? false : isDark;
-  const tint = effectiveDark ? "#FFFFFF" : "#111827";
+  void tone;
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -53,40 +36,36 @@ export function GlassBackButton({ onPress, tone = "auto", size = 38, label = "Ba
   }
 
   return (
-    <>
-      {/* A forced tone means the surface behind this screen's header isn't
-          the app's own background (a photo hero or a brand-colored banner),
-          so the status bar needs to match that surface, not the app theme.
-          expo-status-bar stacks mounted <StatusBar> instances and reverts to
-          the previous one on unmount, so this only applies while this
-          screen is focused. */}
-      {tone !== "auto" && <StatusBar style={effectiveDark ? "light" : "dark"} />}
-      <Pressable
-        onPress={handlePress}
-        hitSlop={defaultHitSlop}
-        accessibilityRole="button"
-        accessibilityLabel={label ? `Go back to ${label}` : "Go back"}
-        style={({ pressed }) => [styles.wrap, { height: size, opacity: pressed ? 0.5 : 1 }, style]}
-      >
-        <ChevronIcon color={tint} size={Math.round(size * 0.58)} />
-        {label ? (
-          <Text style={[styles.label, { color: tint }]} numberOfLines={1}>
-            {label}
-          </Text>
-        ) : null}
-      </Pressable>
-    </>
+    <Pressable
+      onPress={handlePress}
+      hitSlop={defaultHitSlop}
+      accessibilityRole="button"
+      accessibilityLabel={label ? `Go back to ${label}` : "Go back"}
+      style={({ pressed }) => [
+        styles.wrap,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          opacity: pressed ? 0.65 : 1,
+        },
+        style,
+      ]}
+    >
+      <ChevronIcon color="#111827" size={Math.round(size * 0.5)} />
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 2,
-  },
-  label: {
-    ...font.body,
-    marginLeft: -2,
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.92)",
+    shadowColor: "#101828",
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
   },
 });

@@ -242,7 +242,7 @@ export default function PostScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
-        <GlassBackButton onPress={handleHeaderBack} tone="light" size={34} />
+        <GlassBackButton onPress={handleHeaderBack} tone="light" />
         <Text style={styles.topbarTitle} numberOfLines={1}>
           Post a Free Ad
         </Text>
@@ -421,8 +421,8 @@ export default function PostScreen() {
         {state.step === 1 && !state.category ? null : (
           <View style={styles.stepButtons}>
             {state.step > 1 ? (
-              <View style={{ flex: 1 }}>
-                <Button label="← Back" variant="secondary" onPress={goBack} />
+              <View style={styles.inlineBackSlot}>
+                <GlassBackButton onPress={goBack} />
               </View>
             ) : null}
             <View style={{ flex: 2 }}>
@@ -454,7 +454,7 @@ function buildStyles(color: ColorPalette) {
     paddingBottom: space.md,
   },
   topbarTitle: { flex: 1, ...font.title, color: color.textOnBrand, textAlign: "center" },
-  topbarSpacer: { width: 34 },
+  topbarSpacer: { width: 52 },
   stepsBar: {
     flexDirection: "row",
     gap: space.xs,
@@ -513,5 +513,6 @@ function buildStyles(color: ColorPalette) {
   previewMeta: { ...font.sub, color: color.textMuted, marginTop: space.sm },
   error: { ...font.sub, color: color.danger, marginTop: space.lg, textAlign: "center" },
   stepButtons: { flexDirection: "row", gap: space.md, marginTop: space.xxl },
+  inlineBackSlot: { flex: 1, justifyContent: "center" },
   });
 }
