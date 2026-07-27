@@ -12,7 +12,7 @@ const SUPPORT_PHONE = "+971589772645";
 const WHATSAPP = "https://wa.me/971589772645";
 
 const SOCIALS: { name: string; url: string }[] = [
-  { name: "TikTok", url: "https://www.tiktok.com/@pamarketzimbabwe" },
+  { name: "TikTok", url: "https://www.tiktok.com/@pamarketzw" },
   { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61591000371129" },
   { name: "Instagram", url: "https://www.instagram.com/pamarketzim/" },
   { name: "YouTube", url: "https://www.youtube.com/@PaMarketZim" },
