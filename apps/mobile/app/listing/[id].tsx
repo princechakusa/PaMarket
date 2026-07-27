@@ -22,7 +22,7 @@ import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
 import { formatPrice, type Listing } from "../../lib/listings";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
-import { conversationIdFor } from "../../lib/messages";
+import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { REPORT_REASONS } from "../../lib/safety";
@@ -332,12 +332,63 @@ export default function ListingDetailScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
-    const convId = conversationIdFor(session.user.id, listing.seller_id);
-    const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
-    if (!existing) {
+    const myId = session.user.id;
+    const convId = conversationIdFor(myId, listing.seller_id);
+    const { data: conversations } = await supabase
+      .from("conversations")
+      .select("id,members,listing_id,business_id,created_at,updated_at")
+      .contains("members", [myId])
+      .limit(100);
+    const candidates = ((conversations as ConversationRow[]) ?? []).filter((conversation) =>
+      isPersonalConversationFor(conversation, myId, listing.seller_id)
+    );
+    const latestByConversation = new Map<string, string>();
+
+    if (candidates.length) {
+      const { data: latestMessages } = await supabase
+        .from("messages")
+        .select("conversation_id,created_at")
+        .in(
+          "conversation_id",
+          candidates.map((conversation) => conversation.id)
+        )
+        .order("created_at", { ascending: false })
+        .limit(Math.max(candidates.length * 3, 20));
+
+      ((latestMessages as { conversation_id: string; created_at: string }[]) ?? []).forEach((message) => {
+        if (!latestByConversation.has(message.conversation_id)) {
+          latestByConversation.set(message.conversation_id, message.created_at);
+        }
+      });
+    }
+
+    candidates.sort((a, b) => {
+      const aTime = new Date(latestByConversation.get(a.id) || a.updated_at || a.created_at || 0).getTime();
+      const bTime = new Date(latestByConversation.get(b.id) || b.updated_at || b.created_at || 0).getTime();
+      return bTime - aTime;
+    });
+
+    const existing = candidates[0];
+    if (existing) {
+      const members = Array.isArray(existing.members) ? existing.members : [];
+      const patch: { members?: string[]; listing_id?: string } = {};
+      if (!members.includes(myId) || !members.includes(listing.seller_id)) {
+        patch.members = [myId, listing.seller_id];
+      }
+      if (!existing.listing_id) {
+        patch.listing_id = listing.id;
+      }
+      if (Object.keys(patch).length) {
+        await supabase.from("conversations").update(patch).eq("id", existing.id);
+      }
+      router.push({ pathname: "/chat/[id]", params: { id: existing.id } });
+      return;
+    }
+
+    {
       await supabase.from("conversations").upsert({
         id: convId,
-        members: [session.user.id, listing.seller_id],
+        members: [myId, listing.seller_id],
         listing_id: listing.id,
       });
     }

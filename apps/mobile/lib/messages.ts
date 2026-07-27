@@ -31,6 +31,8 @@ export type ConversationRow = {
   members: string[];
   listing_id: string | null;
   business_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 export type MessageRow = {
@@ -46,13 +48,39 @@ export type MessageRow = {
   deleted?: boolean;
 };
 
-// Deterministic 1:1 conversation id, matching www/js/messages.js H.startChatWith:
-// conv_<last8(idA)>_<last8(idB)> with member ids sorted so both sides compute
-// the same id independently.
+// Deterministic 1:1 conversation id, matching www/js/app.js H.idFrag and
+// www/js/messages.js H.startChatWith: full UUIDs with hyphens stripped, sorted
+// so both sides compute the same id independently. Older mobile builds used
+// the final 8 chars; keep a recovery path below so those chats are adopted
+// instead of forked.
 export function conversationIdFor(userIdA: string, userIdB: string): string {
+  const [a, b] = [userIdA, userIdB].sort();
+  const frag = (id: string) => id.replace(/-/g, "");
+  return `conv_${frag(a)}_${frag(b)}`;
+}
+
+export function legacyConversationIdFor(userIdA: string, userIdB: string): string {
   const [a, b] = [userIdA, userIdB].sort();
   const frag = (id: string) => id.slice(-8);
   return `conv_${frag(a)}_${frag(b)}`;
+}
+
+export function isPersonalConversationFor(conversation: ConversationRow, userIdA: string, userIdB: string): boolean {
+  if (conversation.id.startsWith("biz_") || conversation.id.startsWith("job_") || conversation.id.startsWith("rental_")) {
+    return false;
+  }
+
+  const members = Array.isArray(conversation.members) ? conversation.members.map(String) : [];
+  const byMembers = members.includes(userIdA) && members.includes(userIdB);
+  const pairKey = conversationIdFor(userIdA, userIdB);
+  const legacyPairKey = legacyConversationIdFor(userIdA, userIdB);
+  const byId =
+    conversation.id === pairKey ||
+    conversation.id.startsWith(`${pairKey}_`) ||
+    conversation.id === legacyPairKey ||
+    conversation.id.startsWith(`${legacyPairKey}_`);
+
+  return byMembers || byId;
 }
 
 export function otherMember(conversation: ConversationRow, myUserId: string): string | undefined {

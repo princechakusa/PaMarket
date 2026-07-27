@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { conversationIdFor } from "../../lib/messages";
+import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
 import { formatPrice, isFeatured, isNew, listingLocation, type Listing } from "../../lib/listings";
 import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge } from "../../components/ui";
@@ -155,9 +155,52 @@ export default function UserProfileScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
+    const myId = session.user.id;
     const convId = conversationIdFor(session.user.id, id);
-    const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
-    if (!existing) {
+    const { data: conversations } = await supabase
+      .from("conversations")
+      .select("id,members,listing_id,business_id,created_at,updated_at")
+      .contains("members", [myId])
+      .limit(100);
+
+    const candidates = ((conversations as ConversationRow[]) ?? []).filter((conversation) => isPersonalConversationFor(conversation, myId, id));
+    const latestByConversation = new Map<string, string>();
+
+    if (candidates.length) {
+      const { data: latestMessages } = await supabase
+        .from("messages")
+        .select("conversation_id,created_at")
+        .in(
+          "conversation_id",
+          candidates.map((conversation) => conversation.id)
+        )
+        .order("created_at", { ascending: false })
+        .limit(Math.max(candidates.length * 3, 20));
+
+      ((latestMessages as { conversation_id: string; created_at: string }[]) ?? []).forEach((message) => {
+        if (!latestByConversation.has(message.conversation_id)) {
+          latestByConversation.set(message.conversation_id, message.created_at);
+        }
+      });
+    }
+
+    candidates.sort((a, b) => {
+      const aTime = new Date(latestByConversation.get(a.id) || a.updated_at || a.created_at || 0).getTime();
+      const bTime = new Date(latestByConversation.get(b.id) || b.updated_at || b.created_at || 0).getTime();
+      return bTime - aTime;
+    });
+
+    const existing = candidates[0];
+    if (existing) {
+      const members = Array.isArray(existing.members) ? existing.members : [];
+      if (!members.includes(myId) || !members.includes(id)) {
+        await supabase.from("conversations").update({ members: [myId, id] }).eq("id", existing.id);
+      }
+      router.push({ pathname: "/chat/[id]", params: { id: existing.id } });
+      return;
+    }
+
+    {
       await supabase.from("conversations").upsert({ id: convId, members: [session.user.id, id] });
     }
     router.push({ pathname: "/chat/[id]", params: { id: convId } });
