@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle } from "react-native";
 import { passwordStrength } from "../lib/validation";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -10,12 +10,14 @@ export function PasswordField({
   placeholder = "Password",
   showStrength = false,
   autoComplete = "password",
+  inputStyle,
 }: {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
   showStrength?: boolean;
   autoComplete?: "password" | "password-new";
+  inputStyle?: StyleProp<TextStyle>;
 }) {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
@@ -26,7 +28,7 @@ export function PasswordField({
     <View>
       <View style={styles.row}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, inputStyle]}
           placeholder={placeholder}
           placeholderTextColor={tones.placeholder}
           secureTextEntry={!visible}
