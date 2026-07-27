@@ -25,7 +25,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       tinted: "./assets/icon-tinted.png",
     },
     infoPlist: {
-      ITSAppUsesNonExemptEncryption: false,
+      // TRUE, not FALSE: lib/totp.ts implements HMAC-SHA1 (RFC 2104) by hand
+      // in application code for TOTP 2FA (RFC 6238) — expo-crypto (the only
+      // crypto dependency in this app) has no HMAC primitive, only raw
+      // digest() and AES-GCM, so this can't be done through an Apple OS API
+      // alone. That makes the app ineligible for the "only uses Apple's
+      // exempt encryption" declaration. HMAC-SHA1/TOTP are standard,
+      // publicly-documented algorithms (not proprietary), so this still
+      // qualifies for the App Store Connect self-classification / French
+      // exemption path — but the export-compliance questionnaire must be
+      // answered at submission, it cannot be skipped via this flag.
+      ITSAppUsesNonExemptEncryption: true,
     },
   },
   android: {
@@ -44,6 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-apple-authentication",
+    "expo-iap",
     "expo-router",
     "expo-secure-store",
     "expo-status-bar",

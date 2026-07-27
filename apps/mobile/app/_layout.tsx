@@ -9,6 +9,7 @@ import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
 import { RatingPromptModal } from "../components/RatingPromptModal";
 import { initTelemetry } from "../lib/telemetry";
+import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications } from "../lib/push";
 import { resolveNotifRoute } from "../lib/notifications";
 import TwoFactorVerifyScreen from "./two-factor-verify";
@@ -159,6 +160,12 @@ function ThemedStatusBar() {
 
 function RootLayout() {
   useEffect(() => initTelemetry(), []);
+  useEffect(() => {
+    initIAP();
+    return () => {
+      teardownIAP();
+    };
+  }, []);
 
   return (
     <ThemeProvider>
