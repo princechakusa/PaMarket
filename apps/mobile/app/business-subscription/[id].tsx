@@ -9,14 +9,22 @@ import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { purchaseProduct } from "../../lib/iap";
+import { SHOP_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
 
 const PLAN_ORDER = ["free", "starter", "pro", "premium"];
 
+// planId ("starter"/"pro"/"premium") -> store productId ("shop_starter"/...)
+// — reverse of SHOP_SUBSCRIPTION_PRODUCTS, which is keyed the other way.
+const PRODUCT_ID_BY_PLAN: Record<string, string> = Object.fromEntries(
+  Object.entries(SHOP_SUBSCRIPTION_PRODUCTS).map(([productId, meta]) => [meta.planId, productId])
+);
+
 // Mirrors www/js/business-subscription.js pages.BusinessSubscription — plan
-// comparison + usage bars. Paid upgrades go through Google Play Billing
-// (H.upgradeBusinessPlan, deferred alongside billing.js) so "Upgrade"
-// surfaces a coming-soon toast; downgrading to Free is a pure entitlement
-// change with no payment and works fully here.
+// comparison + usage bars. "Upgrade" now drives a real purchase via
+// lib/iap.ts (expo-iap), verified server-side by verify-apple-subscription /
+// verify-play-subscription depending on platform; downgrading to a lower
+// tier is a pure entitlement change with no payment and works fully here.
 export default function BusinessSubscriptionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
@@ -28,6 +36,7 @@ export default function BusinessSubscriptionScreen() {
   const [listingCount, setListingCount] = useState(0);
   const [staffCount, setStaffCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
@@ -72,6 +81,24 @@ export default function BusinessSubscriptionScreen() {
     await supabase.from("businesses").update({ plan_id: planId }).eq("id", business.id);
     setBusiness({ ...business, ...({ plan_id: planId } as any) });
     toast(`Plan changed to ${planEntitlements(planId).name}`);
+  }
+
+  async function upgrade(planId: string, planName: string) {
+    if (!business) return;
+    const productId = PRODUCT_ID_BY_PLAN[planId];
+    if (!productId) {
+      toast(`Upgrading to ${planName} is coming soon`);
+      return;
+    }
+    setPurchasingPlan(planId);
+    const result = await purchaseProduct(productId, { businessId: business.id });
+    setPurchasingPlan(null);
+    if (result.ok) {
+      toast(`Upgraded to ${planName}`);
+      load();
+    } else if (result.error) {
+      toast(result.error);
+    }
   }
 
   function bar(label: string, used: number, limit: number) {
@@ -133,8 +160,16 @@ export default function BusinessSubscriptionScreen() {
               </View>
             ) : isOwner ? (
               higher ? (
-                <Pressable style={styles.upgradeButton} onPress={() => toast("Upgrades via Google Play coming soon")}>
-                  <Text style={styles.upgradeButtonText}>Upgrade to {plan.name}</Text>
+                <Pressable
+                  style={styles.upgradeButton}
+                  disabled={purchasingPlan === planId}
+                  onPress={() => upgrade(planId, plan.name)}
+                >
+                  {purchasingPlan === planId ? (
+                    <ActivityIndicator color={tones.brand} />
+                  ) : (
+                    <Text style={styles.upgradeButtonText}>Upgrade to {plan.name}</Text>
+                  )}
                 </Pressable>
               ) : (
                 <Pressable style={styles.downgradeButton} onPress={() => downgrade(planId)}>

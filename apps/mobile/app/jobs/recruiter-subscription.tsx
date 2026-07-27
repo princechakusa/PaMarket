@@ -10,20 +10,25 @@ import { toast } from "../../components/ui/Toast";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
+import { purchaseProduct } from "../../lib/iap";
+import { RECRUITER_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
 
 const PLAN_ORDER = ["free", "recruiter"];
 
+// planId ("recruiter") -> store productId ("recruiter_monthly") — reverse of
+// RECRUITER_SUBSCRIPTION_PRODUCTS, which is keyed the other way round.
+const PRODUCT_ID_BY_PLAN: Record<string, string> = Object.fromEntries(
+  Object.entries(RECRUITER_SUBSCRIPTION_PRODUCTS).map(([productId, meta]) => [meta.planId, productId])
+);
+
 type Styles = ReturnType<typeof buildStyles>;
 
-// Mirrors www/js/jobs.js H.pages.RecruiterSubscription — plan comparison
-// only, matching the app/business-subscription/[id].tsx precedent: real
-// upgrades go through Google Play Billing (supabase/migrations/
-// add_recruiter_subscriptions.sql — recruiter_profiles / recruiter_
-// subscriptions / play_recruiter_subscriptions + activate_recruiter_
-// subscription RPC all exist server-side already), which is out of scope
-// here, so "Upgrade" surfaces a coming-soon toast instead of a purchase
-// flow. Current plan is read from recruiter_profiles.plan_id (defaults to
-// 'free' — the row is only created lazily at first purchase).
+// Mirrors www/js/jobs.js H.pages.RecruiterSubscription — plan comparison,
+// with "Upgrade" now driving a real purchase via lib/iap.ts (expo-iap),
+// verified server-side by verify-apple-subscription / verify-play-
+// subscription depending on platform. Current plan is read from
+// recruiter_profiles.plan_id (defaults to 'free' — the row is only created
+// lazily at first purchase).
 export default function RecruiterSubscriptionScreen() {
   const styles = useThemedStyles(buildStyles);
   const router = useRouter();
@@ -33,6 +38,7 @@ export default function RecruiterSubscriptionScreen() {
   const [planId, setPlanId] = useState("free");
   const [jobsPosted, setJobsPosted] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -48,6 +54,23 @@ export default function RecruiterSubscriptionScreen() {
     setPlanId((recruiterProfile as any)?.plan_id || "free");
     setJobsPosted(count ?? 0);
   }, [session]);
+
+  const handleUpgrade = useCallback(async (planName: string, targetPlanId: string) => {
+    const productId = PRODUCT_ID_BY_PLAN[targetPlanId];
+    if (!productId) {
+      toast(`Upgrading to ${planName} is coming soon`);
+      return;
+    }
+    setPurchasingPlan(targetPlanId);
+    const result = await purchaseProduct(productId);
+    setPurchasingPlan(null);
+    if (result.ok) {
+      toast(`Upgraded to ${planName}`);
+      load();
+    } else if (result.error) {
+      toast(result.error);
+    }
+  }, [load]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -114,9 +137,14 @@ export default function RecruiterSubscriptionScreen() {
               {!isCurrent && higher && plan.price > 0 ? (
                 <Pressable
                   style={styles.upgradeButton}
-                  onPress={() => toast(`Upgrading to ${plan.name} is coming soon`)}
+                  disabled={purchasingPlan === id}
+                  onPress={() => handleUpgrade(plan.name, id)}
                 >
-                  <Text style={styles.upgradeButtonText}>Upgrade to {plan.name}</Text>
+                  {purchasingPlan === id ? (
+                    <ActivityIndicator color={color.textOnBrand} />
+                  ) : (
+                    <Text style={styles.upgradeButtonText}>Upgrade to {plan.name}</Text>
+                  )}
                 </Pressable>
               ) : null}
             </View>
