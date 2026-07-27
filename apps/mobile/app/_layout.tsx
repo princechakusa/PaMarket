@@ -69,7 +69,13 @@ function RootNavigator() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ title: "Home" }} />
+      {/* The tabs group is a single stack node covering all 5 tabs (Home,
+          Search, Post, Messages, Account) — a static title here would show
+          on the back button regardless of which tab was actually active
+          when the user navigated away (e.g. "Home" showing even when they
+          came from Account), which is actively misleading. Empty title
+          means a bare chevron with no label, correct from any tab. */}
+      <Stack.Screen name="(tabs)" options={{ title: "" }} />
       <Stack.Screen name="(auth)" options={{ title: "Sign In" }} />
       <Stack.Screen name="login-callback" options={{ title: "Sign In" }} />
       <Stack.Screen name="listing/[id]" options={{ headerShown: false, title: "Listing" }} />
