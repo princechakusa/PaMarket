@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
-import { signInWithOAuthProvider } from "../../lib/oauth";
+import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
 import { BrandSymbol, BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
@@ -140,17 +140,27 @@ export default function SignInScreen() {
     await recordAuthSuccess();
   }
 
-  async function handleOAuth(provider: "google" | "apple") {
+  async function handleGoogleSignIn() {
     setError(null);
-    if (provider === "google") setIsGoogleLoading(true);
-    else setIsAppleLoading(true);
+    setIsGoogleLoading(true);
     try {
-      await signInWithOAuthProvider(provider);
+      await signInWithOAuthProvider("google");
     } catch (e) {
-      setError(e instanceof Error ? e.message : `${provider === "google" ? "Google" : "Apple"} sign-in failed`);
+      setError(e instanceof Error ? e.message : "Google sign-in failed");
     } finally {
-      if (provider === "google") setIsGoogleLoading(false);
-      else setIsAppleLoading(false);
+      setIsGoogleLoading(false);
+    }
+  }
+
+  async function handleAppleSignIn() {
+    setError(null);
+    setIsAppleLoading(true);
+    try {
+      await signInWithApple();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Apple sign-in failed");
+    } finally {
+      setIsAppleLoading(false);
     }
   }
 
@@ -178,14 +188,14 @@ export default function SignInScreen() {
             <SocialButton
               label="Continue with Apple"
               icon={<AppleIcon />}
-              onPress={() => handleOAuth("apple")}
+              onPress={handleAppleSignIn}
               isLoading={isAppleLoading}
               dark
             />
             <SocialButton
               label="Continue with Google"
               icon={<GoogleIcon />}
-              onPress={() => handleOAuth("google")}
+              onPress={handleGoogleSignIn}
               isLoading={isGoogleLoading}
             />
           </View>

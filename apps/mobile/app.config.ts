@@ -18,6 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.pamarket.app",
+    usesAppleSignIn: true,
     icon: {
       light: "./assets/icon.png",
       dark: "./assets/icon-dark.png",
@@ -42,6 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: "./assets/favicon.png",
   },
   plugins: [
+    "expo-apple-authentication",
     "expo-router",
     "expo-secure-store",
     "expo-status-bar",
