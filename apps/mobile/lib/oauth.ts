@@ -2,6 +2,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -21,6 +22,61 @@ function isAppleRequestCancelled(error: unknown) {
     "code" in error &&
     (error as { code?: unknown }).code === "ERR_REQUEST_CANCELED"
   );
+}
+
+function formatAppleFullName(fullName: AppleAuthentication.AppleAuthenticationFullName | null) {
+  if (!fullName) return null;
+  const name = [fullName.givenName, fullName.middleName, fullName.familyName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return name.length > 1 ? name : null;
+}
+
+function hasUserEditedName(name: string | null | undefined) {
+  const normalized = name?.trim();
+  return !!normalized && normalized.toLowerCase() !== "user";
+}
+
+async function ensureAppleProfile(
+  session: Session | null,
+  credential: AppleAuthentication.AppleAuthenticationCredential
+) {
+  if (!session?.user?.id) return;
+
+  const appleName = formatAppleFullName(credential.fullName);
+  const authEmail = session.user.email?.trim() || null;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id,name,email")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+
+  const shouldFillName = appleName && !hasUserEditedName(profile?.name);
+  const shouldFillEmail = authEmail && !profile?.email?.trim();
+
+  if (profile) {
+    const updates: { name?: string; email?: string; updated_at?: string } = {};
+    if (shouldFillName) updates.name = appleName;
+    if (shouldFillEmail) updates.email = authEmail;
+    if (Object.keys(updates).length === 0) return;
+
+    updates.updated_at = new Date().toISOString();
+    const { error } = await supabase.from("profiles").update(updates).eq("id", session.user.id);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase.from("profiles").insert({
+    id: session.user.id,
+    name: appleName || authEmail || "User",
+    ...(authEmail ? { email: authEmail } : {}),
+  });
+  if (error) throw error;
 }
 
 function parseCallbackParams(url: string) {
@@ -139,6 +195,7 @@ export async function signInWithApple() {
     });
 
     if (error) throw error;
+    await ensureAppleProfile(data.session, credential);
     return data.session;
   } catch (error) {
     if (isAppleRequestCancelled(error)) return null;
