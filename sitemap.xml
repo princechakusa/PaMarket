@@ -331,12 +331,6 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=b3977022-283a-43a9-83eb-81b823cd5418</loc>
-    <lastmod>2026-06-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=df71a678-f85a-47e1-9707-ef8b9f5dc2a5</loc>
     <lastmod>2026-06-16</lastmod>
     <changefreq>monthly</changefreq>
@@ -373,12 +367,6 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=c30a6eb1-2ce8-403e-8d2b-52a1180c4836</loc>
-    <lastmod>2026-06-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=bcb35d83-5b69-4671-a5f1-e8f22a951a15</loc>
     <lastmod>2026-07-14</lastmod>
     <changefreq>monthly</changefreq>
@@ -397,6 +385,18 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://pamarketzw.com/profile?id=c30a6eb1-2ce8-403e-8d2b-52a1180c4836</loc>
+    <lastmod>2026-06-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=b3977022-283a-43a9-83eb-81b823cd5418</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://pamarketzw.com/profile?id=b770372f-3dd8-476a-b3ba-a79322af5f39</loc>
     <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
@@ -405,6 +405,12 @@
   <url>
     <loc>https://pamarketzw.com/profile?id=918cc7ac-fea7-42f6-bb5f-90677f1b8dc6</loc>
     <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=26307b33-b0f5-45b9-a386-df20e1090402</loc>
+    <lastmod>2026-07-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
@@ -459,12 +465,6 @@
   <url>
     <loc>https://pamarketzw.com/profile?id=83ab643d-7550-4432-8bd8-eae097146aa8</loc>
     <lastmod>2026-06-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://pamarketzw.com/profile?id=26307b33-b0f5-45b9-a386-df20e1090402</loc>
-    <lastmod>2026-07-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
