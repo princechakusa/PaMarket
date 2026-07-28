@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
     users_recommended: 0,
     shops_new_arrivals_notified: 0,
     category_digest_notified: 0,
+    listing_view_reminders_sent: 0,
     verification_nudges_sent: 0,
     messages_noreply_reminded: 0,
     errors: [] as string[],
@@ -148,6 +149,10 @@ Deno.serve(async (req) => {
     const categoryDigest = await db.rpc('run_category_digest')
     if (categoryDigest.error) summary.errors.push('Category digest: ' + categoryDigest.error.message)
     else summary.category_digest_notified = Number(categoryDigest.data?.notified || 0)
+
+    const listingViewReminders = await db.rpc('run_listing_view_reminders')
+    if (listingViewReminders.error) summary.errors.push('Listing view reminders: ' + listingViewReminders.error.message)
+    else summary.listing_view_reminders_sent = Number(listingViewReminders.data?.reminded || 0)
 
     const verificationNudge = await db.rpc('run_verification_nudge')
     if (verificationNudge.error) summary.errors.push('Verification nudge: ' + verificationNudge.error.message)

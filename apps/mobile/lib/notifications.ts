@@ -106,6 +106,7 @@ const TYPE_DOT_COLOR: Record<string, string> = {
   chat_scam_warning: "#DC2626",
   shop_new_arrivals: "#1A3A8F",
   category_digest: "#CA8A04",
+  listing_view_reminder: "#CA8A04",
   verification_nudge: "#1A3A8F",
   message_noreply_reminder: "#1A3A8F",
   rental_lead: "#1A3A8F",
@@ -211,6 +212,7 @@ const LISTING_TYPES = new Set([
   "sale",
   "price_drop",
   "personalized_recommendation",
+  "listing_view_reminder",
   ...OWN_LISTING_TYPES,
 ]);
 

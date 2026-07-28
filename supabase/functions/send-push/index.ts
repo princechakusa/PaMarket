@@ -3,6 +3,28 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-automation-secret',
 };
 
+const PREFERENCE_COLUMN_BY_TYPE: Record<string, string> = {
+  message: 'messages',
+  chat_scam_warning: 'messages',
+  message_noreply_reminder: 'messages',
+  listing_approved: 'approvals',
+  listing_rejected: 'approvals',
+  listing_flagged: 'approvals',
+  listing_expiry: 'listing_updates',
+  stale_listing: 'listing_updates',
+  view_milestone: 'listing_updates',
+  price_drop: 'price_drops',
+  saved_search_match: 'favourites',
+  personalized_recommendation: 'recommendations',
+  shop_new_arrivals: 'recommendations',
+  category_digest: 'recommendations',
+  listing_view_reminder: 'recommendations',
+  verification_nudge: 'verification_reminders',
+  boost: 'promotions',
+  promotion: 'promotions',
+  sale: 'promotions',
+};
+
 // ── FCM HTTP v1 ───────────────────────────────────────────
 async function getFCMAccessToken(sa) {
   const now = Math.floor(Date.now() / 1000);
@@ -245,6 +267,34 @@ Deno.serve(async (req) => {
       profiles = profiles.filter((p) => target === 'sellers' ? sellerSet.has(p['id']) : !sellerSet.has(p['id']));
     }
 
+    // Notification preferences apply to both the in-app centre and device push.
+    // Unknown types (including security alerts) remain enabled by default.
+    const preferenceColumn = PREFERENCE_COLUMN_BY_TYPE[String(type).toLowerCase()];
+    let optedOut = 0;
+    if (preferenceColumn && profiles.length > 0) {
+      const preferenceMap = new Map<string, Record<string, boolean>>();
+      const ids = profiles.map((p) => p['id']);
+      for (let i = 0; i < ids.length; i += 200) {
+        const preferenceRows = await db
+          .from('notification_preferences')
+          .select('user_id,messages,listing_updates,approvals,promotions,favourites,price_drops,recommendations,verification_reminders')
+          .in('user_id', ids.slice(i, i + 200));
+        // Fail open during a rolling deployment so a missing preferences table
+        // cannot interrupt existing security or transactional delivery.
+        if (preferenceRows.error) {
+          console.warn('notification_preferences lookup:', preferenceRows.error.message);
+          preferenceMap.clear();
+          break;
+        }
+        for (const row of (preferenceRows.data || [])) preferenceMap.set(row['user_id'], row);
+      }
+      if (preferenceMap.size > 0) {
+        const before = profiles.length;
+        profiles = profiles.filter((profile) => preferenceMap.get(profile['id'])?.[preferenceColumn] !== false);
+        optedOut = before - profiles.length;
+      }
+    }
+
     // Insert notification records into DB so in-app notification centre shows them
     const now = Date.now();
     const dbRows = profiles.map((p) => ({
@@ -310,6 +360,7 @@ Deno.serve(async (req) => {
     return json({
       success: true,
       total_users:    profiles.length,
+      opted_out:      optedOut,
       fcm_sent:       fcmSent,
       fcm_failed:     fcmFailed,
       web_push_sent:  webPushSent,

@@ -1,16 +1,21 @@
-import { useState, type ReactElement } from "react";
-import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import Svg, { Circle, Line, Path, Polygon, Polyline, Rect } from "react-native-svg";
+import { useEffect, useState, type ReactElement } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import Svg, { Line, Path, Polygon, Polyline, Rect } from "react-native-svg";
 import { toast } from "../components/ui/Toast";
+import { useAuth } from "../lib/auth";
+import { supabase } from "../lib/supabase";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
-// Mirrors www/js/settings.js pages.NotificationSettings. The web app keeps
-// these in u.notificationPrefs, which is localStorage-only (no Supabase
-// column backs it — verified against supabase/migrations, only
-// profiles.privacy is a real jsonb column). This screen mirrors that: prefs
-// live in local state for the session, not persisted server-side yet.
-type PrefKey = "messages" | "listings" | "approvals" | "promotions" | "favorites" | "priceDrops";
+type PrefKey =
+  | "messages"
+  | "listings"
+  | "approvals"
+  | "promotions"
+  | "favorites"
+  | "priceDrops"
+  | "recommendations"
+  | "verificationReminders";
 
 const DEFAULTS: Record<PrefKey, boolean> = {
   messages: true,
@@ -19,6 +24,19 @@ const DEFAULTS: Record<PrefKey, boolean> = {
   promotions: true,
   favorites: true,
   priceDrops: true,
+  recommendations: true,
+  verificationReminders: true,
+};
+
+const DB_COLUMNS: Record<PrefKey, string> = {
+  messages: "messages",
+  listings: "listing_updates",
+  approvals: "approvals",
+  promotions: "promotions",
+  favorites: "favourites",
+  priceDrops: "price_drops",
+  recommendations: "recommendations",
+  verificationReminders: "verification_reminders",
 };
 
 function buildRows(color: ColorPalette): { key: PrefKey; label: string; icon: ReactElement }[] {
@@ -67,7 +85,7 @@ function buildRows(color: ColorPalette): { key: PrefKey; label: string; icon: Re
     },
     {
       key: "favorites",
-      label: "Saves on My Listings",
+      label: "Saved Search & Favourite Alerts",
       icon: (
         <Svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke={color.danger} strokeWidth={2}>
           <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -77,7 +95,6 @@ function buildRows(color: ColorPalette): { key: PrefKey; label: string; icon: Re
     {
       key: "priceDrops",
       label: "Price Drop Alerts",
-      // Purple has no dedicated theme token — left as a literal decorative accent.
       icon: (
         <Svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="#7C3AED" strokeWidth={2}>
           <Polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
@@ -85,22 +102,100 @@ function buildRows(color: ColorPalette): { key: PrefKey; label: string; icon: Re
         </Svg>
       ),
     },
+    {
+      key: "recommendations",
+      label: "Recommendations & Reminders",
+      icon: (
+        <Svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke={color.gold} strokeWidth={2}>
+          <Path d="M12 2l2.6 5.3L20 8l-4 3.9.9 5.5L12 14.8 7.1 17.4 8 11.9 4 8l5.4-.7L12 2z" />
+        </Svg>
+      ),
+    },
+    {
+      key: "verificationReminders",
+      label: "Verification Reminders",
+      icon: (
+        <Svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke={color.brand} strokeWidth={2}>
+          <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <Polyline points="9 12 11 14 15 10" />
+        </Svg>
+      ),
+    },
   ];
 }
 
 export default function NotificationPreferencesScreen() {
+  const { session } = useAuth();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const palette = useThemedStyles(identityPalette);
   const rows = buildRows(palette);
   const [prefs, setPrefs] = useState<Record<PrefKey, boolean>>(DEFAULTS);
+  const [loading, setLoading] = useState(true);
 
-  function toggle(key: PrefKey) {
-    setPrefs((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      toast(next[key] ? "Enabled" : "Disabled");
-      return next;
-    });
+  useEffect(() => {
+    let active = true;
+    async function loadPreferences() {
+      if (!session?.user.id) {
+        if (active) setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("notification_preferences")
+        .select("messages,listing_updates,approvals,promotions,favourites,price_drops,recommendations,verification_reminders")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (!active) return;
+      if (error) {
+        toast("Could not load notification settings");
+      } else if (data) {
+        setPrefs({
+          messages: data.messages ?? true,
+          listings: data.listing_updates ?? true,
+          approvals: data.approvals ?? true,
+          promotions: data.promotions ?? true,
+          favorites: data.favourites ?? true,
+          priceDrops: data.price_drops ?? true,
+          recommendations: data.recommendations ?? true,
+          verificationReminders: data.verification_reminders ?? true,
+        });
+      }
+      setLoading(false);
+    }
+    void loadPreferences();
+    return () => {
+      active = false;
+    };
+  }, [session?.user.id]);
+
+  async function toggle(key: PrefKey) {
+    if (!session?.user.id) return;
+    const previous = prefs;
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+
+    const payload: Record<string, string | boolean> = {
+      user_id: session.user.id,
+      updated_at: new Date().toISOString(),
+    };
+    for (const prefKey of Object.keys(DB_COLUMNS) as PrefKey[]) {
+      payload[DB_COLUMNS[prefKey]] = next[prefKey];
+    }
+    const { error } = await supabase.from("notification_preferences").upsert(payload, { onConflict: "user_id" });
+    if (error) {
+      setPrefs(previous);
+      toast("Could not save notification setting");
+      return;
+    }
+    toast(next[key] ? "Enabled" : "Disabled");
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={tones.brand} />
+      </View>
+    );
   }
 
   return (
@@ -113,7 +208,7 @@ export default function NotificationPreferencesScreen() {
             <Text style={styles.rowLabel}>{row.label}</Text>
             <Switch
               value={prefs[row.key]}
-              onValueChange={() => toggle(row.key)}
+              onValueChange={() => void toggle(row.key)}
               trackColor={{ true: tones.brand }}
             />
           </View>
@@ -148,6 +243,7 @@ function identityPalette(color: ColorPalette): ColorPalette {
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: color.bg },
+    loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: color.bg },
     sectionLabel: {
       fontSize: 11,
       fontWeight: "700",
