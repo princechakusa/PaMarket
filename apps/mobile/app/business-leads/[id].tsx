@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { fetchBusinessLeads, type BusinessLead, type LeadStatus } from "../../lib/business-leads";
@@ -9,6 +9,7 @@ import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const TYPE_LABEL: Record<string, string> = { whatsapp: "WhatsApp", call: "Call", chat: "Chat" };
+const STATUS_LABEL: Record<LeadStatus, string> = { new: "New", active: "Active", closed: "Closed" };
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -20,11 +21,12 @@ function timeAgo(iso: string) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-// Mirrors www/js/business-leads.js pages.BusinessLeads — New/Active/Closed
-// tabs of leads captured from WhatsApp/Call/Chat contact actions.
+// Owner inbox for verified/business shops. Leads are captured from shop-level
+// and product-level contact actions, then managed through a simple funnel.
 export default function BusinessLeadsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
+  const router = useRouter();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
 
@@ -44,14 +46,19 @@ export default function BusinessLeadsScreen() {
     setIsOwner(true);
     const rows = await fetchBusinessLeads(id);
     setLeads(rows);
+
     const listingIds = Array.from(new Set(rows.map((r) => r.listing_id).filter(Boolean))) as string[];
     if (listingIds.length) {
       const { data: listings } = await supabase.from("listings").select("id,title").in("id", listingIds);
       const map: Record<string, string> = {};
-      (listings ?? []).forEach((l: any) => (map[l.id] = l.title));
+      (listings ?? []).forEach((l: any) => {
+        map[l.id] = l.title;
+      });
       setListingTitles(map);
+    } else {
+      setListingTitles({});
     }
-  }, [id, session]);
+  }, [id, session?.user]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -69,8 +76,49 @@ export default function BusinessLeadsScreen() {
   const rows = leads.filter((l) => l.status === tab);
 
   async function setStatus(leadId: string, status: LeadStatus) {
-    await supabase.from("business_leads").update({ status }).eq("id", leadId);
+    const { error } = await supabase.from("business_leads").update({ status }).eq("id", leadId);
+    if (error) {
+      Alert.alert("Could not update lead", "Please try again.");
+      return;
+    }
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status } : l)));
+  }
+
+  async function openChat(lead: BusinessLead) {
+    if (!id || !session?.user || !lead.user_id) return false;
+    const { data } = await supabase
+      .from("conversations")
+      .select("id,members,created_at")
+      .eq("business_id", id)
+      .contains("members", [session.user.id, lead.user_id])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data?.id) return false;
+    if (lead.status === "new") setStatus(lead.id, "active");
+    router.push({ pathname: "/chat/[id]", params: { id: data.id } });
+    return true;
+  }
+
+  function showLeadActions(lead: BusinessLead) {
+    const source = TYPE_LABEL[lead.type] || lead.type;
+    const target = lead.listing_id ? listingTitles[lead.listing_id] || "Listing" : "Shop profile";
+    Alert.alert(
+      lead.user_name || "Customer lead",
+      `${target}\nSource: ${source}\nStatus: ${STATUS_LABEL[lead.status]}\nReceived: ${timeAgo(lead.created_at)}`,
+      [
+        {
+          text: "Open Chat",
+          onPress: async () => {
+            const ok = await openChat(lead);
+            if (!ok) Alert.alert("No chat found", `This customer contacted you through ${source}.`);
+          },
+        },
+        { text: "Mark Active", onPress: () => setStatus(lead.id, "active") },
+        { text: "Close Lead", style: "destructive", onPress: () => setStatus(lead.id, "closed") },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
   }
 
   if (isLoading || isOwner === null) {
@@ -91,11 +139,30 @@ export default function BusinessLeadsScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Shop Leads</Text>
+        <Text style={styles.summaryBody}>Track customers who contact your shop or products through chat, calls, and WhatsApp.</Text>
+        <View style={styles.metricRow}>
+          <View style={styles.metricCell}>
+            <Text style={styles.metricValue}>{counts.new}</Text>
+            <Text style={styles.metricLabel}>New</Text>
+          </View>
+          <View style={styles.metricCell}>
+            <Text style={styles.metricValue}>{counts.active}</Text>
+            <Text style={styles.metricLabel}>Active</Text>
+          </View>
+          <View style={styles.metricCell}>
+            <Text style={styles.metricValue}>{counts.closed}</Text>
+            <Text style={styles.metricLabel}>Closed</Text>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.tabRow}>
         {(["new", "active", "closed"] as LeadStatus[]).map((t) => (
           <Pressable key={t} style={styles.tabButton} onPress={() => setTab(t)}>
             <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-              {t[0].toUpperCase() + t.slice(1)} {counts[t] ? `(${counts[t]})` : ""}
+              {STATUS_LABEL[t]} {counts[t] ? `(${counts[t]})` : ""}
             </Text>
             {tab === t ? <View style={styles.tabUnderline} /> : null}
           </Pressable>
@@ -105,17 +172,22 @@ export default function BusinessLeadsScreen() {
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {rows.length ? (
           rows.map((lead) => (
-            <View key={lead.id} style={styles.card}>
+            <Pressable key={lead.id} style={styles.card} onPress={() => showLeadActions(lead)}>
               <View style={styles.cardTop}>
-                <Text style={styles.userName}>{lead.user_name || "User"}</Text>
+                <Text style={styles.userName}>{lead.user_name || "Customer"}</Text>
                 <View style={styles.typePill}>
                   <Text style={styles.typePillText}>{TYPE_LABEL[lead.type] || lead.type}</Text>
                 </View>
               </View>
               <Text style={styles.meta}>
-                On: {lead.listing_id ? listingTitles[lead.listing_id] || "Listing" : "Shop"} · {timeAgo(lead.created_at)}
+                On: {lead.listing_id ? listingTitles[lead.listing_id] || "Listing" : "Shop"} - {timeAgo(lead.created_at)}
               </Text>
               <View style={styles.actionsRow}>
+                {lead.type === "chat" ? (
+                  <Pressable style={styles.primaryAction} onPress={() => openChat(lead)}>
+                    <Text style={styles.primaryActionText}>Open chat</Text>
+                  </Pressable>
+                ) : null}
                 {lead.status === "new" ? (
                   <Pressable style={styles.primaryAction} onPress={() => setStatus(lead.id, "active")}>
                     <Text style={styles.primaryActionText}>Mark active</Text>
@@ -131,7 +203,7 @@ export default function BusinessLeadsScreen() {
                   </Pressable>
                 )}
               </View>
-            </View>
+            </Pressable>
           ))
         ) : (
           <Text style={styles.emptyText}>No {tab} leads.</Text>
@@ -149,6 +221,13 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: color.bg },
     centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+    summaryCard: { backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border, padding: 16 },
+    summaryTitle: { fontSize: 18, fontWeight: "800", color: color.text },
+    summaryBody: { fontSize: 12.5, color: color.textMuted, lineHeight: 18, marginTop: 4 },
+    metricRow: { flexDirection: "row", gap: 10, marginTop: 14 },
+    metricCell: { flex: 1, backgroundColor: color.surfaceAlt, borderRadius: 14, padding: 10, alignItems: "center" },
+    metricValue: { fontSize: 18, fontWeight: "900", color: color.brand },
+    metricLabel: { fontSize: 10.5, fontWeight: "700", color: color.textMuted, marginTop: 2 },
     tabRow: { flexDirection: "row", backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
     tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
     tabText: { fontSize: 13, fontWeight: "600", color: color.textMuted },

@@ -31,9 +31,9 @@ import { color, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
+  "id,seller_id,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,business_id,created_at";
 const BUSINESS_COLUMNS =
-  "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at";
+  "id,owner_user_id,name,logo,category,province,city,status,verification_level";
 
 const RAIL_CARD_WIDTH = 160;
 const CITY_STORAGE_KEY = "pamarket.home-city-filter";
@@ -127,24 +127,31 @@ export default function HomeScreen() {
 
   const loadData = useCallback(async () => {
     setError(null);
-    const [listingsRes, businessesRes] = await Promise.all([
-      supabase
-        .from("listings")
-        .select(LISTING_COLUMNS)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(120),
-      supabase
-        .from("businesses")
-        .select(BUSINESS_COLUMNS)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ]);
+    const listingsRequest = supabase
+      .from("listings")
+      .select(LISTING_COLUMNS)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(60)
+      .then((result) => result);
+    const businessesRequest = supabase
+      .from("businesses")
+      .select(BUSINESS_COLUMNS)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then((result) => result);
+
+    const listingsRes = await listingsRequest;
 
     if (listingsRes.error) setError(listingsRes.error.message);
     else setListings((listingsRes.data as Listing[]) ?? []);
+    // The marketplace can render as soon as its core listing feed arrives.
+    // A slower shops/count request must not keep the entire home page behind
+    // a loading skeleton.
+    setIsLoading(false);
 
+    const businessesRes = await businessesRequest;
     if (!businessesRes.error) setBusinesses((businessesRes.data as Business[]) ?? []);
 
     fetchActiveAds().then(setAds);
@@ -251,7 +258,7 @@ export default function HomeScreen() {
     return CATEGORIES.filter((c) => c.id !== "jobs")
       .map((cat) => ({
         ...cat,
-        items: filtered.filter((l) => l.category === cat.id).slice(0, 10),
+        items: filtered.filter((l) => l.category === cat.id).slice(0, 6),
       }))
       .filter((section) => section.items.length > 0);
   }, [filtered]);

@@ -36,21 +36,21 @@ function defs() {
   </defs>`;
 }
 
-function symbolPaths(mode = "color") {
-  const canopy = mode === "white" ? WHITE : "url(#goldGrad)";
-  const hands = mode === "white" ? WHITE : NAVY;
+function symbolPaths(mode = "brand") {
+  const canopy = mode === "monochrome" ? WHITE : "url(#goldGrad)";
+  const hands = WHITE;
   return `
     <path fill="${canopy}" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31Z"/>
     <path fill="${hands}" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164Z"/>
     <path fill="${hands}" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164Z"/>`;
 }
 
-function symbolSvg({ mode = "color", background = "transparent", pad = 70 } = {}) {
+function symbolSvg({ mode = "brand", background = "transparent", pad = 70, rounded = false } = {}) {
   const bg =
     background === "white"
-      ? `<rect width="512" height="512" rx="116" fill="${WHITE}"/>`
+      ? `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="${WHITE}"/>`
       : background === "navy"
-        ? `<rect width="512" height="512" rx="116" fill="url(#navyGrad)"/>`
+        ? `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="url(#navyGrad)"/>`
         : "";
   const scale = (512 - pad * 2) / 512;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -61,14 +61,14 @@ function symbolSvg({ mode = "color", background = "transparent", pad = 70 } = {}
 }
 
 function wordmarkSvg({ mode = "light", width = 1280, height = 400 } = {}) {
-  const dark = mode === "dark";
-  const bg = dark ? `<rect width="${width}" height="${height}" fill="url(#navyGrad)"/>` : "";
-  const symbolMode = dark ? "white" : "color";
-  const wordColor = dark ? WHITE : NAVY;
-  const paColor = dark ? WHITE : GOLD;
+  const onBrand = mode === "dark";
+  const bg = "";
+  const symbolMode = "brand";
+  const wordColor = onBrand ? WHITE : NAVY;
+  const paColor = GOLD;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   ${defs()}
-  ${bg}
+${bg ? `  ${bg}\n` : ""}
   <g transform="translate(166 72) scale(.48)">${symbolPaths(symbolMode)}</g>
   <text x="432" y="237" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="116" font-weight="900" letter-spacing="-5">
     <tspan fill="${paColor}">Pa</tspan><tspan fill="${wordColor}">Market</tspan>
@@ -91,8 +91,8 @@ async function renderPng(svg, file, size) {
 async function main() {
   ensureDir(brandDir);
 
-  const symbol = symbolSvg({ mode: "color" });
-  const symbolMono = symbolSvg({ mode: "white" });
+  const symbol = symbolSvg({ mode: "brand", background: "navy", rounded: true });
+  const symbolMono = symbolSvg({ mode: "monochrome" });
   const wordmarkLight = wordmarkSvg({ mode: "light" });
   const wordmarkDark = wordmarkSvg({ mode: "dark" });
 
@@ -101,12 +101,12 @@ async function main() {
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-light.svg"), wordmarkLight);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-dark.svg"), wordmarkDark);
 
-  await renderPng(symbolSvg({ mode: "color", background: "white", pad: 58 }), "icon.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "white", background: "navy", pad: 58 }), "icon-dark.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "white", background: "navy", pad: 58 }), "icon-tinted.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "color", background: "transparent", pad: 92 }), "android-icon-foreground.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "white", background: "transparent", pad: 92 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "color", background: "white", pad: 58 }), "favicon.png", { width: 64, height: 64 });
+  await renderPng(symbolSvg({ mode: "brand", background: "navy", pad: 58 }), "icon.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "brand", background: "navy", pad: 58 }), "icon-dark.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "monochrome", background: "navy", pad: 58 }), "icon-tinted.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "brand", background: "transparent", pad: 92 }), "android-icon-foreground.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "monochrome", background: "transparent", pad: 92 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "brand", background: "navy", pad: 58 }), "favicon.png", { width: 64, height: 64 });
   await renderPng(notificationSvg(), "notification-icon.png", { width: 96, height: 96 });
   await renderPng(wordmarkLight, "splash-icon.png", { width: 1280, height: 400 });
   await renderPng(wordmarkDark, "splash-icon-dark.png", { width: 1280, height: 400 });

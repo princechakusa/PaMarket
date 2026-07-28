@@ -1,23 +1,25 @@
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 import { Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Rect } from "react-native-svg";
 
 import { useThemedStyles } from "../lib/theme-provider";
 
 type BrandSymbolProps = {
   size?: number;
   monochrome?: boolean;
+  contained?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function BrandSymbol({ size = 48, monochrome = false, style }: BrandSymbolProps) {
+export function BrandSymbol({ size = 48, monochrome = false, contained = false, style }: BrandSymbolProps) {
   const palette = useThemedStyles((color) => color);
   const canopy = monochrome ? palette.textOnBrand : palette.gold;
-  const hands = monochrome ? palette.textOnBrand : palette.brandDark;
+  const hands = palette.textOnBrand;
 
   return (
     <View style={[{ width: size, height: size }, style]}>
       <Svg width={size} height={size} viewBox="0 0 512 512" accessibilityLabel="PaMarket logo">
+        {contained ? <Rect width={512} height={512} rx={116} fill="#06266F" /> : null}
         <Path
           fill={canopy}
           d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31Z"

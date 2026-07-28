@@ -16,6 +16,7 @@ import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
+import { recordShopLead, type LeadType } from "../../lib/business-leads";
 import { formatPrice, type Listing } from "../../lib/listings";
 import { averageRating } from "../../lib/sellers";
 import { StarRow } from "../../components/StarRow";
@@ -126,6 +127,7 @@ export default function BusinessShopScreen() {
       return;
     }
     if (isOwner) return;
+    await captureShopLead("chat");
     const convId = `biz_${business.id.slice(-8)}_${session.user.id.slice(-6)}`;
     const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
     if (!existing) {
@@ -137,6 +139,33 @@ export default function BusinessShopScreen() {
       });
     }
     router.push({ pathname: "/chat/[id]", params: { id: convId } });
+  }
+
+  async function captureShopLead(type: LeadType) {
+    if (!business) return;
+    const userName =
+      (session?.user?.user_metadata?.name as string | undefined) ||
+      (session?.user?.user_metadata?.full_name as string | undefined) ||
+      session?.user?.email ||
+      "Guest";
+    try {
+      await recordShopLead(business.id, type, session?.user?.id ?? null, userName);
+    } catch (e) {
+      console.warn("shop lead capture:", e);
+    }
+  }
+
+  async function callShop() {
+    if (!business?.phone) return;
+    await captureShopLead("call");
+    Linking.openURL(`tel:${business.phone}`);
+  }
+
+  async function whatsappShop() {
+    if (!business?.whatsapp) return;
+    await captureShopLead("whatsapp");
+    const digits = business.whatsapp.replace(/[^0-9]/g, "");
+    Linking.openURL(`https://wa.me/${digits}`);
   }
 
   if (isLoading) {
@@ -226,14 +255,14 @@ export default function BusinessShopScreen() {
 
           <View style={styles.contactRow}>
             {business.phone ? (
-              <Pressable style={styles.contactPill} onPress={() => Linking.openURL(`tel:${business.phone}`)}>
+              <Pressable style={styles.contactPill} onPress={callShop}>
                 <Text style={styles.contactPillText}>Call</Text>
               </Pressable>
             ) : null}
             {business.whatsapp ? (
               <Pressable
                 style={[styles.contactPill, styles.contactPillWhatsapp]}
-                onPress={() => Linking.openURL(`https://wa.me/${business.whatsapp!.replace(/[^0-9]/g, "")}`)}
+                onPress={whatsappShop}
               >
                 <Text style={styles.contactPillText}>WhatsApp</Text>
               </Pressable>

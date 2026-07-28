@@ -57,7 +57,7 @@ export default function AboutScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: space.lg, paddingBottom: space.huge }}>
       <View style={styles.hero}>
         <View style={styles.logoMark}>
-          <BrandSymbol size={72} />
+          <BrandSymbol size={72} contained />
         </View>
         <BrandWordmark size={24} style={styles.brand} />
         <Text style={styles.tagline}>Zimbabwe's marketplace — buy, sell, hire, and rent.</Text>

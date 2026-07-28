@@ -21,6 +21,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
 import { formatPrice, type Listing } from "../../lib/listings";
+import { recordLead, type LeadType } from "../../lib/business-leads";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { attrSchema } from "../../lib/attributes";
@@ -317,11 +318,29 @@ export default function ListingDetailScreen() {
     toast("Thanks — this listing has been reported.");
   }
 
-  function callSeller() {
-    if (listing?.seller_phone) Linking.openURL(`tel:${listing.seller_phone}`);
+  async function captureListingLead(type: LeadType) {
+    if (!listing?.business_id) return;
+    const userName =
+      (session?.user?.user_metadata?.name as string | undefined) ||
+      (session?.user?.user_metadata?.full_name as string | undefined) ||
+      session?.user?.email ||
+      "Guest";
+    try {
+      await recordLead(listing.id, type, session?.user?.id ?? null, userName);
+    } catch (e) {
+      console.warn("business listing lead capture:", e);
+    }
   }
-  function whatsappSeller() {
+
+  async function callSeller() {
     if (listing?.seller_phone) {
+      await captureListingLead("call");
+      Linking.openURL(`tel:${listing.seller_phone}`);
+    }
+  }
+  async function whatsappSeller() {
+    if (listing?.seller_phone) {
+      await captureListingLead("whatsapp");
       const digits = listing.seller_phone.replace(/[^0-9]/g, "");
       Linking.openURL(`https://wa.me/${digits}`);
     }
@@ -332,6 +351,7 @@ export default function ListingDetailScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
+    await captureListingLead("chat");
     const myId = session.user.id;
     const convId = conversationIdFor(myId, listing.seller_id);
     const { data: conversations } = await supabase
