@@ -127,7 +127,22 @@
       c = { id: convId, members: [myId, ownerId], messages: [], businessId: bizId, otherName: b.name, listingId: null, bizV: 2 };
       H.state.conversations.unshift(c);
       H.saveState();
-      if (typeof H.ensureConversationInCloud === 'function') H.ensureConversationInCloud(c).catch(function () {});
+      if (typeof H.ensureConversationInCloud === 'function') {
+        H.ensureConversationInCloud(c).then(function (result) {
+          // A conversation with this same person already existed under a
+          // different id (personal conv_ thread, or an older biz_ scheme) —
+          // reconcile the local shell we just created to point at the real
+          // one instead of leaving two client-side entries for one person.
+          if (result && result.reusedId && result.reusedId !== convId) {
+            var idx = H.state.conversations.indexOf(c);
+            if (idx !== -1) H.state.conversations.splice(idx, 1);
+            if (typeof H.syncConversations === 'function') H.syncConversations({ convId: result.reusedId }).catch(function () {});
+            if (H.currentPageName === 'Chat' && H.currentPageParams && H.currentPageParams.id === convId) {
+              H.openInner('Chat', { id: result.reusedId });
+            }
+          }
+        }).catch(function () {});
+      }
     } else {
       let dirty = false;
       // bizV < 2 means the conv was created before the merge-bug fix and may have had

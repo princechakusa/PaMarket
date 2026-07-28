@@ -40,6 +40,10 @@ Deno.serve(async (req) => {
     listings_stale_prompted: 0,
     listings_milestone_notified: 0,
     users_recommended: 0,
+    shops_new_arrivals_notified: 0,
+    category_digest_notified: 0,
+    verification_nudges_sent: 0,
+    messages_noreply_reminded: 0,
     errors: [] as string[],
   }
 
@@ -136,6 +140,22 @@ Deno.serve(async (req) => {
     const recommendations = await db.rpc('run_personalized_recommendations')
     if (recommendations.error) summary.errors.push('Personalized recommendations: ' + recommendations.error.message)
     else summary.users_recommended = Number(recommendations.data?.recommended || 0)
+
+    const shopArrivals = await db.rpc('run_shop_new_arrivals')
+    if (shopArrivals.error) summary.errors.push('Shop new arrivals: ' + shopArrivals.error.message)
+    else summary.shops_new_arrivals_notified = Number(shopArrivals.data?.notified || 0)
+
+    const categoryDigest = await db.rpc('run_category_digest')
+    if (categoryDigest.error) summary.errors.push('Category digest: ' + categoryDigest.error.message)
+    else summary.category_digest_notified = Number(categoryDigest.data?.notified || 0)
+
+    const verificationNudge = await db.rpc('run_verification_nudge')
+    if (verificationNudge.error) summary.errors.push('Verification nudge: ' + verificationNudge.error.message)
+    else summary.verification_nudges_sent = Number(verificationNudge.data?.notified || 0)
+
+    const noreplyReminders = await db.rpc('run_message_noreply_reminders')
+    if (noreplyReminders.error) summary.errors.push('Message no-reply reminders: ' + noreplyReminders.error.message)
+    else summary.messages_noreply_reminded = Number(noreplyReminders.data?.reminded || 0)
 
     const ok = summary.errors.length === 0
     await db.from('job_runs').insert({

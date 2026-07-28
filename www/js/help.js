@@ -10,7 +10,7 @@
 
   // ── Official PaMarket social channels ──────────────────────
   H.SOCIALS = [
-    { name: 'TikTok',    url: 'https://www.tiktok.com/@pamarketzimbabwe', bg: '#000000',
+    { name: 'TikTok',    url: 'https://www.tiktok.com/@pamarketzw', bg: '#000000',
       svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M16.6 5.82a4.28 4.28 0 0 1-1.05-2.82h-3.07v12.2a2.43 2.43 0 1 1-2.43-2.43c.2 0 .4.02.59.06v-3.13a5.57 5.57 0 0 0-.59-.03 5.56 5.56 0 1 0 5.56 5.56V9.01a7.33 7.33 0 0 0 4.28 1.37V7.3a4.28 4.28 0 0 1-3.3-1.48z"/></svg>' },
     { name: 'Facebook',  url: 'https://www.facebook.com/profile.php?id=61591000371129', bg: '#1877F2',
       svg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0 0 24 12z"/></svg>' },

@@ -2,5 +2,18 @@
   "liveServer.settings.root": "/www",
   "deno.enable": true,
   "deno.enablePaths": ["supabase/functions"],
-  "deno.unstable": false
+  "deno.unstable": false,
+  "files.watcherExclude": {
+    "**/apps/mobile/android/**": true,
+    "**/apps/mobile/ios/**": true,
+    "**/apps/mobile/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/apps/mobile/android": true,
+    "**/apps/mobile/ios": true
+  },
+  "files.exclude": {
+    "**/apps/mobile/android": true,
+    "**/apps/mobile/ios": true
+  }
 }

@@ -5,7 +5,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-EGS078J4Q2"></script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2601167334065110" crossorigin="anonymous"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-EGS078J4Q2');</script>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,interactive-widget=resizes-content">
 <title>Chats — PaMarket Zimbabwe</title>
 <meta name="description" content="Message buyers, sellers, shops and rental companies on PaMarket.">
 <meta name="robots" content="noindex, nofollow">
@@ -19,7 +19,11 @@
 <link rel="stylesheet" href="css/site.css">
 <style>
 .chat-view{height:100dvh;overflow:hidden;background:#f5f6f8}.chat-view footer{display:none}
-.chat-page{height:var(--chat-page-height,calc(100dvh - 150px));min-height:0;overflow:hidden;background:#f5f6f8;padding:16px 24px 20px}
+/* The page's own "Search conversations" input already covers search for
+   this screen — the shared header's global listings/shops/jobs search bar
+   is redundant here and just eats vertical space above the fold. */
+.chat-view .search-bar{display:none}
+.chat-page{display:block;height:var(--chat-page-height,calc(100dvh - 150px));min-height:0;overflow:hidden;background:#f5f6f8;padding:16px 24px 20px}
 .chat-hero{display:none}
 .chat-hero-in{max-width:1200px;margin:auto;padding:42px 32px 82px;display:flex;align-items:flex-end;justify-content:space-between;gap:30px}
 .chat-eyebrow{margin-bottom:10px;color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
@@ -55,10 +59,10 @@
 .safety{margin:12px auto 2px;display:flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;max-width:calc(100% - 36px);padding:8px 13px;border-radius:9px;background:#fff6df;color:#765617;font-size:9px}.safety svg{flex-shrink:0}
 .messages{min-height:0;flex:1 1 0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding:16px 28px 22px;background:#fafafa;scroll-behavior:smooth}
 .date-sep{display:flex;align-items:center;gap:10px;margin:5px 0 16px;color:var(--mute);font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.date-sep:before,.date-sep:after{content:"";height:1px;flex:1;background:var(--line)}
-.msg-row{display:flex;align-items:flex-end;gap:8px;margin:7px 0}.msg-row.me{justify-content:flex-end}
-.bubble-col{min-width:0;max-width:100%;display:flex;flex-direction:column}.msg-row.me .bubble-col{align-items:flex-end}
+.msg-row{display:flex;align-items:flex-end;gap:8px;margin:7px 0;max-width:100%}.msg-row.me{justify-content:flex-end}
+.bubble-col{min-width:0;max-width:min(560px,72%);flex:0 1 auto;display:flex;flex-direction:column}.msg-row.me .bubble-col{align-items:flex-end}
 .mini-avatar{width:26px;height:26px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;background:linear-gradient(145deg,var(--navy),#5c74c8);color:#fff;font-size:8px;font-weight:800;overflow:hidden}.mini-avatar img{width:100%;height:100%;object-fit:cover}
-.bubble{max-width:min(560px,72%);padding:11px 13px;border:1px solid #e0e2e7;border-radius:15px 15px 15px 4px;background:#fff;box-shadow:0 2px 7px rgba(15,23,42,.04);font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.bubble{width:fit-content;max-width:100%;padding:11px 13px;border:1px solid #e0e2e7;border-radius:15px 15px 15px 4px;background:#fff;box-shadow:0 2px 7px rgba(15,23,42,.04);font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
 .msg-row.me .bubble{border-color:#173b93;border-radius:15px 15px 4px 15px;background:#21479e;color:#fff}
 .reply-quote{margin:-3px -4px 8px;padding:7px 9px;border-left:3px solid var(--gold);border-radius:7px;background:rgba(26,58,143,.07);color:var(--sub);font-size:10px;line-height:1.4}.reply-quote b{display:block;margin-bottom:2px;color:var(--navy);font-size:9px}.msg-row.me .reply-quote{background:rgba(255,255,255,.12);color:rgba(255,255,255,.82)}.msg-row.me .reply-quote b{color:#f4d583}
 .meta{margin-top:4px;color:var(--mute);font-size:7px;text-align:right}.msg-row.me .meta{color:rgba(255,255,255,.65)}
@@ -242,7 +246,7 @@ window.doSearch = window.doSearch || function(){
     <div class="compose-row">
       <button class="icon-btn" id="attachButton" type="button" title="Send photo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.4 11.6-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg></button>
       <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-      <div class="compose-input"><textarea id="messageInput" rows="1" placeholder="Write a message…"></textarea><button class="offer-btn" id="offerButton" type="button">Make offer</button></div>
+      <div class="compose-input"><textarea id="messageInput" rows="1" placeholder="Write a message…" autocomplete="off" autocorrect="on" spellcheck="true"></textarea><button class="offer-btn" id="offerButton" type="button">Make offer</button></div>
       <button class="send-btn" id="sendButton" type="submit" aria-label="Send message" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
     </div>
     <div class="compose-hint">Enter to send · Shift + Enter for a new line</div>

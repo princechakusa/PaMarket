@@ -2646,10 +2646,21 @@ window.H = {
           local.messages.sort((a,b) => (a.t||0) - (b.t||0));
           if (!Array.isArray(local.members)) local.members = [u.id];
           if (!local.members.includes(u.id)) local.members.unshift(u.id);
+          // A personal 1:1 (conv_) thread must NEVER silently gain a 3rd member:
+          // doing so makes otherId = members.find(m => m !== u.id) ambiguous and
+          // can resolve to the WRONG person's name/avatar — the exact "opens the
+          // wrong conversation" bug. Only biz_/job_ threads can legitimately grow
+          // (e.g. staff added to a business chat). See the matching guard above
+          // in the pushNotificationReceived-driven sync path.
+          const _isPersonalConv2 = typeof local.id === 'string' && local.id.indexOf('conv_') === 0;
           (msgs||[]).forEach(function(m) {
             if (m.sender_id && m.sender_id !== u.id && !local.members.includes(m.sender_id)) {
-              local.members.push(m.sender_id);
-              changed = true;
+              if (_isPersonalConv2 && local.members.length >= 2) {
+                console.warn('Unexpected sender for 1:1 conversation (not merging):', local.id, m.sender_id);
+              } else {
+                local.members.push(m.sender_id);
+                changed = true;
+              }
             }
           });
         }));
@@ -2758,7 +2769,41 @@ window.H = {
         id: conv.id, members: conv.members,
         listing_id: conv.listingId || null
       });
-      if (error) { console.warn('ensureConversationInCloud:', error.message); return { ok:false, error:error.message }; }
+      if (error) {
+        // 23505 on unique_conversation_members means a conversation between
+        // this exact member pair already exists under a DIFFERENT id — e.g.
+        // a personal conv_ thread with someone who later also has a business,
+        // or a biz_ thread from an older id scheme. upsert() only dedupes by
+        // the primary key (id), so this case isn't resolved by the upsert
+        // itself. Look up the real existing conversation and adopt its id
+        // locally instead of silently failing to sync (the prior behavior —
+        // this left the conversation cloud-less with no error surfaced).
+        if (error.code === '23505' && Array.isArray(conv.members) && conv.members.length === 2) {
+          const myId = H.currentUser && H.currentUser() && H.currentUser().id;
+          const otherId = myId ? conv.members.find(m => String(m) !== String(myId)) : null;
+          if (otherId) {
+            const { data: matches } = await sb.from('conversations')
+              .select('id,members,listing_id,updated_at')
+              .contains('members', [otherId]);
+            const candidates = (matches || []).filter(c => Array.isArray(c.members) && c.members.length === 2 && c.members.map(String).includes(String(otherId)));
+            // Only reuse a match with the SAME prefix (conv_/biz_/job_) as the
+            // conversation we were trying to create — reusing a different-
+            // prefixed thread would silently merge, e.g., a personal DM with
+            // a business chat (the "Message Business opens the owner's
+            // personal chat" bug). Once
+            // fix_conversation_members_uniqueness_scope.sql is applied this
+            // 23505 shouldn't happen at all; this is a defensive fallback.
+            const wantPrefix = String(conv.id).split('_')[0] + '_';
+            const match = candidates.find(c => String(c.id).indexOf(wantPrefix) === 0) || null;
+            if (match && match.id !== conv.id) {
+              console.warn('ensureConversationInCloud: reusing existing conversation', match.id, 'for member pair instead of', conv.id);
+              return { ok:true, reusedId: match.id };
+            }
+          }
+        }
+        console.warn('ensureConversationInCloud:', error.message);
+        return { ok:false, error:error.message };
+      }
       return { ok:true };
     } catch(e) { console.warn('ensureConversationInCloud:', e.message); return { ok:false, error:e.message }; }
   },

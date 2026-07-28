@@ -31,6 +31,7 @@ scripts/*
 !scripts/strip-admin.js
 package-lock.json
 !qa-system/package-lock.json
+!apps/mobile/package-lock.json
 COMPLETION_REPORT.md
 DETAILED_CHANGES.md
 ENHANCEMENT_SUMMARY.md

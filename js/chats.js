@@ -316,10 +316,27 @@
     document.getElementById('messageInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
     document.getElementById('messageInput').addEventListener('input',function(){resizeComposerInput(this);updateSendButton();notifyTyping()});
     // Belt-and-suspenders for the iOS keyboard blank-page issue: visualViewport
-    // events normally cover this, but the keyboard's open animation can still
-    // outlast them on some iOS versions, so re-fit again once it's settled.
-    document.getElementById('messageInput').addEventListener('focus',function(){setTimeout(scheduleChatFit,50);setTimeout(scheduleChatFit,350)});
-    document.getElementById('messageInput').addEventListener('blur',function(){setTimeout(scheduleChatFit,350)});
+    // events normally cover this, but the keyboard's open/close animation
+    // duration varies by device and iOS version (seen anywhere from ~250ms to
+    // 600ms+), so a couple of fixed-delay retries can still land BEFORE the
+    // animation actually settles, leaving the page painted blank with no
+    // further repaint trigger. Poll instead: keep nudging every 80ms until the
+    // visualViewport height stops changing for two consecutive checks (i.e.
+    // the keyboard animation has actually finished), capped at ~1.5s so a
+    // stuck poll can't run forever.
+    function settleChatFitAfterKeyboardAnimation(){
+      var lastHeight=-1,stableCount=0,ticks=0;
+      var poll=setInterval(function(){
+        scheduleChatFit();
+        var h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+        if(h===lastHeight)stableCount++;else stableCount=0;
+        lastHeight=h;
+        ticks++;
+        if(stableCount>=2||ticks>18)clearInterval(poll);
+      },80);
+    }
+    document.getElementById('messageInput').addEventListener('focus',settleChatFitAfterKeyboardAnimation);
+    document.getElementById('messageInput').addEventListener('blur',settleChatFitAfterKeyboardAnimation);
     document.getElementById('attachButton').addEventListener('click',function(){document.getElementById('photoFile').click()});
     document.getElementById('photoFile').addEventListener('change',sendPhoto);
     document.getElementById('offerButton').addEventListener('click',openOfferPrompt);
@@ -808,6 +825,50 @@
         conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},row));
         return row.id;
       }).catch(function(err){
+        // 23505 on unique_conversation_members means a conversation between
+        // this exact member pair ALREADY EXISTS under a different id — e.g. a
+        // personal (conv_) thread with this same person from before they had
+        // a business, or a biz_ thread created by a different id scheme in an
+        // older app/website version. on_conflict=id only dedupes by id, not
+        // by the members constraint, so this case falls through to the
+        // insert's error path instead of the merge. Recover by looking up the
+        // real existing conversation server-side (not just the locally
+        // cached `conversations` array, which may not have it yet) and reuse
+        // that id instead of surfacing an error toast for something that's
+        // actually a normal, resolvable case.
+        if(err&&err.code==='23505'){
+          // Prefer an existing biz_ conversation with this exact business
+          // owner over any other 2-person match — reusing a personal conv_
+          // thread here would silently rebrand a private DM as this business
+          // (or vice versa), which is the "opens the owner's personal chat
+          // instead of the business" bug. Once
+          // fix_conversation_members_uniqueness_scope.sql has been run this
+          // 23505 should no longer happen at all (a person can have both a
+          // personal AND a business thread with the same owner); this
+          // recovery only matters for a transition window or if the
+          // constraint drop hasn't been applied yet.
+          return request('/rest/v1/conversations?members=cs.{'+encodeURIComponent(me.id)+'}&select=id,members,listing_id,updated_at').then(function(rows3){
+            var candidates=(rows3||[]).filter(function(c){
+              return Array.isArray(c.members)&&c.members.length===2&&c.members.map(String).indexOf(ownerId)!==-1;
+            });
+            var match=candidates.find(function(c){return String(c.id).indexOf('biz_')===0})||null;
+            if(match){
+              if(!conversations.some(function(c){return c.id===match.id}))conversations.unshift(Object.assign({_lastMessage:null,_unreadCount:0},match));
+              return match.id;
+            }
+            // No biz_ thread exists yet, and the DB still won't allow a new
+            // conversation with this member pair (constraint not yet
+            // dropped) — surface a clear, actionable error instead of
+            // silently opening the wrong (personal) thread.
+            console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
+            toast('This business owner already has a personal chat with you. Business messaging for this pair needs a database update — contact support.',true);
+            return null;
+          }).catch(function(lookupErr){
+            console.warn('resolveBizEntry (member-pair lookup):',lookupErr);
+            toast(conversationErrorText(err),true);
+            return null;
+          });
+        }
         console.warn('resolveBizEntry (create conversation):',err,'status=',err&&err.status,'code=',err&&err.code);
         toast(conversationErrorText(err),true);
         return null;

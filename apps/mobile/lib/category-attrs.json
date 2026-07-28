@@ -1,0 +1,596 @@
+{
+  "vehicles": [
+    {
+      "key": "rentalType",
+      "label": "Listing Type",
+      "type": "select",
+      "options": [
+        "For Sale",
+        "For Hire"
+      ]
+    },
+    {
+      "key": "make",
+      "label": "Make",
+      "type": "text",
+      "placeholder": "e.g. Toyota"
+    },
+    {
+      "key": "model",
+      "label": "Model",
+      "type": "text",
+      "placeholder": "e.g. Hilux"
+    },
+    {
+      "key": "year",
+      "label": "Year",
+      "type": "number",
+      "quick": true,
+      "icon": "cal"
+    },
+    {
+      "key": "mileage",
+      "label": "Mileage",
+      "type": "number",
+      "unit": "km",
+      "quick": true,
+      "icon": "gauge",
+      "suffix": "km"
+    },
+    {
+      "key": "fuel",
+      "label": "Fuel",
+      "type": "select",
+      "options": [
+        "Petrol",
+        "Diesel",
+        "Hybrid",
+        "Electric"
+      ],
+      "quick": true,
+      "icon": "fuel"
+    },
+    {
+      "key": "transmission",
+      "label": "Transmission",
+      "type": "select",
+      "options": [
+        "Manual",
+        "Automatic"
+      ]
+    },
+    {
+      "key": "bodyType",
+      "label": "Body Type",
+      "type": "select",
+      "options": [
+        "Sedan",
+        "Hatchback",
+        "SUV",
+        "Double Cab",
+        "Single Cab",
+        "Van",
+        "Bus",
+        "Truck",
+        "Motorbike",
+        "Other"
+      ]
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "Brand New",
+        "Used",
+        "For Parts"
+      ]
+    },
+    {
+      "key": "color",
+      "label": "Colour",
+      "type": "text",
+      "placeholder": "e.g. Silver"
+    },
+    {
+      "key": "features",
+      "label": "Features",
+      "type": "chips",
+      "options": [
+        "Air Conditioning",
+        "Power Steering",
+        "Electric Windows",
+        "Leather Seats",
+        "Alloy Wheels",
+        "Reverse Camera",
+        "Sunroof",
+        "Bluetooth",
+        "ABS",
+        "Airbags",
+        "Tow Bar",
+        "Mag Wheels"
+      ]
+    }
+  ],
+  "property": [
+    {
+      "key": "rentalType",
+      "label": "Listing Type",
+      "type": "select",
+      "options": [
+        "For Rent",
+        "For Sale"
+      ]
+    },
+    {
+      "key": "propType",
+      "label": "Property Type",
+      "type": "select",
+      "options": [
+        "Apartment / Flat",
+        "House",
+        "Townhouse",
+        "Cottage",
+        "Stand / Land",
+        "Commercial",
+        "Office"
+      ]
+    },
+    {
+      "key": "beds",
+      "label": "Bedrooms",
+      "type": "select",
+      "options": [
+        "Studio",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6+"
+      ],
+      "quick": true,
+      "icon": "bed"
+    },
+    {
+      "key": "baths",
+      "label": "Bathrooms",
+      "type": "select",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5+"
+      ],
+      "quick": true,
+      "icon": "bath"
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "type": "number",
+      "unit": "m²",
+      "quick": true,
+      "icon": "area",
+      "suffix": "m²"
+    },
+    {
+      "key": "furnishing",
+      "label": "Furnishing",
+      "type": "select",
+      "options": [
+        "Furnished",
+        "Unfurnished",
+        "Part Furnished"
+      ]
+    },
+    {
+      "key": "features",
+      "label": "Amenities",
+      "type": "chips",
+      "options": [
+        "Borehole",
+        "Solar Power",
+        "Durawall",
+        "Electric Fence",
+        "Garage",
+        "Garden",
+        "Swimming Pool",
+        "Air Conditioning",
+        "Built-in Wardrobes",
+        "Prepaid Water",
+        "Tiled Floors",
+        "Ceiling",
+        "Staff Quarters",
+        "Tarred Road",
+        "Water Tank",
+        "CCTV"
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "key": "roomType",
+      "label": "Room Type",
+      "type": "select",
+      "options": [
+        "Single Room",
+        "Shared Room",
+        "Cottage",
+        "Full House Share",
+        "Self-Contained"
+      ]
+    },
+    {
+      "key": "furnishing",
+      "label": "Furnishing",
+      "type": "select",
+      "options": [
+        "Furnished",
+        "Unfurnished",
+        "Part Furnished"
+      ]
+    },
+    {
+      "key": "gender",
+      "label": "Suitable For",
+      "type": "select",
+      "options": [
+        "Anyone",
+        "Males Only",
+        "Females Only",
+        "Couples"
+      ]
+    },
+    {
+      "key": "features",
+      "label": "Included",
+      "type": "chips",
+      "options": [
+        "Water",
+        "Electricity",
+        "WiFi",
+        "Borehole",
+        "Solar Power",
+        "Own Bathroom",
+        "Kitchen Access",
+        "Parking",
+        "Prepaid Meter",
+        "Furnished"
+      ]
+    }
+  ],
+  "electronics": [
+    {
+      "key": "etype",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "Phone",
+        "Laptop",
+        "Desktop",
+        "Tablet",
+        "TV",
+        "Audio",
+        "Camera",
+        "Gaming",
+        "Accessory",
+        "Other"
+      ],
+      "quick": true,
+      "icon": "tag"
+    },
+    {
+      "key": "brand",
+      "label": "Brand",
+      "type": "text",
+      "placeholder": "e.g. Samsung",
+      "quick": true
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "Brand New",
+        "Used",
+        "Refurbished",
+        "For Parts"
+      ]
+    },
+    {
+      "key": "storage",
+      "label": "Storage / RAM",
+      "type": "text",
+      "placeholder": "e.g. 128GB / 8GB"
+    },
+    {
+      "key": "warranty",
+      "label": "Warranty",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No"
+      ]
+    }
+  ],
+  "furniture": [
+    {
+      "key": "ftype",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "Sofa / Lounge",
+        "Bed",
+        "Wardrobe",
+        "Table",
+        "Chairs",
+        "Kitchen Unit",
+        "Appliance",
+        "Office",
+        "Outdoor",
+        "Other"
+      ]
+    },
+    {
+      "key": "brand",
+      "label": "Brand",
+      "type": "text",
+      "placeholder": "e.g. Defy, Capri, Samsung",
+      "quick": true
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "Brand New",
+        "Used"
+      ]
+    },
+    {
+      "key": "material",
+      "label": "Material",
+      "type": "text",
+      "placeholder": "e.g. Wood, Leather"
+    }
+  ],
+  "fashion": [
+    {
+      "key": "ftype",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "Clothing",
+        "Shoes",
+        "Bags",
+        "Watches",
+        "Jewellery",
+        "Accessories"
+      ]
+    },
+    {
+      "key": "gender",
+      "label": "For",
+      "type": "select",
+      "options": [
+        "Women",
+        "Men",
+        "Unisex",
+        "Kids"
+      ]
+    },
+    {
+      "key": "size",
+      "label": "Size",
+      "type": "text",
+      "placeholder": "e.g. M, UK 8"
+    },
+    {
+      "key": "color",
+      "label": "Colour",
+      "type": "text",
+      "placeholder": "e.g. Blue, Black"
+    },
+    {
+      "key": "fabric",
+      "label": "Fabric / Material",
+      "type": "select",
+      "options": [
+        "Cotton",
+        "Polyester",
+        "Nylon",
+        "Wool",
+        "Denim",
+        "Leather",
+        "Silk",
+        "Linen",
+        "Suede",
+        "Synthetic",
+        "Other"
+      ]
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "Brand New",
+        "Used"
+      ]
+    },
+    {
+      "key": "brand",
+      "label": "Brand",
+      "type": "text",
+      "placeholder": "optional"
+    }
+  ],
+  "agriculture": [
+    {
+      "key": "atype",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "Livestock",
+        "Crops / Produce",
+        "Seeds",
+        "Equipment",
+        "Irrigation",
+        "Fertiliser / Feed",
+        "Other"
+      ]
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "New",
+        "Used",
+        "Live"
+      ]
+    },
+    {
+      "key": "quantity",
+      "label": "Quantity",
+      "type": "text",
+      "placeholder": "e.g. 50 bales, 10 herd"
+    }
+  ],
+  "pets": [
+    {
+      "key": "ptype",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "Dog",
+        "Cat",
+        "Bird",
+        "Fish",
+        "Rabbit",
+        "Livestock",
+        "Other"
+      ]
+    },
+    {
+      "key": "breed",
+      "label": "Breed",
+      "type": "text",
+      "placeholder": "e.g. Boerboel"
+    },
+    {
+      "key": "age",
+      "label": "Age",
+      "type": "text",
+      "placeholder": "e.g. 3 months"
+    },
+    {
+      "key": "gender",
+      "label": "Gender",
+      "type": "select",
+      "options": [
+        "Male",
+        "Female"
+      ]
+    },
+    {
+      "key": "features",
+      "label": "Health",
+      "type": "chips",
+      "options": [
+        "Vaccinated",
+        "Dewormed",
+        "Trained",
+        "Papers / Pedigree"
+      ]
+    }
+  ],
+  "kids": [
+    {
+      "key": "ktype",
+      "label": "Type",
+      "type": "select",
+      "options": [
+        "Clothing",
+        "Toys",
+        "Prams / Strollers",
+        "Cots / Beds",
+        "Car Seats",
+        "School",
+        "Other"
+      ]
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "Brand New",
+        "Used"
+      ]
+    },
+    {
+      "key": "ageGroup",
+      "label": "Age Group",
+      "type": "select",
+      "options": [
+        "0-6 months",
+        "6-12 months",
+        "1-2 years",
+        "3-5 years",
+        "6-9 years",
+        "10+ years"
+      ]
+    }
+  ],
+  "services": [
+    {
+      "key": "stype",
+      "label": "Service Type",
+      "type": "text",
+      "placeholder": "e.g. Plumbing, Tutoring"
+    },
+    {
+      "key": "availability",
+      "label": "Availability",
+      "type": "select",
+      "options": [
+        "Full-time",
+        "Part-time",
+        "Weekends",
+        "On Call"
+      ]
+    },
+    {
+      "key": "priceBasis",
+      "label": "Pricing",
+      "type": "select",
+      "options": [
+        "Per Hour",
+        "Per Day",
+        "Per Job",
+        "Negotiable"
+      ]
+    }
+  ],
+  "other": [
+    {
+      "key": "brand",
+      "label": "Brand",
+      "type": "text",
+      "placeholder": "e.g. Samsung (optional)",
+      "quick": true
+    },
+    {
+      "key": "condition",
+      "label": "Condition",
+      "type": "select",
+      "options": [
+        "Brand New",
+        "Used"
+      ]
+    }
+  ]
+}

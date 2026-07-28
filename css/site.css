@@ -139,6 +139,14 @@ footer{background:var(--navy-deep);color:#6A8AC8}
   .top-bar{display:none}
   .hdr-util{display:none}
   .hdr-right .btn-sign{display:none}
+  /* .acct-wrap is injected by js/session.js (replaces .btn-sign when signed
+     in) and didn't exist as a selector when this breakpoint was written, so
+     it was never hidden here — it stayed visible/clickable on mobile with
+     its desktop-oriented right:0 dropdown positioning, which overflows off
+     the left edge of narrow viewports. The hamburger menu (#mobNav) is the
+     intended mobile nav surface (see js/session.js's own comment on this),
+     so hide the desktop account chip/dropdown here to match. */
+  .acct-wrap{display:none}
   .search-cat{display:none}
   .ham{display:block}
   .cat-nav{display:none}
