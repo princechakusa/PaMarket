@@ -103,8 +103,7 @@ export default function SignInScreen() {
   }
 
   function handleBack() {
-    if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)");
+    router.replace("/(tabs)");
   }
 
   async function handleSignIn() {
@@ -166,24 +165,34 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={[styles.hero, { paddingTop: insets.top + space.md }]}>
-          <View style={styles.heroOrbLarge} />
-          <View style={styles.heroOrbSmall} />
-          <GlassBackButton onPress={handleBack} tone="light" style={styles.backButton} />
+      <View style={[styles.hero, { paddingTop: insets.top + space.md }]}>
+        <View style={styles.heroOrbLarge} />
+        <View style={styles.heroOrbSmall} />
+        <GlassBackButton onPress={handleBack} tone="light" style={styles.backButton} />
 
+        <Text style={styles.heroKicker}>PaMarket Zimbabwe</Text>
+
+        <View style={[styles.stickyBrandCard, shadow.md]}>
           <View style={styles.heroBrandRow}>
             <View style={styles.logoShell}>
-              <BrandSymbol size={62} />
+              <BrandSymbol size={58} />
             </View>
-            <BrandWordmark size={34} onBrand />
+            <BrandWordmark size={36} onBrand />
           </View>
           <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Sign in to buy, sell, hire and chat across Zimbabwe.</Text>
         </View>
+      </View>
 
+      <ScrollView
+        style={styles.formScroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, space.lg) + space.xl }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.card, shadow.lg]}>
-          <Text style={styles.eyebrow}>FAST SIGN IN</Text>
+          <Text style={styles.cardTitle}>Sign in to continue</Text>
+          <Text style={styles.cardSubtitle}>Buy, sell, browse listings, post ads and chat safely.</Text>
+
           <View style={styles.socialStack}>
             <SocialButton
               label="Continue with Apple"
@@ -202,7 +211,7 @@ export default function SignInScreen() {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with email</Text>
+            <Text style={styles.dividerText}>or use email</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -250,7 +259,7 @@ export default function SignInScreen() {
           </View>
         </View>
 
-        <View style={[styles.bottomBand, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>
+        <View style={styles.bottomNote}>
           <Text style={styles.bottomTitle}>PaMarket Zimbabwe</Text>
           <Text style={styles.bottomSubtitle}>Buy • Sell • Jobs • Property • Vehicles</Text>
         </View>
@@ -283,12 +292,16 @@ function buildStyles(color: ColorPalette) {
       flex: 1,
       backgroundColor: color.bg,
     },
+    formScroll: {
+      flex: 1,
+      marginTop: -36,
+    },
     scroll: {
-      flexGrow: 1,
-      backgroundColor: color.bg,
+      paddingHorizontal: space.lg,
+      paddingTop: 0,
     },
     hero: {
-      minHeight: 360,
+      minHeight: 430,
       paddingHorizontal: space.xl,
       backgroundColor: color.brand,
       overflow: "hidden",
@@ -313,28 +326,40 @@ function buildStyles(color: ColorPalette) {
     },
     backButton: {
       marginTop: space.xs,
-      marginBottom: space.lg,
+      marginBottom: 0,
+      zIndex: 2,
+    },
+    heroKicker: {
+      ...font.bodyStrong,
+      alignSelf: "center",
+      color: "rgba(255,255,255,0.86)",
+      marginTop: -34,
+      fontSize: 17,
+    },
+    stickyBrandCard: {
+      marginTop: 48,
+      borderRadius: 34,
+      backgroundColor: "rgba(255,255,255,0.12)",
+      paddingHorizontal: space.xl,
+      paddingVertical: space.xl,
     },
     heroBrandRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: space.md,
-      marginTop: space.xs,
     },
     logoShell: {
-      width: 70,
-      height: 70,
-      borderRadius: 24,
+      width: 66,
+      height: 66,
+      borderRadius: 22,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: color.surface,
-      ...shadow.md,
     },
     title: {
       ...font.h1,
       color: color.textOnBrand,
-      marginTop: space.md,
-      fontSize: 35,
+      marginTop: space.sm,
+      fontSize: 34,
       letterSpacing: -1,
     },
     subtitle: {
@@ -345,13 +370,22 @@ function buildStyles(color: ColorPalette) {
       lineHeight: 23,
     },
     card: {
-      marginHorizontal: space.lg,
-      marginTop: -62,
       borderRadius: 34,
       backgroundColor: color.surface,
       paddingHorizontal: space.lg,
       paddingTop: space.xl,
       paddingBottom: space.xl,
+    },
+    cardTitle: {
+      ...font.h2,
+      color: color.text,
+      marginBottom: space.xs,
+    },
+    cardSubtitle: {
+      ...font.bodyStrong,
+      color: color.textSub,
+      lineHeight: 22,
+      marginBottom: space.xl,
     },
     eyebrow: {
       ...font.micro,
@@ -518,21 +552,23 @@ function buildStyles(color: ColorPalette) {
       color: color.brand,
       fontWeight: "900",
     },
-    bottomBand: {
+    bottomNote: {
       marginTop: space.xl,
-      paddingTop: space.xl,
       paddingHorizontal: space.lg,
-      alignItems: "center",
-      backgroundColor: color.brand,
+      paddingVertical: space.xl,
+      borderRadius: 30,
+      backgroundColor: color.surface,
+      borderWidth: 1,
+      borderColor: color.border,
     },
     bottomTitle: {
       ...font.bodyStrong,
-      color: color.textOnBrand,
+      color: color.text,
       fontSize: 17,
     },
     bottomSubtitle: {
       ...font.caption,
-      color: "rgba(255,255,255,0.75)",
+      color: color.textSub,
       marginTop: space.xs,
       fontWeight: "800",
     },

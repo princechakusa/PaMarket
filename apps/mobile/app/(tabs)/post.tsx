@@ -83,6 +83,7 @@ export default function PostScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null);
 
   if (!session?.user) {
     return (
@@ -175,16 +176,20 @@ export default function PostScreen() {
   async function submit() {
     if (isSubmitting || !session?.user) return;
     setIsSubmitting(true);
+    setSubmitStatus("Preparing your listing...");
     setError(null);
 
     try {
       const photoUrls: string[] = [];
-      for (const uri of state.photos) {
+      for (let index = 0; index < state.photos.length; index += 1) {
+        const uri = state.photos[index];
+        setSubmitStatus(`Uploading photo ${index + 1} of ${state.photos.length}...`);
         const key = `listings/${session.user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
         const url = await uploadImageUriToR2(uri, key);
         photoUrls.push(url);
       }
 
+      setSubmitStatus("Creating your ad...");
       const { data: profile } = await supabase
         .from("profiles")
         .select("name,phone")
@@ -217,11 +222,13 @@ export default function PostScreen() {
 
       if (insertError) throw insertError;
 
+      setSubmitStatus("Ad posted successfully.");
       setState(INITIAL_STATE);
       if (params.businessId) router.replace({ pathname: "/business-listings/[id]", params: { id: params.businessId } });
       else router.replace("/(tabs)");
     } catch (e) {
       setError(friendlyError(e).message);
+      setSubmitStatus(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +265,7 @@ export default function PostScreen() {
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {state.step === 1 && !state.category ? (
           <CategoryPicker onSelect={(id) => update({ category: id })} />
         ) : state.step === 1 ? (
@@ -417,24 +424,24 @@ export default function PostScreen() {
         ) : null}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        {state.step === 1 && !state.category ? null : (
-          <View style={styles.stepButtons}>
-            {state.step > 1 ? (
-              <View style={styles.inlineBackSlot}>
-                <GlassBackButton onPress={goBack} />
-              </View>
-            ) : null}
-            <View style={{ flex: 2 }}>
-              {state.step < 4 ? (
-                <Button label={state.step === 3 ? "Preview →" : "Continue →"} onPress={goNext} />
-              ) : (
-                <Button label="Post Ad →" variant="gold" onPress={submit} loading={isSubmitting} />
-              )}
-            </View>
-          </View>
-        )}
       </ScrollView>
+
+      {/* Fixed footer, not part of ScrollView content — previously the
+          Continue/Post button scrolled with the form and could end up below
+          the fold, looking like it had vanished. The header's back button
+          (handleHeaderBack) already steps back one wizard step when
+          state.step > 1, so a second inline back button here was pure
+          duplication — removed. */}
+      {state.step === 1 && !state.category ? null : (
+        <View style={[styles.stepButtons, { paddingBottom: insets.bottom + 64 + space.md }]}>
+          {isSubmitting && submitStatus ? <Text style={styles.submitStatus}>{submitStatus}</Text> : null}
+          {state.step < 4 ? (
+            <Button label={state.step === 3 ? "Preview →" : "Continue →"} onPress={goNext} />
+          ) : (
+            <Button label="Post Ad →" variant="gold" onPress={submit} loading={isSubmitting} />
+          )}
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -465,6 +472,11 @@ function buildStyles(color: ColorPalette) {
   stepDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: color.border },
   stepDotDone: { backgroundColor: color.brand },
   stepDotCurrent: { backgroundColor: color.gold },
+  // ScrollView needs an explicit flex:1 here — without it, it sizes to its
+  // own content instead of bounding itself to the space between the steps
+  // bar and the fixed footer below, so it never actually scrolls and the
+  // footer (a sibling, not scroll content) ends up pushed off-screen.
+  scroll: { flex: 1 },
   scrollContent: { padding: space.lg, paddingBottom: space.huge },
   card: { padding: space.lg },
   categoryBar: {
@@ -512,7 +524,20 @@ function buildStyles(color: ColorPalette) {
   previewPrice: { ...font.h2, color: color.brand, marginTop: space.xs },
   previewMeta: { ...font.sub, color: color.textMuted, marginTop: space.sm },
   error: { ...font.sub, color: color.danger, marginTop: space.lg, textAlign: "center" },
-  stepButtons: { flexDirection: "row", gap: space.md, marginTop: space.xxl },
-  inlineBackSlot: { flex: 1, justifyContent: "center" },
+  stepButtons: {
+    paddingHorizontal: space.lg,
+    paddingTop: space.md,
+    backgroundColor: color.bg,
+    borderTopWidth: 1,
+    borderTopColor: color.border,
+    zIndex: 20,
+    elevation: 20,
+  },
+  submitStatus: {
+    ...font.caption,
+    color: color.textSub,
+    textAlign: "center",
+    marginBottom: space.sm,
+  },
   });
 }

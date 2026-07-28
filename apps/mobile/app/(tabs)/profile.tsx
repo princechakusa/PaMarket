@@ -407,7 +407,9 @@ export default function AccountScreen() {
         </Pressable>
       </View>
 
-      <Text style={styles.footer}>PaMarket Zimbabwe · Made in Zimbabwe</Text>
+      <Text style={styles.footer}>
+        © {new Date().getFullYear()} PaMarket Zimbabwe · Made in Zimbabwe
+      </Text>
     </ScrollView>
   );
 }

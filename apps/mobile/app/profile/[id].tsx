@@ -232,6 +232,10 @@ export default function UserProfileScreen() {
       data={listings}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.content}
+      alwaysBounceVertical
+      bounces
+      decelerationRate="normal"
+      showsVerticalScrollIndicator={false}
       ListHeaderComponent={
         <View>
           <View style={styles.hero}>
@@ -516,16 +520,23 @@ function buildStyles(color: ColorPalette) {
       paddingHorizontal: space.lg,
     },
     listingRow: {
-      minHeight: 170,
       marginHorizontal: space.lg,
       marginBottom: space.md,
       borderRadius: 24,
       backgroundColor: color.surface,
       flexDirection: "row",
+      alignItems: "flex-start",
       overflow: "hidden",
     },
+    // width + aspectRatio (not width + height:"100%" stretched to match
+    // rowBody's variable text height) — previously this had no fixed
+    // height at all, so it stretched to whatever height the row's text
+    // content produced (1-line vs 2-line titles, etc.), rendering as an
+    // inconsistent, sometimes very elongated photo instead of a normal
+    // listing thumbnail.
     rowPhotoWrap: {
       width: 142,
+      aspectRatio: 1.05,
       backgroundColor: color.surfaceAlt,
       position: "relative",
     },

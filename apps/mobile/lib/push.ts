@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
+import messaging, { AuthorizationStatus } from "@react-native-firebase/messaging";
 import { supabase } from "./supabase";
 
 // PaMarket's backend push pipeline (supabase/functions/send-push,
@@ -31,6 +32,22 @@ async function ensureAndroidChannel() {
   });
 }
 
+async function getFirebaseMessagingToken(): Promise<string | null> {
+  const instance = messaging();
+  if (Platform.OS === "ios") {
+    const authStatus = await instance.requestPermission();
+    const enabled =
+      authStatus === AuthorizationStatus.AUTHORIZED ||
+      authStatus === AuthorizationStatus.PROVISIONAL;
+    if (!enabled) return null;
+
+    await instance.registerDeviceForRemoteMessages();
+  }
+
+  const token = await instance.getToken();
+  return token || null;
+}
+
 export async function registerForPushNotifications(userId: string): Promise<void> {
   try {
     await ensureAndroidChannel();
@@ -43,12 +60,19 @@ export async function registerForPushNotifications(userId: string): Promise<void
     }
     if (!granted) return;
 
-    // Raw FCM device token (Android). This is what the backend's FCM sender expects.
-    const tokenResponse = await Notifications.getDevicePushTokenAsync();
-    const token = tokenResponse?.data;
+    // Firebase Cloud Messaging token. The backend sends via FCM HTTP v1 and
+    // reads these values from public.push_tokens.
+    const token = await getFirebaseMessagingToken();
     if (!token || typeof token !== "string") return;
 
-    await supabase.from("profiles").update({ push_token: token }).eq("id", userId);
+    await supabase.from("push_tokens").upsert(
+      {
+        user_id: userId,
+        token,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
   } catch {
     // Push registration is best-effort — never block app usage on failure
     // (e.g. emulator without Play Services, permission denial, etc).
@@ -57,7 +81,7 @@ export async function registerForPushNotifications(userId: string): Promise<void
 
 export async function clearPushToken(userId: string): Promise<void> {
   try {
-    await supabase.from("profiles").update({ push_token: null }).eq("id", userId);
+    await supabase.from("push_tokens").delete().eq("user_id", userId);
   } catch {
     // best-effort
   }

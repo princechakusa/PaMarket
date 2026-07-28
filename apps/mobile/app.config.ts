@@ -18,6 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.pamarket.app",
+    googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
       light: "./assets/icon.png",
@@ -25,17 +26,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       tinted: "./assets/icon-tinted.png",
     },
     infoPlist: {
-      // TRUE, not FALSE: lib/totp.ts implements HMAC-SHA1 (RFC 2104) by hand
-      // in application code for TOTP 2FA (RFC 6238) — expo-crypto (the only
-      // crypto dependency in this app) has no HMAC primitive, only raw
-      // digest() and AES-GCM, so this can't be done through an Apple OS API
-      // alone. That makes the app ineligible for the "only uses Apple's
-      // exempt encryption" declaration. HMAC-SHA1/TOTP are standard,
-      // publicly-documented algorithms (not proprietary), so this still
-      // qualifies for the App Store Connect self-classification / French
-      // exemption path — but the export-compliance questionnaire must be
-      // answered at submission, it cannot be skipped via this flag.
-      ITSAppUsesNonExemptEncryption: true,
+      // lib/totp.ts implements HMAC-SHA1 (RFC 2104) by hand for TOTP 2FA
+      // (RFC 6238) — the app's only non-HTTPS crypto usage, and it's used
+      // exclusively to authenticate a user (proving identity), never to
+      // encrypt/protect app content or user data. Apple's export-compliance
+      // exemption for "encryption limited to authentication" turns on that
+      // purpose, not on whether the algorithm runs through an Apple API —
+      // so this qualifies as exempt. FALSE here (previously TRUE) fixed an
+      // ITMS-90592 rejection: TRUE requires real compliance documentation
+      // on file with a matching ITSEncryptionExportComplianceCode, which
+      // this app has never filed.
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
@@ -53,6 +54,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: "./assets/favicon.png",
   },
   plugins: [
+    "@react-native-firebase/app",
+    "@react-native-firebase/messaging",
     "expo-apple-authentication",
     "expo-iap",
     "expo-router",
