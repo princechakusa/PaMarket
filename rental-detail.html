@@ -454,11 +454,6 @@ async function init(){
   try{
     const v=await PM.fetchRentalListingById(id);
     if(!v){showNotFound();return}
-    // Consolidate onto the static pre-rendered page when it exists.
-    if(window.PMSchema){
-      const sp='/'+PMSchema.rentalPath(v);
-      try{const h=await fetch(sp,{method:'HEAD'});if(h.ok){location.replace(sp);return;}}catch(e){}
-    }
     render(v);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('detailContent').classList.remove('hidden');

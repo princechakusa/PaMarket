@@ -66,7 +66,12 @@
     return {
       aggregateRating: { '@type': 'AggregateRating', ratingValue: (sum / reviews.length).toFixed(1), reviewCount: reviews.length, bestRating: 5, worstRating: 1 },
       review: reviews.slice(0, 10).map(function (r) {
-        return { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, datePublished: (r.created_at || '').slice(0, 10), reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+        var rev = { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+        // Omit rather than emit an empty-string datePublished (invalid ISO
+        // 8601) when a review has no created_at — same fix as the
+        // buildBusinessSchema review block below.
+        if (r.created_at) rev.datePublished = String(r.created_at).slice(0, 10);
+        return rev;
       })
     };
   }
@@ -266,7 +271,11 @@
       var sum = reviews.reduce(function (a, r) { return a + (Number(r.rating) || 0); }, 0);
       store.aggregateRating = { '@type': 'AggregateRating', ratingValue: (sum / reviews.length).toFixed(1), reviewCount: reviews.length, bestRating: 5, worstRating: 1 };
       store.review = reviews.slice(0, 10).map(function (r) {
-        return { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, datePublished: (r.created_at || '').slice(0, 10), reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+        var rev = { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+        // Omit rather than emit an empty-string datePublished (invalid ISO
+        // 8601) when a review has no created_at.
+        if (r.created_at) rev.datePublished = String(r.created_at).slice(0, 10);
+        return rev;
       });
     }
     var profilePage = {
@@ -275,7 +284,16 @@
       isPartOf: { '@type': 'WebSite', name: 'PaMarket', url: SITE + '/' },
       mainEntity: { '@id': url + '#store' }
     };
-    if (b.updated_at) profilePage.dateModified = String(b.updated_at).slice(0, 10);
+    // Full ISO 8601 datetime, not date-only — Google's structured data
+    // validator flagged the date-only truncation as an "Invalid datetime
+    // value for dateModified" (Search Console, 2026-07-15). b.updated_at
+    // comes straight from Postgres as a full timestamptz string already;
+    // re-parsed defensively so a malformed value is omitted rather than
+    // throwing (Invalid Date .toISOString() throws a RangeError).
+    if (b.updated_at) {
+      var modDate = new Date(b.updated_at);
+      if (!isNaN(modDate.getTime())) profilePage.dateModified = modDate.toISOString();
+    }
     var breadcrumb = {
       '@context': 'https://schema.org', '@type': 'BreadcrumbList',
       itemListElement: [

@@ -183,7 +183,15 @@ function shell(o) {
 }
 
 function renderListing(l, chrome) {
-  const url = PMSchema.listingUrl(l);
+  // Canonical is the live client-rendered page, NOT this static snapshot's
+  // own URL. sitemap.xml deliberately lists the l/*.html path so crawlers
+  // fetch real pre-rendered content (see generate-sitemap.js), but this
+  // page's own <link rel=canonical> and JSON-LD url must agree with
+  // detail.html's canonical (/detail?id=) or Google sees two pages each
+  // claiming to be the canonical for the same listing and picks one on its
+  // own — exactly the "Duplicate, Google chose different canonical than
+  // user" Search Console alert found 2026-07-28.
+  const url = SITE + '/detail?id=' + l.id;
   const catLabel = PMSchema.catLabelOf(l);
   const loc = PMSchema.locOf(l);
   const photos = (l.photos && l.photos.length) ? l.photos : [];
@@ -243,7 +251,9 @@ function renderListing(l, chrome) {
 }
 
 function renderRental(v, chrome) {
-  const url = PMSchema.rentalUrl(v);
+  // See renderListing's comment: canonical must be the live page, not this
+  // static snapshot's own URL, or the two disagree on which is canonical.
+  const url = SITE + '/rental-detail?id=' + v.id;
   const title = PMSchema.rentalTitle(v);
   const media = (v.rental_vehicle_media || []).slice().sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
   const loc = [v.pickup_suburb, v.rental_locations && v.rental_locations.city].filter(Boolean).join(', ') || 'Zimbabwe';
@@ -327,7 +337,9 @@ function bizProdCard(l) {
 }
 
 function renderBusiness(b, chrome) {
-  const url = PMSchema.businessUrl(b);
+  // See renderListing's comment: canonical must be the live page, not this
+  // static snapshot's own URL, or the two disagree on which is canonical.
+  const url = SITE + '/business?id=' + b.id;
   const products = b._products || [];
   const reviews = b._reviews || [];
   const verified = (b.verification_level || 0) > 0;

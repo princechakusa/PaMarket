@@ -747,25 +747,11 @@ function currentViewerOwnsListing(){
   return !!(uid&&window.__sellerId&&String(uid)===String(window.__sellerId));
 }
 
-async function staticListingExists(staticPath){
-  const controller=typeof AbortController!=='undefined'?new AbortController():null;
-  const timeout=controller?setTimeout(()=>controller.abort(),5000):null;
-  try{
-    const head=await fetch(staticPath,{method:'HEAD',signal:controller?controller.signal:undefined});
-    return head.ok;
-  }catch(e){
-    console.warn('Static listing redirect check failed; rendering dynamic detail instead:',staticPath,e&&e.message?e.message:e);
-    return false;
-  }finally{
-    if(timeout)clearTimeout(timeout);
-  }
-}
-
 async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){showNotFound();return}
-  // Keep the skeleton as the only visible detail state until the static-page
-  // redirect decision completes. Render dynamic content only on fallback.
+  // Keep the skeleton as the only visible detail state until the listing
+  // finishes loading.
   document.getElementById('loadingState').classList.remove('hidden');
   document.getElementById('detailContent').classList.add('hidden');
   try{
@@ -777,15 +763,6 @@ async function init(){
       // (seller awareness) or it's genuinely unavailable/moderated.
       await handleUnavailable(id);
       return;
-    }
-    // Consolidate onto the static pre-rendered page (real HTML + baked JSON-LD).
-    // Redirect only when that page actually exists — a listing posted since the
-    // last build isn't generated yet, so we fall back to rendering here.
-    const viewerId=PM.currentUserId&&PM.currentUserId();
-    const ownerView=!!(viewerId&&listing.seller_id&&String(viewerId)===String(listing.seller_id));
-    if(window.PMSchema&&!ownerView){
-      const staticPath='/'+PMSchema.listingPath(listing);
-      if(await staticListingExists(staticPath)){location.replace(staticPath);return;}
     }
     // Seller reviews drive Product aggregateRating/review (real data only).
     const reviews=await PM.fetchSellerReviews(listing.seller_id,20).catch(()=>[]);

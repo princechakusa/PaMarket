@@ -13,7 +13,25 @@ const CHECKS = [
   {
     url: '/',
     name: 'homepage renders listing cards',
-    test: (page) => page.evaluate(() => document.querySelectorAll('#elCards .lcard').length > 0),
+    // #elCards (electronics) is the one homepage carousel that loads
+    // eagerly — every other category carousel is scroll-triggered
+    // (lazySection/IntersectionObserver) and won't fire without scrolling,
+    // so it's the only section a non-scrolling headless check can rely on.
+    // But requiring .lcard > 0 is too strict: index.html's own
+    // renderCards() treats a genuinely empty category as healthy ("No
+    // listings yet in this category" — happens from normal churn, e.g.
+    // electronics briefly had zero active listings and false-failed this
+    // exact check) versus a real fetch failure ("Couldn't load listings
+    // right now — Retry"). Pass on either cards or the graceful empty
+    // state; only fail on the error state or an unpopulated container
+    // (stuck loading — the actual JS-blocks-init failure this test
+    // exists to catch).
+    test: (page) => page.evaluate(() => {
+      const el = document.getElementById('elCards');
+      if (!el) return false;
+      if (el.querySelectorAll('.lcard').length > 0) return true;
+      return /no listings yet/i.test(el.textContent || '');
+    }),
   },
   {
     url: '/browse',

@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   update-sitemap:
@@ -40,6 +41,7 @@ jobs:
         run: node tools/prerender.js
 
       - name: Commit sitemap + static pages if changed
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -48,7 +50,50 @@ jobs:
           git add -A sitemap.xml l r b
           if git diff --cached --quiet; then
             echo "sitemap + static pages unchanged, nothing to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "chore: refresh sitemap + pre-rendered listing pages"
-          git push
+          # Retry on a push race (another push landed on master between our
+          # checkout and this push — e.g. a person pushing at the same time,
+          # or the cron and a push-triggered run overlapping). Deliberately
+          # NOT a rebase: our diff is the entire regenerated content of
+          # sitemap.xml/l/r/b, so a concurrent run touching those same files
+          # would make a patch-based rebase conflict almost every time.
+          # Instead, re-sync to the new tip and recommit the (already-on-disk,
+          # already-regenerated) files fresh against it — always
+          # conflict-free, since it's just "does this deterministic output
+          # differ from what's now on master", never a text merge.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt/5) — re-syncing to the new master tip"
+            git fetch origin master
+            git reset --soft origin/master
+            git add -A sitemap.xml l r b
+            if git diff --cached --quiet; then
+              echo "sitemap + static pages now match latest master already, nothing left to commit"
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            git commit -m "chore: refresh sitemap + pre-rendered listing pages"
+            sleep $((attempt * 3))
+          done
+          echo "::error::git push failed after 5 attempts"
+          exit 1
+
+      - name: Trigger the Pages deploy
+        # A push made with the default GITHUB_TOKEN (as the commit step above
+        # just did) does NOT fire pages.yml's own `on: push` trigger — GitHub
+        # suppresses that specifically to prevent workflow recursion. Without
+        # this step, every automatic/cron sitemap refresh would sit committed
+        # on master but never actually get published, silently drifting from
+        # what's live until someone noticed and re-ran pages.yml by hand
+        # (which is what was happening before this fix). workflow_dispatch is
+        # the documented exception — GITHUB_TOKEN CAN trigger it explicitly.
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref master
