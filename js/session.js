@@ -2,6 +2,26 @@
 // Reads the same localStorage 'pm_session' shape written by auth.html/auth-callback.html.
 // Injects an account chip + dropdown into #signInBtn's parent when a session exists.
 (function (global) {
+  // Every page's own canonical tag already points at the extensionless URL,
+  // but GitHub Pages serves foo.html at both /foo.html AND /foo automatically
+  // — so old links/bookmarks/search-engine-indexed URLs to the .html variant
+  // stay reachable forever as an unredirected duplicate of the clean URL.
+  // Google Search Console flagged this directly ("Duplicate, Google chose
+  // different canonical than user" + stale /detail.html and /auth.html
+  // URLs still being crawled). A canonical <link> is only a hint Google can
+  // override when its own signals (e.g. years of history on the .html URL)
+  // disagree; an actual redirect is the only thing that reliably collapses
+  // both URLs into one. GitHub Pages has no server-side redirect config, so
+  // this is a client-side one — same pattern already used by
+  // detail.html/business.html/rental-detail.html's own static-page
+  // redirects (location.replace, no history entry).
+  (function redirectHtmlSuffix() {
+    var path = global.location && global.location.pathname;
+    if (!path || !/\.html$/i.test(path)) return;
+    var clean = path === '/index.html' ? '/' : path.replace(/\.html$/i, '');
+    global.location.replace(clean + global.location.search + global.location.hash);
+  })();
+
   var APP_URL = 'https://play.google.com/store/apps/details?id=com.pamarket.app';
   var SB_URL = global.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
   var SB_KEY = global.SUPABASE_ANON_KEY || 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
