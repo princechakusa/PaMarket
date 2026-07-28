@@ -66,7 +66,12 @@
     return {
       aggregateRating: { '@type': 'AggregateRating', ratingValue: (sum / reviews.length).toFixed(1), reviewCount: reviews.length, bestRating: 5, worstRating: 1 },
       review: reviews.slice(0, 10).map(function (r) {
-        return { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, datePublished: (r.created_at || '').slice(0, 10), reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+        var rev = { '@type': 'Review', author: { '@type': 'Person', name: r.reviewer_name || 'PaMarket user' }, reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating) || 0, bestRating: 5, worstRating: 1 }, reviewBody: r.body || '' };
+        // Omit rather than emit an empty-string datePublished (invalid ISO
+        // 8601) when a review has no created_at — same fix as the
+        // buildBusinessSchema review block below.
+        if (r.created_at) rev.datePublished = String(r.created_at).slice(0, 10);
+        return rev;
       })
     };
   }
