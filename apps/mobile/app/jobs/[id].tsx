@@ -220,7 +220,10 @@ export default function JobDetailScreen() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Button label="View applicants" onPress={() => router.push("/jobs/applications")} />
+              <Button
+                label="View applicants"
+                onPress={() => router.push({ pathname: "/jobs/applicants/[jobId]", params: { jobId: job.id } })}
+              />
             </View>
           </View>
         ) : (

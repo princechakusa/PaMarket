@@ -187,6 +187,7 @@ export default function RentalManageFleetScreen() {
 
   function showActions(v: RentalFleetVehicle) {
     Alert.alert(fleetVehicleLabel(v), undefined, [
+      { text: "View Public Listing", onPress: () => router.push(`/rentals/${v.id}`) },
       { text: "Edit Vehicle", onPress: () => router.push(`/rental-fleet/edit-vehicle?id=${v.id}&bizId=${bizId}`) },
       {
         text: v.status === "active" ? "Pause Listing" : "Activate Listing",
@@ -259,6 +260,9 @@ export default function RentalManageFleetScreen() {
                   <Text style={styles.vehiclePrice}>${(v.daily_rate ?? 0).toLocaleString()}/day</Text>
                   <StatusPill status={v.status} styles={styles} statusStyles={statusStyles} />
                 </View>
+                <Text style={styles.vehicleStats}>
+                  {(v.inquiry_count ?? 0).toLocaleString()} inquiries · {(v.view_count ?? 0).toLocaleString()} views · {(v.save_count ?? 0).toLocaleString()} saves
+                </Text>
               </View>
             </Pressable>
           ))
@@ -340,6 +344,7 @@ function buildStyles(color: ColorPalette) {
     vehicleYear: { fontWeight: "500", color: color.textMuted },
     vehicleMetaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
     vehiclePrice: { fontSize: 14, fontWeight: "800", color: color.brand },
+    vehicleStats: { fontSize: 11.5, fontWeight: "600", color: color.textMuted, marginTop: 4 },
     pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
     pillText: { fontSize: 11, fontWeight: "700" },
     fab: {

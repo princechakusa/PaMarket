@@ -140,7 +140,7 @@ function parseLegacyWebRoute(s: string): ExpoRoute | null {
     case "Detail":
       return anyId ? { pathname: "/listing/[id]", params: { id: anyId } } : null;
     case "JobApplications":
-      return anyId ? { pathname: "/jobs/[id]", params: { id: anyId } } : { pathname: "/jobs/applications" };
+      return anyId ? { pathname: "/jobs/applicants/[jobId]", params: { jobId: anyId } } : { pathname: "/jobs/applications" };
     case "AppliedJobs":
       return { pathname: "/jobs/applications" };
     case "RentalLeads": {
@@ -285,6 +285,12 @@ export function resolveNotifRoute(n: {
   if (type === "lead" || type === "job_application" || type === "job_shortlisted" || type === "job_declined") {
     const parsed = parseDeepLinkString(meta.deepLink);
     if (parsed) return parsed;
+    if (type === "job_application" && meta.jobId) {
+      return { pathname: "/jobs/applicants/[jobId]", params: { jobId: String(meta.jobId) } };
+    }
+    if (type === "job_shortlisted" || type === "job_declined") {
+      return { pathname: "/jobs/applications" };
+    }
     if (meta.jobId) return { pathname: "/jobs/[id]", params: { id: String(meta.jobId) } };
     return { pathname: "/jobs/applications" };
   }

@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../lib/auth";
 import { toast } from "../../components/ui/Toast";
 import type { RentalLookupOption } from "../../lib/rentals";
 import { RENTAL_DRIVE_TYPES, RENTAL_FUEL_TYPES, RENTAL_TRANSMISSIONS } from "../../lib/rentals";
+import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -35,6 +39,7 @@ export default function RentalAddVehicleScreen() {
   const tones = useThemedStyles(buildTones);
   const { bizId } = useLocalSearchParams<{ bizId: string }>();
   const router = useRouter();
+  const { session } = useAuth();
 
   const [canCreate, setCanCreate] = useState<boolean | null>(null);
   const [categories, setCategories] = useState<RentalLookupOption[]>([]);
@@ -54,8 +59,10 @@ export default function RentalAddVehicleScreen() {
   const [weeklyRate, setWeeklyRate] = useState("");
   const [monthlyRate, setMonthlyRate] = useState("");
   const [deposit, setDeposit] = useState("");
+  const [minDays, setMinDays] = useState("1");
   const [driverRate, setDriverRate] = useState("");
   const [description, setDescription] = useState("");
+  const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -74,6 +81,22 @@ export default function RentalAddVehicleScreen() {
       setCities(cityRows);
     })();
   }, []);
+
+  async function pickPhotos() {
+    const remaining = Math.max(0, 5 - photoUris.length);
+    if (!remaining) {
+      toast("You can add up to 5 photos.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+      quality: 0.82,
+    });
+    if (result.canceled || !result.assets?.length) return;
+    setPhotoUris((prev) => [...prev, ...result.assets.map((a) => a.uri)].slice(0, 5));
+  }
 
   async function submit() {
     if (!bizId) return;
@@ -121,7 +144,7 @@ export default function RentalAddVehicleScreen() {
           weekly_rate: weeklyRate ? parseFloat(weeklyRate) : null,
           monthly_rate: monthlyRate ? parseFloat(monthlyRate) : null,
           deposit: deposit ? parseFloat(deposit) : 0,
-          min_rental_days: 1,
+          min_rental_days: minDays ? Math.max(1, parseInt(minDays, 10) || 1) : 1,
           driver_rate: driverRate ? parseFloat(driverRate) : null,
           description: description.trim() || null,
           status: "active",
@@ -139,6 +162,20 @@ export default function RentalAddVehicleScreen() {
         drive_type: driveType,
         seats: seats ? parseInt(seats, 10) : null,
       });
+
+      if (session?.user && photoUris.length) {
+        for (let index = 0; index < photoUris.length; index++) {
+          const uri = photoUris[index];
+          const key = `rentals/${session.user.id}/${listing.id}/${Date.now()}_${index}.jpg`;
+          const url = await uploadImageUriToR2(uri, key);
+          await supabase.from("rental_vehicle_media").insert({
+            listing_id: listing.id,
+            url,
+            is_cover: index === 0,
+            sort_order: index,
+          });
+        }
+      }
 
       toast("Vehicle created! It will appear in the marketplace once approved.");
       router.replace(`/rental-fleet/manage?bizId=${bizId}`);
@@ -164,6 +201,29 @@ export default function RentalAddVehicleScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
+      <Text style={styles.sectionLabel}>Photos</Text>
+      <Text style={styles.helperText}>Add clear real photos now. The first photo becomes the cover image.</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
+        {photoUris.map((uri, index) => (
+          <View key={`${uri}-${index}`} style={styles.photoThumbWrap}>
+            <Image source={{ uri }} style={styles.photoThumb} contentFit="cover" />
+            {index === 0 ? (
+              <View style={styles.coverPill}>
+                <Text style={styles.coverPillText}>Cover</Text>
+              </View>
+            ) : null}
+            <Pressable style={styles.removePhotoBtn} onPress={() => setPhotoUris((prev) => prev.filter((_, i) => i !== index))}>
+              <Text style={styles.removePhotoText}>×</Text>
+            </Pressable>
+          </View>
+        ))}
+        {photoUris.length < 5 ? (
+          <Pressable style={styles.addPhotoBtn} onPress={pickPhotos}>
+            <Text style={styles.addPhotoText}>+ Add Photos</Text>
+          </Pressable>
+        ) : null}
+      </ScrollView>
+
       <Text style={styles.sectionLabel}>Category *</Text>
       <View style={styles.chipRow}>
         {categories.map((c) => (
@@ -235,6 +295,8 @@ export default function RentalAddVehicleScreen() {
       </View>
       <Text style={styles.label}>Security Deposit</Text>
       <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+      <Text style={styles.label}>Minimum Rental Days</Text>
+      <TextInput style={styles.input} value={minDays} onChangeText={setMinDays} placeholder="1" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
       <Text style={styles.label}>Driver Rate / Day (leave blank for self-drive only)</Text>
       <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
 
@@ -267,6 +329,7 @@ function buildStyles(color: ColorPalette) {
     blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 6, textAlign: "center" },
     blockedBody: { fontSize: 12.5, color: color.textMuted, textAlign: "center", lineHeight: 18 },
     sectionLabel: { fontSize: 13, fontWeight: "700", color: color.textSub, marginTop: 16, marginBottom: 8 },
+    helperText: { fontSize: 12.5, color: color.textMuted, lineHeight: 18, marginBottom: 10 },
     label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 12 },
     input: {
       height: 46,
@@ -290,6 +353,44 @@ function buildStyles(color: ColorPalette) {
       textAlignVertical: "top",
     },
     row: { flexDirection: "row", gap: 10 },
+    photoRow: { gap: 10, paddingBottom: 4 },
+    photoThumbWrap: { width: 104, height: 84, borderRadius: 14, overflow: "hidden", backgroundColor: color.skeleton },
+    photoThumb: { width: "100%", height: "100%" },
+    coverPill: {
+      position: "absolute",
+      left: 6,
+      bottom: 6,
+      backgroundColor: color.brand,
+      borderRadius: 999,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+    },
+    coverPillText: { color: color.textOnBrand, fontSize: 10, fontWeight: "800" },
+    removePhotoBtn: {
+      position: "absolute",
+      right: 5,
+      top: 5,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: color.overlay,
+    },
+    removePhotoText: { color: color.textOnBrand, fontSize: 17, fontWeight: "800", lineHeight: 20 },
+    addPhotoBtn: {
+      width: 112,
+      height: 84,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderStyle: "dashed",
+      borderColor: color.border,
+      backgroundColor: color.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 8,
+    },
+    addPhotoText: { color: color.brand, fontSize: 12.5, fontWeight: "800", textAlign: "center" },
     chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
     chip: {
       paddingHorizontal: 14,

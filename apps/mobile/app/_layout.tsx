@@ -109,6 +109,7 @@ function RootNavigator() {
       <Stack.Screen name="jobs/browse" options={{ headerShown: false, title: "Jobs" }} />
       <Stack.Screen name="jobs/[id]" options={{ headerShown: false, title: "Job" }} />
       <Stack.Screen name="jobs/apply/[id]" options={{ headerShown: false, title: "Apply" }} />
+      <Stack.Screen name="jobs/applicants/[jobId]" options={{ headerShown: false, title: "Applicants" }} />
       <Stack.Screen name="jobs/applications" options={{ headerShown: false, title: "My Applications" }} />
       <Stack.Screen name="jobs/cv-profile" options={{ headerShown: false, title: "CV Profile" }} />
       <Stack.Screen name="jobs/post" options={{ headerShown: false, title: "Post a Job" }} />

@@ -30,10 +30,17 @@ function PhoneIcon({ stroke }: { stroke: string }) {
 }
 
 function WhatsAppIcon({ fill }: { fill: string }) {
+  // Single path with fillRule="evenodd", not two overlapping solid-fill
+  // paths — see app/listing/[id].tsx's WhatsAppIcon for why: two separate
+  // paths in the same color render as a plain speech-bubble blob with the
+  // handset glyph fully painted over, not the real WhatsApp logo.
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill={fill}>
-      <Path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-      <Path d="M11.99 0C5.364 0 0 5.372 0 11.994c0 2.116.554 4.1 1.524 5.822L.057 24l6.304-1.654A11.978 11.978 0 0 0 11.99 24C18.626 24 24 18.628 24 12.006 24 5.372 18.626 0 11.99 0z" />
+    <Svg width={18} height={18} viewBox="0 0 24 24">
+      <Path
+        fillRule="evenodd"
+        fill={fill}
+        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M11.99 0C5.364 0 0 5.372 0 11.994c0 2.116.554 4.1 1.524 5.822L.057 24l6.304-1.654A11.978 11.978 0 0 0 11.99 24C18.626 24 24 18.628 24 12.006 24 5.372 18.626 0 11.99 0z"
+      />
     </Svg>
   );
 }
@@ -68,6 +75,21 @@ function isoDate(d: Date): string {
 
 function isBlocked(dateIso: string, blocks: AvailabilityBlock[]): boolean {
   return blocks.some((b) => dateIso >= b.starts_on && dateIso <= b.ends_on);
+}
+
+function eachDateInRange(startIso: string, endIso: string): string[] {
+  const dates: string[] = [];
+  const cursor = new Date(`${startIso}T00:00:00`);
+  const end = new Date(`${endIso}T00:00:00`);
+  while (cursor <= end) {
+    dates.push(isoDate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
+function rangeHasBlockedDate(startIso: string, endIso: string, blocks: AvailabilityBlock[]): boolean {
+  return eachDateInRange(startIso, endIso).some((dateIso) => isBlocked(dateIso, blocks));
 }
 
 function dayChipLabel(d: Date): { top: string; bottom: string } {
@@ -185,27 +207,99 @@ export default function RentalVehicleDetailScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
+  async function getOrCreateRentalConversation() {
+    if (!session?.user || !business || !company || !id) return null;
+
+    const { data: rpcConvId, error: rpcError } = await supabase.rpc("get_or_create_rental_conversation", {
+      p_listing_id: id,
+      p_company_id: company.id,
+      p_user_id: session.user.id,
+    });
+
+    if (!rpcError && typeof rpcConvId === "string" && rpcConvId.length > 0) {
+      const { data: existing } = await supabase.from("conversations").select("id").eq("id", rpcConvId).maybeSingle();
+      if (existing) return rpcConvId;
+    }
+
+    const convId = `biz_${company.business_id!.slice(-8)}_${session.user.id.slice(-6)}`;
+    const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
+    if (!existing) {
+      const { error: convError } = await supabase.from("conversations").upsert({
+        id: convId,
+        members: [session.user.id, business.owner_user_id],
+        listing_id: null,
+        business_id: company.business_id,
+      });
+      if (convError) throw convError;
+    }
+    const { error: contextError } = await supabase.from("rental_conversation_context").upsert(
+      { conversation_id: convId, listing_id: id, company_id: company.id, user_id: session.user.id },
+      { onConflict: "user_id,listing_id" }
+    );
+    if (contextError) throw contextError;
+    return convId;
+  }
+
+  async function captureLead(
+    leadSource: "chat" | "whatsapp_click" | "call_click" | "booking_request",
+    conversationId?: string | null,
+    requestedStartDate?: string | null,
+    requestedEndDate?: string | null
+  ) {
+    if (!session?.user || !company || !id) return null;
+    const { data: rpcLeadId, error: rpcError } = await supabase.rpc("rental_capture_lead", {
+      p_listing_id: id,
+      p_company_id: company.id,
+      p_lead_source: leadSource,
+      p_conversation_id: conversationId ?? null,
+      p_requested_start_date: requestedStartDate ?? null,
+      p_requested_end_date: requestedEndDate ?? null,
+    });
+    if (!rpcError && typeof rpcLeadId === "string") return rpcLeadId;
+
+    const payload = {
+      listing_id: id,
+      company_id: company.id,
+      user_id: session.user.id,
+      lead_source: leadSource,
+      status: "new",
+      conversation_id: conversationId ?? null,
+      requested_start_date: requestedStartDate ?? null,
+      requested_end_date: requestedEndDate ?? null,
+    };
+    const { data, error } = await supabase.from("rental_vehicle_leads").insert(payload).select("id").maybeSingle();
+    if (!error) return data?.id ?? null;
+
+    // A customer can tap Chat/Call/WhatsApp repeatedly. The database keeps one
+    // lead per user/listing, so duplicate capture should not block the contact.
+    if (error.code === "23505") {
+      const { data: existing } = await supabase
+        .from("rental_vehicle_leads")
+        .select("id")
+        .eq("listing_id", id)
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      return existing?.id ?? null;
+    }
+    console.warn("rental lead capture:", error);
+    return null;
+  }
+
   async function contactViaChat() {
     if (!session?.user) {
       router.push("/(auth)/sign-in");
       return;
     }
     if (!business || !company) return;
-    const convId = `biz_${company.business_id!.slice(-8)}_${session.user.id.slice(-6)}`;
-    const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
-    if (!existing) {
-      await supabase.from("conversations").upsert({
-        id: convId,
-        members: [session.user.id, business.owner_user_id],
-        listing_id: null,
-        business_id: company.business_id,
-      });
+    try {
+      const convId = await getOrCreateRentalConversation();
+      if (!convId) return;
+      await captureLead("chat", convId);
+      router.push({ pathname: "/chat/[id]", params: { id: convId } });
+    } catch (e) {
+      console.warn("rental chat:", e);
+      Alert.alert("Could not open chat", "Please try again in a moment.");
     }
-    await supabase.from("rental_conversation_context").upsert(
-      { conversation_id: convId, listing_id: id, company_id: company.id, user_id: session.user.id },
-      { onConflict: "user_id,listing_id" }
-    );
-    router.push({ pathname: "/chat/[id]", params: { id: convId } });
   }
 
   async function requestBooking() {
@@ -214,35 +308,15 @@ export default function RentalVehicleDetailScreen() {
       return;
     }
     if (!business || !company || !startDate || !endDate) return;
-    if (isBlocked(startDate, availability) || isBlocked(endDate, availability)) {
-      Alert.alert("Dates unavailable", "One of the selected dates is already booked. Please pick different dates.");
+    if (rangeHasBlockedDate(startDate, endDate, availability)) {
+      Alert.alert("Dates unavailable", "One or more days in this rental period are already blocked. Please pick different dates.");
       return;
     }
     setIsBooking(true);
     try {
-      const convId = `biz_${company.business_id!.slice(-8)}_${session.user.id.slice(-6)}`;
-      const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
-      if (!existing) {
-        await supabase.from("conversations").upsert({
-          id: convId,
-          members: [session.user.id, business.owner_user_id],
-          listing_id: null,
-          business_id: company.business_id,
-        });
-      }
-      await supabase.from("rental_conversation_context").upsert(
-        { conversation_id: convId, listing_id: id, company_id: company.id, user_id: session.user.id },
-        { onConflict: "user_id,listing_id" }
-      );
-      await supabase.from("rental_vehicle_leads").insert({
-        listing_id: id,
-        company_id: company.id,
-        user_id: session.user.id,
-        lead_source: "booking_request",
-        conversation_id: convId,
-        requested_start_date: startDate,
-        requested_end_date: endDate,
-      });
+      const convId = await getOrCreateRentalConversation();
+      if (!convId) return;
+      await captureLead("booking_request", convId, startDate, endDate);
       const { data: profile } = await supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle();
       const totalText = estimatedTotal != null ? ` (est. $${estimatedTotal} for ${rentalDayCount} day${rentalDayCount === 1 ? "" : "s"})` : "";
       await supabase.from("messages").insert({
@@ -258,12 +332,24 @@ export default function RentalVehicleDetailScreen() {
     }
   }
 
-  function callCompany() {
-    if (business?.phone) Linking.openURL(`tel:${business.phone}`);
+  async function callCompany() {
+    if (!session?.user) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    if (business?.phone) {
+      await captureLead("call_click");
+      Linking.openURL(`tel:${business.phone}`);
+    }
   }
 
-  function whatsappCompany() {
+  async function whatsappCompany() {
+    if (!session?.user) {
+      router.push("/(auth)/sign-in");
+      return;
+    }
     if (business?.whatsapp) {
+      await captureLead("whatsapp_click");
       const digits = business.whatsapp.replace(/[^0-9]/g, "");
       const text = encodeURIComponent(
         `Hi ${business.name}! I saw your ${brandLabel(brandSlug)} ${vehicle?.model} rental on PaMarket Zimbabwe. Is it available?`

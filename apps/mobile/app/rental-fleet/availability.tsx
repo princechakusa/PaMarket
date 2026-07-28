@@ -8,6 +8,12 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+  return aStart <= bEnd && bStart <= aEnd;
+}
+
 // Mirrors www/js/rentals-business.js H.pages.RentalAvailability — block/
 // unblock date ranges in rental_vehicle_availability (display-only calendar,
 // no booking engine, per rental_marketplace_schema.sql TABLE 10 comments).
@@ -47,8 +53,16 @@ export default function RentalAvailabilityScreen() {
       toast("Please enter both start and end dates.");
       return;
     }
+    if (!ISO_DATE_RE.test(startDate) || !ISO_DATE_RE.test(endDate)) {
+      toast("Use date format YYYY-MM-DD.");
+      return;
+    }
     if (startDate > endDate) {
       toast("Start date must be before end date.");
+      return;
+    }
+    if (blocks.some((b) => rangesOverlap(startDate, endDate, b.starts_on, b.ends_on))) {
+      toast("These dates overlap with an existing blocked period.", 4000, true);
       return;
     }
     setIsSubmitting(true);
