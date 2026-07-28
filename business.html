@@ -531,11 +531,6 @@ function init(){
   if (!id){ showNotFound(); return; }
   PM.fetchBusinessById(id).then(function(b){
     if (!b){ showNotFound(); return; }
-    // Consolidate onto the static pre-rendered shop page when it exists.
-    if (window.PMSchema){
-      var _sp='/'+PMSchema.businessPath(b);
-      fetch(_sp,{method:'HEAD'}).then(function(h){ if(h.ok) location.replace(_sp); }).catch(function(){});
-    }
     Promise.all([
       PM.fetchListings({ businessId: id, limit: 12 }).catch(function(){ return []; }),
       PM.fetchSellerReviews(b.owner_user_id, 20),
