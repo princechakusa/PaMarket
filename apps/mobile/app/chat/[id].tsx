@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActionSheetIOS,
   Alert,
+  AppState,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -121,15 +122,27 @@ export default function ChatScreen() {
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const [isSendingImages, setIsSendingImages] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
     const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    const willHideSub =
+      Platform.OS === "ios" ? Keyboard.addListener("keyboardWillHide", () => setKeyboardVisible(false)) : null;
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") {
+        setKeyboardVisible(false);
+        Keyboard.dismiss();
+      } else {
+        setKeyboardAvoidingKey((key) => key + 1);
+      }
+    });
     return () => {
       showSub.remove();
       hideSub.remove();
+      willHideSub?.remove();
+      appStateSub.remove();
     };
   }, []);
   const styles = useThemedStyles(buildStyles);
@@ -568,9 +581,10 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
+      key={keyboardAvoidingKey}
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+      keyboardVerticalOffset={0}
     >
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
         <GlassBackButton onPress={() => router.back()} />
@@ -731,7 +745,7 @@ export default function ChatScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.md : Math.max(insets.bottom, space.md) }]}>
+      <View style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.xs : Math.max(insets.bottom, space.md) }]}>
         <Pressable style={styles.attachButton} onPress={handleAttach} hitSlop={6}>
           <AttachIcon color={themeColor} />
         </Pressable>
