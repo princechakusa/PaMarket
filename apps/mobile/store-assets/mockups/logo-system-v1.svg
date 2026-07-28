@@ -1,0 +1,179 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2000" viewBox="0 0 1600 2000">
+  
+  <defs>
+    <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#031A55"/>
+      <stop offset=".62" stop-color="#06266F"/>
+      <stop offset="1" stop-color="#1749B2"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFB21B"/>
+      <stop offset=".62" stop-color="#F59A00"/>
+      <stop offset="1" stop-color="#E48500"/>
+    </linearGradient>
+    <linearGradient id="pageGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEF4FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#06122F" flood-opacity=".17"/>
+    </filter>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#06122F" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="2000" fill="url(#pageGrad)"/>
+  <circle cx="1370" cy="140" r="320" fill="#F59A00" opacity=".08"/>
+  <circle cx="120" cy="1780" r="420" fill="#153E91" opacity=".08"/>
+
+  <text x="80" y="94" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="900" letter-spacing="3" fill="#153E91">PAMARKET LOGO SYSTEM MOCKUP</text>
+  <text x="80" y="142" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="950" letter-spacing="-1.8" fill="#101828">Market canopy + trusted hands</text>
+  <text x="80" y="184" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="650" fill="#667085">A cleaner production-ready version of the concept you approved, shown across real app uses.</text>
+
+  <g transform="translate(80 250)" filter="url(#shadow)">
+    <rect x="0" y="0" width="690" height="470" rx="44" fill="#FFFFFF"/>
+    
+  <g transform="translate(224 50) scale(0.47265625)">
+    <path fill="url(#goldGrad)" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#06266F" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#06266F" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    
+    <text x="345" y="356" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="86" font-weight="900" letter-spacing="-4">
+      <tspan fill="#F59A00">Pa</tspan><tspan fill="#06266F">Market</tspan>
+    </text>
+    <text x="345" y="406" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="750" fill="#667085">Primary light wordmark</text>
+  </g>
+
+  <g transform="translate(830 250)" filter="url(#shadow)">
+    <rect x="0" y="0" width="690" height="470" rx="44" fill="url(#navyGrad)"/>
+    
+  <g transform="translate(224 50) scale(0.47265625)">
+    <path fill="#FFFFFF" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#FFFFFF" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#FFFFFF" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    
+    <text x="345" y="356" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="86" font-weight="900" letter-spacing="-4">
+      <tspan fill="#FFFFFF">Pa</tspan><tspan fill="#FFFFFF">Market</tspan>
+    </text>
+    <text x="345" y="406" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="750" fill="rgba(255,255,255,.72)">Dark mode / splash safe</text>
+  </g>
+
+  
+  <text x="80" y="800" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="900" fill="#101828">App icon</text>
+  <text x="80" y="838" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="650" fill="#667085">Symbol-only icon keeps details readable on iPhone and Android.</text>
+  <g transform="translate(80 870)" filter="url(#shadow)">
+    <rect x="0" y="0" width="300" height="300" rx="68" fill="#FFFFFF"/>
+    
+  <g transform="translate(54 48) scale(0.375)">
+    <path fill="url(#goldGrad)" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#06266F" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#06266F" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+  </g>
+  <g transform="translate(430 870)" filter="url(#shadow)">
+    <rect x="0" y="0" width="300" height="300" rx="68" fill="url(#navyGrad)"/>
+    <rect x="38" y="38" width="224" height="224" rx="52" fill="#FFFFFF"/>
+    
+  <g transform="translate(84 72) scale(0.2578125)">
+    <path fill="url(#goldGrad)" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#06266F" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#06266F" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+  </g>
+  <g transform="translate(780 870)" filter="url(#shadow)">
+    <rect x="0" y="0" width="300" height="300" rx="68" fill="url(#navyGrad)"/>
+    
+  <g transform="translate(54 48) scale(0.375)">
+    <path fill="#FFFFFF" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#FFFFFF" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#FFFFFF" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+  </g>
+  <g transform="translate(1130 870)" filter="url(#softShadow)">
+    <rect x="0" y="0" width="300" height="300" rx="68" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    
+  <g transform="translate(74 68) scale(0.296875)">
+    <path fill="url(#goldGrad)" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#06266F" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#06266F" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    <text x="150" y="250" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="900" fill="#06266F">small preview</text>
+  </g>
+
+  
+  <text x="80" y="1280" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="900" fill="#101828">Splash + login preview</text>
+  <text x="80" y="1318" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="650" fill="#667085">How the same logo feels in the cleaned login direction.</text>
+  <g transform="translate(80 1360)" filter="url(#shadow)">
+    <rect x="0" y="0" width="620" height="400" rx="44" fill="url(#navyGrad)"/>
+    
+  <g transform="translate(230 80) scale(0.3125)">
+    <path fill="#FFFFFF" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#FFFFFF" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#FFFFFF" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    
+    <text x="310" y="300" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="68" font-weight="900" letter-spacing="-4">
+      <tspan fill="#FFFFFF">Pa</tspan><tspan fill="#FFFFFF">Market</tspan>
+    </text>
+    <text x="310" y="346" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="700" fill="rgba(255,255,255,.72)">Zimbabwe’s Marketplace</text>
+  </g>
+  
+  <g transform="translate(820 1235)" filter="url(#shadow)">
+    <rect x="0" y="0" width="330" height="680" rx="54" fill="#0B0D12"/>
+    <rect x="14" y="14" width="302" height="652" rx="42" fill="#FFFFFF"/>
+    <rect x="112" y="26" width="106" height="24" rx="12" fill="#0B0D12"/>
+    <rect x="14" y="14" width="302" height="170" rx="42" fill="url(#navyGrad)"/>
+    
+  <g transform="translate(110 72) scale(0.16796875)">
+    <path fill="#FFFFFF" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#FFFFFF" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#FFFFFF" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    
+    <text x="166" y="210" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="36" font-weight="900" letter-spacing="-4">
+      <tspan fill="#F59A00">Pa</tspan><tspan fill="#06266F">Market</tspan>
+    </text>
+    <text x="166" y="250" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#667085">Welcome back</text>
+    <rect x="42" y="288" width="246" height="48" rx="16" fill="#05070B"/>
+    <text x="166" y="319" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="850" fill="#FFFFFF">Continue with Apple</text>
+    <rect x="42" y="350" width="246" height="48" rx="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    <text x="166" y="381" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="850" fill="#101828">Continue with Google</text>
+    <rect x="42" y="430" width="246" height="48" rx="15" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="2"/>
+    <rect x="42" y="494" width="246" height="48" rx="15" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="2"/>
+    <rect x="42" y="568" width="246" height="54" rx="18" fill="#153E91"/>
+    <text x="166" y="602" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="900" fill="#FFFFFF">Sign In</text>
+  </g>
+
+  <g transform="translate(80 1818)">
+    <rect x="0" y="0" width="640" height="94" rx="28" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+    
+  <g transform="translate(28 22) scale(0.1015625)">
+    <path fill="url(#goldGrad)" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#06266F" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#06266F" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    
+  <text x="92" y="58" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="38" font-weight="900" letter-spacing="-4">
+    <tspan fill="#F59A00">Pa</tspan><tspan fill="#06266F">Market</tspan>
+  </text>
+    <text x="372" y="58" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="750" fill="#667085">Header / about screen lockup</text>
+  </g>
+
+  <g transform="translate(820 1818)">
+    <rect x="0" y="0" width="640" height="94" rx="28" fill="url(#navyGrad)"/>
+    
+  <g transform="translate(28 22) scale(0.1015625)">
+    <path fill="#FFFFFF" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31z"/>
+    <path fill="#FFFFFF" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164z"/>
+    <path fill="#FFFFFF" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164z"/>
+  </g>
+    
+  <text x="92" y="58" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="38" font-weight="900" letter-spacing="-4">
+    <tspan fill="#FFFFFF">Pa</tspan><tspan fill="#FFFFFF">Market</tspan>
+  </text>
+    <text x="372" y="58" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="750" fill="rgba(255,255,255,.72)">Home header on brand blue</text>
+  </g>
+</svg>
