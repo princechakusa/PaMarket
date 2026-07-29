@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { BrandWordmark } from "../BrandLogo";
+import { BrandSymbol, BrandWordmark } from "../BrandLogo";
 
 function BellIcon() {
   return (
@@ -196,7 +196,10 @@ export function HomeHeader({
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.topRow}>
-        <BrandWordmark onBrand style={styles.brand} />
+        <View style={styles.brandRow}>
+          <BrandSymbol size={36} />
+          <BrandWordmark onBrand style={styles.brand} />
+        </View>
         <View style={styles.iconRow}>
           <Pressable style={styles.iconButton} onPress={onPressNotifications} hitSlop={8}>
             <BellIcon />
@@ -248,6 +251,13 @@ function buildStyles(color: ColorPalette) {
     },
     brand: {
       ...font.h1,
+    },
+    brandRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.sm,
+      minWidth: 0,
+      flexShrink: 1,
     },
     iconRow: {
       flexDirection: "row",
