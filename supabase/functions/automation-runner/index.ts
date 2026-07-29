@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
     listing_view_reminders_sent: 0,
     verification_nudges_sent: 0,
     messages_noreply_reminded: 0,
+    business_subscriptions_expired: 0,
     errors: [] as string[],
   }
 
@@ -176,6 +177,13 @@ Deno.serve(async (req) => {
     const noreplyReminders = await db.rpc('run_message_noreply_reminders')
     if (noreplyReminders.error) summary.errors.push('Message no-reply reminders: ' + noreplyReminders.error.message)
     else summary.messages_noreply_reminded = Number(noreplyReminders.data?.reminded || 0)
+
+    // Automatically reverts admin promotional plan grants (and any regular
+    // paid subscription) back to Free once current_period_end passes —
+    // previously only a manual "Downgrade overdue" button in admin.html.
+    const expiredSubs = await db.rpc('expire_overdue_business_subscriptions')
+    if (expiredSubs.error) summary.errors.push('Business subscription expiry: ' + expiredSubs.error.message)
+    else summary.business_subscriptions_expired = Number(expiredSubs.data?.expired || 0)
 
     const ok = summary.errors.length === 0
     await db.from('job_runs').insert({

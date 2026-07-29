@@ -1354,7 +1354,7 @@ var _listingCat = '', _listingProv = '', _listingPriceMin = '', _listingPriceMax
 var _lstSelected = {};
 var MK_CATEGORIES = ['electronics','vehicles','property','furniture','fashion','jobs','agriculture','services','rooms','pets','kids','other'];
 function _listingQuery(withCount) {
-  var q = sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description,business_id', withCount?{count:'exact'}:undefined)
+  var q = sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description,business_id,featuredUntil:featured_until', withCount?{count:'exact'}:undefined)
     .order('created_at',{ascending:false});
   if(_listingFilter!=='all') q = q.eq('status',_listingFilter);
   if(_listingCat)  q = q.eq('category',_listingCat);
@@ -1859,43 +1859,55 @@ async function _doDeleteBusiness(id) {
   } catch(e){ toast('Error: '+(e.message||'Failed'),'error'); }
 }
 
+// duration: 'month' (+1 month, billing_cycle 'monthly') or 'year' (+1 year,
+// billing_cycle 'yearly') — an admin promotional grant, same
+// business_subscriptions/businesses.plan_id mechanism a real paid upgrade
+// uses, just admin-initiated with no payment and a chosen expiry. A
+// business's plan reverts to free automatically once current_period_end
+// passes — see expire_overdue_business_subscriptions(), run every
+// automation-runner cycle (added alongside this feature).
 function bizSetPlan(id) {
   var cur = bizActivePlan(id);
   var b = DATA.businesses.find(function(x){return x.id===id;}); if(!b) return;
   var rows = BIZ_PLANS.map(function(p){
     var price = BIZ_PLAN_PRICES[p] || 0;
     var priceLabel = price===0 ? 'Free' : ('$'+price+'/mo');
+    var setBtns = p==='free' ? '' :
+      '<button class="ab ab-approve" style="padding:6px 10px" onclick="doSetPlan(\''+id+'\',\''+p+'\',\'month\')">1 month</button>'
+      +'<button class="ab ab-approve" style="padding:6px 10px" onclick="doSetPlan(\''+id+'\',\''+p+'\',\'year\')">1 year</button>';
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)">'
       +'<div><span style="font-size:13px;font-weight:700;color:var(--text);text-transform:capitalize">'+esc(p)+'</span>'
       +' <span style="font-size:12px;color:var(--sub)">'+priceLabel+'</span></div>'
       +(cur===p
         ? '<span class="badge badge-active">Current</span>'
-        : '<button class="ab ab-approve" style="padding:6px 14px" onclick="doSetPlan(\''+id+'\',\''+p+'\')">Set</button>')
+        : '<div style="display:flex;gap:6px">'+(p==='free'?'<button class="ab ab-approve" style="padding:6px 14px" onclick="doSetPlan(\''+id+'\',\'free\',\'month\')">Set</button>':setBtns)+'</div>')
       +'</div>';
   }).join('');
   openModal('<div class="modal-title">Override Plan: '+esc(b.name||'Business')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
-    +'<div style="font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.5">Admin override activates the plan immediately without requiring payment. Use this to manually apply an approved plan.</div>'
+    +'<div style="font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.5">Admin override activates the plan immediately without requiring payment, for the chosen duration. It automatically reverts to Free once that period ends.</div>'
     +rows
   );
 }
 
-async function doSetPlan(id, next) {
+async function doSetPlan(id, next, duration) {
   closeModal();
   try {
     await sb.from('business_subscriptions').update({status:'downgraded'}).eq('business_id',id).eq('status','active');
-    var now = new Date(); now.setMonth(now.getMonth()+1);
-    var r = await sb.from('business_subscriptions').insert({business_id:id,plan_id:next,billing_cycle:'monthly',status:'active',current_period_end:now.toISOString()});
+    var now = new Date();
+    var cycle = duration==='year' ? 'yearly' : 'monthly';
+    if(duration==='year') now.setFullYear(now.getFullYear()+1); else now.setMonth(now.getMonth()+1);
+    var r = await sb.from('business_subscriptions').insert({business_id:id,plan_id:next,billing_cycle:cycle,status:'active',current_period_end:now.toISOString()});
     if(r.error) throw r.error;
     await sb.from('businesses').update({plan_id:next}).eq('id',id);
     DATA.businessSubs = DATA.businessSubs.map(function(s){
       if(s.business_id===id&&s.status==='active') s.status='downgraded'; return s;
     });
-    DATA.businessSubs.push({business_id:id,plan_id:next,billing_cycle:'monthly',status:'active'});
+    DATA.businessSubs.push({business_id:id,plan_id:next,billing_cycle:cycle,status:'active',current_period_end:now.toISOString()});
     var biz = DATA.businesses.find(function(b){return b.id===id;});
     var prevPlan = biz ? biz.plan_id : null;
     if(biz) biz.plan_id=next;
-    auditLog('override_plan','businesses',id,{plan:prevPlan},{plan:next},'admin manual override');
-    renderBusinesses(); toast('Plan overridden to '+next);
+    auditLog('override_plan','businesses',id,{plan:prevPlan},{plan:next,duration:duration},'admin promotional override ('+duration+')');
+    renderBusinesses(); toast('Plan overridden to '+next+' for 1 '+duration);
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
@@ -2212,6 +2224,8 @@ function renderListings() {
       html += '<button class="ab ab-reject" onclick="rejectListing(\''+l.id+'\')">Reject</button>';
     }
     if(l.status==='active') html += '<button class="ab ab-reject" onclick="rejectListing(\''+l.id+'\')">Remove</button>';
+    var _isFeat = l.featuredUntil && new Date(l.featuredUntil).getTime() > Date.now();
+    html += '<button class="ab ab-view" style="'+(_isFeat?'background:rgba(245,158,11,.16);color:var(--amber)':'')+'" onclick="listingSetFeatured(\''+l.id+'\')">'+(_isFeat?'Featured ★':'Feature')+'</button>';
     html += '<button class="ab ab-delete" onclick="deleteListing(\''+l.id+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>';
     html += '</div></td></tr>';
   });
@@ -2221,6 +2235,57 @@ function renderListings() {
 }
 
 function lstSelectAll(checked){ (DATA.listings||[]).forEach(function(l){ _lstSelected[l.id]=checked; }); renderListings(); }
+
+// Admin promotional feature: pin a listing to the top of search/category
+// results without requiring the seller to pay for a boost — same
+// listings.featured_until column paid boosts use, so the mobile/website
+// apps' existing "is this featured" sort logic already picks it up with no
+// client changes needed.
+var FEATURE_DURATIONS = [
+  {label:'7 days', days:7}, {label:'30 days', days:30},
+  {label:'90 days', days:90}, {label:'1 year', days:365}
+];
+function listingSetFeatured(id) {
+  var l = (DATA.listings||[]).find(function(x){return x.id===id;}); if(!l) return;
+  var isFeat = l.featuredUntil && new Date(l.featuredUntil).getTime() > Date.now();
+  var rows = FEATURE_DURATIONS.map(function(d){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+d.label+'</span>'
+      +'<button class="ab ab-approve" style="padding:6px 14px" onclick="doSetFeatured(\''+id+'\','+d.days+')">Feature</button>'
+      +'</div>';
+  }).join('');
+  openModal('<div class="modal-title">Feature: '+esc(l.title||'Listing')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
+    +'<div style="font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.5">Admin promotional feature — pins this listing to the top wherever paid-boost listings normally rank, with no payment from the seller.'
+    +(isFeat?' Currently featured until '+fmtDate(l.featuredUntil)+'.':'')+'</div>'
+    +rows
+    +(isFeat?'<button class="ab ab-reject" style="width:100%;margin-top:14px;padding:10px" onclick="doRemoveFeatured(\''+id+'\')">Remove featured placement now</button>':'')
+  );
+}
+async function doSetFeatured(id, days) {
+  closeModal();
+  try {
+    var until = new Date(Date.now()+days*864e5).toISOString();
+    var l = (DATA.listings||[]).find(function(x){return x.id===id;});
+    var prev = l ? l.featuredUntil : null;
+    var r = await sb.from('listings').update({featured_until:until}).eq('id',id);
+    if(r.error) throw r.error;
+    if(l) l.featuredUntil = until;
+    auditLog('admin_feature_listing','listings',id,{featured_until:prev},{featured_until:until},'admin promotional feature ('+days+'d)');
+    renderListings(); toast('Featured for '+days+' days');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+async function doRemoveFeatured(id) {
+  closeModal();
+  try {
+    var l = (DATA.listings||[]).find(function(x){return x.id===id;});
+    var prev = l ? l.featuredUntil : null;
+    var r = await sb.from('listings').update({featured_until:null}).eq('id',id);
+    if(r.error) throw r.error;
+    if(l) l.featuredUntil = null;
+    auditLog('admin_unfeature_listing','listings',id,{featured_until:prev},{featured_until:null},'admin removed promotional feature');
+    renderListings(); toast('Featured placement removed');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
 
 // Bulk moderation over the selected page rows; per-row checked writes + audit.
 async function bulkListings(kind){
