@@ -1,20 +1,4 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
-import { withAndroidManifest, type ConfigPlugin } from "expo/config-plugins";
-
-const withFirebaseNotificationColorOverride: ConfigPlugin = (expoConfig) =>
-  withAndroidManifest(expoConfig, (modConfig) => {
-    const application = modConfig.modResults.manifest.application?.[0];
-    const metaData = application?.["meta-data"];
-    const colorMeta = metaData?.find(
-      (item) => item.$["android:name"] === "com.google.firebase.messaging.default_notification_color"
-    );
-
-    if (colorMeta) {
-      (colorMeta.$ as Record<string, string>)["tools:replace"] = "android:resource";
-    }
-
-    return modConfig;
-  });
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -111,7 +95,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: "#D6A12A",
       },
     ],
-    withFirebaseNotificationColorOverride,
     "expo-image",
     [
       "expo-image-picker",
@@ -133,7 +116,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // of unreadable minified JS.
       },
     ],
-  ] as any,
+  ],
   extra: {
     router: {},
     eas: {
