@@ -56,20 +56,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "@react-native-firebase/app",
     "@react-native-firebase/messaging",
-    [
-      "expo-build-properties",
-      {
-        // Firebase's Swift pods (GoogleUtilities, via FirebaseCoreInternal)
-        // can't be integrated as static libraries — pod install fails with
-        // "The following Swift pods cannot yet be integrated as static
-        // libraries" the moment @react-native-firebase/messaging is added.
-        // useModularHeaders is NOT a real option on this plugin (silently
-        // ignored, confirmed by reading pluginConfig.js's schema) — the
-        // actual documented fix for this exact error is switching to
-        // dynamic frameworks, which don't have this restriction.
-        ios: { useFrameworks: "dynamic" },
-      },
-    ],
     "expo-apple-authentication",
     "expo-iap",
     "expo-router",
