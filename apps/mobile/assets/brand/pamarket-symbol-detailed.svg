@@ -8,8 +8,7 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="116" fill="#030303"/>
-  <g transform="translate(70 70) scale(0.7265625)">
-    <text x="258" y="336" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="332" font-weight="700" fill="url(#goldGrad)" letter-spacing="-24">P</text>
-    <text x="257" y="362" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="286" font-weight="700" fill="#FFFFFF" letter-spacing="-30">M</text>
-    <path d="M183 166L338 378" stroke="url(#goldGrad)" stroke-width="32" stroke-linecap="square" opacity=".9"/></g>
+  <g transform="translate(52 52) scale(0.796875)">
+    <text x="186" y="338" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="252" font-weight="700" fill="url(#goldGrad)">P</text>
+    <text x="324" y="338" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="220" font-weight="700" fill="#FFFFFF">M</text></g>
 </svg>

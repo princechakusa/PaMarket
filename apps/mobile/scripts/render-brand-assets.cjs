@@ -5,7 +5,6 @@ const sharp = require("sharp");
 const root = path.resolve(__dirname, "..");
 const assets = path.join(root, "assets");
 const brandDir = path.join(assets, "brand");
-const sourceLogo = path.join(brandDir, "pamarket-final-logo-source.png");
 
 const BLACK = "#030303";
 const GOLD = "#D6A12A";
@@ -32,18 +31,12 @@ function symbolPaths(mode = "brand") {
   const gold = mode === "monochrome" ? WHITE : "url(#goldGrad)";
   const white = WHITE;
   return `
-    <text x="258" y="336" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="332" font-weight="700" fill="${gold}" letter-spacing="-24">P</text>
-    <text x="257" y="362" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="286" font-weight="700" fill="${white}" letter-spacing="-30">M</text>
-    <path d="M183 166L338 378" stroke="${gold}" stroke-width="32" stroke-linecap="square" opacity="${mode === "monochrome" ? "0" : ".9"}"/>`;
+    <text x="186" y="338" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="252" font-weight="700" fill="${gold}">P</text>
+    <text x="324" y="338" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="220" font-weight="700" fill="${white}">M</text>`;
 }
 
 function compactSymbolPaths(mode = "brand") {
-  const gold = mode === "monochrome" ? WHITE : GOLD;
-  const white = WHITE;
-  return `
-    <path fill="${gold}" d="M198 86h128c68 0 112 40 112 101 0 63-45 104-115 104h-55v135h-70V86Zm70 64v82h52c31 0 49-15 49-42 0-26-18-40-49-40h-52Z"/>
-    <path fill="${white}" d="M82 426V164h66l108 130 108-130h66v262h-69V265L266 378h-22L151 265v161H82Z"/>
-    ${mode === "monochrome" ? "" : `<path d="M158 178 348 426" stroke="${gold}" stroke-width="34" stroke-linecap="square"/>`}`;
+  return symbolPaths(mode);
 }
 
 function symbolSvg({ mode = "brand", background = "transparent", pad = 70, rounded = false } = {}) {
@@ -104,12 +97,9 @@ async function renderPng(svg, file, size) {
 
 async function main() {
   ensureDir(brandDir);
-  if (!fs.existsSync(sourceLogo)) {
-    throw new Error(`Missing final logo source: ${sourceLogo}`);
-  }
 
-  const symbol = compactSymbolSvg({ mode: "brand", background: "black", rounded: true });
-  const symbolMono = compactSymbolSvg({ mode: "monochrome" });
+  const symbol = symbolSvg({ mode: "brand", background: "black", pad: 52, rounded: true });
+  const symbolMono = symbolSvg({ mode: "monochrome", pad: 52 });
   const wordmarkLight = wordmarkSvg({ mode: "light" });
   const wordmarkDark = wordmarkSvg({ mode: "dark" });
 
@@ -117,19 +107,18 @@ async function main() {
   fs.writeFileSync(path.join(brandDir, "pamarket-symbol-monochrome.svg"), symbolMono);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-light.svg"), wordmarkLight);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-dark.svg"), wordmarkDark);
-  fs.writeFileSync(path.join(brandDir, "pamarket-symbol-detailed.svg"), symbolSvg({ mode: "brand", background: "black", rounded: true }));
+  fs.writeFileSync(path.join(brandDir, "pamarket-symbol-detailed.svg"), symbolSvg({ mode: "brand", background: "black", pad: 52, rounded: true }));
   fs.writeFileSync(path.join(brandDir, "pamarket-symbol-compact.svg"), symbol);
 
-  const squareLogo = sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png();
-  await squareLogo.toFile(path.join(assets, "icon.png"));
-  await sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png().toFile(path.join(assets, "icon-dark.png"));
-  await sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png().toFile(path.join(assets, "icon-tinted.png"));
-  await renderPng(compactSymbolSvg({ mode: "brand", background: "transparent", pad: 72 }), "android-icon-foreground.png", { width: 1024, height: 1024 });
-  await renderPng(compactSymbolSvg({ mode: "monochrome", background: "transparent", pad: 72 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
-  await sharp(sourceLogo).resize(64, 64, { fit: "cover" }).png().toFile(path.join(assets, "favicon.png"));
+  await renderPng(symbolSvg({ mode: "brand", background: "black", pad: 60 }), "icon.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "brand", background: "black", pad: 60 }), "icon-dark.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "monochrome", background: "black", pad: 60 }), "icon-tinted.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "brand", background: "transparent", pad: 74 }), "android-icon-foreground.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "monochrome", background: "transparent", pad: 74 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
+  await renderPng(symbolSvg({ mode: "brand", background: "black", pad: 60 }), "favicon.png", { width: 64, height: 64 });
   await renderPng(notificationSvg(), "notification-icon.png", { width: 96, height: 96 });
-  await sharp(sourceLogo).resize(640, 640, { fit: "contain", background: BLACK }).png().toFile(path.join(assets, "splash-icon.png"));
-  await sharp(sourceLogo).resize(640, 640, { fit: "contain", background: BLACK }).png().toFile(path.join(assets, "splash-icon-dark.png"));
+  await renderPng(symbolSvg({ mode: "brand", background: "transparent", pad: 58 }), "splash-icon.png", { width: 640, height: 640 });
+  await renderPng(symbolSvg({ mode: "brand", background: "transparent", pad: 58 }), "splash-icon-dark.png", { width: 640, height: 640 });
 
   await sharp(Buffer.from(wordmarkLight)).png().toFile(path.join(brandDir, "pamarket-wordmark-light.png"));
   await sharp(Buffer.from(wordmarkDark)).png().toFile(path.join(brandDir, "pamarket-wordmark-dark.png"));

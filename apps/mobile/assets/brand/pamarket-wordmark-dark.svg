@@ -9,9 +9,8 @@
   </defs>
 
   <g transform="translate(166 72) scale(.48)">
-    <text x="258" y="336" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="332" font-weight="700" fill="url(#goldGrad)" letter-spacing="-24">P</text>
-    <text x="257" y="362" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="286" font-weight="700" fill="#FFFFFF" letter-spacing="-30">M</text>
-    <path d="M183 166L338 378" stroke="url(#goldGrad)" stroke-width="32" stroke-linecap="square" opacity=".9"/></g>
+    <text x="186" y="338" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="252" font-weight="700" fill="url(#goldGrad)">P</text>
+    <text x="324" y="338" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="220" font-weight="700" fill="#FFFFFF">M</text></g>
   <text x="432" y="237" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="116" font-weight="900" letter-spacing="-5">
     <tspan fill="url(#goldGrad)">Pa</tspan><tspan fill="#FFFFFF">Market</tspan>
   </text>
