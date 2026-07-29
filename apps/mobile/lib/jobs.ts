@@ -168,7 +168,7 @@ export type ContactRequest = {
 
 // ── Recruiter plans (RecruiterSubscription) ──────────────────────────────
 // Mirrors www/js/jobs.js H.RECRUITER_PLAN_ENTITLEMENTS / H.RECRUITER_PLANS.
-// Paid upgrades go through app-store billing (out of scope here, same as
+// Paid upgrades go through Google Play Billing (out of scope here, same as
 // business-subscription.tsx) — "Upgrade" is a coming-soon toast.
 export type RecruiterPlanEntitlements = {
   name: string;

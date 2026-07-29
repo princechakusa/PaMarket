@@ -20,7 +20,7 @@ const DURATIONS: [number, string][] = [
 
 // Mirrors www/js/business-featured.js pages.BusinessFeatured — time-based
 // boosts drawn from the plan's free featured-slot allowance. Buying extra
-// slot packs are app-store consumable purchases, out of scope
+// slot packs is a Google Play Billing consumable purchase, out of scope
 // (deferred alongside billing.js) — this screen only manages the plan's
 // included slots.
 export default function BusinessFeaturedScreen() {

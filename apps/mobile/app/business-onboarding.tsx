@@ -219,7 +219,7 @@ export default function BusinessOnboardingScreen() {
 
   function selectPlan(planId: string) {
     if (planId !== "free") {
-      // Paid plans activate only through a verified app-store purchase —
+      // Paid plans activate only through a verified Google Play purchase —
       // that native IAP flow is explicitly deferred in this migration.
       Alert.alert("Paid Plans", "Coming soon. Continue with the Free plan for now — you can upgrade later.");
       return;

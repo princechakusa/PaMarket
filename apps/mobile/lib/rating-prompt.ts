@@ -6,8 +6,6 @@ const KEY_DONE = "pm_rate_done";
 const KEY_SNOOZE = "pm_rate_snooze";
 const KEY_OPENS = "pm_rate_opens";
 const SNOOZE_MS = 5 * 86400000;
-const ANDROID_PACKAGE = "com.pamarket.app";
-const IOS_STORE_SEARCH_URL = "https://apps.apple.com/search?term=PaMarket%20Zimbabwe";
 
 let checkedThisSession = false;
 
@@ -51,14 +49,9 @@ export async function snoozeRatingPrompt() {
 
 export async function openAppRating() {
   await set(KEY_DONE, "1");
-  if (Platform.OS === "android") {
-    const marketUrl = `market://details?id=${ANDROID_PACKAGE}`;
-    const webUrl = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
-    const canOpenMarket = await Linking.canOpenURL(marketUrl).catch(() => false);
-    await Linking.openURL(canOpenMarket ? marketUrl : webUrl).catch(() => {});
-    return;
-  }
-
-  // Use search until the live App Store numeric ID is available.
-  await Linking.openURL(IOS_STORE_SEARCH_URL).catch(() => {});
+  const url =
+    Platform.OS === "ios"
+      ? "https://apps.apple.com/app/id0000000000?action=write-review"
+      : "https://play.google.com/store/apps/details?id=com.pamarket.app";
+  await Linking.openURL(url).catch(() => {});
 }
