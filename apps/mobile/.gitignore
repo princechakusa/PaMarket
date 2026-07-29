@@ -34,6 +34,11 @@ yarn-error.*
 .env
 .env*.local
 
+# Firebase config (contains project API keys) — download from the Firebase
+# console per-developer/CI, never commit. See the .example files for shape.
+GoogleService-Info.plist
+google-services.json
+
 # typescript
 *.tsbuildinfo
 
