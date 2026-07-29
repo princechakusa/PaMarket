@@ -26,10 +26,10 @@ export function ShopsRail({
     <View style={styles.section}>
       <SectionHeader
         title="Verified Shops"
-        subtitle="Trusted local sellers"
+        subtitle="Trusted sellers near you"
         actionLabel="See all"
         onAction={onSeeAll}
-        actionColor={color.brand}
+        actionColor={color.goldDark}
       />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
         {businesses.slice(0, 12).map((business) => {
@@ -94,24 +94,24 @@ function buildStyles(color: ColorPalette) {
     },
     rail: {
       paddingHorizontal: space.lg,
-      gap: space.sm,
+      gap: space.md,
     },
     card: {
-      width: 184,
+      width: 220,
       backgroundColor: color.surface,
       borderRadius: radius.lg,
-      padding: space.sm,
-      gap: space.sm,
+      padding: space.md,
+      gap: space.md,
     },
     topRow: {
       flexDirection: "row",
-      gap: space.sm,
+      gap: space.md,
     },
     logoWrap: {
-      width: 42,
-      height: 42,
+      width: 48,
+      height: 48,
       borderRadius: radius.pill,
-      backgroundColor: color.brandTint,
+      backgroundColor: color.goldTint,
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
@@ -121,8 +121,8 @@ function buildStyles(color: ColorPalette) {
       height: "100%",
     },
     logoInitial: {
-      ...font.bodyStrong,
-      color: color.brand,
+      ...font.title,
+      color: color.goldDark,
     },
     copy: {
       flex: 1,
@@ -135,7 +135,7 @@ function buildStyles(color: ColorPalette) {
     },
     name: {
       ...font.bodyStrong,
-      fontSize: 14.5,
+      fontSize: 15.5,
       letterSpacing: -0.1,
       color: color.text,
       flexShrink: 1,
@@ -144,13 +144,11 @@ function buildStyles(color: ColorPalette) {
       ...font.caption,
       color: color.textMuted,
       fontWeight: "500",
-      fontSize: 11.5,
     },
     metaSub: {
       ...font.caption,
       color: color.textMuted,
       marginTop: 1,
-      fontSize: 11.5,
     },
     thumbRow: {
       flexDirection: "row",
@@ -158,7 +156,7 @@ function buildStyles(color: ColorPalette) {
     },
     thumb: {
       flex: 1,
-      height: 52,
+      height: 64,
       borderRadius: radius.md,
       backgroundColor: color.surfaceAlt,
       overflow: "hidden",

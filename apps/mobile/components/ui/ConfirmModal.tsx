@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { glass, type ColorPalette } from "../../lib/theme";
@@ -53,6 +53,7 @@ export function ConfirmModal({
         <BlurView
           intensity={glass.intensity.strong}
           tint="dark"
+          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.card}>

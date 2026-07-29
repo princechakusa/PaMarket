@@ -17,7 +17,7 @@ import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
-import { BrandWordmark } from "../../components/BrandLogo";
+import { BrandSymbol, BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
 import { GlassBackButton } from "../../components/ui";
 import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
@@ -167,11 +167,20 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.hero, { paddingTop: insets.top + space.md }]}>
+        <View style={styles.heroOrbLarge} />
+        <View style={styles.heroOrbSmall} />
         <GlassBackButton onPress={handleBack} tone="light" style={styles.backButton} />
-        <View style={styles.heroContent}>
-          <BrandWordmark size={38} onBrand />
+
+        <Text style={styles.heroKicker}>PaMarket Zimbabwe</Text>
+
+        <View style={[styles.stickyBrandCard, shadow.md]}>
+          <View style={styles.heroBrandRow}>
+            <View style={styles.logoShell}>
+              <BrandSymbol size={58} />
+            </View>
+            <BrandWordmark size={36} onBrand />
+          </View>
           <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Sign in to post, save favourites, and chat with buyers and sellers.</Text>
         </View>
       </View>
 
@@ -182,8 +191,8 @@ export default function SignInScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.card, shadow.lg]}>
-          <Text style={styles.cardTitle}>Sign in</Text>
-          <Text style={styles.cardSubtitle}>You can browse listings without an account. Sign in when you need account features.</Text>
+          <Text style={styles.cardTitle}>Sign in to continue</Text>
+          <Text style={styles.cardSubtitle}>Buy, sell, browse listings, post ads and chat safely.</Text>
 
           <View style={styles.socialStack}>
             {showAppleSignIn ? (
@@ -288,20 +297,17 @@ function buildStyles(color: ColorPalette) {
     },
     formScroll: {
       flex: 1,
-      marginTop: -24,
+      marginTop: -36,
     },
     scroll: {
       paddingHorizontal: space.lg,
       paddingTop: 0,
     },
     hero: {
-      minHeight: 310,
+      minHeight: 430,
       paddingHorizontal: space.xl,
       backgroundColor: color.brand,
       overflow: "hidden",
-    },
-    heroContent: {
-      marginTop: space.xxl,
     },
     heroOrbLarge: {
       position: "absolute",
@@ -367,7 +373,7 @@ function buildStyles(color: ColorPalette) {
       lineHeight: 23,
     },
     card: {
-      borderRadius: 28,
+      borderRadius: 34,
       backgroundColor: color.surface,
       paddingHorizontal: space.lg,
       paddingTop: space.xl,
@@ -404,8 +410,8 @@ function buildStyles(color: ColorPalette) {
       position: "relative",
     },
     socialButtonDark: {
-      backgroundColor: color.brandDark,
-      borderColor: color.brandDark,
+      backgroundColor: "#020C0A",
+      borderColor: "#020C0A",
     },
     socialButtonLight: {
       backgroundColor: color.surface,
