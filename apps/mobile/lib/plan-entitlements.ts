@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 
 // Mirrors www/js/business-subscription.js H.PLAN_ENTITLEMENTS — the single
-// source of truth for plan limits. Paid upgrades (Google Play Billing) are
+// source of truth for plan limits. Paid upgrades (app-store billing) are
 // out of scope for now; this covers read-only entitlement checks (listing
 // limits, staff limits, featured slots) needed by the listings/team screens.
 export type PlanEntitlements = {

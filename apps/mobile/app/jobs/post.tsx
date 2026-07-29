@@ -81,7 +81,7 @@ function buildDescription(opts: {
 // company_verified check as company-verify.tsx (posting jobs requires
 // verification "to protect job seekers from fraudulent listings").
 // Job credits / recruiter-plan enforcement (H.recruiterPlanEntitlements,
-// spend_job_credit RPC) is Google Play Billing-gated and deferred — this
+// spend_job_credit RPC) is app-store billing-gated and deferred — this
 // screen always allows posting, matching how a Free-plan recruiter with
 // posts remaining behaves today.
 export default function PostJobScreen() {

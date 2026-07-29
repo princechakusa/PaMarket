@@ -97,6 +97,7 @@ export default function SignInScreen() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showAppleSignIn = Platform.OS === "ios";
 
   if (!sessionLoading && session) {
     return <Redirect href="/(tabs)" />;
@@ -194,13 +195,15 @@ export default function SignInScreen() {
           <Text style={styles.cardSubtitle}>Buy, sell, browse listings, post ads and chat safely.</Text>
 
           <View style={styles.socialStack}>
-            <SocialButton
-              label="Continue with Apple"
-              icon={<AppleIcon />}
-              onPress={handleAppleSignIn}
-              isLoading={isAppleLoading}
-              dark
-            />
+            {showAppleSignIn ? (
+              <SocialButton
+                label="Continue with Apple"
+                icon={<AppleIcon />}
+                onPress={handleAppleSignIn}
+                isLoading={isAppleLoading}
+                dark
+              />
+            ) : null}
             <SocialButton
               label="Continue with Google"
               icon={<GoogleIcon />}

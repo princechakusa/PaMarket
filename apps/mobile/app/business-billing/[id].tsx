@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -57,10 +57,8 @@ function Badge({ tuple, styles }: { tuple: [string, string, string]; styles: Sty
   );
 }
 
-// Mirrors www/js/business-monetization.js pages.BusinessBilling — read-only
-// history of Google Play Billing purchases. No purchase logic here (that's
-// billing.js, deferred); the underlying tables will simply be empty until
-// react-native-iap is wired up.
+// Read-only history of app-store purchases. No purchase logic here; the
+// underlying tables will simply be empty until react-native-iap is wired up.
 export default function BusinessBillingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
@@ -71,6 +69,7 @@ export default function BusinessBillingScreen() {
   const [subs, setSubs] = useState<PlaySubscription[]>([]);
   const [packs, setPacks] = useState<SlotPack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const storeName = Platform.OS === "ios" ? "App Store" : "Google Play";
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
@@ -122,10 +121,10 @@ export default function BusinessBillingScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>Billed through Google Play</Text>
+        <Text style={styles.infoTitle}>Billed through {storeName}</Text>
         <Text style={styles.infoText}>
-          All purchases are made and managed through Google Play. To update your payment method or cancel a
-          subscription, use the Google Play Store app.
+          All purchases are made and managed through {storeName}. To update your payment method or cancel a
+          subscription, use your {storeName} account settings.
         </Text>
       </View>
 
