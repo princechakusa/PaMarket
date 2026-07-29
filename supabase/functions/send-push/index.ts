@@ -1,7 +1,21 @@
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-automation-secret',
-};
+// Tightened from wildcard (*) — this function is cron/secret-gated and never
+// called from a browser page, but a wildcard origin is still inconsistent
+// with every other function in this project and worth closing for
+// defense-in-depth (found during a pre-launch security audit).
+const ALLOWED_ORIGINS = new Set([
+  'https://pamarketzw.com',
+  'https://www.pamarketzw.com',
+]);
+
+function corsHeaders(req: Request) {
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com';
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-automation-secret',
+    'Vary': 'Origin',
+  };
+}
 
 const PREFERENCE_COLUMN_BY_TYPE: Record<string, string> = {
   message: 'messages',
@@ -189,9 +203,10 @@ async function sendWebPush(subscription: { endpoint: string; keys: { p256dh: str
 
 // ── Main handler ──────────────────────────────────────────
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  const cors = corsHeaders(req);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
-  const json = (data, status?) => new Response(JSON.stringify(data), { status: status || 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+  const json = (data, status?) => new Response(JSON.stringify(data), { status: status || 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 
   try {
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
