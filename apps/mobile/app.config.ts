@@ -61,7 +61,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
     versionCode: 110,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
-      backgroundColor: "#030303",
+      backgroundColor: "#F4F6FA",
       foregroundImage: "./assets/android-icon-foreground.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
@@ -95,10 +95,10 @@ export default ({ config }: ConfigContext): ExpoConfig =>
     [
       "expo-splash-screen",
       {
-        backgroundColor: "#030303",
-        image: "./assets/splash-icon-dark.png",
+        backgroundColor: "#FFFFFF",
+        image: "./assets/splash-icon.png",
         dark: {
-          backgroundColor: "#030303",
+          backgroundColor: "#0B0D12",
           image: "./assets/splash-icon-dark.png",
         },
         imageWidth: 280,
@@ -109,7 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig =>
       "expo-notifications",
       {
         icon: "./assets/notification-icon.png",
-        color: "#D6A12A",
+        color: "#1A3A8F",
       },
     ],
     "expo-image",

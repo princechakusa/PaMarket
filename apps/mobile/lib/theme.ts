@@ -56,13 +56,13 @@ export type ColorPalette = {
 
 export const LIGHT_COLORS: ColorPalette = {
   // Brand
-  brand: "#050505",
-  brandDark: "#000000",
-  brandTint: "#F5F1E8",
-  brandTintStrong: "#E7D8B5",
-  gold: "#D6A12A",
-  goldDark: "#9A6D18",
-  goldTint: "#FFF4D8",
+  brand: "#1A3A8F",
+  brandDark: "#122A6B",
+  brandTint: "#EEF2FB",
+  brandTintStrong: "#DDE5F7",
+  gold: "#F5A623",
+  goldDark: "#E2920F",
+  goldTint: "#FFF4E0",
 
   // Surfaces
   bg: "#F4F6FA",
@@ -89,11 +89,11 @@ export const LIGHT_COLORS: ColorPalette = {
   warningTint: "#FEF3C7",
   danger: "#DC2626",
   dangerTint: "#FEE2E2",
-  info: "#8A6418",
-  infoTint: "#FFF4D8",
+  info: "#1D4ED8",
+  infoTint: "#EAF1FF",
 
   // Utility
-  star: "#D6A12A",
+  star: "#F5A623",
   online: "#22C55E",
   skeleton: "#E7EAF1",
   skeletonHighlight: "#F1F3F8",
@@ -105,12 +105,12 @@ export const LIGHT_COLORS: ColorPalette = {
 
 export const DARK_COLORS: ColorPalette = {
   // Brand — lifted slightly for contrast against dark surfaces
-  brand: "#F4D678",
-  brandDark: "#D6A12A",
-  brandTint: "#261F10",
-  brandTintStrong: "#3A2C10",
-  gold: "#F4D678",
-  goldDark: "#D6A12A",
+  brand: "#4C6FD6",
+  brandDark: "#2C4494",
+  brandTint: "#1B2340",
+  brandTintStrong: "#242E52",
+  gold: "#F5A623",
+  goldDark: "#E2920F",
   goldTint: "#3A2C10",
 
   // Surfaces
@@ -138,11 +138,11 @@ export const DARK_COLORS: ColorPalette = {
   warningTint: "#3A2A0A",
   danger: "#EF4444",
   dangerTint: "#3A1414",
-  info: "#F4D678",
-  infoTint: "#2A220F",
+  info: "#3B82F6",
+  infoTint: "#15233E",
 
   // Utility
-  star: "#F4D678",
+  star: "#F5A623",
   online: "#22C55E",
   skeleton: "#1F222C",
   skeletonHighlight: "#282C38",

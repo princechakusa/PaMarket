@@ -1,6 +1,6 @@
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 import { Text, View } from "react-native";
-import Svg, { Defs, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 
 import { useThemedStyles } from "../lib/theme-provider";
 
@@ -11,43 +11,20 @@ type BrandSymbolProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function BrandSymbol({ size = 48, monochrome = false, contained = false, style }: BrandSymbolProps) {
+export function BrandSymbol({ size = 48, monochrome = false, style }: BrandSymbolProps) {
   const palette = useThemedStyles((color) => color);
-  const gold = monochrome ? palette.textOnBrand : "url(#pmGold)";
+  const topLeft = monochrome ? palette.textOnBrand : palette.brand;
+  const topRight = monochrome ? palette.textOnBrand : palette.gold;
+  const bottomLeft = monochrome ? palette.textOnBrand : palette.brandDark;
+  const bottomRight = monochrome ? palette.textOnBrand : palette.info;
 
   return (
     <View style={[{ width: size, height: size }, style]}>
       <Svg width={size} height={size} viewBox="0 0 512 512" accessibilityLabel="PaMarket logo">
-        <Defs>
-          <LinearGradient id="pmGold" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#FFE078" />
-            <Stop offset="0.58" stopColor={palette.gold} />
-            <Stop offset="1" stopColor={palette.goldDark} />
-          </LinearGradient>
-        </Defs>
-        {contained ? <Rect width={512} height={512} rx={116} fill={palette.brandDark} /> : null}
-        <SvgText
-          x={186}
-          y={338}
-          textAnchor="middle"
-          fontFamily="Georgia, Times New Roman, serif"
-          fontSize={252}
-          fontWeight="700"
-          fill={gold}
-        >
-          P
-        </SvgText>
-        <SvgText
-          x={324}
-          y={338}
-          textAnchor="middle"
-          fontFamily="Georgia, Times New Roman, serif"
-          fontSize={220}
-          fontWeight="700"
-          fill={palette.textOnBrand}
-        >
-          M
-        </SvgText>
+        <Path fill={topLeft} d="M66 32h124c19 0 34 15 34 34v124l-34 34H66c-19 0-34-15-34-34V66c0-19 15-34 34-34Z" />
+        <Path fill={topRight} d="M322 32h124c19 0 34 15 34 34v124c0 19-15 34-34 34H322l-34-34V66c0-19 15-34 34-34Z" />
+        <Path fill={bottomLeft} d="M66 288h124l34 34v124c0 19-15 34-34 34H66c-19 0-34-15-34-34V322c0-19 15-34 34-34Z" />
+        <Path fill={bottomRight} d="M322 288h124c19 0 34 15 34 34v124c0 19-15 34-34 34H322c-19 0-34-15-34-34V322l34-34Z" />
       </Svg>
     </View>
   );
@@ -61,7 +38,6 @@ type BrandWordmarkProps = {
 
 export function BrandWordmark({ size = 26, onBrand = false, style }: BrandWordmarkProps) {
   const palette = useThemedStyles((color) => color);
-  const marketColor = onBrand ? palette.textOnBrand : palette.brand;
 
   return (
     <Text
@@ -69,17 +45,17 @@ export function BrandWordmark({ size = 26, onBrand = false, style }: BrandWordma
       accessibilityLabel="PaMarket"
       style={[
         {
-          color: marketColor,
+          color: onBrand ? palette.textOnBrand : palette.brand,
           fontSize: size,
           fontWeight: "900",
-          letterSpacing: 0,
+          letterSpacing: -1,
           lineHeight: Math.round(size * 1.2),
         },
         style,
       ]}
     >
       <Text style={{ color: palette.gold }}>Pa</Text>
-      <Text style={{ color: marketColor }}>Market</Text>
+      <Text>Market</Text>
     </Text>
   );
 }
