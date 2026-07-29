@@ -196,7 +196,7 @@
             '<div class="mega-simple-ic">' + ICONS.shop + '</div>' +
             '<div><div class="mega-simple-title">Browse All Shops</div><div class="mega-simple-sub">Verified business storefronts near you</div></div>' +
           '</a>' +
-          '<a href="advertise" class="mega-simple-card">' +
+          '<a href="open-shop" class="mega-simple-card">' +
             '<div class="mega-simple-ic">' + ICONS.plus + '</div>' +
             '<div><div class="mega-simple-title">Open Your Shop</div><div class="mega-simple-sub">Free storefront, product catalog & inbox</div></div>' +
           '</a>' +
