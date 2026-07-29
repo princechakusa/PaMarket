@@ -51,7 +51,7 @@ export async function openAppRating() {
   await set(KEY_DONE, "1");
   const url =
     Platform.OS === "ios"
-      ? "https://apps.apple.com/app/id0000000000?action=write-review"
+      ? "https://apps.apple.com/app/id6794616959?action=write-review"
       : "https://play.google.com/store/apps/details?id=com.pamarket.app";
   await Linking.openURL(url).catch(() => {});
 }

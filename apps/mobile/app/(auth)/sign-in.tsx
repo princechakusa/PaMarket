@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Link, Redirect, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
@@ -98,8 +98,22 @@ export default function SignInScreen() {
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Returns to whatever screen the user was on before being gated to sign
+  // in (e.g. "Create a Shop" while signed out) instead of always dumping
+  // them at Home — previously every gated action landed on Home after
+  // signing in, requiring a second tap to actually continue what they were
+  // doing. router.back() only has somewhere to go back to when sign-in was
+  // pushed on top of another screen; a direct/deep-linked visit falls back
+  // to Home since there's no prior screen in this stack.
+  useEffect(() => {
+    if (!sessionLoading && session) {
+      if (router.canGoBack()) router.back();
+      else router.replace("/(tabs)");
+    }
+  }, [sessionLoading, session]);
+
   if (!sessionLoading && session) {
-    return <Redirect href="/(tabs)" />;
+    return null;
   }
 
   function handleBack() {
@@ -194,13 +208,15 @@ export default function SignInScreen() {
           <Text style={styles.cardSubtitle}>Buy, sell, browse listings, post ads and chat safely.</Text>
 
           <View style={styles.socialStack}>
-            <SocialButton
-              label="Continue with Apple"
-              icon={<AppleIcon />}
-              onPress={handleAppleSignIn}
-              isLoading={isAppleLoading}
-              dark
-            />
+            {Platform.OS === "ios" ? (
+              <SocialButton
+                label="Continue with Apple"
+                icon={<AppleIcon />}
+                onPress={handleAppleSignIn}
+                isLoading={isAppleLoading}
+                dark
+              />
+            ) : null}
             <SocialButton
               label="Continue with Google"
               icon={<GoogleIcon />}

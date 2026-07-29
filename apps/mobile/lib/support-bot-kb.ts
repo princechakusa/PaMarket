@@ -1,6 +1,10 @@
 // Ported verbatim from www/js/help.js pages.ReportProblem_after KB array (37 topics).
 // Keep tags/answer/chips text identical to the Capacitor source — this is
-// real user-facing support content, not paraphrased.
+// real user-facing support content, not paraphrased. Billing-related
+// entries are platform-aware (Google Play on Android, App Store on iOS) via
+// lib/store-info.ts, since the original Capacitor source predates iOS IAP.
+
+import { STORE_NAME, BILLING_NAME, MANAGE_SUBSCRIPTION_PATH, REFUND_PATH, ACCOUNT_NAME } from "./store-info";
 
 export type KbEntry = {
   tags: string[];
@@ -146,42 +150,42 @@ export const KB: KbEntry[] = [
   },
   {
     tags: ['boost','sponsored','advertise','promote listing','feature listing','paid ad','promote my listing','boost my listing','boost listing'],
-    answer: 'To boost a listing so it ranks higher in search and browse:\n1. Go to My Listings and open the listing you want to boost\n2. Tap "Boost Listing"\n3. Choose a duration — 1 day, 7 days, or 30 days\n4. Pay securely with Google Play Billing (your normal Google account payment method — card, Play balance, or carrier billing)\n\nBoosted listings get priority placement for the duration you choose. Payment is a one-time purchase, not a subscription — it simply expires after the period ends.',
+    answer: `To boost a listing so it ranks higher in search and browse:\n1. Go to My Listings and open the listing you want to boost\n2. Tap "Boost Listing"\n3. Choose a duration — 1 day, 7 days, or 30 days\n4. Pay securely with ${BILLING_NAME} (your normal ${ACCOUNT_NAME} payment method)\n\nBoosted listings get priority placement for the duration you choose. Payment is a one-time purchase, not a subscription — it simply expires after the period ends.`,
     chips: ['Featured Slot Pack', 'Shop Subscription', 'Ask Another Question'],
   },
   {
     tags: ['shop subscription','shop plan','business plan','shop starter','shop pro','shop premium','upgrade shop','business subscription','shop billing'],
-    answer: 'Shop subscriptions unlock extra features for your business profile — more featured slots, higher listing limits, and priority placement, depending on the tier.\n\nAvailable plans (monthly, billed via Google Play):\n• Shop Starter\n• Shop Pro\n• Shop Premium\n\nTo subscribe:\n1. Go to your Business Profile\n2. Tap "Upgrade" or "Manage Subscription"\n3. Pick a plan and confirm through Google Play Billing\n\nSubscriptions renew automatically each month through your Google account until you cancel. You can manage or cancel anytime from Google Play → Subscriptions — PaMarket cannot cancel it for you.',
+    answer: `Shop subscriptions unlock extra features for your business profile — more featured slots, higher listing limits, and priority placement, depending on the tier.\n\nAvailable plans (monthly, billed via ${STORE_NAME}):\n• Shop Starter\n• Shop Pro\n• Shop Premium\n\nTo subscribe:\n1. Go to your Business Profile\n2. Tap "Upgrade" or "Manage Subscription"\n3. Pick a plan and confirm through ${BILLING_NAME}\n\nSubscriptions renew automatically each month through your ${ACCOUNT_NAME} until you cancel. You can manage or cancel anytime from ${MANAGE_SUBSCRIPTION_PATH} — PaMarket cannot cancel it for you.`,
     chips: ['Featured Slot Pack', 'Boost a Listing', 'Talk to a Human'],
   },
   {
     tags: ['featured slot','slot pack','extra slots','featured slot pack','more featured slots'],
-    answer: 'Featured Slot Packs give your shop extra featured-listing slots (on top of what your subscription tier includes).\n\nAvailable packs (one-time purchase via Google Play Billing):\n• +1 slot\n• +3 slots (best value)\n\nTo buy one: go to your Business Profile → Featured Slots → "Buy More Slots" and complete the purchase through Google Play. Slots are added to your account immediately after payment confirms.',
+    answer: `Featured Slot Packs give your shop extra featured-listing slots (on top of what your subscription tier includes).\n\nAvailable packs (one-time purchase via ${BILLING_NAME}):\n• +1 slot\n• +3 slots (best value)\n\nTo buy one: go to your Business Profile → Featured Slots → "Buy More Slots" and complete the purchase through ${STORE_NAME}. Slots are added to your account immediately after payment confirms.`,
     chips: ['Shop Subscription', 'Boost a Listing', 'Ask Another Question'],
   },
   {
     tags: ['recruiter','recruiter subscription','recruiter plan','recruiter monthly','job posting subscription','unlimited job posts'],
-    answer: 'The Recruiter subscription is for employers who post jobs regularly. It gives you a monthly allowance of job posts plus recruiter tools, billed monthly through Google Play Billing.\n\nTo subscribe:\n1. Go to Post → Jobs (or your Recruiter dashboard)\n2. Tap "Subscribe" under Recruiter Plan\n3. Confirm the purchase through Google Play\n\nIt renews automatically each month. Manage or cancel anytime from Google Play → Subscriptions.\n\nPrefer to pay per job instead? Use Job Posting Credits — no subscription required.',
+    answer: `The Recruiter subscription is for employers who post jobs regularly. It gives you a monthly allowance of job posts plus recruiter tools, billed monthly through ${BILLING_NAME}.\n\nTo subscribe:\n1. Go to Post → Jobs (or your Recruiter dashboard)\n2. Tap "Subscribe" under Recruiter Plan\n3. Confirm the purchase through ${STORE_NAME}\n\nIt renews automatically each month. Manage or cancel anytime from ${MANAGE_SUBSCRIPTION_PATH}.\n\nPrefer to pay per job instead? Use Job Posting Credits — no subscription required.`,
     chips: ['Job Posting Credits', 'Job Boost', 'Talk to a Human'],
   },
   {
     tags: ['job credit','job posting credit','job credits','pay per job post','credit pack','job post credit'],
-    answer: 'Job Posting Credits let you pay per job listing instead of subscribing to the Recruiter plan — each credit lets you post one job.\n\nAvailable packs (one-time purchase via Google Play Billing):\n• 1 job post credit\n• 5 job post credits (best value)\n\nTo buy: go to Post → Jobs → "Buy Job Credits" and complete the purchase through Google Play. Credits are added to your account instantly and are spent automatically the next time you post a job.',
+    answer: `Job Posting Credits let you pay per job listing instead of subscribing to the Recruiter plan — each credit lets you post one job.\n\nAvailable packs (one-time purchase via ${BILLING_NAME}):\n• 1 job post credit\n• 5 job post credits (best value)\n\nTo buy: go to Post → Jobs → "Buy Job Credits" and complete the purchase through ${STORE_NAME}. Credits are added to your account instantly and are spent automatically the next time you post a job.`,
     chips: ['Recruiter Subscription', 'Job Boost', 'Ask Another Question'],
   },
   {
     tags: ['job boost','boost job','boost vacancy','promote job listing','feature job'],
-    answer: 'To boost a job listing so it appears higher for job seekers:\n1. Go to My Listings and open the job posting\n2. Tap "Boost Job"\n3. Choose 7 days or 30 days (best value)\n4. Pay securely through Google Play Billing\n\nThis is a one-time purchase per boost, separate from the Recruiter subscription and Job Posting Credits.',
+    answer: `To boost a job listing so it appears higher for job seekers:\n1. Go to My Listings and open the job posting\n2. Tap "Boost Job"\n3. Choose 7 days or 30 days (best value)\n4. Pay securely through ${BILLING_NAME}\n\nThis is a one-time purchase per boost, separate from the Recruiter subscription and Job Posting Credits.`,
     chips: ['Recruiter Subscription', 'Job Posting Credits', 'Ask Another Question'],
   },
   {
     tags: ['rental featured','feature my rental','featured rental','promote rental','rental slot','feature property'],
-    answer: 'To feature a rental listing so it stands out to renters:\n1. Go to My Listings and open the rental listing\n2. Tap "Feature This Rental"\n3. Choose 7 days or 30 days (best value)\n4. Pay securely through Google Play Billing\n\nFeatured rentals get priority placement in rental search and browse for the duration purchased.',
+    answer: `To feature a rental listing so it stands out to renters:\n1. Go to My Listings and open the rental listing\n2. Tap "Feature This Rental"\n3. Choose 7 days or 30 days (best value)\n4. Pay securely through ${BILLING_NAME}\n\nFeatured rentals get priority placement in rental search and browse for the duration purchased.`,
     chips: ['Boost a Listing', 'Ask Another Question'],
   },
   {
     tags: ['refund','cancel subscription','cancel purchase','billing issue','charged twice','wrong charge','purchase failed','payment failed','play billing','google play billing','manage subscription','restore purchase'],
-    answer: 'All paid features (boosts, featured slots, shop plans, recruiter plans, job credits) are billed through Google Play Billing — PaMarket never sees or stores your card details.\n\nTo manage or cancel a subscription:\nGoogle Play Store → tap your profile icon → Payments & subscriptions → Subscriptions\n\nTo request a refund:\nGoogle Play Store → Order history → find the purchase → Report a problem\n\nIf a purchase completed but the feature did not activate in the app, contact our support team with your order number and we will resolve it manually.',
+    answer: `All paid features (boosts, featured slots, shop plans, recruiter plans, job credits) are billed through ${BILLING_NAME} — PaMarket never sees or stores your card details.\n\nTo manage or cancel a subscription:\n${MANAGE_SUBSCRIPTION_PATH}\n\nTo request a refund:\n${REFUND_PATH}\n\nIf a purchase completed but the feature did not activate in the app, contact our support team with your order number and we will resolve it manually.`,
     chips: ['Talk to a Human', 'Ask Another Question'],
   },
   {

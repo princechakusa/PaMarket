@@ -1,3 +1,5 @@
+import { STORE_NAME, BILLING_NAME, MANAGE_SUBSCRIPTION_PATH, REFUND_PATH, REFUND_POLICY_OWNER, ACCOUNT_NAME } from "./store-info";
+
 export type LegalSection = { heading: string; body: string };
 export type LegalDoc = { title: string; updated: string; sections: LegalSection[] };
 export type LegalDocKey =
@@ -69,8 +71,8 @@ export const TERMS: LegalDoc = {
       body: "PaMarket does not facilitate, guarantee, insure, or supervise any transaction between users. We do not process payments, hold escrow funds, or provide buyer or seller protection of any kind. All agreements, payments, and deliveries are arranged directly between the buyer and the seller. PaMarket expressly disclaims any liability for non-payment or delayed payment, non-delivery or late delivery of goods, defective or misdescribed or counterfeit or stolen goods, fraud or deceptive conduct by any user, loss/damage/injury arising from a meeting between users, and any dispute arising from a transaction conducted through or discovered on the platform.",
     },
     {
-      heading: "10A. Paid Features and Google Play Billing",
-      body: "Separately from peer-to-peer marketplace transactions, PaMarket offers optional paid platform features — listing boosts, featured slot packs, Business Shop subscriptions, Recruiter subscriptions, job posting credit packs, job boosts, and featured rental slots — sold by PaMarket directly to you and processed exclusively through Google Play Billing. All paid features are purchased and billed through Google Play Billing; PaMarket does not receive, process, or store your card or payment details. Subscriptions renew automatically until cancelled via Google Play Store; PaMarket cannot cancel a Google Play subscription on your behalf. One-time purchases do not renew automatically. Refund requests are handled through Google Play's refund process. Posting listings, applying for jobs, messaging, and browsing remain entirely free.",
+      heading: "10A. Paid Features and Platform Billing",
+      body: `Separately from peer-to-peer marketplace transactions, PaMarket offers optional paid platform features — listing boosts, featured slot packs, Business Shop subscriptions, Recruiter subscriptions, job posting credit packs, job boosts, and featured rental slots — sold by PaMarket directly to you and processed exclusively through ${BILLING_NAME}. All paid features are purchased and billed through ${BILLING_NAME}; PaMarket does not receive, process, or store your card or payment details. Subscriptions renew automatically until cancelled via ${STORE_NAME}; PaMarket cannot cancel a subscription on your behalf. One-time purchases do not renew automatically. Refund requests are handled through ${REFUND_POLICY_OWNER} refund process. Posting listings, applying for jobs, messaging, and browsing remain entirely free.`,
     },
     {
       heading: "11. Messaging and User Conduct",
@@ -137,7 +139,7 @@ export const PRIVACY: LegalDoc = {
     },
     {
       heading: "2. Information We Collect",
-      body: "Account and identity data (name, email, phone, profile photo); verification data (national ID/passport copy for verified badge requests, deleted within 30 days of review); listing data (photos, titles, descriptions, prices, categories, locations); business data (business name, type, description, logo, catalogue); job and CV data; message and communication data; push notification device tokens; usage and behavioural data; device and technical data (model, OS version, app version, IP address, crash logs); and purchase data (purchase token, product ID, purchase/subscription status from Google Play Billing — we never receive your card number, bank details, or Google account password).",
+      body: "Account and identity data (name, email, phone, profile photo); verification data (national ID/passport copy for verified badge requests, deleted within 30 days of review); listing data (photos, titles, descriptions, prices, categories, locations); business data (business name, type, description, logo, catalogue); job and CV data; message and communication data; push notification device tokens; usage and behavioural data; device and technical data (model, OS version, app version, IP address, crash logs); and purchase data (purchase token, product ID, purchase/subscription status from Google Play Billing on Android or Apple's In-App Purchase system on iOS — we never receive your card number, bank details, Google account password, or Apple ID password).",
     },
     {
       heading: "3. Legal Basis for Processing",
@@ -149,7 +151,7 @@ export const PRIVACY: LegalDoc = {
     },
     {
       heading: "5. Sharing and Service Providers",
-      body: "We do not sell, rent, or trade your personal information. We share data only with trusted sub-processors: Supabase Inc. (database, auth, storage, realtime — hosted on AWS eu-west-1/Ireland); Google LLC/Firebase (Android push notifications via FCM); Apple Inc. (iOS push via APNS); Google LLC Sign in with Google (name/email shared if you choose Google login); Google LLC Google Play Billing (purchase token, product ID, subscription status for paid features). All sub-processors are bound by data processing agreements. We may disclose data if required by a court order, warrant, or lawful request from a competent Zimbabwean authority.",
+      body: "We do not sell, rent, or trade your personal information. We share data only with trusted sub-processors: Supabase Inc. (database, auth, storage, realtime — hosted on AWS eu-west-1/Ireland); Google LLC/Firebase (Android push notifications via FCM); Apple Inc. (iOS push via APNS); Google LLC Sign in with Google (name/email shared if you choose Google login); Sign in with Apple (name/email shared if you choose Apple login on iOS); Google LLC Google Play Billing (purchase token, product ID, subscription status for paid features on Android); Apple Inc. App Store billing (the same purchase data for paid features on iOS). All sub-processors are bound by data processing agreements. We may disclose data if required by a court order, warrant, or lawful request from a competent Zimbabwean authority.",
     },
     {
       heading: "6. Push Notifications",
@@ -745,7 +747,7 @@ export const BOOSTED_LISTING_RULES: LegalDoc = {
   sections: [
     {
       heading: "",
-      body: "These rules apply to all PaMarket paid platform features: listing boosts, featured slot packs, Business Shop subscriptions, Recruiter subscriptions, job posting credits, job boosts, and featured rental slots. All of these are purchased through Google Play Billing and must comply with all standard listing requirements.",
+      body: `These rules apply to all PaMarket paid platform features: listing boosts, featured slot packs, Business Shop subscriptions, Recruiter subscriptions, job posting credits, job boosts, and featured rental slots. All of these are purchased through ${BILLING_NAME} and must comply with all standard listing requirements.`,
     },
     {
       heading: "1. What Boosting Does",
@@ -756,8 +758,8 @@ export const BOOSTED_LISTING_RULES: LegalDoc = {
       body: "Listings must meet all of the following before a boost can be applied: listing must be Active and comply with all Terms of Use; listing must have at least one real photo; listing must have an accurate title, description, and price; listings under review or flagged for policy violations are not eligible; prohibited items may not be boosted under any circumstances.",
     },
     {
-      heading: "3. Payment & Refunds — Google Play Billing",
-      body: "All paid features (boosts, featured slot packs, Business Shop and Recruiter subscriptions, job credits, job boosts, featured rental slots) are purchased and billed through Google Play Billing using the payment method on your Google account — PaMarket never receives or stores your card details. One-time purchases (boosts, slot packs, job credits, job boosts, featured rental slots) activate immediately after payment confirms and expire automatically at the end of the purchased duration or once the credits are used. Subscriptions (Business Shop and Recruiter plans) renew automatically each billing period until cancelled via Google Play Store > Payments and subscriptions > Subscriptions — PaMarket cannot cancel a subscription on your behalf. Refunds are requested through Google Play (Order history > Report a problem) and are subject to Google Play's refund policy. No refund is issued if a listing is removed for policy violations during an active boost or subscription period. If a purchase completes but the feature does not activate in the app, contact support with your Google Play order number and we will investigate and correct it.",
+      heading: "3. Payment & Refunds — Platform Billing",
+      body: `All paid features (boosts, featured slot packs, Business Shop and Recruiter subscriptions, job credits, job boosts, featured rental slots) are purchased and billed through ${BILLING_NAME} using the payment method on your ${ACCOUNT_NAME} — PaMarket never receives or stores your card details. One-time purchases (boosts, slot packs, job credits, job boosts, featured rental slots) activate immediately after payment confirms and expire automatically at the end of the purchased duration or once the credits are used. Subscriptions (Business Shop and Recruiter plans) renew automatically each billing period until cancelled via ${MANAGE_SUBSCRIPTION_PATH} — PaMarket cannot cancel a subscription on your behalf. Refunds are requested through ${REFUND_PATH} and are subject to ${REFUND_POLICY_OWNER} refund policy. No refund is issued if a listing is removed for policy violations during an active boost or subscription period. If a purchase completes but the feature does not activate in the app, contact support with your ${STORE_NAME} order number and we will investigate and correct it.`,
     },
     {
       heading: "4. Boost Limits",
@@ -765,7 +767,7 @@ export const BOOSTED_LISTING_RULES: LegalDoc = {
     },
     {
       heading: "5. Our Rights",
-      body: "PaMarket reserves the right to: remove or suspend a boost or featured placement if the listing violates platform policies, even if payment has been made; adjust the boost algorithm to ensure a fair and diverse marketplace experience; refuse to boost or feature any listing at our sole discretion; direct you to Google Play for refund processing on any paid feature removed for policy violations. Questions? Email support@pamarketzw.com",
+      body: `PaMarket reserves the right to: remove or suspend a boost or featured placement if the listing violates platform policies, even if payment has been made; adjust the boost algorithm to ensure a fair and diverse marketplace experience; refuse to boost or feature any listing at our sole discretion; direct you to ${STORE_NAME} for refund processing on any paid feature removed for policy violations. Questions? Email support@pamarketzw.com`,
     },
   ],
 };
