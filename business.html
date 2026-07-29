@@ -365,6 +365,9 @@ function setMeta(b, url){
   set('canonicalLink','href',url);
   set('ogTitle','content',title); set('ogDesc','content',desc); set('ogImage','content',img); set('ogUrl','content',url);
   set('twTitle','content',title); set('twDesc','content',desc); set('twImage','content',img);
+  // A non-active shop is only ever fetchable by its own owner (RLS) or an
+  // admin -- never index a page a real visitor can never actually reach.
+  if (b.status !== 'active') set('robotsMeta','content','noindex, nofollow');
 }
 
 // Dynamic JSON-LD — real data only. AggregateRating/Review are emitted ONLY
@@ -412,6 +415,15 @@ function render(b, extras){
   statHtml += '<div class="biz-stat"><div class="n">'+followers+'</div><div class="l">Followers</div></div>';
   if (year) statHtml += '<div class="biz-stat"><div class="n">'+year+'</div><div class="l">On PaMarket since</div></div>';
 
+  var statusBanner = (isOwner && b.status !== 'active')
+    ? '<div class="biz-section" style="background:#FBF4E6;border:1px solid #E8A33D33;border-radius:12px;padding:14px 18px;margin-bottom:16px">'+
+      '<b>'+(b.status==='suspended'?'This shop is suspended.':'This shop is pending review.')+'</b> '+
+      (b.status==='suspended'
+        ? 'Contact support if you believe this is a mistake.'
+        : 'Only you can see this page until PaMarket approves it — usually within 24 hours. It is not visible to buyers yet.')+
+      '</div>'
+    : '';
+
   var ownerPanel = isOwner
     ? '<div class="biz-section owner-panel"><h2>Manage your shop</h2>'+
       '<div class="sub">Keep your shop details current and stay on top of buyer messages.</div>'+
@@ -441,6 +453,7 @@ function render(b, extras){
       '<div class="biz-actions">'+(actions||'<span class="sub" style="color:var(--mute);font-size:13px">No contact details provided</span>')+'</div>'+
     '</div>'+
     '<div class="biz-body">'+
+      statusBanner+
       ownerPanel+
       (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>'+esc(b.description)+'</p>'+
         (cats.length?'<div class="cat-chips">'+cats.map(function(c){return '<span class="pm-chip">'+esc(CAT_LABEL[c]||c)+'</span>';}).join('')+'</div>':'')+'</div>' : '')+

@@ -5,9 +5,9 @@
   var SB_URL = global.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
   var SB_KEY = global.SUPABASE_ANON_KEY || 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
 
-  function pgFetch(path) {
+  function pgFetch(path, token) {
     return fetch(SB_URL + '/rest/v1/' + path, {
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (token || SB_KEY) },
     }).then(function (res) {
       if (!res.ok) throw new Error('Supabase request failed: ' + res.status);
       return res.json();
@@ -218,9 +218,18 @@
     return pgFetch('businesses?' + qp.join('&'));
   }
 
+  // Not-yet-active businesses (pending_activation/draft/suspended) are only
+  // visible to their owner or a moderator — enforced by the businesses RLS
+  // policy (status='active' OR owner_user_id=auth.uid() OR is_admin()). That
+  // policy can only recognise the caller as the owner if the request carries
+  // their own access token, so a signed-in viewer's session token is used
+  // when available; anonymous visitors fall back to the anon key, which RLS
+  // limits to active rows only.
   function fetchBusinessById(id) {
+    var s = sharedSession();
     return pgFetch(
-      'businesses?id=eq.' + esc(id) + '&status=eq.active&select=*'
+      'businesses?id=eq.' + esc(id) + '&select=*',
+      s && s.access_token
     ).then(function (rows) {
       return rows[0] || null;
     });
