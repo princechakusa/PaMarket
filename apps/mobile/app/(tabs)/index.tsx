@@ -37,9 +37,7 @@ const BUSINESS_COLUMNS =
   "id,owner_user_id,name,logo,category,province,city,status,verification_level";
 
 const RAIL_CARD_WIDTH = 160;
-const COMPACT_RAIL_CARD_WIDTH = 122;
 const CITY_STORAGE_KEY = "pamarket.home-city-filter";
-const RECENTLY_POSTED_WINDOW_MS = 2 * 60 * 60 * 1000;
 
 // Horizontal rail of ListingCards with a SectionHeader — used for Featured,
 // Recently posted, and Near-<city> sections.
@@ -52,7 +50,6 @@ function ListingRail({
   onSeeAll,
   onPressListing,
   onToggleSave,
-  compact = false,
 }: {
   title: string;
   subtitle?: string;
@@ -62,7 +59,6 @@ function ListingRail({
   onSeeAll: () => void;
   onPressListing: (listing: Listing) => void;
   onToggleSave: (listing: Listing) => void;
-  compact?: boolean;
 }) {
   const styles = useThemedStyles(buildStyles);
   if (!listings.length) return null;
@@ -74,8 +70,7 @@ function ListingRail({
           <ListingCard
             key={listing.id}
             listing={listing}
-            width={compact ? COMPACT_RAIL_CARD_WIDTH : RAIL_CARD_WIDTH}
-            compact={compact}
+            width={RAIL_CARD_WIDTH}
             saved={savedIds.has(listing.id)}
             onToggleSave={() => onToggleSave(listing)}
             verified={verifiedSellerIds.has(listing.seller_id)}
@@ -252,8 +247,8 @@ export default function HomeScreen() {
   const featured = useMemo(() => filtered.filter(isFeatured).slice(0, 12), [filtered]);
 
   const recent = useMemo(() => {
-    const cutoff = Date.now() - RECENTLY_POSTED_WINDOW_MS;
-    return filtered.filter((l) => new Date(l.created_at).getTime() >= cutoff).slice(0, 12);
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    return filtered.filter((l) => new Date(l.created_at).getTime() >= dayAgo).slice(0, 12);
   }, [filtered]);
 
   const nearCity = useMemo(() => {
@@ -354,7 +349,6 @@ export default function HomeScreen() {
               onSeeAll={() => router.push("/(tabs)/search")}
               onPressListing={openListing}
               onToggleSave={onToggleSave}
-              compact
             />
 
             {nearCity.length ? (
