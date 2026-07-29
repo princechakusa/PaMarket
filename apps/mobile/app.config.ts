@@ -16,7 +16,8 @@ const withFirebaseNotificationColorOverride: ConfigPlugin = (expoConfig) =>
     return modConfig;
   });
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+export default ({ config }: ConfigContext): ExpoConfig =>
+  withFirebaseNotificationColorOverride({
   ...config,
   name: "PaMarket",
   slug: "pamarket",
@@ -111,7 +112,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: "#D6A12A",
       },
     ],
-    withFirebaseNotificationColorOverride,
     "expo-image",
     [
       "expo-image-picker",
@@ -133,11 +133,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // of unreadable minified JS.
       },
     ],
-  ] as any,
+  ],
   extra: {
     router: {},
     eas: {
       projectId: "d3ca5977-65b4-4690-b686-198e1a83ffd1",
     },
   },
-});
+  }) as ExpoConfig;
