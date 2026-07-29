@@ -243,62 +243,13 @@ export default function AccountScreen() {
   }
 
   if (!session?.user) {
-    const goSignIn = () => router.push("/(auth)/sign-in");
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 64 + insets.bottom + space.xxxl }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.guestHero, { paddingTop: insets.top + space.xl }]}>
-          <Text style={styles.guestKicker}>PaMarket Zimbabwe</Text>
-          <Text style={styles.guestTitle}>Your marketplace account</Text>
-          <Text style={styles.guestSubtitle}>
-            Browse listings freely. Sign in only when you want to post, save, chat, verify, or manage your account.
-          </Text>
-          <Pressable style={styles.guestSignInButton} onPress={goSignIn}>
-            <Text style={styles.guestSignInText}>Sign in or create account</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.sectionSpace}>
-          <SectionHeader title="Browse" />
-        </View>
-        <View style={styles.sidePad}>
-          <Card padded={false} style={styles.menuGroup}>
-            <MenuRow label="Browse Listings" onPress={() => router.push("/(tabs)/search")} color={color} styles={styles} />
-            <MenuRow label="Verified Shops" onPress={() => router.push("/shops")} color={color} styles={styles} />
-            <MenuRow label="Browse Rentals" onPress={() => router.push("/rentals")} color={color} styles={styles} />
-            <MenuRow label="Jobs" last onPress={() => router.push("/jobs")} color={color} styles={styles} />
-          </Card>
-        </View>
-
-        <View style={styles.sectionSpace}>
-          <SectionHeader title="Account" />
-        </View>
-        <View style={styles.sidePad}>
-          <Card padded={false} style={styles.menuGroup}>
-            <MenuRow label="Post a Free Ad" onPress={goSignIn} color={color} styles={styles} />
-            <MenuRow label="Messages" onPress={goSignIn} color={color} styles={styles} />
-            <MenuRow label="Saved & Favourites" onPress={goSignIn} color={color} styles={styles} />
-            <MenuRow label="My Listings" last onPress={goSignIn} color={color} styles={styles} />
-          </Card>
-        </View>
-
-        <View style={styles.sectionSpace}>
-          <SectionHeader title="More" />
-        </View>
-        <View style={styles.sidePad}>
-          <Card padded={false} style={styles.menuGroup}>
-            <MenuRow label="Help & Support" onPress={() => router.push("/help")} color={color} styles={styles} />
-            <MenuRow label="Legal Hub" last onPress={() => router.push("/legal-hub")} color={color} styles={styles} />
-          </Card>
-        </View>
-
-        <Text style={styles.footer}>
-          © {new Date().getFullYear()} PaMarket Zimbabwe · Made in Zimbabwe
-        </Text>
-      </ScrollView>
+      <View style={styles.centered}>
+        <Text style={styles.signInTitle}>Sign in to view your account</Text>
+        <Pressable style={styles.signInButton} onPress={() => router.push("/(auth)/sign-in")}>
+          <Text style={styles.signInButtonText}>Sign In</Text>
+        </Pressable>
+      </View>
     );
   }
 
@@ -475,43 +426,6 @@ function buildStyles(color: ColorPalette) {
     paddingVertical: space.md,
   },
   signInButtonText: { ...font.bodyStrong, color: color.textOnBrand },
-
-  guestHero: {
-    backgroundColor: color.brand,
-    paddingHorizontal: space.lg,
-    paddingBottom: space.xxl,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-  },
-  guestKicker: {
-    ...font.micro,
-    color: color.gold,
-    letterSpacing: 2,
-    marginBottom: space.sm,
-  },
-  guestTitle: {
-    ...font.h1,
-    color: color.textOnBrand,
-    letterSpacing: -0.8,
-  },
-  guestSubtitle: {
-    ...font.body,
-    color: color.textOnBrandSub,
-    lineHeight: 22,
-    marginTop: space.sm,
-  },
-  guestSignInButton: {
-    alignSelf: "flex-start",
-    backgroundColor: color.gold,
-    borderRadius: radius.pill,
-    paddingHorizontal: space.xl,
-    paddingVertical: space.md,
-    marginTop: space.lg,
-  },
-  guestSignInText: {
-    ...font.bodyStrong,
-    color: color.brandDark,
-  },
 
   hero: {
     alignItems: "center",
