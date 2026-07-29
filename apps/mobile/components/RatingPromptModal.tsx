@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -15,11 +15,11 @@ function Star({ size = 20, color }: { size?: number; color: string }) {
   );
 }
 
-// Mirrors www/js/app.js H._showRatingPrompt/maybeShowRatingPrompt.
 export function RatingPromptModal() {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const [visible, setVisible] = useState(false);
+  const storeName = Platform.OS === "ios" ? "App Store" : "Play Store";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -61,7 +61,7 @@ export function RatingPromptModal() {
           </Text>
           <Pressable style={styles.rateBtn} onPress={rate}>
             <Star size={16} color={tones.star} />
-            <Text style={styles.rateBtnText}>Rate on Play Store</Text>
+            <Text style={styles.rateBtnText}>Rate on {storeName}</Text>
           </Pressable>
           <Pressable style={styles.laterBtn} onPress={dismiss}>
             <Text style={styles.laterBtnText}>Maybe later</Text>
