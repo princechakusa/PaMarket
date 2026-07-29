@@ -13,6 +13,11 @@ type ListingCardProps = {
   saved?: boolean;
   onToggleSave?: () => void;
   verified?: boolean;
+  // Smaller/shorter card for the home screen's horizontal "Latest in X"
+  // rails — shorter photo ratio, smaller type, no location line. Opt-in
+  // only: every other usage (search grid, favourites, business listings)
+  // keeps the original larger card untouched.
+  compact?: boolean;
 };
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -32,15 +37,18 @@ function PinIcon() {
   );
 }
 
-export function ListingCard({ listing, onPress, width, saved, onToggleSave, verified }: ListingCardProps) {
+export function ListingCard({ listing, onPress, width, saved, onToggleSave, verified, compact }: ListingCardProps) {
   const styles = useThemedStyles(buildStyles);
   const photo = listing.photos?.[0];
   const featured = isFeatured(listing);
   const fresh = !featured && isNew(listing);
 
   return (
-    <Pressable style={[styles.card, width ? { width } : styles.fluid, shadow.sm]} onPress={onPress}>
-      <View style={styles.photoWrap}>
+    <Pressable
+      style={[styles.card, width ? { width } : styles.fluid, compact && styles.cardCompact, shadow.sm]}
+      onPress={onPress}
+    >
+      <View style={[styles.photoWrap, compact && styles.photoWrapCompact]}>
         {photo ? (
           <Image source={{ uri: photo }} style={styles.photo} contentFit="cover" transition={150} cachePolicy="memory-disk" />
         ) : (
@@ -48,42 +56,44 @@ export function ListingCard({ listing, onPress, width, saved, onToggleSave, veri
         )}
 
         {featured ? (
-          <View style={[styles.ribbon, styles.ribbonGold]}>
+          <View style={[styles.ribbon, styles.ribbonGold, compact && styles.ribbonCompact]}>
             <Text style={styles.ribbonText}>FEATURED</Text>
           </View>
         ) : fresh ? (
-          <View style={[styles.ribbon, styles.ribbonGreen]}>
+          <View style={[styles.ribbon, styles.ribbonGreen, compact && styles.ribbonCompact]}>
             <Text style={styles.ribbonText}>NEW</Text>
           </View>
         ) : null}
 
         {onToggleSave ? (
-          <Pressable style={styles.saveBtn} onPress={onToggleSave} hitSlop={8}>
+          <Pressable style={[styles.saveBtn, compact && styles.saveBtnCompact]} onPress={onToggleSave} hitSlop={8}>
             <HeartIcon filled={!!saved} />
           </Pressable>
         ) : null}
       </View>
 
-      <View style={styles.body}>
-        <Text style={styles.price} numberOfLines={1}>
+      <View style={[styles.body, compact && styles.bodyCompact]}>
+        <Text style={[styles.price, compact && styles.priceCompact]} numberOfLines={1}>
           {formatPrice(listing)}
         </Text>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, compact && styles.titleCompact]} numberOfLines={compact ? 1 : 2}>
           {listing.title}
         </Text>
-        <View style={styles.metaRow}>
-          <PinIcon />
-          <Text style={styles.location} numberOfLines={1}>
-            {listingLocation(listing)}
-          </Text>
-          {verified ? (
-            <View style={styles.verifiedDot}>
-              <Svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={4}>
-                <Polyline points="20 6 9 17 4 12" />
-              </Svg>
-            </View>
-          ) : null}
-        </View>
+        {compact ? null : (
+          <View style={styles.metaRow}>
+            <PinIcon />
+            <Text style={styles.location} numberOfLines={1}>
+              {listingLocation(listing)}
+            </Text>
+            {verified ? (
+              <View style={styles.verifiedDot}>
+                <Svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={4}>
+                  <Polyline points="20 6 9 17 4 12" />
+                </Svg>
+              </View>
+            ) : null}
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -97,7 +107,12 @@ function buildStyles(color: ColorPalette) {
       overflow: "hidden",
     },
     fluid: { flex: 1 },
+    // compact mirrors the approved home-rail mockup: 1.4 photo ratio (was
+    // 1.18), smaller ribbon/save button, tighter body padding, smaller
+    // price/title, no location line at all.
+    cardCompact: { borderRadius: radius.md },
     photoWrap: { width: "100%", aspectRatio: 1.18, position: "relative", backgroundColor: color.surfaceAlt },
+    photoWrapCompact: { aspectRatio: 1.4 },
     photo: { width: "100%", height: "100%" },
     placeholder: { backgroundColor: color.skeleton },
     ribbon: {
@@ -108,6 +123,7 @@ function buildStyles(color: ColorPalette) {
       paddingHorizontal: space.sm,
       paddingVertical: 3,
     },
+    ribbonCompact: { top: 5, left: 5, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5 },
     ribbonGold: { backgroundColor: color.gold },
     ribbonGreen: { backgroundColor: color.success },
     ribbonText: { ...font.micro, color: color.textOnBrand },
@@ -122,9 +138,16 @@ function buildStyles(color: ColorPalette) {
       alignItems: "center",
       justifyContent: "center",
     },
+    saveBtnCompact: { top: 5, right: 5, width: 20, height: 20, borderRadius: 10 },
     body: { padding: space.md, gap: 3 },
+    bodyCompact: { padding: 7, gap: 2 },
     price: { ...font.price, color: color.brand },
+    // Gold instead of brand blue — specific to the compact "Latest in X"
+    // home rails only; the default (non-compact) price color elsewhere is
+    // untouched.
+    priceCompact: { fontSize: 13, lineHeight: 17, fontWeight: "800", color: color.goldDark },
     title: { ...font.sub, color: color.text, fontWeight: "600" },
+    titleCompact: { fontSize: 10.5, lineHeight: 14, fontWeight: "500" },
     metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
     location: { ...font.caption, color: color.textMuted, flex: 1 },
     verifiedDot: {

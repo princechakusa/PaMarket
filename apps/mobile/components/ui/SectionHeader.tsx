@@ -7,6 +7,11 @@ type SectionHeaderProps = {
   subtitle?: string;
   actionLabel?: string;
   onAction?: () => void;
+  // Opt-in override for the "See all" link color — every existing call
+  // site keeps the default brand blue; only sections that specifically
+  // ask for a different accent (e.g. Verified Shops, Latest-in-X gold
+  // styling) pass this.
+  actionColor?: string;
 };
 
 function buildStyles(color: ColorPalette) {
@@ -26,7 +31,7 @@ function buildStyles(color: ColorPalette) {
 }
 
 // Consistent rail/section heading with an optional "See all" affordance.
-export function SectionHeader({ title, subtitle, actionLabel, onAction }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, actionLabel, onAction, actionColor }: SectionHeaderProps) {
   const styles = useThemedStyles(buildStyles);
   return (
     <View style={styles.row}>
@@ -36,7 +41,7 @@ export function SectionHeader({ title, subtitle, actionLabel, onAction }: Sectio
       </View>
       {actionLabel && onAction ? (
         <Pressable onPress={onAction} hitSlop={8}>
-          <Text style={styles.action}>{actionLabel}</Text>
+          <Text style={[styles.action, actionColor && { color: actionColor }]}>{actionLabel}</Text>
         </Pressable>
       ) : null}
     </View>

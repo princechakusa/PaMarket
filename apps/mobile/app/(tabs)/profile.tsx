@@ -187,7 +187,7 @@ export default function AccountScreen() {
       supabase.from("messages").select("id", { count: "exact", head: true }).eq("read", false).neq("sender_id", myId),
       supabase.from("businesses").select("*").eq("owner_user_id", myId),
       supabase.from("applications").select("id", { count: "exact", head: true }).eq("applicant_id", myId),
-      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", myId),
+      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", myId).limit(200),
       fetchValidSavedCount(myId),
     ]);
     if (profileRes.data) setProfile(profileRes.data as Profile);

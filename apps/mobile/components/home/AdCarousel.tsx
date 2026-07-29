@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Dimensions, Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import type { PaidAd } from "../../lib/ads";
 import { trackAdClick, trackAdImpression } from "../../lib/ads";
@@ -64,7 +65,7 @@ export function AdCarousel({ ads, title = "Featured Partners" }: { ads: PaidAd[]
           <View key={ad.id} style={[styles.slide, { width: SLIDE_WIDTH, backgroundColor: ad.bgColor }]}>
             {ad.imageUrl ? (
               <>
-                <Image source={{ uri: ad.imageUrl }} style={StyleSheet.absoluteFill} />
+                <Image source={{ uri: ad.imageUrl }} style={StyleSheet.absoluteFill} cachePolicy="memory-disk" />
                 <View style={styles.scrim} />
               </>
             ) : null}

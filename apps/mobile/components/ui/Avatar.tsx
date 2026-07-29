@@ -55,7 +55,10 @@ export function Avatar({ uri, name, size = 44, online, ring }: AvatarProps) {
         {uri ? (
           <Image source={{ uri }} style={{ width: "100%", height: "100%" }} />
         ) : (
-          <Text style={[styles.initials, { fontSize: size * 0.4 }]}>{initials(name)}</Text>
+          // lineHeight must scale with fontSize here — font.bodyStrong's fixed
+          // lineHeight:21 was clipping the glyphs top/bottom on any avatar
+          // larger than ~50px, where fontSize (size * 0.4) exceeds that box.
+          <Text style={[styles.initials, { fontSize: size * 0.4, lineHeight: size * 0.46 }]}>{initials(name)}</Text>
         )}
       </View>
       {online ? <View style={[styles.dot, { right: 0, bottom: 0 }]} /> : null}

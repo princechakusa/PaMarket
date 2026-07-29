@@ -47,7 +47,8 @@ export default function MyListingsScreen() {
       .from("listings")
       .select(LISTING_COLUMNS)
       .eq("seller_id", session.user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(300);
     setListings((data as Listing[]) ?? []);
   }, [session]);
 

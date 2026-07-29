@@ -71,7 +71,9 @@ export default function MessagesScreen() {
     const { data: conversations } = await supabase
       .from("conversations")
       .select("id,members,listing_id,business_id")
-      .contains("members", [myId]);
+      .contains("members", [myId])
+      .order("updated_at", { ascending: false })
+      .limit(200);
 
     const rows = (conversations as ConversationRow[]) ?? [];
     if (!rows.length) {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import Svg, { Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
@@ -98,6 +99,7 @@ function HomeSkeleton() {
 export default function HomeScreen() {
   const styles = useThemedStyles(buildStyles);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -319,7 +321,7 @@ export default function HomeScreen() {
       {header}
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 64 + insets.bottom + space.xxxl }]}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={color.brand} />}
         showsVerticalScrollIndicator={false}
       >
@@ -423,7 +425,6 @@ function buildStyles(color: ColorPalette) {
       backgroundColor: color.bg,
     },
     scrollContent: {
-      paddingBottom: space.xxl,
       paddingTop: space.sm,
     },
     railSection: {

@@ -1,9 +1,10 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import { CATEGORIES } from "../../lib/constants";
 import type { Listing } from "../../lib/listings";
-import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
+import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { SectionHeader, VerifiedBadge } from "../ui";
 
@@ -23,7 +24,13 @@ export function ShopsRail({
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Verified Shops" subtitle="Trusted sellers near you" actionLabel="See all" onAction={onSeeAll} />
+      <SectionHeader
+        title="Verified Shops"
+        subtitle="Trusted sellers near you"
+        actionLabel="See all"
+        onAction={onSeeAll}
+        actionColor={color.goldDark}
+      />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
         {businesses.slice(0, 12).map((business) => {
           const products = listings.filter(
@@ -43,7 +50,7 @@ export function ShopsRail({
               <View style={styles.topRow}>
                 <View style={styles.logoWrap}>
                   {business.logo ? (
-                    <Image source={{ uri: business.logo }} style={styles.logo} />
+                    <Image source={{ uri: business.logo }} style={styles.logo} cachePolicy="memory-disk" />
                   ) : (
                     <Text style={styles.logoInitial}>{businessInitials(business.name)}</Text>
                   )}
@@ -66,7 +73,9 @@ export function ShopsRail({
               <View style={styles.thumbRow}>
                 {[0, 1].map((i) => (
                   <View key={i} style={styles.thumb}>
-                    {thumbs[i] ? <Image source={{ uri: thumbs[i].photos![0] }} style={styles.thumbImage} /> : null}
+                    {thumbs[i] ? (
+                      <Image source={{ uri: thumbs[i].photos![0] }} style={styles.thumbImage} cachePolicy="memory-disk" />
+                    ) : null}
                   </View>
                 ))}
               </View>
@@ -102,7 +111,7 @@ function buildStyles(color: ColorPalette) {
       width: 48,
       height: 48,
       borderRadius: radius.pill,
-      backgroundColor: color.brandTint,
+      backgroundColor: color.goldTint,
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
@@ -113,7 +122,7 @@ function buildStyles(color: ColorPalette) {
     },
     logoInitial: {
       ...font.title,
-      color: color.brand,
+      color: color.goldDark,
     },
     copy: {
       flex: 1,
@@ -126,6 +135,8 @@ function buildStyles(color: ColorPalette) {
     },
     name: {
       ...font.bodyStrong,
+      fontSize: 15.5,
+      letterSpacing: -0.1,
       color: color.text,
       flexShrink: 1,
     },

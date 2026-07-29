@@ -143,10 +143,20 @@ function MessageIcon() {
   );
 }
 function WhatsAppIcon() {
+  // Both sub-paths (the phone-handset glyph and the outer speech-bubble
+  // silhouette) must be ONE path with fillRule="evenodd" — as two separate
+  // solid-white <Path> elements, the bubble path (drawn second, on top)
+  // fully painted over the tiny handset glyph, so this rendered as a plain
+  // white chat-bubble blob with no visible WhatsApp glyph at all. evenodd
+  // on the combined path cuts the handset shape out as a hole, letting the
+  // green circle behind it show through — the actual recognizable logo.
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="#ffffff">
-      <Path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-      <Path d="M11.99 0C5.364 0 0 5.372 0 11.994c0 2.116.554 4.1 1.524 5.822L.057 24l6.304-1.654A11.978 11.978 0 0 0 11.99 24C18.626 24 24 18.628 24 12.006 24 5.372 18.626 0 11.99 0z" />
+    <Svg width={20} height={20} viewBox="0 0 24 24">
+      <Path
+        fillRule="evenodd"
+        fill="#ffffff"
+        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M11.99 0C5.364 0 0 5.372 0 11.994c0 2.116.554 4.1 1.524 5.822L.057 24l6.304-1.654A11.978 11.978 0 0 0 11.99 24C18.626 24 24 18.628 24 12.006 24 5.372 18.626 0 11.99 0z"
+      />
     </Svg>
   );
 }
@@ -197,7 +207,7 @@ export default function ListingDetailScreen() {
     const sellerId = found.seller_id;
     const [profileRes, reviewsRes, similarRes] = await Promise.all([
       supabase.from("profiles_public").select("id,name,avatar,verified,created_at").eq("id", sellerId).maybeSingle(),
-      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", sellerId),
+      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", sellerId).limit(200),
       found.category
         ? supabase
             .from("listings")

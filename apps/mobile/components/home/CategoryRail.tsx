@@ -5,7 +5,10 @@ import { space } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { SectionHeader } from "../ui";
 
-const CARD_WIDTH = 160;
+// Smaller/shorter than the other home rails (Featured, Near City, Recently
+// Posted, which stay at their original 160px) — approved via mockup as a
+// Dubizzle-style compact size specifically for the per-category rails.
+const CARD_WIDTH = 122;
 
 export function CategoryRail({
   title,
@@ -36,6 +39,7 @@ export function CategoryRail({
             key={listing.id}
             listing={listing}
             width={CARD_WIDTH}
+            compact
             saved={savedIds.has(listing.id)}
             onToggleSave={() => onToggleSave(listing)}
             verified={verifiedSellerIds?.has(listing.seller_id)}
