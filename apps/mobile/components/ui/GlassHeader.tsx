@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { font, glass, space, type ColorPalette } from "../../lib/theme";
@@ -35,7 +35,6 @@ export function GlassHeader({ title, onBack, tone = "auto", trailing, transparen
         <BlurView
           intensity={glass.intensity.standard}
           tint={effectiveDark ? "dark" : "light"}
-          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
           style={StyleSheet.absoluteFill}
         />
       )}

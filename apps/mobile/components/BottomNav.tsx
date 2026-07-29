@@ -1,8 +1,10 @@
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs/types";
 import Svg, { Circle, Line, Path, Polyline } from "react-native-svg";
+import { useAuth } from "../lib/auth";
 import { glass, type ColorPalette } from "../lib/theme";
 import { useThemePreference, useThemedStyles } from "../lib/theme-provider";
 
@@ -58,6 +60,8 @@ const LABELS: Record<string, string> = {
 };
 
 export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
+  const { session } = useAuth();
+  const router = useRouter();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const { resolvedScheme } = useThemePreference();
@@ -78,6 +82,10 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
         style={styles.tabButton}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          if (route.name === "messages" && !session?.user) {
+            router.push("/(auth)/sign-in");
+            return;
+          }
           const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
           if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
         }}
@@ -94,7 +102,6 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
       <BlurView
         intensity={glass.intensity.standard}
         tint={resolvedScheme === "dark" ? "dark" : "light"}
-        experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
         style={StyleSheet.absoluteFill}
       />
       {leftRoutes.map(renderTab)}
