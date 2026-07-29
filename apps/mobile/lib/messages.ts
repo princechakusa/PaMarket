@@ -84,6 +84,12 @@ export function isPersonalConversationFor(conversation: ConversationRow, userIdA
 }
 
 export function otherMember(conversation: ConversationRow, myUserId: string): string | undefined {
+  // Some conversation rows (certain business/job/rental ones) can have a
+  // null/missing members field — calling .find() directly on that threw a
+  // TypeError synchronously during the chat screen's first render, crashing
+  // the app the moment a conversation was opened. isPersonalConversationFor
+  // right above already guards the same field this way; this didn't.
+  if (!Array.isArray(conversation.members)) return undefined;
   return conversation.members.find((m) => m !== myUserId);
 }
 
