@@ -37,15 +37,6 @@ function symbolPaths(mode = "brand") {
     <path d="M183 166L338 378" stroke="${gold}" stroke-width="32" stroke-linecap="square" opacity="${mode === "monochrome" ? "0" : ".9"}"/>`;
 }
 
-function compactSymbolPaths(mode = "brand") {
-  const gold = mode === "monochrome" ? WHITE : GOLD;
-  const white = WHITE;
-  return `
-    <path fill="${gold}" d="M198 86h128c68 0 112 40 112 101 0 63-45 104-115 104h-55v135h-70V86Zm70 64v82h52c31 0 49-15 49-42 0-26-18-40-49-40h-52Z"/>
-    <path fill="${white}" d="M82 426V164h66l108 130 108-130h66v262h-69V265L266 378h-22L151 265v161H82Z"/>
-    ${mode === "monochrome" ? "" : `<path d="M158 178 348 426" stroke="${gold}" stroke-width="34" stroke-linecap="square"/>`}`;
-}
-
 function symbolSvg({ mode = "brand", background = "transparent", pad = 70, rounded = false } = {}) {
   const bg =
     background === "white"
@@ -58,21 +49,6 @@ function symbolSvg({ mode = "brand", background = "transparent", pad = 70, round
   ${defs()}
   ${bg}
   <g transform="translate(${pad} ${pad}) scale(${scale})">${symbolPaths(mode)}</g>
-</svg>`;
-}
-
-function compactSymbolSvg({ mode = "brand", background = "transparent", pad = 46, rounded = false } = {}) {
-  const bg =
-    background === "white"
-      ? `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="${WHITE}"/>`
-      : background === "black"
-        ? `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="${BLACK}"/>`
-        : "";
-  const scale = (512 - pad * 2) / 512;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  ${defs()}
-  ${bg}
-  <g transform="translate(${pad} ${pad}) scale(${scale})">${compactSymbolPaths(mode)}</g>
 </svg>`;
 }
 
@@ -94,7 +70,8 @@ ${bg ? `  ${bg}\n` : ""}
 
 function notificationSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 512 512">
-  <g transform="translate(72 72) scale(.71875)">${compactSymbolPaths("monochrome")}</g>
+  <text x="258" y="336" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="332" font-weight="700" fill="#FFFFFF" letter-spacing="-24">P</text>
+  <text x="257" y="362" text-anchor="middle" font-family="Georgia, Times New Roman, serif" font-size="286" font-weight="700" fill="#FFFFFF" letter-spacing="-30">M</text>
 </svg>`;
 }
 
@@ -108,8 +85,8 @@ async function main() {
     throw new Error(`Missing final logo source: ${sourceLogo}`);
   }
 
-  const symbol = compactSymbolSvg({ mode: "brand", background: "black", rounded: true });
-  const symbolMono = compactSymbolSvg({ mode: "monochrome" });
+  const symbol = symbolSvg({ mode: "brand", background: "black", rounded: true });
+  const symbolMono = symbolSvg({ mode: "monochrome" });
   const wordmarkLight = wordmarkSvg({ mode: "light" });
   const wordmarkDark = wordmarkSvg({ mode: "dark" });
 
@@ -117,15 +94,13 @@ async function main() {
   fs.writeFileSync(path.join(brandDir, "pamarket-symbol-monochrome.svg"), symbolMono);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-light.svg"), wordmarkLight);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-dark.svg"), wordmarkDark);
-  fs.writeFileSync(path.join(brandDir, "pamarket-symbol-detailed.svg"), symbolSvg({ mode: "brand", background: "black", rounded: true }));
-  fs.writeFileSync(path.join(brandDir, "pamarket-symbol-compact.svg"), symbol);
 
   const squareLogo = sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png();
   await squareLogo.toFile(path.join(assets, "icon.png"));
   await sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png().toFile(path.join(assets, "icon-dark.png"));
   await sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png().toFile(path.join(assets, "icon-tinted.png"));
-  await renderPng(compactSymbolSvg({ mode: "brand", background: "transparent", pad: 72 }), "android-icon-foreground.png", { width: 1024, height: 1024 });
-  await renderPng(compactSymbolSvg({ mode: "monochrome", background: "transparent", pad: 72 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
+  await sharp(sourceLogo).resize(1024, 1024, { fit: "cover" }).png().toFile(path.join(assets, "android-icon-foreground.png"));
+  await renderPng(symbolSvg({ mode: "monochrome", background: "transparent", pad: 92 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
   await sharp(sourceLogo).resize(64, 64, { fit: "cover" }).png().toFile(path.join(assets, "favicon.png"));
   await renderPng(notificationSvg(), "notification-icon.png", { width: 96, height: 96 });
   await sharp(sourceLogo).resize(640, 640, { fit: "contain", background: BLACK }).png().toFile(path.join(assets, "splash-icon.png"));
