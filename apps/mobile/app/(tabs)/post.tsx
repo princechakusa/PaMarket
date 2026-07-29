@@ -433,7 +433,13 @@ export default function PostScreen() {
           state.step > 1, so a second inline back button here was pure
           duplication — removed. */}
       {state.step === 1 && !state.category ? null : (
-        <View style={[styles.stepButtons, { paddingBottom: insets.bottom + 64 + space.md }]}>
+        // Generous fixed buffer (not just an exact-fit calculation) above the
+        // floating tab bar's own footprint (64 + insets.bottom, see
+        // components/BottomNav.tsx) — the tab bar is a sibling overlay
+        // painted on top of this screen's content by the Tabs navigator, so
+        // any small rendering discrepancy in an exact-fit gap could still
+        // visually cover the button even though it exists in the tree.
+        <View style={[styles.stepButtons, { paddingBottom: insets.bottom + 64 + space.xxl }]}>
           {isSubmitting && submitStatus ? <Text style={styles.submitStatus}>{submitStatus}</Text> : null}
           {state.step < 4 ? (
             <Button label={state.step === 3 ? "Preview →" : "Continue →"} onPress={goNext} />
