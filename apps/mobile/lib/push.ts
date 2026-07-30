@@ -26,7 +26,11 @@ async function ensureAndroidChannel() {
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
     name: "PaMarket",
     importance: Notifications.AndroidImportance.HIGH,
-    sound: "default",
+    // Omitting `sound` uses the system default notification sound. Passing
+    // the literal string "default" makes expo-notifications look for a
+    // bundled file named "default" in the app's sounds config and warn when
+    // it can't find one — it isn't a real sound file, it's the whole point
+    // of leaving this unset.
     vibrationPattern: [0, 250, 250, 250],
     lightColor: "#F5A623",
   });
