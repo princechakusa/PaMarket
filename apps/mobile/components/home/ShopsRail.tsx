@@ -6,7 +6,7 @@ import { CATEGORIES } from "../../lib/constants";
 import type { Listing } from "../../lib/listings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { SectionHeader, VerifiedBadge } from "../ui";
+import { VerifiedBadge } from "../ui";
 
 export function ShopsRail({
   businesses,
@@ -24,13 +24,18 @@ export function ShopsRail({
 
   return (
     <View style={styles.section}>
-      <SectionHeader
-        title="Verified Shops"
-        subtitle="Trusted sellers near you"
-        actionLabel="See all"
-        onAction={onSeeAll}
-        actionColor={color.goldDark}
-      />
+      <View style={styles.header}>
+        <View style={styles.headerTitleWrap}>
+          <View style={styles.headerTitleRow}>
+            <VerifiedBadge />
+            <Text style={styles.headerTitle}>Verified Shops</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>Trusted sellers near you</Text>
+        </View>
+        <Pressable onPress={onSeeAll} hitSlop={8} style={styles.headerAction}>
+          <Text style={styles.headerActionText}>See all</Text>
+        </Pressable>
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
         {businesses.slice(0, 12).map((business) => {
           const products = listings.filter(
@@ -91,6 +96,43 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     section: {
       marginBottom: space.xl,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      paddingHorizontal: space.lg,
+      marginBottom: space.md,
+    },
+    headerTitleWrap: {
+      flex: 1,
+      minWidth: 0,
+      gap: 3,
+    },
+    headerTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    headerTitle: {
+      ...font.h2,
+      color: color.text,
+      letterSpacing: -0.3,
+    },
+    headerSubtitle: {
+      ...font.sub,
+      color: color.textMuted,
+    },
+    headerAction: {
+      backgroundColor: color.goldTint,
+      borderRadius: radius.pill,
+      paddingHorizontal: space.md,
+      paddingVertical: 6,
+    },
+    headerActionText: {
+      ...font.caption,
+      fontWeight: "700",
+      color: color.goldDark,
     },
     rail: {
       paddingHorizontal: space.lg,

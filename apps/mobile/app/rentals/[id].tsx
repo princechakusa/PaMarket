@@ -249,7 +249,6 @@ export default function RentalVehicleDetailScreen() {
     if (!session?.user || !company || !id) return null;
     const { data: rpcLeadId, error: rpcError } = await supabase.rpc("rental_capture_lead", {
       p_listing_id: id,
-      p_company_id: company.id,
       p_lead_source: leadSource,
       p_conversation_id: conversationId ?? null,
       p_requested_start_date: requestedStartDate ?? null,

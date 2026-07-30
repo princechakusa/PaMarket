@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import type { ColorPalette } from "../lib/theme";
+import { shadow, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { openAppRating, shouldShowRatingPrompt, snoozeRatingPrompt } from "../lib/rating-prompt";
 
@@ -45,9 +45,9 @@ export function RatingPromptModal() {
   return (
     <Modal visible transparent animationType="fade" onRequestClose={dismiss}>
       <Pressable style={styles.backdrop} onPress={dismiss}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.iconWrap}>
-            <Star size={30} color={tones.star} />
+        <Pressable style={[styles.card, shadow.lg]} onPress={(e) => e.stopPropagation()}>
+          <View style={[styles.iconWrap, shadow.md]}>
+            <Star size={32} color={tones.starOnGold} />
           </View>
           <View style={styles.starsRow}>
             {Array.from({ length: 5 }).map((_, i) => (
@@ -56,7 +56,7 @@ export function RatingPromptModal() {
           </View>
           <Text style={styles.title}>Enjoying PaMarket?</Text>
           <Text style={styles.subtitle}>
-            Tell us with a rating — it takes <Text style={styles.bold}>10 seconds</Text> and helps other Zimbabweans
+            Tell us with a rating. It takes <Text style={styles.bold}>10 seconds</Text> and helps other Zimbabweans
             find the app.
           </Text>
           <Pressable style={styles.rateBtn} onPress={rate}>
@@ -75,6 +75,7 @@ export function RatingPromptModal() {
 function buildTones(color: ColorPalette) {
   return {
     star: color.gold,
+    starOnGold: color.textOnBrand,
   };
 }
 
@@ -97,10 +98,10 @@ function buildStyles(color: ColorPalette) {
       alignItems: "center",
     },
     iconWrap: {
-      width: 64,
-      height: 64,
-      borderRadius: 18,
-      backgroundColor: color.goldTint,
+      width: 72,
+      height: 72,
+      borderRadius: 20,
+      backgroundColor: color.gold,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 18,

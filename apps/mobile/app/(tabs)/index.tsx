@@ -37,6 +37,7 @@ const BUSINESS_COLUMNS =
   "id,owner_user_id,name,logo,category,province,city,status,verification_level";
 
 const RAIL_CARD_WIDTH = 160;
+const RAIL_CARD_WIDTH_COMPACT = 122;
 const CITY_STORAGE_KEY = "pamarket.home-city-filter";
 
 // Horizontal rail of ListingCards with a SectionHeader — used for Featured,
@@ -50,6 +51,7 @@ function ListingRail({
   onSeeAll,
   onPressListing,
   onToggleSave,
+  compact,
 }: {
   title: string;
   subtitle?: string;
@@ -59,6 +61,10 @@ function ListingRail({
   onSeeAll: () => void;
   onPressListing: (listing: Listing) => void;
   onToggleSave: (listing: Listing) => void;
+  // Recently Posted was reported as "too big" next to the other rails —
+  // opt this rail into the same compact ListingCard size CategoryRail's
+  // "Latest in X" sections already use, without touching Featured/Near-City.
+  compact?: boolean;
 }) {
   const styles = useThemedStyles(buildStyles);
   if (!listings.length) return null;
@@ -70,7 +76,8 @@ function ListingRail({
           <ListingCard
             key={listing.id}
             listing={listing}
-            width={RAIL_CARD_WIDTH}
+            width={compact ? RAIL_CARD_WIDTH_COMPACT : RAIL_CARD_WIDTH}
+            compact={compact}
             saved={savedIds.has(listing.id)}
             onToggleSave={() => onToggleSave(listing)}
             verified={verifiedSellerIds.has(listing.seller_id)}
@@ -380,6 +387,7 @@ export default function HomeScreen() {
               onSeeAll={() => router.push("/(tabs)/search")}
               onPressListing={openListing}
               onToggleSave={onToggleSave}
+              compact
             />
 
             <View style={styles.ctaWrap}>

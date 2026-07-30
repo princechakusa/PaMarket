@@ -57,6 +57,24 @@ function AppleIcon({ size = 23, fill = "#FFFFFF" }: { size?: number; fill?: stri
   );
 }
 
+function EnvelopeIcon({ color }: { color: string }) {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M3 5h18v14H3z" />
+      <Path d="m3 6 9 7 9-7" />
+    </Svg>
+  );
+}
+
+function LockIcon({ color }: { color: string }) {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M5 11h14v10H5z" />
+      <Path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </Svg>
+  );
+}
+
 function SocialButton({
   label,
   icon,
@@ -227,31 +245,40 @@ export default function SignInScreen() {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or use email</Text>
+            <Text style={styles.dividerText}>OR SIGN IN WITH EMAIL</Text>
             <View style={styles.dividerLine} />
           </View>
 
           <View style={styles.form}>
             <View style={styles.fieldBlock}>
-              <Text style={styles.fieldLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={tones.textMuted}
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-              />
+              <View style={styles.inputIconWrap}>
+                <View style={styles.inputIcon}>
+                  <EnvelopeIcon color={tones.textMuted} />
+                </View>
+                <TextInput
+                  style={[styles.input, styles.inputWithIcon]}
+                  placeholder="Email address"
+                  placeholderTextColor={tones.textMuted}
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
             </View>
             <View style={styles.fieldBlock}>
-              <Text style={styles.fieldLabel}>Password</Text>
-              <PasswordField value={password} onChangeText={setPassword} placeholder="Password" inputStyle={styles.passwordInput} />
+              <PasswordField
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                inputStyle={styles.passwordInput}
+                icon={<LockIcon color={tones.textMuted} />}
+              />
             </View>
 
             <Pressable onPress={() => router.push("/(auth)/forgot-password")} style={styles.forgotLink}>
-              <Text style={styles.forgotText}>Forgot?</Text>
+              <Text style={styles.forgotText}>Forgot password?</Text>
             </Pressable>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -268,9 +295,9 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
+            <Text style={styles.footerText}>New to PaMarket? </Text>
             <Link href="/(auth)/sign-up">
-              <Text style={styles.footerLink}>Create one</Text>
+              <Text style={styles.footerLink}>Create account</Text>
             </Link>
           </View>
         </View>
@@ -485,12 +512,24 @@ function buildStyles(color: ColorPalette) {
       color: color.text,
       backgroundColor: color.surface,
     },
+    inputIconWrap: {
+      justifyContent: "center",
+    },
+    inputIcon: {
+      position: "absolute",
+      left: space.lg,
+      zIndex: 1,
+    },
+    inputWithIcon: {
+      paddingLeft: space.lg + 26,
+    },
     passwordInput: {
       minHeight: 60,
       borderWidth: 1.5,
       borderColor: color.border,
       borderRadius: 20,
       paddingHorizontal: space.lg,
+      paddingLeft: space.lg + 26,
       paddingVertical: 0,
       paddingRight: 72,
       fontSize: 16,
@@ -508,7 +547,7 @@ function buildStyles(color: ColorPalette) {
     },
     button: {
       minHeight: 64,
-      backgroundColor: color.brand,
+      backgroundColor: color.gold,
       borderRadius: 22,
       alignItems: "center",
       justifyContent: "center",

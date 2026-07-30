@@ -6286,6 +6286,7 @@ async function raSetReportStatus(id, newStatus) {
     var r = await sb.from('rental_reports').update(update).eq('id',id).select('id');
     if (r.error) throw r.error;
     if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
+    try { await sb.from('rental_audit_logs').insert({action:'report_'+newStatus,target_table:'rental_reports',target_id:id}); } catch(e){}
     var rp = RA_DATA.reports.find(function(r){return r.id===id;}); if (rp) rp.status=newStatus;
     toast('Report: '+newStatus);
     if (currentTab==='rentalReports') renderRentalReports();
@@ -6297,6 +6298,7 @@ async function raSetReviewStatus(id, newStatus) {
     var r = await sb.from('rental_reviews').update({status:newStatus}).eq('id',id).select('id');
     if (r.error) throw r.error;
     if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
+    try { await sb.from('rental_audit_logs').insert({action:'review_'+newStatus,target_table:'rental_reviews',target_id:id}); } catch(e){}
     var rv = RA_DATA.reviews.find(function(r){return r.id===id;}); if (rv) rv.status=newStatus;
     toast('Review: '+newStatus);
     if (currentTab==='rentalReviews') renderRentalReviews();
@@ -6308,6 +6310,7 @@ async function raSetFeaturedActive(id, active) {
     var r = await sb.from('rental_featured_listings').update({is_active:active}).eq('id',id).select('id');
     if (r.error) throw r.error;
     if (!r.data || !r.data.length) throw new Error('Update matched 0 rows — RLS blocked it (check your admin role)');
+    try { await sb.from('rental_audit_logs').insert({action:active?'featured_activate':'featured_deactivate',target_table:'rental_featured_listings',target_id:id}); } catch(e){}
     var f = RA_DATA.featured.find(function(f){return f.id===id;}); if (f) f.is_active=active;
     toast('Featured listing '+(active?'activated':'deactivated'));
     if (currentTab==='rentalFeatured') renderRentalFeatured();
@@ -6320,6 +6323,7 @@ async function raRemoveFeatured(id) {
   try {
     var r = await sb.from('rental_featured_listings').delete().eq('id',id);
     if (r.error) throw r.error;
+    try { await sb.from('rental_audit_logs').insert({action:'featured_remove',target_table:'rental_featured_listings',target_id:id}); } catch(e){}
     RA_DATA.featured = RA_DATA.featured.filter(function(f){return f.id!==id;});
     toast('Removed from featured');
     if (currentTab==='rentalFeatured') renderRentalFeatured();
@@ -6336,8 +6340,9 @@ async function raAddFeatured() {
   try {
     var lstRes = await sb.from('rental_vehicle_listings').select('company_id').eq('id',listingId.trim()).single();
     if (lstRes.error) { toast('Listing not found','error'); return; }
-    var r = await sb.from('rental_featured_listings').insert({listing_id:listingId.trim(),company_id:lstRes.data.company_id,starts_at:starts,ends_at:ends,priority:priority,is_active:true});
+    var r = await sb.from('rental_featured_listings').insert({listing_id:listingId.trim(),company_id:lstRes.data.company_id,starts_at:starts,ends_at:ends,priority:priority,is_active:true}).select('id').single();
     if (r.error) throw r.error;
+    try { await sb.from('rental_audit_logs').insert({action:'featured_add',target_table:'rental_featured_listings',target_id:r.data.id,after_state:{listing_id:listingId.trim(),starts_at:starts,ends_at:ends,priority:priority}}); } catch(e){}
     toast('Listing featured');
     RA_DATA.featured = [];
     raLoadFeatured();
