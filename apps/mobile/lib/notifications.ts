@@ -37,8 +37,12 @@ export async function fetchNotifications(userId: string): Promise<NotificationRo
 }
 
 export function subscribeToNotifications(userId: string, onChange: () => void) {
+  // Unique topic per call — a fixed topic can collide with a same-named
+  // channel from a previous mount still mid-teardown (removeChannel
+  // unsubscribes over the socket, it isn't instant), which throws "cannot
+  // add postgres_changes callbacks after subscribe()" on remount.
   const channel = supabase
-    .channel(`notifications:${userId}`)
+    .channel(`notifications:${userId}:${Date.now()}-${Math.random().toString(36).slice(2)}`)
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },

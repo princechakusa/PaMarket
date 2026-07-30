@@ -48,7 +48,12 @@ export function isUserOnline(userId: string | null | undefined): boolean {
 }
 
 export function joinChatChannel(conversationId: string, myUserId: string, onTypingChange: (typing: boolean) => void) {
-  const channel = supabase.channel(`chat-${conversationId}`, { config: { broadcast: { self: false } } });
+  // Unique topic per call — a fixed topic can collide with a same-named
+  // channel from a previous mount still mid-teardown, throwing "cannot add
+  // postgres_changes callbacks after subscribe()" on remount.
+  const channel = supabase.channel(`chat-${conversationId}-${Date.now()}-${Math.random().toString(36).slice(2)}`, {
+    config: { broadcast: { self: false } },
+  });
   let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
   channel
@@ -101,8 +106,11 @@ export async function markConversationReadInCloud(conversationId: string, otherU
 }
 
 export function subscribeToReadReceipts(myUserId: string, onRead: (messageId: string, conversationId: string) => void) {
+  // Unique topic per call — a fixed topic can collide with a same-named
+  // channel from a previous mount still mid-teardown, throwing "cannot add
+  // postgres_changes callbacks after subscribe()" on remount.
   const channel = supabase
-    .channel("msg-reads")
+    .channel(`msg-reads-${Date.now()}-${Math.random().toString(36).slice(2)}`)
     .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload: any) => {
       const row = payload.new;
       if (!row?.read || String(row.sender_id) !== String(myUserId)) return;

@@ -62,8 +62,11 @@ export async function trackAdImpression(id: string) {
 // Mirrors www/js/app.js H._setupRealtimeAds: keeps the ads feed live so new
 // promos/announcements from admin appear without a manual refresh.
 export function subscribeToAds(onChange: (ads: PaidAd[]) => void) {
+  // Unique topic per call — a fixed topic can collide with a same-named
+  // channel from a previous mount still mid-teardown, throwing "cannot add
+  // postgres_changes callbacks after subscribe()" on remount.
   const channel = supabase
-    .channel("paid-ads-live")
+    .channel(`paid-ads-live-${Date.now()}-${Math.random().toString(36).slice(2)}`)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "paid_ads" }, () => {
       fetchActiveAds().then(onChange);
     })

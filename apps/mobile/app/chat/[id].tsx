@@ -236,8 +236,11 @@ export default function ChatScreen() {
   // Realtime INSERT + UPDATE (read receipts / edits / deletes reflect live).
   useEffect(() => {
     if (!id) return;
+    // Unique topic per call — a fixed topic can collide with a same-named
+    // channel from a previous mount still mid-teardown, throwing "cannot add
+    // postgres_changes callbacks after subscribe()" on remount.
     const channel = supabase
-      .channel(`chat-thread-${id}`)
+      .channel(`chat-thread-${id}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${id}` },
