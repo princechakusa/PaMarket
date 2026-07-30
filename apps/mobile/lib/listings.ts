@@ -107,7 +107,7 @@ export function filterListings(list: Listing[], filters: ListingFilters): Listin
   return scored.map((s) => s.listing);
 }
 
-export function isFeatured(listing: Listing): boolean {
+export function isFeatured(listing: { featured_until?: string | null }): boolean {
   return !!listing.featured_until && new Date(listing.featured_until).getTime() > Date.now();
 }
 

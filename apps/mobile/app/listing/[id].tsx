@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Linking,
   Modal,
@@ -20,7 +21,9 @@ import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
-import { formatPrice, type Listing } from "../../lib/listings";
+import { formatPrice, isFeatured, type Listing } from "../../lib/listings";
+import { BOOST_PRODUCTS } from "../../lib/billing-products";
+import { purchaseProduct } from "../../lib/iap";
 import { recordLead, type LeadType } from "../../lib/business-leads";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
@@ -99,6 +102,13 @@ function ClockIcon({ c }: { c: string }) {
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2}>
       <Circle cx={12} cy={12} r={9} />
       <Polyline points="12 7 12 12 15 14" />
+    </Svg>
+  );
+}
+function StarIcon({ c }: { c: string }) {
+  return (
+    <Svg width={17} height={17} viewBox="0 0 24 24" fill={c}>
+      <Path d="M12 2.5l2.9 6.06 6.6.83-4.86 4.63 1.28 6.55L12 17.35l-5.92 3.22 1.28-6.55L2.5 9.39l6.6-.83L12 2.5z" />
     </Svg>
   );
 }
@@ -183,6 +193,8 @@ export default function ListingDetailScreen() {
   const [savingBusy, setSavingBusy] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const galleryRef = useRef<FlatList<string>>(null);
 
   const load = useCallback(async () => {
@@ -306,6 +318,20 @@ export default function ListingDetailScreen() {
       url: link,
       title: listing.title,
     });
+  }
+
+  async function buyBoost(productId: string) {
+    if (!listing) return;
+    setPurchasingBoost(productId);
+    const result = await purchaseProduct(productId, { listingId: listing.id });
+    setPurchasingBoost(null);
+    if (result.ok) {
+      setBoostPickerOpen(false);
+      toast("Listing boosted!");
+      load();
+    } else if (result.error) {
+      toast(result.error);
+    }
   }
 
   async function submitReport(reason: string) {
@@ -674,6 +700,55 @@ export default function ListingDetailScreen() {
                   <Text style={styles.perfLabel}>Posted</Text>
                 </View>
               </Card>
+
+              {isFeatured(listing) ? (
+                <View style={styles.boostActiveRow}>
+                  <StarIcon c={color.gold} />
+                  <Text style={styles.boostActiveText}>
+                    Boosted until {new Date(listing.featured_until as string).toLocaleDateString()}
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Pressable style={styles.boostBanner} onPress={() => setBoostPickerOpen((v) => !v)}>
+                    <View style={styles.boostBannerIcon}>
+                      <StarIcon c={color.textOnBrand} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.boostBannerTitle}>Boost this ad</Text>
+                      <Text style={styles.boostBannerSub}>Get more views, starting at $2</Text>
+                    </View>
+                    <View style={styles.boostBannerBtn}>
+                      <Text style={styles.boostBannerBtnText}>Boost</Text>
+                    </View>
+                  </Pressable>
+
+                  {boostPickerOpen ? (
+                    <View style={styles.boostOptions}>
+                      {Object.entries(BOOST_PRODUCTS).map(([productId, p]) => (
+                        <Pressable
+                          key={productId}
+                          style={[styles.boostOpt, p.days === 7 && styles.boostOptReco]}
+                          onPress={() => buyBoost(productId)}
+                          disabled={!!purchasingBoost}
+                        >
+                          {p.days === 7 ? (
+                            <View style={styles.boostOptTag}>
+                              <Text style={styles.boostOptTagText}>BEST VALUE</Text>
+                            </View>
+                          ) : null}
+                          <Text style={styles.boostOptDays}>{p.days} day{p.days === 1 ? "" : "s"}</Text>
+                          {purchasingBoost === productId ? (
+                            <ActivityIndicator color={color.brand} />
+                          ) : (
+                            <Text style={styles.boostOptPrice}>${p.estimatedPriceUsd}</Text>
+                          )}
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : null}
+                </>
+              )}
             </View>
           ) : null}
         </View>
@@ -894,6 +969,70 @@ function buildStyles(color: ColorPalette) {
   perfDivider: { width: 1, alignSelf: "stretch", backgroundColor: color.divider },
   perfValue: { ...font.h3, color: color.text },
   perfLabel: { ...font.caption, color: color.textMuted },
+
+  boostActiveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.sm,
+    backgroundColor: color.goldTint,
+    borderRadius: radius.md,
+    padding: space.md,
+    marginTop: space.md,
+  },
+  boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
+
+  boostBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: color.brand,
+    borderRadius: radius.lg,
+    padding: space.md,
+    marginTop: space.md,
+  },
+  boostBannerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  boostBannerTitle: { ...font.title, color: "#fff" },
+  boostBannerSub: { ...font.caption, color: "rgba(255,255,255,0.75)", marginTop: 2 },
+  boostBannerBtn: {
+    backgroundColor: color.gold,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  boostBannerBtnText: { ...font.caption, color: "#fff", fontWeight: "800" },
+
+  boostOptions: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
+  boostOpt: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: color.surfaceAlt,
+    borderRadius: radius.md,
+    paddingVertical: space.md,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    position: "relative",
+  },
+  boostOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+  boostOptTag: {
+    position: "absolute",
+    top: -9,
+    alignSelf: "center",
+    backgroundColor: color.gold,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  boostOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
+  boostOptDays: { ...font.sub, color: color.text, fontWeight: "700" },
+  boostOptPrice: { ...font.h3, color: color.brand },
 
   similarSection: { marginTop: space.xxl, paddingTop: space.lg, backgroundColor: color.surface },
   similarRail: { paddingHorizontal: space.lg, gap: space.md, paddingBottom: space.lg },

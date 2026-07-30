@@ -6,6 +6,8 @@ import Svg, { Rect, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import type { RentalFleetVehicle } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
+import { RENTAL_FEATURED_SLOT_PRODUCTS } from "../../lib/billing-products";
+import { purchaseProduct } from "../../lib/iap";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
@@ -63,6 +65,8 @@ export default function RentalManageFleetScreen() {
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [featurePickerFor, setFeaturePickerFor] = useState<string | null>(null);
+  const [purchasingFeature, setPurchasingFeature] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!bizId) return;
@@ -110,15 +114,41 @@ export default function RentalManageFleetScreen() {
         coverMap[m.listing_id] = m.url;
       });
     }
+    let featuredMap: Record<string, string> = {};
+    if (rows.length) {
+      const { data: featuredRows } = await supabase
+        .from("rental_featured_listings")
+        .select("listing_id,ends_at")
+        .in("listing_id", rows.map((v) => v.id))
+        .eq("is_active", true)
+        .gt("ends_at", new Date().toISOString());
+      (featuredRows ?? []).forEach((f: any) => {
+        featuredMap[f.listing_id] = f.ends_at;
+      });
+    }
     setFleet(
       rows.map((v) => ({
         ...v,
         brand_slug: brandMap[v.brand_id]?.slug ?? null,
         brand_label: brandMap[v.brand_id]?.label ?? null,
         cover_url: coverMap[v.id] ?? null,
+        featured_until: featuredMap[v.id] ?? null,
       }))
     );
   }, [bizId]);
+
+  async function buyFeature(vehicleId: string, productId: string) {
+    setPurchasingFeature(productId);
+    const result = await purchaseProduct(productId, { listingId: vehicleId });
+    setPurchasingFeature(null);
+    if (result.ok) {
+      setFeaturePickerFor(null);
+      toast("Vehicle featured!");
+      load();
+    } else if (result.error) {
+      toast(result.error);
+    }
+  }
 
   useEffect(() => {
     setIsLoading(true);
@@ -239,33 +269,71 @@ export default function RentalManageFleetScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
         {filtered.length ? (
-          filtered.map((v) => (
-            <Pressable
-              key={v.id}
-              style={styles.vehicleRow}
-              onPress={() => (canWrite ? showActions(v) : undefined)}
-            >
-              <View style={styles.thumbWrap}>
-                {v.cover_url ? (
-                  <Image source={{ uri: v.cover_url }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
-                ) : (
-                  <CarPlaceholderIcon stroke={tones.textMuted} />
-                )}
+          filtered.map((v) => {
+            const isFeatured = !!v.featured_until && new Date(v.featured_until).getTime() > Date.now();
+            return (
+              <View key={v.id}>
+                <Pressable style={styles.vehicleRow} onPress={() => (canWrite ? showActions(v) : undefined)}>
+                  <View style={styles.thumbWrap}>
+                    {v.cover_url ? (
+                      <Image source={{ uri: v.cover_url }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+                    ) : (
+                      <CarPlaceholderIcon stroke={tones.textMuted} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.vehicleTitle} numberOfLines={1}>
+                      {fleetVehicleLabel(v)} {v.year ? <Text style={styles.vehicleYear}>{v.year}</Text> : null}
+                    </Text>
+                    <View style={styles.vehicleMetaRow}>
+                      <Text style={styles.vehiclePrice}>${(v.daily_rate ?? 0).toLocaleString()}/day</Text>
+                      <StatusPill status={v.status} styles={styles} statusStyles={statusStyles} />
+                    </View>
+                    <Text style={styles.vehicleStats}>
+                      {(v.inquiry_count ?? 0).toLocaleString()} inquiries · {(v.view_count ?? 0).toLocaleString()} views · {(v.save_count ?? 0).toLocaleString()} saves
+                    </Text>
+                  </View>
+                  {isFeatured ? (
+                    <View style={styles.featuredBadge}>
+                      <Text style={styles.featuredBadgeText}>Featured</Text>
+                    </View>
+                  ) : (
+                    <Pressable
+                      style={styles.featureButton}
+                      onPress={() => setFeaturePickerFor(featurePickerFor === v.id ? null : v.id)}
+                    >
+                      <Text style={styles.featureButtonText}>Feature</Text>
+                    </Pressable>
+                  )}
+                </Pressable>
+
+                {featurePickerFor === v.id ? (
+                  <View style={styles.featureOptions}>
+                    {Object.entries(RENTAL_FEATURED_SLOT_PRODUCTS).map(([productId, p]) => (
+                      <Pressable
+                        key={productId}
+                        style={[styles.featureOpt, p.days === 30 && styles.featureOptReco]}
+                        onPress={() => buyFeature(v.id, productId)}
+                        disabled={!!purchasingFeature}
+                      >
+                        {p.days === 30 ? (
+                          <View style={styles.featureOptTag}>
+                            <Text style={styles.featureOptTagText}>BEST VALUE</Text>
+                          </View>
+                        ) : null}
+                        <Text style={styles.featureOptLabel}>{p.days} days</Text>
+                        {purchasingFeature === productId ? (
+                          <ActivityIndicator color={tones.brand} />
+                        ) : (
+                          <Text style={styles.featureOptCta}>Feature</Text>
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.vehicleTitle} numberOfLines={1}>
-                  {fleetVehicleLabel(v)} {v.year ? <Text style={styles.vehicleYear}>{v.year}</Text> : null}
-                </Text>
-                <View style={styles.vehicleMetaRow}>
-                  <Text style={styles.vehiclePrice}>${(v.daily_rate ?? 0).toLocaleString()}/day</Text>
-                  <StatusPill status={v.status} styles={styles} statusStyles={statusStyles} />
-                </View>
-                <Text style={styles.vehicleStats}>
-                  {(v.inquiry_count ?? 0).toLocaleString()} inquiries · {(v.view_count ?? 0).toLocaleString()} views · {(v.save_count ?? 0).toLocaleString()} saves
-                </Text>
-              </View>
-            </Pressable>
-          ))
+            );
+          })
         ) : (
           <View style={{ paddingTop: 40 }}>
             <EmptyState
@@ -347,6 +415,41 @@ function buildStyles(color: ColorPalette) {
     vehicleStats: { fontSize: 11.5, fontWeight: "600", color: color.textMuted, marginTop: 4 },
     pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
     pillText: { fontSize: 11, fontWeight: "700" },
+    featuredBadge: { backgroundColor: color.goldTint, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, flexShrink: 0 },
+    featuredBadgeText: { fontSize: 11, fontWeight: "800", color: "#B9720A" },
+    featureButton: {
+      backgroundColor: color.brand,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      flexShrink: 0,
+    },
+    featureButtonText: { fontSize: 11.5, fontWeight: "800", color: color.textOnBrand },
+    featureOptions: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: color.surface },
+    featureOpt: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: color.surfaceAlt,
+      borderRadius: 10,
+      paddingVertical: 12,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      position: "relative",
+    },
+    featureOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+    featureOptTag: {
+      position: "absolute",
+      top: -9,
+      alignSelf: "center",
+      backgroundColor: color.gold,
+      borderRadius: 20,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    featureOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
+    featureOptLabel: { fontSize: 13, fontWeight: "700", color: color.text },
+    featureOptCta: { fontSize: 12, fontWeight: "800", color: color.brand },
     fab: {
       position: "absolute",
       right: 16,

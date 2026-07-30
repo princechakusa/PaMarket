@@ -16,8 +16,10 @@ import { useAuth } from "../../lib/auth";
 import { CITIES_BY_PROVINCE, PROVINCES } from "../../lib/constants";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { JOB_CATEGORIES, JOB_TYPES } from "../../lib/jobs";
+import { JOB_CATEGORIES, JOB_TYPES, recruiterPlanEntitlements } from "../../lib/jobs";
 import { friendlyError } from "../../lib/safety";
+import { JOB_CREDIT_PRODUCTS } from "../../lib/billing-products";
+import { purchaseProduct } from "../../lib/iap";
 import { Badge, Button, Card, Chip, GlassBackButton, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
@@ -112,13 +114,33 @@ export default function PostJobScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
+  const [planId, setPlanId] = useState("free");
+  const [activeJobPosts, setActiveJobPosts] = useState(0);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [creditPickerOpen, setCreditPickerOpen] = useState(false);
+  const [purchasingCredit, setPurchasingCredit] = useState<string | null>(null);
+
+  const refreshCredits = useCallback(async () => {
+    const { data } = await supabase.rpc("get_job_credit_balance");
+    if (typeof data === "number") setCreditBalance(data);
+  }, []);
+
   const load = useCallback(async () => {
     if (!session?.user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("company,company_verified,company_verification_pending,name,email,phone,city")
-      .eq("id", session.user.id)
-      .maybeSingle();
+    const [{ data }, { data: recruiterProfile }, { count }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("company,company_verified,company_verification_pending,name,email,phone,city")
+        .eq("id", session.user.id)
+        .maybeSingle(),
+      supabase.from("recruiter_profiles").select("plan_id").eq("user_id", session.user.id).maybeSingle(),
+      supabase
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("seller_id", session.user.id)
+        .eq("category", "jobs")
+        .neq("status", "removed"),
+    ]);
     const p = data as any;
     setVerified(!!p?.company_verified);
     setPending(!!p?.company_verification_pending);
@@ -126,7 +148,10 @@ export default function PostJobScreen() {
     setEmail(p?.email || "");
     setPhone(p?.phone || "");
     if (p?.city) setCity(p.city);
-  }, [session]);
+    setPlanId((recruiterProfile as any)?.plan_id || "free");
+    setActiveJobPosts(count || 0);
+    await refreshCredits();
+  }, [session, refreshCredits]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -145,6 +170,22 @@ export default function PostJobScreen() {
     setSkillInput("");
   }
 
+  const ent = recruiterPlanEntitlements(planId);
+  const overLimit = ent.activeJobPosts >= 0 && activeJobPosts >= ent.activeJobPosts;
+
+  async function buyCredit(productId: string) {
+    setPurchasingCredit(productId);
+    const result = await purchaseProduct(productId);
+    setPurchasingCredit(null);
+    if (result.ok) {
+      setCreditPickerOpen(false);
+      toast("Job credits added!");
+      refreshCredits();
+    } else if (result.error) {
+      toast(result.error);
+    }
+  }
+
   async function submit() {
     if (!session?.user) return;
     if (!company.trim()) return toast("Company name is required");
@@ -155,6 +196,10 @@ export default function PostJobScreen() {
     if (description.trim().length < 30) return toast("Please write a job description (min 30 chars)");
     const salaryRaw = salary.trim();
     if (salaryRaw && !SALARY_RE.test(salaryRaw)) return toast('Enter a valid salary amount or "Negotiable"');
+    if (overLimit && creditBalance <= 0) {
+      toast("You've reached your plan's free job post limit. Buy a job credit or upgrade your recruiter plan to post more.", 5000, true);
+      return;
+    }
 
     setIsSubmitting(true);
     const finalSalary = salaryRaw || "Negotiable";
@@ -196,6 +241,11 @@ export default function PostJobScreen() {
     if (error || !data) {
       toast(error ? friendlyError(error).message : "Could not post job — please try again", 4000, true);
       return;
+    }
+    if (overLimit) {
+      supabase.rpc("spend_job_credit", { p_listing_id: data.id }).then(({ error: spendError }) => {
+        if (!spendError) refreshCredits();
+      });
     }
     if (data.status && data.status !== "active") {
       toast("Job submitted — it will appear once it passes review.");
@@ -272,6 +322,50 @@ export default function PostJobScreen() {
               Your role goes live immediately and appears in the Jobs feed. Your company name is always shown to
               candidates — a complete, specific posting attracts far stronger applicants.
             </Text>
+          </Card>
+
+          <Card style={styles.creditCard}>
+            <Text style={styles.creditText}>
+              {ent.activeJobPosts < 0
+                ? "Your plan includes unlimited job posts."
+                : `Posting is free up to ${ent.activeJobPosts} active job${ent.activeJobPosts === 1 ? "" : "s"}. You have ${activeJobPosts} active now.`}
+              {creditBalance > 0 ? ` You have ${creditBalance} credit${creditBalance === 1 ? "" : "s"}.` : ""}
+            </Text>
+            {overLimit ? (
+              <View style={styles.creditActions}>
+                <Pressable onPress={() => setCreditPickerOpen((v) => !v)}>
+                  <Text style={styles.creditLink}>Buy credits</Text>
+                </Pressable>
+                <Text style={styles.creditOr}>or</Text>
+                <Pressable onPress={() => router.push("/jobs/recruiter-subscription")}>
+                  <Text style={styles.creditLink}>upgrade plan</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            {creditPickerOpen ? (
+              <View style={styles.creditOptions}>
+                {Object.entries(JOB_CREDIT_PRODUCTS).map(([productId, p]) => (
+                  <Pressable
+                    key={productId}
+                    style={[styles.creditOpt, p.credits === 5 && styles.creditOptReco]}
+                    onPress={() => buyCredit(productId)}
+                    disabled={!!purchasingCredit}
+                  >
+                    {p.credits === 5 ? (
+                      <View style={styles.creditOptTag}>
+                        <Text style={styles.creditOptTagText}>BEST VALUE</Text>
+                      </View>
+                    ) : null}
+                    <Text style={styles.creditOptLabel}>{p.credits} credit{p.credits === 1 ? "" : "s"}</Text>
+                    {purchasingCredit === productId ? (
+                      <ActivityIndicator color={color.brand} />
+                    ) : (
+                      <Text style={styles.creditOptCta}>Buy</Text>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </Card>
         </View>
 
@@ -557,10 +651,41 @@ function buildStyles(color: ColorPalette) {
   headerTitle: { ...font.title, color: color.textOnBrand },
 
   padded: { paddingHorizontal: space.lg, marginBottom: space.xl },
-  introWrap: { padding: space.lg, paddingBottom: space.sm },
+  introWrap: { padding: space.lg, paddingBottom: space.sm, gap: space.md },
   introCard: { backgroundColor: color.brandTint },
   introTitle: { ...font.bodyStrong, color: color.brand },
   introText: { ...font.sub, color: color.textSub, marginTop: space.xs, lineHeight: 19 },
+
+  creditCard: { backgroundColor: color.surfaceAlt },
+  creditText: { ...font.sub, color: color.textSub, lineHeight: 19 },
+  creditActions: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.sm },
+  creditLink: { ...font.sub, color: color.brand, fontWeight: "800", textDecorationLine: "underline" },
+  creditOr: { ...font.caption, color: color.textMuted },
+  creditOptions: { flexDirection: "row", gap: space.sm, marginTop: space.md },
+  creditOpt: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: color.surface,
+    borderRadius: radius.md,
+    paddingVertical: space.md,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    position: "relative",
+  },
+  creditOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+  creditOptTag: {
+    position: "absolute",
+    top: -9,
+    alignSelf: "center",
+    backgroundColor: color.gold,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  creditOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
+  creditOptLabel: { ...font.sub, color: color.text, fontWeight: "700" },
+  creditOptCta: { ...font.caption, color: color.brand, fontWeight: "800" },
 
   // Gate
   gateContent: { padding: space.lg, paddingTop: space.xxl },

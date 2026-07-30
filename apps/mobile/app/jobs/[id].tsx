@@ -10,6 +10,9 @@ import { color, font, radius, shadow, space, type ColorPalette } from "../../lib
 import { useThemedStyles } from "../../lib/theme-provider";
 import { businessInitials } from "../../lib/businesses";
 import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
+import { isFeatured } from "../../lib/listings";
+import { JOB_BOOST_PRODUCTS } from "../../lib/billing-products";
+import { purchaseProduct } from "../../lib/iap";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { toast } from "../../components/ui/Toast";
 import { Badge, Button, Card, EmptyState, GlassBackButton } from "../../components/ui";
@@ -24,14 +27,23 @@ type JobListing = {
   province: string | null;
   photos: string[] | null;
   created_at: string;
+  featured_until: string | null;
 };
 
-const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at";
+const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at,featured_until";
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <Svg width={19} height={19} viewBox="0 0 24 24" fill={filled ? color.gold : "none"} stroke={color.textOnBrand} strokeWidth={2}>
       <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </Svg>
+  );
+}
+
+function StarIcon({ c }: { c: string }) {
+  return (
+    <Svg width={17} height={17} viewBox="0 0 24 24" fill={c}>
+      <Path d="M12 2.5l2.9 6.06 6.6.83-4.86 4.63 1.28 6.55L12 17.35l-5.92 3.22 1.28-6.55L2.5 9.39l6.6-.83L12 2.5z" />
     </Svg>
   );
 }
@@ -70,6 +82,8 @@ export default function JobDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savingBusy, setSavingBusy] = useState(false);
+  const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -144,6 +158,20 @@ export default function JobDetailScreen() {
   const requirements = parseJobField(job.description, "REQUIREMENTS");
   const howToApply = parseJobField(job.description, "HOW TO APPLY");
 
+  async function buyBoost(productId: string) {
+    if (!job) return;
+    setPurchasingBoost(productId);
+    const result = await purchaseProduct(productId, { listingId: job.id });
+    setPurchasingBoost(null);
+    if (result.ok) {
+      setBoostPickerOpen(false);
+      toast("Job boosted!");
+      load();
+    } else if (result.error) {
+      toast(result.error);
+    }
+  }
+
   function applyNow() {
     if (!session?.user) {
       router.push("/(auth)/sign-in");
@@ -207,6 +235,57 @@ export default function JobDetailScreen() {
             <Text style={styles.sectionBody}>No description provided.</Text>
           ) : null}
         </Card>
+
+        {isOwner ? (
+          isFeatured(job) ? (
+            <View style={styles.boostActiveRow}>
+              <StarIcon c={color.gold} />
+              <Text style={styles.boostActiveText}>
+                Boosted until {new Date(job.featured_until as string).toLocaleDateString()}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <Pressable style={styles.boostBanner} onPress={() => setBoostPickerOpen((v) => !v)}>
+                <View style={styles.boostBannerIcon}>
+                  <StarIcon c={color.textOnBrand} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.boostBannerTitle}>Boost this job</Text>
+                  <Text style={styles.boostBannerSub}>Get more applicants with a featured listing</Text>
+                </View>
+                <View style={styles.boostBannerBtn}>
+                  <Text style={styles.boostBannerBtnText}>Boost</Text>
+                </View>
+              </Pressable>
+
+              {boostPickerOpen ? (
+                <View style={styles.boostOptions}>
+                  {Object.entries(JOB_BOOST_PRODUCTS).map(([productId, p]) => (
+                    <Pressable
+                      key={productId}
+                      style={[styles.boostOpt, p.days === 30 && styles.boostOptReco]}
+                      onPress={() => buyBoost(productId)}
+                      disabled={!!purchasingBoost}
+                    >
+                      {p.days === 30 ? (
+                        <View style={styles.boostOptTag}>
+                          <Text style={styles.boostOptTagText}>BEST VALUE</Text>
+                        </View>
+                      ) : null}
+                      <Text style={styles.boostOptDays}>{p.days} days</Text>
+                      {purchasingBoost === productId ? (
+                        <ActivityIndicator color={color.brand} />
+                      ) : (
+                        <Text style={styles.boostOptCta}>Boost</Text>
+                      )}
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </>
+          )
+        ) : null}
       </ScrollView>
 
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + space.md }]}>
@@ -290,5 +369,69 @@ function buildStyles(color: ColorPalette) {
     ...shadow.md,
   },
   ownerRow: { flexDirection: "row", gap: space.md },
+
+  boostActiveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.sm,
+    backgroundColor: color.goldTint,
+    borderRadius: radius.md,
+    padding: space.md,
+    marginTop: space.lg,
+  },
+  boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
+
+  boostBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: color.brand,
+    borderRadius: radius.lg,
+    padding: space.md,
+    marginTop: space.lg,
+  },
+  boostBannerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  boostBannerTitle: { ...font.title, color: "#fff" },
+  boostBannerSub: { ...font.caption, color: "rgba(255,255,255,0.75)", marginTop: 2 },
+  boostBannerBtn: {
+    backgroundColor: color.gold,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  boostBannerBtnText: { ...font.caption, color: "#fff", fontWeight: "800" },
+
+  boostOptions: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
+  boostOpt: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: color.surfaceAlt,
+    borderRadius: radius.md,
+    paddingVertical: space.md,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    position: "relative",
+  },
+  boostOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+  boostOptTag: {
+    position: "absolute",
+    top: -9,
+    alignSelf: "center",
+    backgroundColor: color.gold,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  boostOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
+  boostOptDays: { ...font.sub, color: color.text, fontWeight: "700" },
+  boostOptCta: { ...font.caption, color: color.brand, fontWeight: "800" },
   });
 }

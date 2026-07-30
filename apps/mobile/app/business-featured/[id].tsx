@@ -6,6 +6,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { isFeatured, type Listing } from "../../lib/listings";
 import { planEntitlements } from "../../lib/plan-entitlements";
+import { SLOT_PACK_PRODUCTS } from "../../lib/billing-products";
+import { purchaseProduct } from "../../lib/iap";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
@@ -19,10 +21,9 @@ const DURATIONS: [number, string][] = [
 ];
 
 // Mirrors www/js/business-featured.js pages.BusinessFeatured — time-based
-// boosts drawn from the plan's free featured-slot allowance. Buying extra
-// slot packs is a Google Play Billing consumable purchase, out of scope
-// (deferred alongside billing.js) — this screen only manages the plan's
-// included slots.
+// boosts drawn from the plan's free featured-slot allowance plus any extra
+// slots purchased as a Play Billing consumable (featured_slot_packs, summed
+// with the plan baseline exactly like H.featuredSlots in business-featured.js).
 export default function BusinessFeaturedScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
@@ -33,6 +34,8 @@ export default function BusinessFeaturedScreen() {
   const [slots, setSlots] = useState(0);
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [slotPickerOpen, setSlotPickerOpen] = useState(false);
+  const [purchasingSlotPack, setPurchasingSlotPack] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
@@ -42,13 +45,29 @@ export default function BusinessFeaturedScreen() {
       return;
     }
     setIsOwner(true);
-    setSlots(planEntitlements((biz as any).plan_id).featuredSlots);
-    const { data: rows } = await supabase
-      .from("listings")
-      .select("id,title,photos,boost,featured_until")
-      .eq("business_id", id);
+    const baseline = planEntitlements((biz as any).plan_id).featuredSlots;
+    const [{ data: rows }, { data: packs }] = await Promise.all([
+      supabase.from("listings").select("id,title,photos,boost,featured_until").eq("business_id", id),
+      supabase.from("featured_slot_packs").select("extra_slots").eq("business_id", id).eq("status", "consumed"),
+    ]);
+    const extra = (packs as { extra_slots: number }[] | null)?.reduce((sum, p) => sum + p.extra_slots, 0) ?? 0;
+    setSlots(baseline + extra);
     setListings((rows as any[]) ?? []);
   }, [id, session]);
+
+  async function buySlotPack(productId: string) {
+    if (!id) return;
+    setPurchasingSlotPack(productId);
+    const result = await purchaseProduct(productId, { businessId: id });
+    setPurchasingSlotPack(null);
+    if (result.ok) {
+      setSlotPickerOpen(false);
+      toast("Featured slots added!");
+      load();
+    } else if (result.error) {
+      toast(result.error);
+    }
+  }
 
   useEffect(() => {
     setIsLoading(true);
@@ -100,7 +119,34 @@ export default function BusinessFeaturedScreen() {
         <Text style={styles.heroCount}>
           {used} <Text style={styles.heroCountSub}>/ {slotLabel} used</Text>
         </Text>
-        {noSlots ? <Text style={styles.heroSub}>Your plan has no featured slots. Upgrade to Pro or Premium for boosts.</Text> : null}
+        {noSlots ? <Text style={styles.heroSub}>Your plan has no featured slots. Upgrade to Pro or Premium, or buy a slot pack below.</Text> : null}
+        <Pressable style={styles.buySlotsButton} onPress={() => setSlotPickerOpen((v) => !v)}>
+          <Text style={styles.buySlotsButtonText}>Buy featured slots</Text>
+        </Pressable>
+        {slotPickerOpen ? (
+          <View style={styles.slotOptions}>
+            {Object.entries(SLOT_PACK_PRODUCTS).map(([productId, p]) => (
+              <Pressable
+                key={productId}
+                style={[styles.slotOpt, p.extraSlots === 3 && styles.slotOptReco]}
+                onPress={() => buySlotPack(productId)}
+                disabled={!!purchasingSlotPack}
+              >
+                {p.extraSlots === 3 ? (
+                  <View style={styles.slotOptTag}>
+                    <Text style={styles.slotOptTagText}>BEST VALUE</Text>
+                  </View>
+                ) : null}
+                <Text style={styles.slotOptLabel}>+{p.extraSlots} slot{p.extraSlots === 1 ? "" : "s"}</Text>
+                {purchasingSlotPack === productId ? (
+                  <ActivityIndicator color={tones.brand} />
+                ) : (
+                  <Text style={styles.slotOptPrice}>${p.estimatedPriceUsd}</Text>
+                )}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
 
       {listings.length ? (
@@ -171,6 +217,39 @@ function buildStyles(color: ColorPalette) {
     heroCount: { fontSize: 26, fontWeight: "900", color: color.text, marginTop: 6 },
     heroCountSub: { fontSize: 14, fontWeight: "500", color: color.textMuted },
     heroSub: { fontSize: 12.5, color: color.textMuted, marginTop: 8, lineHeight: 18 },
+    buySlotsButton: {
+      marginTop: 12,
+      paddingVertical: 10,
+      borderRadius: 10,
+      backgroundColor: color.brand,
+      alignItems: "center",
+    },
+    buySlotsButtonText: { fontSize: 13, fontWeight: "800", color: color.textOnBrand },
+    slotOptions: { flexDirection: "row", gap: 8, marginTop: 10 },
+    slotOpt: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: color.surfaceAlt,
+      borderRadius: 10,
+      paddingVertical: 12,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      position: "relative",
+    },
+    slotOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+    slotOptTag: {
+      position: "absolute",
+      top: -9,
+      alignSelf: "center",
+      backgroundColor: color.gold,
+      borderRadius: 20,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    slotOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
+    slotOptLabel: { fontSize: 13, fontWeight: "700", color: color.text },
+    slotOptPrice: { fontSize: 15, fontWeight: "800", color: color.brand },
     sectionTitle: { fontSize: 12, fontWeight: "800", color: color.textMuted, marginBottom: 10, textTransform: "uppercase" },
     card: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: 14, padding: 12, marginBottom: 10 },
     cardFeatured: { borderColor: color.brand },

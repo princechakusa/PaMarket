@@ -128,6 +128,7 @@ export type RentalFleetVehicle = {
   drive_type?: string | null;
   seats?: number | null;
   mileage_km?: number | null;
+  featured_until?: string | null;
 };
 
 export type RentalLead = {
