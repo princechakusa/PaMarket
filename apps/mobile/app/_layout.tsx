@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
+import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { ThemeProvider, useThemePreference } from "../lib/theme-provider";
@@ -13,6 +14,16 @@ import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications } from "../lib/push";
 import { resolveNotifRoute } from "../lib/notifications";
 import TwoFactorVerifyScreen from "./two-factor-verify";
+
+// Nothing was ever calling SplashScreen.hideAsync() — the native splash's
+// pre-draw listener kept returning `false` on every single frame
+// indefinitely (visible in logcat as endless "onPreDraw return false
+// SplashScreenManager" lines), which is exactly what was making the app
+// feel stuck/slow to open: the real UI was ready long before the splash
+// let it paint. preventAutoHideAsync() must run at import time, before any
+// component mounts, or the OS may already have auto-hidden (or failed to
+// hide) the splash before our own hideAsync() call below ever runs.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Navigate using the same deep-link mapper the in-app notifications list
 // uses, so a push tap (cold start or backgrounded) and an in-app tap always
@@ -61,8 +72,14 @@ function usePushNotifications() {
 }
 
 function RootNavigator() {
-  const { pendingTwoFactor } = useAuth();
+  const { pendingTwoFactor, isLoading } = useAuth();
   usePushNotifications();
+
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isLoading]);
 
   if (pendingTwoFactor) {
     return <TwoFactorVerifyScreen />;
