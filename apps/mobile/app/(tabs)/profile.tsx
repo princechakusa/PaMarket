@@ -23,8 +23,6 @@ import { fetchValidSavedCount } from "../../lib/saves";
 import { clearPushToken } from "../../lib/push";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { Avatar, Badge, Card, SectionHeader, VerifiedBadge } from "../../components/ui";
-import { BrandWordmark } from "../../components/BrandLogo";
-import type { EdgeInsets } from "react-native-safe-area-context";
 
 function ChevronRight({ color }: { color: ColorPalette }) {
   return (
@@ -156,72 +154,6 @@ function BizCard({
   );
 }
 
-// Guests can browse the Account tab too — a brand card prompts sign-in and a
-// menu of mostly-public destinations (help, legal, language) sits below it.
-// Only the items that genuinely need an account (Favourites, Saved Searches,
-// My Activity, Notifications) redirect to sign-in when tapped; sign-in.tsx
-// itself returns the user to this tab via router.back() once they're in.
-function GuestAccountScreen({
-  styles,
-  color,
-  insets,
-  router,
-}: {
-  styles: ReturnType<typeof buildStyles>;
-  color: ColorPalette;
-  insets: EdgeInsets;
-  router: ReturnType<typeof useRouter>;
-}) {
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 + insets.bottom + space.xxxl }}>
-      <View style={[styles.guestHero, { paddingTop: insets.top + space.xl }]}>
-        <View style={styles.guestBrandCard}>
-          <BrandWordmark size={26} />
-        </View>
-      </View>
-
-      <View style={styles.sidePad}>
-        <Card style={styles.guestSignInCard}>
-          <Text style={styles.guestSignInTitle}>Login to continue</Text>
-          <Pressable style={styles.signInButton} onPress={() => router.push("/(auth)/sign-in")}>
-            <Text style={styles.signInButtonText}>Sign In / Sign Up</Text>
-          </Pressable>
-        </Card>
-      </View>
-
-      <View style={styles.sidePad}>
-        <Card padded={false} style={styles.menuGroup}>
-          <MenuRow
-            label="My Activity"
-            last
-            onPress={() => router.push("/(auth)/sign-in")}
-            color={color}
-            styles={styles}
-          />
-        </Card>
-      </View>
-
-      <View style={styles.sectionSpace}>
-        <SectionHeader title="More on PaMarket" />
-      </View>
-      <View style={styles.sidePad}>
-        <Card padded={false} style={styles.menuGroup}>
-          <MenuRow label="Favourites" onPress={() => router.push("/(auth)/sign-in")} color={color} styles={styles} />
-          <MenuRow label="Saved Searches" onPress={() => router.push("/(auth)/sign-in")} color={color} styles={styles} />
-          <MenuRow label="Find Jobs" onPress={() => router.push("/jobs")} color={color} styles={styles} />
-          <MenuRow label="Notifications" onPress={() => router.push("/(auth)/sign-in")} color={color} styles={styles} />
-          <MenuRow label="Language" onPress={() => router.push("/language-settings")} color={color} styles={styles} />
-          <MenuRow label="Help & Support" onPress={() => router.push("/help")} color={color} styles={styles} />
-          <MenuRow label="About Us" onPress={() => router.push("/about")} color={color} styles={styles} />
-          <MenuRow label="Legal Hub" last onPress={() => router.push("/legal-hub")} color={color} styles={styles} />
-        </Card>
-      </View>
-
-      <Text style={styles.footer}>© {new Date().getFullYear()} PaMarket Zimbabwe · Made in Zimbabwe</Text>
-    </ScrollView>
-  );
-}
-
 export default function AccountScreen() {
   const { session } = useAuth();
   const router = useRouter();
@@ -311,7 +243,14 @@ export default function AccountScreen() {
   }
 
   if (!session?.user) {
-    return <GuestAccountScreen styles={styles} color={color} insets={insets} router={router} />;
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.signInTitle}>Sign in to view your account</Text>
+        <Pressable style={styles.signInButton} onPress={() => router.push("/(auth)/sign-in")}>
+          <Text style={styles.signInButtonText}>Sign In</Text>
+        </Pressable>
+      </View>
+    );
   }
 
   if (isLoading) {
@@ -487,24 +426,6 @@ function buildStyles(color: ColorPalette) {
     paddingVertical: space.md,
   },
   signInButtonText: { ...font.bodyStrong, color: color.textOnBrand },
-
-  guestHero: {
-    alignItems: "center",
-    paddingHorizontal: space.lg,
-    paddingBottom: space.xl,
-  },
-  guestBrandCard: {
-    backgroundColor: color.brand,
-    borderRadius: radius.lg,
-    paddingHorizontal: space.xxl,
-    paddingVertical: space.lg,
-  },
-  guestSignInCard: {
-    alignItems: "center",
-    gap: space.md,
-    paddingVertical: space.xl,
-  },
-  guestSignInTitle: { ...font.bodyStrong, color: color.text },
 
   hero: {
     alignItems: "center",

@@ -20,10 +20,10 @@ import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/a
 import { BrandSymbol, BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
 import { GlassBackButton } from "../../components/ui";
-import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
+import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
-function GoogleIcon({ size = 22 }: { size?: number }) {
+function GoogleIcon({ size = 17 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
       <Path
@@ -46,31 +46,13 @@ function GoogleIcon({ size = 22 }: { size?: number }) {
   );
 }
 
-function AppleIcon({ size = 23, fill = "#FFFFFF" }: { size?: number; fill?: string }) {
+function AppleIcon({ size = 16, fill = "#FFFFFF" }: { size?: number; fill?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 384 512">
       <Path
         fill={fill}
         d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.6-2.8-74.5 20.7-88.5 20.7-14.8 0-48.8-19.7-75.6-19.2-39 .6-75 22.7-95.1 57.6-40.6 70.5-10.4 174.9 29.2 232.1 19.4 28 42.4 59.5 72.7 58.4 29.2-1.2 40.2-18.9 75.5-18.9 35.1 0 45.3 18.9 76.2 18.3 31.5-.6 51.4-28.6 70.6-56.8 22.3-32.5 31.5-64.1 32-65.7-.7-.3-61.7-23.7-62.3-97.1zM260.6 101.9C276.7 82.4 287.6 55.3 284.6 28c-23.3.9-51.5 15.5-68.2 35-15 17.3-28.1 45.1-24.6 71.6 26 .2 52.6-13.2 68.8-32.7z"
       />
-    </Svg>
-  );
-}
-
-function EnvelopeIcon({ color }: { color: string }) {
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <Path d="M3 5h18v14H3z" />
-      <Path d="m3 6 9 7 9-7" />
-    </Svg>
-  );
-}
-
-function LockIcon({ color }: { color: string }) {
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <Path d="M5 11h14v10H5z" />
-      <Path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </Svg>
   );
 }
@@ -97,7 +79,7 @@ function SocialButton({
       onPress={onPress}
       disabled={isLoading}
     >
-      <View style={styles.socialIcon}>{isLoading ? <ActivityIndicator color={dark ? "#FFFFFF" : tones.brand} /> : icon}</View>
+      {isLoading ? <ActivityIndicator color={dark ? "#FFFFFF" : tones.brand} /> : icon}
       <Text style={[styles.socialText, dark ? styles.socialTextDark : styles.socialTextLight]}>{label}</Text>
     </Pressable>
   );
@@ -197,33 +179,49 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View style={[styles.hero, { paddingTop: insets.top + space.md }]}>
-        <View style={styles.heroOrbLarge} />
-        <View style={styles.heroOrbSmall} />
-        <GlassBackButton onPress={handleBack} tone="light" style={styles.backButton} />
-
-        <Text style={styles.heroKicker}>PaMarket Zimbabwe</Text>
-
-        <View style={[styles.stickyBrandCard, shadow.md]}>
-          <View style={styles.heroBrandRow}>
-            <View style={styles.logoShell}>
-              <BrandSymbol size={58} />
-            </View>
-            <BrandWordmark size={36} onBrand />
-          </View>
-          <Text style={styles.title}>Welcome back</Text>
-        </View>
-      </View>
+      <GlassBackButton onPress={handleBack} tone="dark" style={[styles.backButton, { marginTop: insets.top + space.sm }]} />
 
       <ScrollView
-        style={styles.formScroll}
         contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, space.lg) + space.xl }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.card, shadow.lg]}>
-          <Text style={styles.cardTitle}>Sign in to continue</Text>
-          <Text style={styles.cardSubtitle}>Buy, sell, browse listings, post ads and chat safely.</Text>
+        <View style={styles.logoShell}>
+          <BrandSymbol size={32} monochrome />
+        </View>
+        <View style={styles.wordmarkRow}>
+          <BrandWordmark size={17} />
+        </View>
+        <Text style={styles.title}>Welcome Back</Text>
+
+        <View style={styles.form}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email address"
+            placeholderTextColor={tones.textMuted}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <PasswordField value={password} onChangeText={setPassword} placeholder="Password" inputStyle={styles.passwordInput} />
+
+          <Pressable onPress={() => router.push("/(auth)/forgot-password")} style={styles.forgotLink}>
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Pressable style={[styles.button, isSubmitting && styles.disabled]} onPress={handleSignIn} disabled={isSubmitting}>
+            {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.buttonText}>Sign In</Text>}
+          </Pressable>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
           <View style={styles.socialStack}>
             {Platform.OS === "ios" ? (
@@ -243,81 +241,15 @@ export default function SignInScreen() {
             />
           </View>
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR SIGN IN WITH EMAIL</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.fieldBlock}>
-              <View style={styles.inputIconWrap}>
-                <View style={styles.inputIcon}>
-                  <EnvelopeIcon color={tones.textMuted} />
-                </View>
-                <TextInput
-                  style={[styles.input, styles.inputWithIcon]}
-                  placeholder="Email address"
-                  placeholderTextColor={tones.textMuted}
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </View>
-            </View>
-            <View style={styles.fieldBlock}>
-              <PasswordField
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Password"
-                inputStyle={styles.passwordInput}
-                icon={<LockIcon color={tones.textMuted} />}
-              />
-            </View>
-
-            <Pressable onPress={() => router.push("/(auth)/forgot-password")} style={styles.forgotLink}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
-            </Pressable>
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <Pressable style={[styles.button, isSubmitting && styles.disabled]} onPress={handleSignIn} disabled={isSubmitting}>
-              {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.buttonText}>Sign In</Text>}
-            </Pressable>
-          </View>
-
-          <View style={styles.trustRow}>
-            <TrustPill label="Secure login" />
-            <TrustPill label="Private chats" />
-            <TrustPill label="No listing fees" />
-          </View>
-
           <View style={styles.footer}>
-            <Text style={styles.footerText}>New to PaMarket? </Text>
+            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
             <Link href="/(auth)/sign-up">
-              <Text style={styles.footerLink}>Create account</Text>
+              <Text style={styles.footerLink}>Sign Up</Text>
             </Link>
           </View>
         </View>
-
-        <View style={styles.bottomNote}>
-          <Text style={styles.bottomTitle}>PaMarket Zimbabwe</Text>
-          <Text style={styles.bottomSubtitle}>Buy • Sell • Jobs • Property • Vehicles</Text>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
-  );
-}
-
-function TrustPill({ label }: { label: string }) {
-  const styles = useThemedStyles(buildStyles);
-  return (
-    <View style={styles.trustPill}>
-      <View style={styles.trustDot} />
-      <Text style={styles.trustText}>{label}</Text>
-    </View>
   );
 }
 
@@ -333,153 +265,98 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: color.bg,
-    },
-    formScroll: {
-      flex: 1,
-      marginTop: -36,
-    },
-    scroll: {
-      paddingHorizontal: space.lg,
-      paddingTop: 0,
-    },
-    hero: {
-      minHeight: 430,
-      paddingHorizontal: space.xl,
-      backgroundColor: color.brand,
-      overflow: "hidden",
-    },
-    heroOrbLarge: {
-      position: "absolute",
-      right: -74,
-      top: -92,
-      width: 290,
-      height: 290,
-      borderRadius: 145,
-      backgroundColor: "rgba(255,255,255,0.12)",
-    },
-    heroOrbSmall: {
-      position: "absolute",
-      right: 62,
-      bottom: -96,
-      width: 330,
-      height: 330,
-      borderRadius: 165,
-      backgroundColor: "rgba(255,255,255,0.08)",
+      backgroundColor: color.surface,
     },
     backButton: {
-      marginTop: space.xs,
+      marginLeft: space.lg,
       marginBottom: 0,
-      zIndex: 2,
     },
-    heroKicker: {
-      ...font.bodyStrong,
-      alignSelf: "center",
-      color: "rgba(255,255,255,0.86)",
-      marginTop: -34,
-      fontSize: 17,
-    },
-    stickyBrandCard: {
-      marginTop: 48,
-      borderRadius: 34,
-      backgroundColor: "rgba(255,255,255,0.12)",
+    scroll: {
       paddingHorizontal: space.xl,
-      paddingVertical: space.xl,
-    },
-    heroBrandRow: {
-      flexDirection: "row",
+      paddingTop: space.xl,
       alignItems: "center",
-      gap: space.md,
     },
     logoShell: {
-      width: 66,
-      height: 66,
-      borderRadius: 22,
+      width: 60,
+      height: 60,
+      borderRadius: 16,
+      backgroundColor: color.brand,
       alignItems: "center",
       justifyContent: "center",
+      marginBottom: space.sm,
     },
-    title: {
-      ...font.h1,
-      color: color.textOnBrand,
-      marginTop: space.sm,
-      fontSize: 34,
-      letterSpacing: -1,
-    },
-    subtitle: {
-      ...font.bodyStrong,
-      color: "rgba(255,255,255,0.82)",
-      marginTop: space.sm,
-      maxWidth: 330,
-      lineHeight: 23,
-    },
-    card: {
-      borderRadius: 34,
-      backgroundColor: color.surface,
-      paddingHorizontal: space.lg,
-      paddingTop: space.xl,
-      paddingBottom: space.xl,
-    },
-    cardTitle: {
-      ...font.h2,
-      color: color.text,
-      marginBottom: space.xs,
-    },
-    cardSubtitle: {
-      ...font.bodyStrong,
-      color: color.textSub,
-      lineHeight: 22,
+    wordmarkRow: {
       marginBottom: space.xl,
     },
-    eyebrow: {
-      ...font.micro,
-      color: color.textMuted,
-      letterSpacing: 2.4,
+    title: {
+      ...font.h2,
+      color: color.text,
+      marginBottom: space.xl,
+    },
+    form: {
+      width: "100%",
+    },
+    input: {
+      width: "100%",
+      minHeight: 50,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 10,
+      paddingHorizontal: space.md,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+      marginBottom: space.md,
+    },
+    passwordInput: {
+      minHeight: 50,
+      borderWidth: 1.5,
+      borderColor: color.border,
+      borderRadius: 10,
+      paddingHorizontal: space.md,
+      paddingVertical: 0,
+      paddingRight: 60,
+      fontSize: 14,
+      color: color.text,
+      backgroundColor: color.surface,
+    },
+    forgotLink: {
+      alignSelf: "flex-end",
+      marginTop: space.sm,
+      marginBottom: space.md,
+    },
+    forgotText: {
+      ...font.caption,
+      fontWeight: "700",
+      color: color.brand,
+    },
+    error: {
+      ...font.caption,
+      color: color.danger,
+      marginBottom: space.sm,
+    },
+    button: {
+      width: "100%",
+      minHeight: 52,
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
       marginBottom: space.lg,
     },
-    socialStack: {
-      gap: space.sm,
+    disabled: {
+      opacity: 0.6,
     },
-    socialButton: {
-      minHeight: 62,
-      borderRadius: 22,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: space.lg,
-      borderWidth: 1.5,
-      position: "relative",
-    },
-    socialButtonDark: {
-      backgroundColor: "#020C0A",
-      borderColor: "#020C0A",
-    },
-    socialButtonLight: {
-      backgroundColor: color.surface,
-      borderColor: color.border,
-    },
-    socialIcon: {
-      position: "absolute",
-      left: space.xl,
-      width: 28,
-      height: 28,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    socialText: {
+    buttonText: {
       ...font.bodyStrong,
-      fontSize: 16,
-    },
-    socialTextDark: {
-      color: "#FFFFFF",
-    },
-    socialTextLight: {
-      color: color.text,
+      color: color.textOnBrand,
+      fontSize: 15,
     },
     divider: {
       flexDirection: "row",
       alignItems: "center",
       gap: space.sm,
-      marginVertical: space.xl,
+      marginBottom: space.lg,
     },
     dividerLine: {
       flex: 1,
@@ -488,144 +365,55 @@ function buildStyles(color: ColorPalette) {
     },
     dividerText: {
       ...font.caption,
+      fontWeight: "700",
       color: color.textMuted,
     },
-    form: {
-      gap: space.md,
+    socialStack: {
+      gap: space.sm,
+      marginBottom: space.lg,
     },
-    fieldBlock: {
-      gap: space.xs,
-    },
-    fieldLabel: {
-      ...font.micro,
-      color: color.textMuted,
-      letterSpacing: 1.4,
-    },
-    input: {
-      minHeight: 60,
-      borderWidth: 1.5,
-      borderColor: color.border,
-      borderRadius: 20,
-      paddingHorizontal: space.lg,
-      fontSize: 16,
-      fontWeight: "700",
-      color: color.text,
-      backgroundColor: color.surface,
-    },
-    inputIconWrap: {
-      justifyContent: "center",
-    },
-    inputIcon: {
-      position: "absolute",
-      left: space.lg,
-      zIndex: 1,
-    },
-    inputWithIcon: {
-      paddingLeft: space.lg + 26,
-    },
-    passwordInput: {
-      minHeight: 60,
-      borderWidth: 1.5,
-      borderColor: color.border,
-      borderRadius: 20,
-      paddingHorizontal: space.lg,
-      paddingLeft: space.lg + 26,
-      paddingVertical: 0,
-      paddingRight: 72,
-      fontSize: 16,
-      fontWeight: "700",
-      color: color.text,
-      backgroundColor: color.surface,
-    },
-    forgotLink: {
-      alignSelf: "flex-end",
-      marginTop: -2,
-    },
-    forgotText: {
-      ...font.bodyStrong,
-      color: color.brand,
-    },
-    button: {
-      minHeight: 64,
-      backgroundColor: color.gold,
-      borderRadius: 22,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: space.sm,
-    },
-    disabled: {
-      opacity: 0.6,
-    },
-    buttonText: {
-      ...font.bodyStrong,
-      color: color.textOnBrand,
-      fontSize: 18,
-    },
-    error: {
-      ...font.caption,
-      color: color.danger,
-    },
-    trustRow: {
+    socialButton: {
+      minHeight: 48,
+      borderRadius: 10,
       flexDirection: "row",
+      alignItems: "center",
       justifyContent: "center",
       gap: space.sm,
-      flexWrap: "wrap",
-      marginTop: space.xl,
+      paddingHorizontal: space.lg,
+      borderWidth: 1.5,
     },
-    trustPill: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.xs,
-      borderRadius: radius.pill,
-      backgroundColor: color.surfaceAlt,
-      paddingHorizontal: space.md,
-      paddingVertical: space.sm,
+    socialButtonDark: {
+      backgroundColor: "#111827",
+      borderColor: "#111827",
     },
-    trustDot: {
-      width: 9,
-      height: 9,
-      borderRadius: 4.5,
-      backgroundColor: color.gold,
+    socialButtonLight: {
+      backgroundColor: color.surface,
+      borderColor: color.border,
     },
-    trustText: {
+    socialText: {
       ...font.caption,
-      color: color.brand,
-      fontWeight: "900",
+      fontWeight: "700",
+      fontSize: 13.5,
+    },
+    socialTextDark: {
+      color: "#FFFFFF",
+    },
+    socialTextLight: {
+      color: color.text,
     },
     footer: {
       flexDirection: "row",
       justifyContent: "center",
-      marginTop: space.xl,
       flexWrap: "wrap",
     },
     footerText: {
-      ...font.bodyStrong,
+      ...font.caption,
       color: color.textSub,
     },
     footerLink: {
-      ...font.bodyStrong,
+      ...font.caption,
       color: color.brand,
       fontWeight: "900",
-    },
-    bottomNote: {
-      marginTop: space.xl,
-      paddingHorizontal: space.lg,
-      paddingVertical: space.xl,
-      borderRadius: 30,
-      backgroundColor: color.surface,
-      borderWidth: 1,
-      borderColor: color.border,
-    },
-    bottomTitle: {
-      ...font.bodyStrong,
-      color: color.text,
-      fontSize: 17,
-    },
-    bottomSubtitle: {
-      ...font.caption,
-      color: color.textSub,
-      marginTop: space.xs,
-      fontWeight: "800",
     },
   });
 }
