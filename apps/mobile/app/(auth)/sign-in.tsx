@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
@@ -90,6 +90,7 @@ export default function SignInScreen() {
   const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { message } = useLocalSearchParams<{ message?: string }>();
   const { session, isLoading: sessionLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -192,7 +193,7 @@ export default function SignInScreen() {
         <View style={styles.wordmarkRow}>
           <BrandWordmark size={17} />
         </View>
-        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.title}>{message || "Welcome Back"}</Text>
 
         <View style={styles.form}>
           <TextInput

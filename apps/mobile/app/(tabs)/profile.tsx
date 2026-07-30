@@ -23,6 +23,8 @@ import { fetchValidSavedCount } from "../../lib/saves";
 import { clearPushToken } from "../../lib/push";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { Avatar, Badge, Card, SectionHeader, VerifiedBadge } from "../../components/ui";
+import { BrandWordmark } from "../../components/BrandLogo";
+import type { EdgeInsets } from "react-native-safe-area-context";
 
 function ChevronRight({ color }: { color: ColorPalette }) {
   return (
@@ -154,6 +156,68 @@ function BizCard({
   );
 }
 
+// Mirrors the legacy web app's guestAccountPage() (www/js/app.js): guests
+// see a real Account tab, not a hard wall — a sign-in prompt card up top,
+// then a menu where only account-specific rows are gated.
+function GuestAccountScreen({
+  styles,
+  color,
+  insets,
+  router,
+}: {
+  styles: ReturnType<typeof buildStyles>;
+  color: ColorPalette;
+  insets: EdgeInsets;
+  router: ReturnType<typeof useRouter>;
+}) {
+  function goToSignIn() {
+    router.push({ pathname: "/(auth)/sign-in", params: { message: "Login to continue" } });
+  }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 + insets.bottom + space.xxxl }}>
+      <View style={[styles.guestHeader, { paddingTop: insets.top + space.xl }]}>
+        <BrandWordmark size={22} />
+      </View>
+
+      <View style={styles.sidePad}>
+        <Card style={styles.guestSignInCard}>
+          <Text style={styles.guestSignInTitle}>Login to continue</Text>
+          <Pressable style={styles.signInButton} onPress={goToSignIn}>
+            <Text style={styles.signInButtonText}>Sign In / Sign Up</Text>
+          </Pressable>
+        </Card>
+      </View>
+
+      <View style={styles.sidePad}>
+        <Card padded={false} style={styles.menuGroup}>
+          <MenuRow label="My Activity" last onPress={goToSignIn} color={color} styles={styles} />
+        </Card>
+      </View>
+
+      <View style={styles.sectionSpace}>
+        <SectionHeader title="More on PaMarket" />
+      </View>
+      <View style={styles.sidePad}>
+        <Card padded={false} style={styles.menuGroup}>
+          <MenuRow label="Advertisements" onPress={goToSignIn} color={color} styles={styles} />
+          <MenuRow label="Favourites" onPress={goToSignIn} color={color} styles={styles} />
+          <MenuRow label="Saved Searches" onPress={goToSignIn} color={color} styles={styles} />
+          <MenuRow label="Find Jobs" onPress={() => router.push("/jobs")} color={color} styles={styles} />
+          <MenuRow label="Notification Center" onPress={() => router.push("/notifications")} color={color} styles={styles} />
+          <MenuRow label="Language" onPress={() => router.push("/language-settings")} color={color} styles={styles} />
+          <MenuRow label="Help & Support" onPress={() => router.push("/help")} color={color} styles={styles} />
+          <MenuRow label="About Us" onPress={() => router.push("/about")} color={color} styles={styles} />
+          <MenuRow label="Privacy Policy" onPress={() => router.push("/legal-hub")} color={color} styles={styles} />
+          <MenuRow label="Legal Hub" last onPress={() => router.push("/legal-hub")} color={color} styles={styles} />
+        </Card>
+      </View>
+
+      <Text style={styles.footer}>© {new Date().getFullYear()} PaMarket Zimbabwe · Made in Zimbabwe</Text>
+    </ScrollView>
+  );
+}
+
 export default function AccountScreen() {
   const { session } = useAuth();
   const router = useRouter();
@@ -243,14 +307,7 @@ export default function AccountScreen() {
   }
 
   if (!session?.user) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.signInTitle}>Sign in to view your account</Text>
-        <Pressable style={styles.signInButton} onPress={() => router.push("/(auth)/sign-in")}>
-          <Text style={styles.signInButtonText}>Sign In</Text>
-        </Pressable>
-      </View>
-    );
+    return <GuestAccountScreen styles={styles} color={color} insets={insets} router={router} />;
   }
 
   if (isLoading) {
@@ -426,6 +483,16 @@ function buildStyles(color: ColorPalette) {
     paddingVertical: space.md,
   },
   signInButtonText: { ...font.bodyStrong, color: color.textOnBrand },
+
+  guestHeader: {
+    alignItems: "center",
+    paddingBottom: space.xl,
+  },
+  guestSignInCard: {
+    alignItems: "center",
+    gap: space.md,
+  },
+  guestSignInTitle: { ...font.bodyStrong, color: color.text },
 
   hero: {
     alignItems: "center",

@@ -1,10 +1,20 @@
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs/types";
 import Svg, { Circle, Line, Path, Polyline } from "react-native-svg";
+import { useAuth } from "../lib/auth";
 import { glass, type ColorPalette } from "../lib/theme";
 import { useThemePreference, useThemedStyles } from "../lib/theme-provider";
+
+// Mirrors the legacy web app's navTo() guard: tapping Post or Messages while
+// signed out never renders those screens at all — it goes straight to
+// sign-in with a contextual message instead.
+const GATED_TAB_MESSAGES: Record<string, string> = {
+  post: "Log in to post an ad",
+  messages: "Sign in to view messages",
+};
 
 type Route = BottomTabBarProps["state"]["routes"][number];
 
@@ -61,10 +71,21 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const { resolvedScheme } = useThemePreference();
+  const { session } = useAuth();
+  const router = useRouter();
   const routes = state.routes.filter((r: Route) => r.name !== "post");
   const postRoute = state.routes.find((r: Route) => r.name === "post");
   const leftRoutes = routes.slice(0, 2);
   const rightRoutes = routes.slice(2);
+
+  function goToTab(routeName: string) {
+    const message = GATED_TAB_MESSAGES[routeName];
+    if (message && !session?.user) {
+      router.push({ pathname: "/(auth)/sign-in", params: { message } });
+      return;
+    }
+    navigation.navigate(routeName);
+  }
 
   function renderTab(route: Route) {
     const isFocused = state.index === state.routes.findIndex((r: Route) => r.key === route.key);
@@ -79,7 +100,7 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
           const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
-          if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+          if (!isFocused && !event.defaultPrevented) goToTab(route.name);
         }}
       >
         {isFocused ? <View style={styles.activeIndicator} /> : null}
@@ -104,7 +125,7 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
           style={styles.fab}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            postRoute && navigation.navigate(postRoute.name);
+            if (postRoute) goToTab(postRoute.name);
           }}
         >
           <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={tones.active} strokeWidth={2.5}>
