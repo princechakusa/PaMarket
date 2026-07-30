@@ -8,7 +8,6 @@ const brandDir = path.join(assets, "brand");
 
 const NAVY = "#06266F";
 const NAVY_DARK = "#031A55";
-const BLUE = "#153E91";
 const GOLD = "#F59A00";
 const GOLD_LIGHT = "#FFB21B";
 const WHITE = "#FFFFFF";
@@ -25,62 +24,68 @@ function defs() {
       <stop offset=".62" stop-color="${NAVY}"/>
       <stop offset="1" stop-color="#1749B2"/>
     </linearGradient>
-    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${GOLD_LIGHT}"/>
-      <stop offset=".62" stop-color="${GOLD}"/>
-      <stop offset="1" stop-color="#E48500"/>
-    </linearGradient>
-    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
-      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#06122F" flood-opacity=".16"/>
-    </filter>
+    <radialGradient id="goldGlow" cx="0.8" cy="0.1" r="0.6">
+      <stop offset="0" stop-color="${GOLD_LIGHT}" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="${GOLD_LIGHT}" stop-opacity="0"/>
+    </radialGradient>
   </defs>`;
 }
 
-function symbolPaths(mode = "brand") {
-  const canopy = mode === "monochrome" ? WHITE : "url(#goldGrad)";
-  const hands = WHITE;
-  return `
-    <path fill="${canopy}" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31Z"/>
-    <path fill="${hands}" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164Z"/>
-    <path fill="${hands}" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164Z"/>`;
-}
+// The launcher icon, splash, and every brand mark are wordmark-only now — no
+// hands/leaf symbol anywhere (that glyph was explicitly rejected). "Pa" is
+// always gold, "Market" is always white-on-navy or navy-on-white, matching
+// the in-app Home header (components/BrandLogo.tsx's BrandWordmark).
 
-function symbolSvg({ mode = "brand", background = "transparent", pad = 70, rounded = false } = {}) {
-  const bg =
-    background === "white"
-      ? `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="${WHITE}"/>`
-      : background === "navy"
-        ? `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="url(#navyGrad)"/>`
-        : "";
-  const scale = (512 - pad * 2) / 512;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+// Square icon (App Store hero, favicon): navy tile, stacked two lines so it
+// stays legible at launcher size.
+function iconSvg({ size = 512, rounded = true } = {}) {
+  const bg = `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="url(#navyGrad)"/>`;
+  const glow = `<circle cx="410" cy="60" r="220" fill="url(#goldGlow)"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 512 512">
   ${defs()}
   ${bg}
-  <g transform="translate(${pad} ${pad}) scale(${scale})">${symbolPaths(mode)}</g>
+  ${glow}
+  <text x="256" y="234" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="108" font-weight="900" letter-spacing="-3" fill="${GOLD}">Pa</text>
+  <text x="256" y="330" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="108" font-weight="900" letter-spacing="-3" fill="${WHITE}">Market</text>
 </svg>`;
 }
 
+// Android adaptive-icon foreground layer: transparent background, wordmark
+// scaled down to stay inside the circular/squircle safe zone the OS masks
+// it with (roughly the middle 66% of the 512 canvas).
+function adaptiveForegroundSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <text x="256" y="245" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${GOLD}">Pa</text>
+  <text x="256" y="317" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${WHITE}">Market</text>
+</svg>`;
+}
+
+function adaptiveMonochromeSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <text x="256" y="245" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${WHITE}">Pa</text>
+  <text x="256" y="317" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${WHITE}">Market</text>
+</svg>`;
+}
+
+// Wordmark lockup (splash screen, in-app brand marks): single line, "Pa" in
+// gold, "Market" in white (dark/on-brand backgrounds) or navy (light).
 function wordmarkSvg({ mode = "light", width = 1280, height = 400 } = {}) {
   const onBrand = mode === "dark";
-  const bg = "";
-  const symbolMode = "brand";
   const wordColor = onBrand ? WHITE : NAVY;
-  const paColor = GOLD;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  ${defs()}
-${bg ? `  ${bg}\n` : ""}
-  <g transform="translate(166 72) scale(.48)">${symbolPaths(symbolMode)}</g>
-  <text x="432" y="237" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="116" font-weight="900" letter-spacing="-5">
-    <tspan fill="${paColor}">Pa</tspan><tspan fill="${wordColor}">Market</tspan>
+  <text x="640" y="237" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="116" font-weight="900" letter-spacing="-5">
+    <tspan fill="${GOLD}">Pa</tspan><tspan fill="${wordColor}">Market</tspan>
   </text>
 </svg>`;
 }
 
+// Android status-bar notification icon: OS renders this as a flat white
+// silhouette regardless of the fill color given, and at ~24dp text isn't
+// legible — a bold "P" glyph reads better than either the old symbol or an
+// illegible full wordmark.
 function notificationSvg() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 512 512">
-  <path fill="#FFFFFF" d="M108 188C129 111 187 72 256 72s127 39 148 116c4 14-5 28-19 31-31 7-58-7-72-33-10 32-31 49-57 49s-47-17-57-49c-14 26-41 40-72 33-14-3-23-17-19-31Z"/>
-  <path fill="#FFFFFF" d="M83 229c0-24 8-39 22-39 16 0 20 18 20 44 0 35 15 68 41 91 9 8 16 13 21 16 10 7 14 0 7-9l-38-51c-9-13-7-29 6-36 11-6 23-2 35 10l61 61c20 20 30 45 30 74v63c0 11-9 20-20 18-56-9-102-35-136-78-32-41-49-95-49-164Z"/>
-  <path fill="#FFFFFF" d="M429 229c0-24-8-39-22-39-16 0-20 18-20 44 0 35-15 68-41 91-9 8-16 13-21 16-10 7-14 0-7-9l38-51c9-13 7-29-6-36-11-6-23-2-35 10l-61 61c-20 20-30 45-30 74v63c0 11 9 20 20 18 56-9 102-35 136-78 32-41 49-95 49-164Z"/>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <text x="48" y="72" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" fill="${WHITE}">P</text>
 </svg>`;
 }
 
@@ -91,22 +96,18 @@ async function renderPng(svg, file, size) {
 async function main() {
   ensureDir(brandDir);
 
-  const symbol = symbolSvg({ mode: "brand", background: "navy", rounded: true });
-  const symbolMono = symbolSvg({ mode: "monochrome" });
   const wordmarkLight = wordmarkSvg({ mode: "light" });
   const wordmarkDark = wordmarkSvg({ mode: "dark" });
 
-  fs.writeFileSync(path.join(brandDir, "pamarket-symbol.svg"), symbol);
-  fs.writeFileSync(path.join(brandDir, "pamarket-symbol-monochrome.svg"), symbolMono);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-light.svg"), wordmarkLight);
   fs.writeFileSync(path.join(brandDir, "pamarket-wordmark-dark.svg"), wordmarkDark);
 
-  await renderPng(symbolSvg({ mode: "brand", background: "navy", pad: 58 }), "icon.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "brand", background: "navy", pad: 58 }), "icon-dark.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "monochrome", background: "navy", pad: 58 }), "icon-tinted.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "brand", background: "transparent", pad: 92 }), "android-icon-foreground.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "monochrome", background: "transparent", pad: 92 }), "android-icon-monochrome.png", { width: 1024, height: 1024 });
-  await renderPng(symbolSvg({ mode: "brand", background: "navy", pad: 58 }), "favicon.png", { width: 64, height: 64 });
+  await renderPng(iconSvg({ rounded: false }), "icon.png", { width: 1024, height: 1024 });
+  await renderPng(iconSvg({ rounded: false }), "icon-dark.png", { width: 1024, height: 1024 });
+  await renderPng(adaptiveMonochromeSvg(), "icon-tinted.png", { width: 1024, height: 1024 });
+  await renderPng(adaptiveForegroundSvg(), "android-icon-foreground.png", { width: 1024, height: 1024 });
+  await renderPng(adaptiveMonochromeSvg(), "android-icon-monochrome.png", { width: 1024, height: 1024 });
+  await renderPng(iconSvg({ rounded: false }), "favicon.png", { width: 64, height: 64 });
   await renderPng(notificationSvg(), "notification-icon.png", { width: 96, height: 96 });
   await renderPng(wordmarkLight, "splash-icon.png", { width: 1280, height: 400 });
   await renderPng(wordmarkDark, "splash-icon-dark.png", { width: 1280, height: 400 });
@@ -114,7 +115,7 @@ async function main() {
   await sharp(Buffer.from(wordmarkLight)).png().toFile(path.join(brandDir, "pamarket-wordmark-light.png"));
   await sharp(Buffer.from(wordmarkDark)).png().toFile(path.join(brandDir, "pamarket-wordmark-dark.png"));
 
-  console.log("Rendered PaMarket brand assets.");
+  console.log("Rendered PaMarket brand assets (wordmark-only, no symbol).");
 }
 
 main().catch((error) => {
