@@ -110,36 +110,46 @@ export default function MessagesScreen() {
       : { data: [] as BusinessLite[] };
     const businessesById = new Map((businessesRes.data as BusinessLite[] | null ?? []).map((b) => [b.id, b]));
 
-    const summariesList = await Promise.all(
-      rows.map(async (conversation): Promise<ConversationSummary> => {
-        const otherId = otherMember(conversation, myId);
+    // Batched last-message + unread-count across ALL conversations at once —
+    // this used to fire 2 queries per conversation (up to 400 round trips
+    // for a heavy inbox), which was the main reason this screen felt slow.
+    const conversationIds = rows.map((c) => c.id);
+    const [lastMsgsRes, unreadRes] = await Promise.all([
+      supabase
+        .from("messages")
+        .select("id,conversation_id,sender_id,sender_name,text,image,read,created_at,deleted")
+        .in("conversation_id", conversationIds)
+        .order("created_at", { ascending: false })
+        .limit(1000),
+      supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", conversationIds)
+        .eq("read", false)
+        .neq("sender_id", myId)
+        .limit(5000),
+    ]);
 
-        const [lastMessageRes, unreadRes] = await Promise.all([
-          supabase
-            .from("messages")
-            .select("id,conversation_id,sender_id,sender_name,text,image,read,created_at,deleted")
-            .eq("conversation_id", conversation.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabase
-            .from("messages")
-            .select("id", { count: "exact", head: true })
-            .eq("conversation_id", conversation.id)
-            .eq("read", false)
-            .neq("sender_id", myId),
-        ]);
+    const lastMessageByConv = new Map<string, MessageRow>();
+    for (const m of (lastMsgsRes.data as MessageRow[] | null) ?? []) {
+      if (!lastMessageByConv.has(m.conversation_id)) lastMessageByConv.set(m.conversation_id, m);
+    }
+    const unreadCountByConv = new Map<string, number>();
+    for (const m of (unreadRes.data as { conversation_id: string }[] | null) ?? []) {
+      unreadCountByConv.set(m.conversation_id, (unreadCountByConv.get(m.conversation_id) ?? 0) + 1);
+    }
 
-        return {
-          conversation,
-          otherProfile: (otherId ? profilesById.get(otherId) : undefined) ?? null,
-          lastMessage: (lastMessageRes.data as MessageRow) ?? null,
-          unreadCount: unreadRes.count ?? 0,
-          listing: (conversation.listing_id ? listingsById.get(conversation.listing_id) : undefined) ?? null,
-          business: (conversation.business_id ? businessesById.get(conversation.business_id) : undefined) ?? null,
-        };
-      })
-    );
+    const summariesList = rows.map((conversation): ConversationSummary => {
+      const otherId = otherMember(conversation, myId);
+      return {
+        conversation,
+        otherProfile: (otherId ? profilesById.get(otherId) : undefined) ?? null,
+        lastMessage: lastMessageByConv.get(conversation.id) ?? null,
+        unreadCount: unreadCountByConv.get(conversation.id) ?? 0,
+        listing: (conversation.listing_id ? listingsById.get(conversation.listing_id) : undefined) ?? null,
+        business: (conversation.business_id ? businessesById.get(conversation.business_id) : undefined) ?? null,
+      };
+    });
 
     summariesList.sort((a, b) => {
       const aTime = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : 0;

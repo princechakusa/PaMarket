@@ -167,53 +167,40 @@ export default function ChatScreen() {
     setConversation(conv as ConversationRow);
 
     const oId = otherMember(conv as ConversationRow, myId);
-    if (oId) {
-      const { data: profile } = await supabase
-        .from("profiles_public")
-        .select("id,name,avatar,verified,last_seen")
-        .eq("id", oId)
-        .maybeSingle();
-      setOtherProfile((profile as Profile) ?? null);
-    }
-
     // Business conversation — show the shop's identity, not the owner's
     // personal profile (see supabase/migrations/add_conversation_business_id.sql).
     const businessId = (conv as ConversationRow).business_id;
-    if (businessId) {
-      const { data: biz } = await supabase.from("businesses").select("id,name,logo").eq("id", businessId).maybeSingle();
-      setConversationBusiness((biz as { id: string; name: string | null; logo: string | null }) ?? null);
-    } else {
-      setConversationBusiness(null);
-    }
-
-    // Listing context strip — fetch the attached listing on load.
     const listingId = (conv as ConversationRow).listing_id;
-    if (listingId) {
-      const { data: l } = await supabase
-        .from("listings")
-        .select("id,title,price,currency,photos")
-        .eq("id", listingId)
-        .maybeSingle();
-      setListing((l as ListingContext) ?? null);
-    } else {
-      setListing(null);
-    }
 
-    const { data: msgs } = await supabase
-      .from("messages")
-      .select("id,conversation_id,sender_id,sender_name,text,image,read,created_at,edited,deleted")
-      .eq("conversation_id", id)
-      .order("created_at", { ascending: true })
-      .limit(200);
-    setMessages((msgs as MessageRow[]) ?? []);
+    // These four don't depend on each other — running them sequentially was
+    // turning one screen open into 5 back-to-back network round trips.
+    const [profileRes, bizRes, listingRes, msgsRes] = await Promise.all([
+      oId
+        ? supabase.from("profiles_public").select("id,name,avatar,verified,last_seen").eq("id", oId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      businessId
+        ? supabase.from("businesses").select("id,name,logo").eq("id", businessId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      listingId
+        ? supabase.from("listings").select("id,title,price,currency,photos").eq("id", listingId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("messages")
+        .select("id,conversation_id,sender_id,sender_name,text,image,read,created_at,edited,deleted")
+        .eq("conversation_id", id)
+        .order("created_at", { ascending: true })
+        .limit(200),
+    ]);
+
+    setOtherProfile((profileRes.data as Profile) ?? null);
+    setConversationBusiness((bizRes.data as { id: string; name: string | null; logo: string | null } | null) ?? null);
+    setListing((listingRes.data as ListingContext) ?? null);
+    setMessages((msgsRes.data as MessageRow[]) ?? []);
 
     if (oId) {
-      await supabase
-        .from("messages")
-        .update({ read: true })
-        .eq("conversation_id", id)
-        .eq("sender_id", oId)
-        .eq("read", false);
+      // Fire-and-forget — marking messages read doesn't need to block the
+      // screen from finishing its load.
+      supabase.from("messages").update({ read: true }).eq("conversation_id", id).eq("sender_id", oId).eq("read", false);
     }
   }, [id, myId]);
 
