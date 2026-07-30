@@ -38,9 +38,11 @@ export function ShopsRail({
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
         {businesses.slice(0, 12).map((business) => {
-          const products = listings.filter(
-            (l) => l.status === "active" && (l.seller_id === business.owner_user_id || l.business_id === business.id)
-          );
+          // Only listings actually assigned to this shop (business_id) count
+          // as its catalog — mirrors the legacy web app's storefront logic
+          // exactly. A fallback to the owner's personal seller_id here was
+          // leaking that person's unrelated personal listings into the shop.
+          const products = listings.filter((l) => l.status === "active" && l.business_id === business.id);
           const categoryNames = (business.category ? [business.category] : [])
             .map((id) => CATEGORIES.find((c) => c.id === id)?.name)
             .filter(Boolean)

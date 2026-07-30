@@ -20,9 +20,9 @@ import { recordShopLead, type LeadType } from "../../lib/business-leads";
 import { formatPrice, type Listing } from "../../lib/listings";
 import { averageRating } from "../../lib/sellers";
 import { StarRow } from "../../components/StarRow";
-import type { ColorPalette } from "../../lib/theme";
+import { space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { GlassBackButton } from "../../components/ui";
+import { Card, GlassBackButton, VerifiedBadge } from "../../components/ui";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
@@ -54,19 +54,15 @@ export default function BusinessShopScreen() {
       )
       .eq("id", id)
       .maybeSingle();
-    const ownerUserId = (businessRes.data as Business | null)?.owner_user_id;
-    // Match components/home/ShopsRail.tsx's product-count logic exactly
-    // (business_id OR owner's personal seller_id) — the storefront page was
-    // previously stricter (business_id only), so it could show "0 items"
-    // for the same shop Home's rail showed with real products, whenever a
-    // listing was posted under the owner's personal account without
-    // business_id set.
-    const productsFilter = ownerUserId ? `business_id.eq.${id},seller_id.eq.${ownerUserId}` : `business_id.eq.${id}`;
     const [productsRes, reviewsRes, followerCountRes, myFollowRes] = await Promise.all([
+      // Only listings actually assigned to this shop (business_id) belong to
+      // its catalog — matches the legacy web app's storefront logic. A
+      // fallback to the owner's personal seller_id here was leaking that
+      // person's unrelated personal listings into the shop's product grid.
       supabase
         .from("listings")
         .select(LISTING_COLUMNS)
-        .or(productsFilter)
+        .eq("business_id", id)
         .eq("status", "active")
         .neq("category", "jobs"),
       supabase.from("business_reviews").select("rating").eq("business_id", id),
@@ -219,7 +215,7 @@ export default function BusinessShopScreen() {
           ) : null}
         </View>
 
-        <View style={styles.identity}>
+        <Card style={styles.identity} elevated>
           <View style={styles.logoWrap}>
             {business.logo ? (
               <Image source={{ uri: business.logo }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
@@ -228,30 +224,37 @@ export default function BusinessShopScreen() {
             )}
           </View>
 
-          <Text style={styles.name}>{business.name}</Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {business.name}
+            </Text>
+            {isVerified ? <VerifiedBadge /> : null}
+          </View>
           {business.city || business.province ? (
             <Text style={styles.location}>{[business.city, business.province].filter(Boolean).join(", ")}</Text>
           ) : null}
 
-          <Pressable
-            style={styles.ratingRow}
-            onPress={() => router.push({ pathname: "/reviews/[id]", params: { id: business.id, type: "business" } })}
-          >
-            <StarRow rating={avgRating} />
-            <Text style={styles.ratingText}>
-              {reviews.length ? `${avgRating.toFixed(1)} (${reviews.length})` : "No reviews yet"}
-            </Text>
-            <Text style={styles.ratingDot}>·</Text>
-            <Text style={styles.ratingText}>
-              {products.length} {products.length === 1 ? "item" : "items"}
-            </Text>
-            <Text style={styles.ratingDot}>·</Text>
-            <Text style={styles.ratingText}>
-              {followerCount} {followerCount === 1 ? "follower" : "followers"}
-            </Text>
-          </Pressable>
-
           {business.description ? <Text style={styles.description}>{business.description}</Text> : null}
+
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{products.length}</Text>
+              <Text style={styles.statLabel}>{products.length === 1 ? "Item" : "Items"}</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <Pressable
+              style={styles.statBox}
+              onPress={() => router.push({ pathname: "/reviews/[id]", params: { id: business.id, type: "business" } })}
+            >
+              <Text style={styles.statValue}>{reviews.length ? avgRating.toFixed(1) : "—"}</Text>
+              <Text style={styles.statLabel}>{reviews.length ? `${reviews.length} rating${reviews.length === 1 ? "" : "s"}` : "No ratings"}</Text>
+            </Pressable>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{followerCount}</Text>
+              <Text style={styles.statLabel}>{followerCount === 1 ? "Follower" : "Followers"}</Text>
+            </View>
+          </View>
 
           <View style={styles.contactRow}>
             {business.phone ? (
@@ -291,7 +294,40 @@ export default function BusinessShopScreen() {
               </Pressable>
             ) : null}
           </View>
-        </View>
+        </Card>
+
+        <Card style={styles.reviewsCard} elevated>
+          <View style={styles.reviewsHeaderRow}>
+            <View>
+              <Text style={styles.reviewsTitle}>Reviews</Text>
+              {reviews.length ? (
+                <View style={styles.reviewsSummaryRow}>
+                  <StarRow rating={avgRating} />
+                  <Text style={styles.reviewsSummaryText}>
+                    {avgRating.toFixed(1)} ({reviews.length})
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.reviewsSummaryText}>No reviews yet</Text>
+              )}
+            </View>
+            {!isOwner ? (
+              <Pressable
+                style={styles.writeReviewButton}
+                onPress={() => router.push({ pathname: "/reviews/[id]", params: { id: business.id, type: "business" } })}
+              >
+                <Text style={styles.writeReviewButtonText}>Write a Review</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.seeReviewsButton}
+                onPress={() => router.push({ pathname: "/reviews/[id]", params: { id: business.id, type: "business" } })}
+              >
+                <Text style={styles.seeReviewsButtonText}>See all</Text>
+              </Pressable>
+            )}
+          </View>
+        </Card>
 
         {categoryChips.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryChips}>
@@ -414,18 +450,18 @@ function buildStyles(color: ColorPalette) {
       height: "100%",
     },
     identity: {
-      paddingHorizontal: 16,
-      paddingBottom: 16,
+      marginHorizontal: 12,
+      marginTop: -28,
     },
     logoWrap: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
+      width: 68,
+      height: 68,
+      borderRadius: 34,
       backgroundColor: color.surfaceAlt,
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
-      marginTop: -32,
+      marginTop: -44,
       borderWidth: 3,
       borderColor: color.surface,
     },
@@ -438,35 +474,55 @@ function buildStyles(color: ColorPalette) {
       fontWeight: "700",
       color: color.brand,
     },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginTop: 10,
+    },
     name: {
       fontSize: 19,
       fontWeight: "800",
       color: color.text,
-      marginTop: 10,
+      flexShrink: 1,
     },
     location: {
       fontSize: 13,
       color: color.textMuted,
       marginTop: 2,
     },
-    ratingRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      marginTop: 8,
-    },
-    ratingText: {
-      fontSize: 12,
-      color: color.textMuted,
-    },
-    ratingDot: {
-      color: color.textMuted,
-    },
     description: {
       fontSize: 13,
       color: color.textSub,
       lineHeight: 19,
       marginTop: 10,
+    },
+    statsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: color.surfaceAlt,
+      borderRadius: 14,
+      marginTop: space.md,
+      paddingVertical: space.sm,
+    },
+    statBox: {
+      flex: 1,
+      alignItems: "center",
+    },
+    statDivider: {
+      width: 1,
+      alignSelf: "stretch",
+      backgroundColor: color.border,
+    },
+    statValue: {
+      fontSize: 16,
+      fontWeight: "800",
+      color: color.text,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: color.textMuted,
+      marginTop: 2,
     },
     contactRow: {
       flexDirection: "row",
@@ -503,6 +559,51 @@ function buildStyles(color: ColorPalette) {
       color: color.textOnBrand,
     },
     contactPillFollowingText: {
+      color: color.brand,
+    },
+    reviewsCard: {
+      marginHorizontal: 12,
+      marginTop: space.md,
+    },
+    reviewsHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: space.md,
+    },
+    reviewsTitle: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: color.text,
+      marginBottom: 4,
+    },
+    reviewsSummaryRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    reviewsSummaryText: {
+      fontSize: 12,
+      color: color.textMuted,
+    },
+    writeReviewButton: {
+      backgroundColor: color.brand,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    writeReviewButtonText: {
+      fontSize: 12.5,
+      fontWeight: "700",
+      color: color.textOnBrand,
+    },
+    seeReviewsButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    seeReviewsButtonText: {
+      fontSize: 12.5,
+      fontWeight: "700",
       color: color.brand,
     },
     categoryChips: {
