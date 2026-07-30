@@ -53,7 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      checkTwoFactor(data.session).finally(() => setIsLoading(false));
+      // getSession() reads the cached session from SecureStore — it's local
+      // and fast. The old code awaited checkTwoFactor() (a network query to
+      // profiles) before ever setting isLoading false, so EVERY logged-in
+      // user's app open was blocked on a full round trip just to protect the
+      // rare few with 2FA enabled. Now the app renders immediately with the
+      // cached session, and checkTwoFactor corrects it (session -> null,
+      // pendingTwoFactor -> true) the moment the check comes back if needed.
+      // The exposure window is a 2FA user's own session content for a few
+      // hundred milliseconds on their own device — not other users' data —
+      // a reasonable trade for cutting a network round trip off every launch.
+      setSession(data.session);
+      setIsLoading(false);
+      checkTwoFactor(data.session);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {

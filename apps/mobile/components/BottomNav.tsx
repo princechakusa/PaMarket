@@ -115,7 +115,7 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
       <BlurView
         intensity={glass.intensity.standard}
         tint={resolvedScheme === "dark" ? "dark" : "light"}
-        experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+        blurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
         style={StyleSheet.absoluteFill}
       />
       {leftRoutes.map(renderTab)}

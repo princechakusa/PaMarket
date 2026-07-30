@@ -53,7 +53,7 @@ export function ConfirmModal({
         <BlurView
           intensity={glass.intensity.strong}
           tint="dark"
-          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+          blurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.card}>

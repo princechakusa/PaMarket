@@ -35,7 +35,7 @@ export function GlassHeader({ title, onBack, tone = "auto", trailing, transparen
         <BlurView
           intensity={glass.intensity.standard}
           tint={effectiveDark ? "dark" : "light"}
-          experimentalBlurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+          blurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
           style={StyleSheet.absoluteFill}
         />
       )}
