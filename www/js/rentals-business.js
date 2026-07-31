@@ -842,6 +842,7 @@
   };
 
   RB._wizSubmit = async function () {
+    if (H.state.disableRentals) { H.toast(H.state.maintenanceMessage || 'Rental listings are temporarily disabled. Please try again later.', 5000, true); return; }
     const sb = window.supabase; if (!sb) { H.toast('No connection. Try again.', 4000, true); return; }
     const u  = H.currentUser(); if (!u) return;
     const d  = RB._wizState.data;

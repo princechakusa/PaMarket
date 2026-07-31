@@ -1529,6 +1529,7 @@
   }
 
   H._submitJob = async function () {
+    if (H.state.disableJobs) { H.toast(H.state.maintenanceMessage || 'Job posting is temporarily disabled. Please try again later.', 5000, true); return; }
     var company = (document.getElementById('jCompany') || {}).value || '';
     var title = (document.getElementById('jTitle') || {}).value || '';
     var cat = (document.getElementById('jCat') || {}).value || '';

@@ -447,6 +447,7 @@
 
   // Kicks off the native Play Billing purchase sheet for a job credit pack.
   H.buyJobCredits = async function (productId) {
+    if (H.state.disablePayments) { H.toast(H.state.maintenanceMessage || 'Purchases are temporarily disabled. Please try again later.', 5000, true); return; }
     var u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to buy job posting credits'); return; }
     if (!_isNative()) { H.toast('Buying job credits requires the PaMarket Android app.', 4000, true); return; }
@@ -544,6 +545,7 @@
   // Kicks off the native Play Billing purchase sheet for a rental featured
   // placement package.
   H.buyRentalFeaturedSlot = async function (listingId, productId) {
+    if (H.state.disablePayments) { H.toast(H.state.maintenanceMessage || 'Purchases are temporarily disabled. Please try again later.', 5000, true); return; }
     var u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to feature your listing'); return; }
     if (!_isNative()) { H.toast('Featuring listings requires the PaMarket Android app.', 4000, true); return; }
@@ -662,6 +664,7 @@
     if (sheet) sheet.remove();
     var jobSheet = document.getElementById('_jobBoostSheet');
     if (jobSheet) jobSheet.remove();
+    if (H.state.disablePayments) { H.toast(H.state.maintenanceMessage || 'Purchases are temporarily disabled. Please try again later.', 5000, true); return; }
     if (!H.isActiveProductId(productId)) { H.toast('This product is not available yet.', 4000, true); return; }
 
     var P = _plugin();
@@ -728,6 +731,7 @@
   // featured-slot pack. Same async pattern as _buyBoost — the result
   // arrives via 'purchasesUpdated'.
   H.buySlotPack = async function (businessId, productId) {
+    if (H.state.disablePayments) { H.toast(H.state.maintenanceMessage || 'Purchases are temporarily disabled. Please try again later.', 5000, true); return; }
     var u = H.currentUser();
     if (!u) { H.requireAuth('Sign in to buy featured slots'); return; }
     if (!_isNative()) { H.toast('Buying featured slots requires the PaMarket Android app.', 4000, true); return; }

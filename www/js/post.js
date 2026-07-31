@@ -435,6 +435,7 @@
     async submit() {
       if (H._post._posting) return;            // guard against double-tap → duplicate listings
       if (H.checkBan && H.checkBan()) return;
+      if (H.state.disablePosting) { H.toast(H.state.maintenanceMessage || 'Posting is temporarily disabled. Please try again later.', 5000, true); return; }
       const s = postState;
 
       // Re-validate all required fields before posting

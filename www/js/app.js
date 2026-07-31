@@ -1637,7 +1637,35 @@ window.H = {
       const s = data.settings||{};
       Object.assign(H.state, s);
       H.saveState();
+      if(typeof H._applyMaintenanceMode==='function') H._applyMaintenanceMode();
     } catch(e){ console.warn('fetchAppSettings:',e.message); }
+  },
+
+  // Emergency lockdown gate — admin.html's "Emergency Controls" panel sets
+  // app_settings.settings.maintenanceMode (+ optional maintenanceMessage).
+  // This is the ONE true kill switch: rather than independently gating every
+  // write path (chat send, payment start, rental/job post — each scattered
+  // across different files with no single choke point), a full-screen block
+  // is simpler to guarantee and simpler for an admin to trust under pressure.
+  // Listing-post has its own narrower disablePosting gate (see post.js) for
+  // when only new ads need to stop, not the whole app.
+  _applyMaintenanceMode() {
+    const on = !!H.state.maintenanceMode;
+    const u = H.currentUser && H.currentUser();
+    let el = document.getElementById('maintenanceOverlay');
+    if(on && !(u && u.role==='admin')){
+      if(!el){
+        el = document.createElement('div');
+        el.id = 'maintenanceOverlay';
+        el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0E2359;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,sans-serif';
+        document.body.appendChild(el);
+      }
+      el.innerHTML = '<div style="font-size:20px;font-weight:800;margin-bottom:10px">We\'ll be right back</div>'
+        + '<div style="font-size:14px;color:#B9C6E4;max-width:340px;line-height:1.6">' + H.escHtml(H.state.maintenanceMessage || 'PaMarket is undergoing scheduled maintenance. Please check back shortly.') + '</div>';
+      el.style.display = 'flex';
+    } else if(el){
+      el.style.display = 'none';
+    }
   },
 
   trackAdImpression(id) {
@@ -2747,6 +2775,10 @@ window.H = {
 
 
   async saveMessageToCloud(convId, msg) {
+    // Single choke point for persisting any chat message (direct sends,
+    // offers, auto-replies all funnel here) — gating here means disableChat
+    // works even for a caller that forgot to check it itself.
+    if (this.state.disableChat) return { ok:false, error:'Chat is temporarily disabled' };
     try {
       const sb = window.supabase;
       if (!sb || typeof sb.from !== 'function') return { ok:false, error:'Connection unavailable' };
