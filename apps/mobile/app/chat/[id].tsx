@@ -97,7 +97,13 @@ function timeLabel(dateString: string): string {
 }
 
 export default function ChatScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // name/avatar are an optional hint the caller already had on hand (e.g. the
+  // conversations list row, or the listing/business/profile being messaged
+  // from) — shown instantly as the header while the real fetch is in flight,
+  // so opening a chat never flashes "PaMarket User" first. Purely cosmetic:
+  // the authoritative otherProfile/conversationBusiness fetch below still
+  // always runs and overwrites this once it resolves.
+  const { id, name: nameHint, avatar: avatarHint } = useLocalSearchParams<{ id: string; name?: string; avatar?: string }>();
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
@@ -558,8 +564,8 @@ export default function ChatScreen() {
         ? "Online"
         : lastSeenLabel(otherProfile?.last_seen);
 
-  const displayName = conversationBusiness?.name || otherProfile?.name || "PaMarket User";
-  const displayAvatar = conversationBusiness?.logo || otherProfile?.avatar;
+  const displayName = conversationBusiness?.name || otherProfile?.name || nameHint || "PaMarket User";
+  const displayAvatar = conversationBusiness?.logo || otherProfile?.avatar || avatarHint;
 
   const openProfile = () => {
     if (conversationBusiness) {

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -84,6 +86,34 @@ export default function PostScreen() {
   const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    // Locking the phone with the keyboard open desyncs KeyboardAvoidingView's
+    // internal keyboard-height tracking from the real keyboard on unlock —
+    // it was previously seen collapsing this screen's content to a sliver
+    // with the footer floating at the top (same root cause chat/[id].tsx's
+    // keyboardAvoidingKey already works around). Dismissing on background and
+    // forcing a fresh mount via `key` on foreground resets that state cleanly.
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") {
+        setKeyboardVisible(false);
+        Keyboard.dismiss();
+      } else {
+        setKeyboardAvoidingKey((key) => key + 1);
+      }
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+      appStateSub.remove();
+    };
+  }, []);
 
   if (!session?.user) {
     return (
@@ -247,7 +277,11 @@ export default function PostScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView
+      key={keyboardAvoidingKey}
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
         <GlassBackButton onPress={handleHeaderBack} tone="light" />
         <Text style={styles.topbarTitle} numberOfLines={1}>
@@ -439,7 +473,12 @@ export default function PostScreen() {
         // painted on top of this screen's content by the Tabs navigator, so
         // any small rendering discrepancy in an exact-fit gap could still
         // visually cover the button even though it exists in the tree.
-        <View style={[styles.stepButtons, { paddingBottom: insets.bottom + 64 + space.xxl }]}>
+        <View
+          style={[
+            styles.stepButtons,
+            { paddingBottom: keyboardVisible ? space.md : insets.bottom + 64 + space.xxl },
+          ]}
+        >
           {isSubmitting && submitStatus ? <Text style={styles.submitStatus}>{submitStatus}</Text> : null}
           {state.step < 4 ? (
             <Button label={state.step === 3 ? "Preview →" : "Continue →"} onPress={goNext} />

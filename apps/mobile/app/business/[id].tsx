@@ -134,7 +134,10 @@ export default function BusinessShopScreen() {
         business_id: business.id,
       });
     }
-    router.push({ pathname: "/chat/[id]", params: { id: convId } });
+    router.push({
+      pathname: "/chat/[id]",
+      params: { id: convId, name: business.name || "", avatar: business.logo ?? "" },
+    });
   }
 
   async function captureShopLead(type: LeadType) {

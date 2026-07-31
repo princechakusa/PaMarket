@@ -196,14 +196,20 @@ export default function UserProfileScreen() {
       if (!members.includes(myId) || !members.includes(id)) {
         await supabase.from("conversations").update({ members: [myId, id] }).eq("id", existing.id);
       }
-      router.push({ pathname: "/chat/[id]", params: { id: existing.id } });
+      router.push({
+        pathname: "/chat/[id]",
+        params: { id: existing.id, name: profile?.name || "", avatar: profile?.avatar ?? "" },
+      });
       return;
     }
 
     {
       await supabase.from("conversations").upsert({ id: convId, members: [session.user.id, id] });
     }
-    router.push({ pathname: "/chat/[id]", params: { id: convId } });
+    router.push({
+      pathname: "/chat/[id]",
+      params: { id: convId, name: profile?.name || "", avatar: profile?.avatar ?? "" },
+    });
   }
 
   if (isLoading) {
