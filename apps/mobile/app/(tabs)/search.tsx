@@ -13,6 +13,9 @@ import { logSearch } from "../../lib/telemetry";
 import { saveSearch } from "../../lib/saved-searches";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
 import { toast } from "../../components/ui/Toast";
+import { loadCache, saveCache } from "../../lib/offlineCache";
+
+const SEARCH_CACHE_KEY = "search-browse";
 import { ListingRow } from "../../components/ListingRow";
 import { FilterPanel, countActiveFilters } from "../../components/search/FilterPanel";
 import { AdCarousel } from "../../components/home/AdCarousel";
@@ -82,6 +85,7 @@ export default function SearchScreen() {
   const [ads, setAds] = useState<PaidAd[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [matchingShops, setMatchingShops] = useState<Business[]>([]);
+  const [showingCached, setShowingCached] = useState(false);
 
   const pageRef = useRef(0);
   const styles = useThemedStyles(buildStyles);
@@ -123,17 +127,31 @@ export default function SearchScreen() {
     const { data, error: queryError } = await buildQuery(0, PAGE_SIZE - 1);
     if (queryError) {
       setError(queryError.message);
-      setListings([]);
     } else {
       const page = (data as Listing[]) ?? [];
       setListings(page);
+      setShowingCached(false);
       setHasMore(page.length === PAGE_SIZE);
+      saveCache<Listing[]>(SEARCH_CACHE_KEY, page);
     }
     setIsLoading(false);
   }, [buildQuery]);
 
   useEffect(() => {
+    let cancelled = false;
+    // Hydrate from the last successful browse load immediately — if the
+    // network call below fails (no connection), this stays on screen
+    // instead of an empty/error state, matching the home feed's behavior.
+    loadCache<Listing[]>(SEARCH_CACHE_KEY).then((cached) => {
+      if (cancelled || !cached) return;
+      setListings((current) => (current.length ? current : cached));
+      setShowingCached(true);
+      setIsLoading(false);
+    });
     loadFirstPage();
+    return () => {
+      cancelled = true;
+    };
   }, [loadFirstPage]);
 
   const loadMore = useCallback(async () => {
@@ -293,7 +311,7 @@ export default function SearchScreen() {
         <View style={styles.listContent}>
           <ListSkeleton count={7} />
         </View>
-      ) : error ? (
+      ) : error && !listings.length ? (
         <ErrorState subtitle={error} onRetry={loadFirstPage} />
       ) : (
         <FlatList
@@ -302,6 +320,13 @@ export default function SearchScreen() {
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <>
+              {error ? (
+                <View style={styles.offlineBanner}>
+                  <Text style={styles.offlineBannerText}>
+                    {showingCached ? "You're offline — showing your last saved results." : "Couldn't refresh — showing what we last loaded."}
+                  </Text>
+                </View>
+              ) : null}
               {matchingShops.length ? (
                 <View style={styles.shopsSection}>
                   <Text style={styles.shopsSectionTitle}>Shops matching &ldquo;{filters.query.trim()}&rdquo;</Text>
@@ -379,6 +404,14 @@ export default function SearchScreen() {
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg },
+  offlineBanner: {
+    marginHorizontal: space.lg,
+    marginTop: space.md,
+    backgroundColor: color.goldTint,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  offlineBannerText: { ...font.sub, color: color.text, fontWeight: "600" },
   shopsSection: { paddingTop: space.lg, paddingBottom: space.sm },
   shopsSectionTitle: { ...font.caption, color: color.textMuted, paddingHorizontal: space.lg, marginBottom: space.sm },
   shopsRow: { paddingHorizontal: space.lg, gap: space.md },

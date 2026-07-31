@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
@@ -284,6 +284,22 @@ export default function AccountScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  // The unread-messages stat was only ever fetched once on mount — reading
+  // your messages elsewhere and coming back to Profile left this stat
+  // showing a stale count. Refresh just this lightweight count on every
+  // focus instead of re-running the full profile load.
+  useFocusEffect(
+    useCallback(() => {
+      if (!session?.user) return;
+      supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("read", false)
+        .neq("sender_id", session.user.id)
+        .then(({ count }) => setUnreadMessages(count ?? 0));
+    }, [session])
+  );
 
   async function onRefresh() {
     setIsRefreshing(true);

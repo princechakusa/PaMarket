@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import Svg, { Line } from "react-native-svg";
@@ -10,6 +10,10 @@ import { CATEGORIES } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { fetchActiveAds, type PaidAd } from "../../lib/ads";
 import { subscribeToFeedChanges } from "../../lib/realtime-feed";
+import { loadCache, saveCache } from "../../lib/offlineCache";
+
+type HomeCache = { listings: Listing[]; businesses: Business[]; ads: PaidAd[] };
+const HOME_CACHE_KEY = "home-feed";
 import { useAuth } from "../../lib/auth";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
 import { HomeHeader } from "../../components/home/HomeHeader";
@@ -114,6 +118,7 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showingCached, setShowingCached] = useState(false);
   const [cityFilter, setCityFilter] = useState("All Zimbabwe");
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -153,17 +158,33 @@ export default function HomeScreen() {
 
     const listingsRes = await listingsRequest;
 
+    let freshListings: Listing[] | null = null;
     if (listingsRes.error) setError(listingsRes.error.message);
-    else setListings((listingsRes.data as Listing[]) ?? []);
+    else {
+      freshListings = (listingsRes.data as Listing[]) ?? [];
+      setListings(freshListings);
+      setShowingCached(false);
+    }
     // The marketplace can render as soon as its core listing feed arrives.
     // A slower shops/count request must not keep the entire home page behind
     // a loading skeleton.
     setIsLoading(false);
 
     const businessesRes = await businessesRequest;
-    if (!businessesRes.error) setBusinesses((businessesRes.data as Business[]) ?? []);
+    let freshBusinesses: Business[] | null = null;
+    if (!businessesRes.error) {
+      freshBusinesses = (businessesRes.data as Business[]) ?? [];
+      setBusinesses(freshBusinesses);
+    }
 
-    fetchActiveAds().then(setAds);
+    const freshAds = await fetchActiveAds();
+    setAds(freshAds);
+
+    // Only overwrite the on-disk snapshot once every part of this load
+    // succeeded — a partial/failed load must never stomp a good cache.
+    if (freshListings && freshBusinesses) {
+      saveCache<HomeCache>(HOME_CACHE_KEY, { listings: freshListings, businesses: freshBusinesses, ads: freshAds });
+    }
 
     if (session?.user) {
       const [notifRes, msgRes] = await Promise.all([
@@ -184,8 +205,49 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setIsLoading(true);
+    let cancelled = false;
+    // Hydrate from the last successful load immediately — if the network
+    // call below fails (no connection), this is what stays on screen
+    // instead of an empty/error state. Overwritten the moment fresh data
+    // arrives, so it's never shown alongside outdated data unknowingly.
+    loadCache<HomeCache>(HOME_CACHE_KEY).then((cached) => {
+      if (cancelled || !cached) return;
+      setListings((current) => (current.length ? current : cached.listings));
+      setBusinesses((current) => (current.length ? current : cached.businesses));
+      setAds((current) => (current.length ? current : cached.ads));
+      setShowingCached(true);
+      setIsLoading(false);
+    });
     loadData().finally(() => setIsLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [loadData]);
+
+  // The notification/message badge counts were only ever fetched once on
+  // mount (inside loadData) — reading your messages elsewhere and coming
+  // back to Home left this screen showing a stale count until the whole
+  // app remounted. Refresh just these two lightweight counts on every
+  // focus instead of the full listings/businesses/ads load.
+  useFocusEffect(
+    useCallback(() => {
+      if (!session?.user) return;
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", session.user.id)
+        .eq("read", false)
+        .neq("type", "message")
+        .or("category.is.null,category.neq.rental")
+        .then(({ count }) => setUnreadNotifs(count ?? 0));
+      supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("read", false)
+        .neq("sender_id", session.user.id)
+        .then(({ count }) => setUnreadMessages(count ?? 0));
+    }, [session])
+  );
 
   useEffect(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -332,7 +394,7 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={color.brand} />}
         showsVerticalScrollIndicator={false}
       >
-        {error ? (
+        {error && !hasAnyContent ? (
           <ErrorState subtitle={error} onRetry={onRefresh} />
         ) : !hasAnyContent ? (
           <EmptyState
@@ -343,6 +405,13 @@ export default function HomeScreen() {
           />
         ) : (
           <>
+            {error ? (
+              <View style={styles.offlineBanner}>
+                <Text style={styles.offlineBannerText}>
+                  {showingCached ? "You're offline — showing your last saved listings." : "Couldn't refresh — showing what we last loaded."}
+                </Text>
+              </View>
+            ) : null}
             <CategoryGrid onSelectCategory={openCategory} onSeeAll={() => router.push("/(tabs)/search")} />
 
             <AdCarousel ads={ads} />
@@ -445,6 +514,18 @@ function buildStyles(color: ColorPalette) {
     ctaWrap: {
       paddingHorizontal: space.lg,
       marginBottom: space.xl,
+    },
+    offlineBanner: {
+      marginHorizontal: space.lg,
+      marginBottom: space.lg,
+      backgroundColor: color.goldTint,
+      borderRadius: radius.md,
+      padding: space.md,
+    },
+    offlineBannerText: {
+      fontSize: 12.5,
+      fontWeight: "600",
+      color: color.text,
     },
     skeletonWrap: {
       padding: space.lg,

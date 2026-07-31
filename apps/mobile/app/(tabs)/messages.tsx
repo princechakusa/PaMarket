@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
@@ -19,6 +20,9 @@ import { initPresence, isUserOnline } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Avatar, EmptyState, ListSkeleton } from "../../components/ui";
+import { loadCache, saveCache } from "../../lib/offlineCache";
+
+const MESSAGES_CACHE_KEY = "messages-list";
 
 type ListingLite = { id: string; title: string | null; photos: string[] | null };
 type BusinessLite = { id: string; name: string | null; logo: string | null };
@@ -63,21 +67,43 @@ export default function MessagesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [, setOnlineTick] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [showingCached, setShowingCached] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Personal vs Business inbox split, matching the legacy Capacitor app
+  // (www/js/messages.js pages.Messages) — a business conversation is any
+  // conversation with business_id set, whether you're the shop owner
+  // receiving a customer's message or a customer messaging a shop.
+  const [msgTab, setMsgTab] = useState<"personal" | "business">("personal");
+  const summariesRef = useRef<ConversationSummary[]>([]);
+  useEffect(() => {
+    summariesRef.current = summaries;
+  }, [summaries]);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
     const myId = session.user.id;
 
-    const { data: conversations } = await supabase
+    const { data: conversations, error: convError } = await supabase
       .from("conversations")
       .select("id,members,listing_id,business_id")
       .contains("members", [myId])
       .order("updated_at", { ascending: false })
       .limit(200);
 
+    if (convError) {
+      // A failed fetch must never wipe out whatever's already on screen
+      // (cached or from a previous successful load) — just surface the
+      // error banner and leave `summaries` alone.
+      setError(convError.message);
+      return;
+    }
+    setError(null);
+
     const rows = (conversations as ConversationRow[]) ?? [];
     if (!rows.length) {
       setSummaries([]);
+      saveCache<ConversationSummary[]>(MESSAGES_CACHE_KEY, []);
       return;
     }
 
@@ -157,12 +183,28 @@ export default function MessagesScreen() {
       return bTime - aTime;
     });
 
-    setSummaries(summariesList.filter((s) => s.lastMessage));
+    const finalSummaries = summariesList.filter((s) => s.lastMessage);
+    setSummaries(finalSummaries);
+    setShowingCached(false);
+    saveCache<ConversationSummary[]>(MESSAGES_CACHE_KEY, finalSummaries);
   }, [session]);
 
   useEffect(() => {
+    let cancelled = false;
+    // Hydrate from the last successful load immediately — if the network
+    // call above fails (no connection), this stays on screen instead of an
+    // empty inbox, matching the home feed's behavior.
+    loadCache<ConversationSummary[]>(MESSAGES_CACHE_KEY).then((cached) => {
+      if (cancelled || !cached || !cached.length) return;
+      setSummaries((current) => (current.length ? current : cached));
+      setShowingCached(true);
+      setIsLoading(false);
+    });
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   useEffect(() => {
@@ -181,23 +223,74 @@ export default function MessagesScreen() {
     };
   }, [session, load]);
 
+  // Lightweight focus refresh — re-checks just the unread flag for
+  // conversations already on screen, instead of re-running the full `load()`
+  // (which re-fetches every profile/listing/business plus up to 1,000
+  // messages and 5,000 unread rows). Opening a chat and marking its messages
+  // read there never reached this screen without SOME refresh on focus (the
+  // realtime subscription below only listens for INSERT, not the UPDATE that
+  // marks a message read) — but doing that with a full reload burned data on
+  // every single tab visit, which matters a lot on Zimbabwean mobile data.
+  const refreshUnreadCounts = useCallback(async () => {
+    if (!session?.user) return;
+    const ids = summariesRef.current.map((s) => s.conversation.id);
+    if (!ids.length) return;
+    const { data } = await supabase
+      .from("messages")
+      .select("conversation_id")
+      .in("conversation_id", ids)
+      .eq("read", false)
+      .neq("sender_id", session.user.id)
+      .limit(5000);
+    const counts = new Map<string, number>();
+    for (const m of (data as { conversation_id: string }[] | null) ?? []) {
+      counts.set(m.conversation_id, (counts.get(m.conversation_id) ?? 0) + 1);
+    }
+    setSummaries((current) =>
+      current.map((s) => ({ ...s, unreadCount: counts.get(s.conversation.id) ?? 0 }))
+    );
+  }, [session]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (summariesRef.current.length) {
+        refreshUnreadCounts();
+      } else {
+        load();
+      }
+    }, [refreshUnreadCounts, load])
+  );
+
   // Presence — re-render rows as online status changes.
   useEffect(() => {
     if (!session?.user) return;
     return initPresence(session.user.id, () => setOnlineTick((t) => t + 1));
   }, [session]);
 
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await load();
+    setIsRefreshing(false);
+  }, [load]);
+
   const myId = session?.user?.id;
+
+  const personalSummaries = useMemo(() => summaries.filter((s) => !s.conversation.business_id), [summaries]);
+  const businessSummaries = useMemo(() => summaries.filter((s) => !!s.conversation.business_id), [summaries]);
+  const personalUnread = useMemo(() => personalSummaries.reduce((sum, s) => sum + s.unreadCount, 0), [personalSummaries]);
+  const businessUnread = useMemo(() => businessSummaries.reduce((sum, s) => sum + s.unreadCount, 0), [businessSummaries]);
+  const hasBizTab = businessSummaries.length > 0;
+  const activeTabSummaries = hasBizTab && msgTab === "business" ? businessSummaries : personalSummaries;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return summaries;
-    return summaries.filter((s) => {
+    if (!q) return activeTabSummaries;
+    return activeTabSummaries.filter((s) => {
       const name = (s.business?.name || s.otherProfile?.name || "").toLowerCase();
       const listing = (s.listing?.title || "").toLowerCase();
       return name.includes(q) || listing.includes(q);
     });
-  }, [summaries, query]);
+  }, [activeTabSummaries, query]);
 
   if (!session?.user) {
     return (
@@ -219,6 +312,22 @@ export default function MessagesScreen() {
       <View style={styles.headerBar}>
         <Text style={styles.screenTitle}>Messages</Text>
       </View>
+      {hasBizTab ? (
+        <View style={styles.tabBar}>
+          <Pressable style={styles.tabButton} onPress={() => setMsgTab("personal")}>
+            <Text style={[styles.tabButtonText, msgTab === "personal" && styles.tabButtonTextActive]}>
+              Personal{personalUnread > 0 ? ` (${personalUnread})` : ""}
+            </Text>
+            {msgTab === "personal" ? <View style={styles.tabButtonIndicator} /> : null}
+          </Pressable>
+          <Pressable style={styles.tabButton} onPress={() => setMsgTab("business")}>
+            <Text style={[styles.tabButtonText, msgTab === "business" && styles.tabButtonTextActive]}>
+              Business{businessUnread > 0 ? ` (${businessUnread})` : ""}
+            </Text>
+            {msgTab === "business" ? <View style={styles.tabButtonIndicator} /> : null}
+          </Pressable>
+        </View>
+      ) : null}
       <View style={styles.searchWrap}>
         <View style={styles.searchBox}>
           <SearchIcon color={themeColor} />
@@ -242,15 +351,33 @@ export default function MessagesScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.conversation.id}
-          contentContainerStyle={filtered.length ? { paddingBottom: space.xxxl + space.lg } : styles.emptyContent}
+          contentContainerStyle={
+            filtered.length ? { paddingBottom: space.xxxl + space.lg + insets.bottom } : styles.emptyContent
+          }
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={themeColor.brand} />
+          }
+          ListHeaderComponent={
+            error ? (
+              <View style={styles.offlineBanner}>
+                <Text style={styles.offlineBannerText}>
+                  {showingCached ? "You're offline — showing your last saved conversations." : "Couldn't refresh — showing what we last loaded."}
+                </Text>
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             query.trim() ? (
               <EmptyState title="No matches" subtitle={`No conversations match "${query.trim()}".`} />
             ) : (
               <EmptyState
-                title="No messages yet"
-                subtitle="When buyers message you about a listing, it will show up here."
+                title={hasBizTab && msgTab === "business" ? "No business messages yet" : "No messages yet"}
+                subtitle={
+                  hasBizTab && msgTab === "business"
+                    ? "Conversations about your shops and their listings show up here."
+                    : "When buyers message you about a listing, it will show up here."
+                }
               />
             )
           }
@@ -262,12 +389,27 @@ export default function MessagesScreen() {
             // Business conversations show the shop's identity, not the
             // owner's personal profile — see lib/messages.ts ConversationRow
             // and supabase/migrations/add_conversation_business_id.sql.
-            const displayName = item.business?.name || item.otherProfile?.name || "PaMarket User";
+            // Falls back to the last message's stored sender_name when the
+            // profile lookup has no name (e.g. profiles_public row missing a
+            // name, or the account was deleted) — same opportunistic fallback
+            // the legacy Capacitor app uses (H._resolveOtherName), so a real
+            // person's name still shows instead of "PaMarket User" whenever
+            // we have ANY record of what they're called.
+            const otherSenderName =
+              item.lastMessage && otherId && item.lastMessage.sender_id === otherId
+                ? item.lastMessage.sender_name
+                : null;
+            const displayName = item.business?.name || item.otherProfile?.name || otherSenderName || "PaMarket User";
             const displayAvatar = item.business?.logo || item.otherProfile?.avatar;
             return (
               <Pressable
                 style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-                onPress={() => router.push({ pathname: "/chat/[id]", params: { id: item.conversation.id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/chat/[id]",
+                    params: { id: item.conversation.id, name: displayName, avatar: displayAvatar ?? "" },
+                  })
+                }
               >
                 <Avatar uri={displayAvatar} name={displayName} size={52} online={!item.business && online} />
                 <View style={styles.rowBody}>
@@ -323,6 +465,15 @@ function buildStyles(color: ColorPalette) {
     flex: 1,
     backgroundColor: color.surface,
   },
+  offlineBanner: {
+    marginHorizontal: space.lg,
+    marginTop: space.sm,
+    marginBottom: space.sm,
+    backgroundColor: color.goldTint,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  offlineBannerText: { ...font.sub, color: color.text, fontWeight: "600" },
   centered: {
     flex: 1,
     alignItems: "center",
@@ -337,6 +488,34 @@ function buildStyles(color: ColorPalette) {
   screenTitle: {
     ...font.h1,
     color: color.text,
+  },
+  tabBar: {
+    flexDirection: "row",
+    borderBottomWidth: 2,
+    borderBottomColor: color.border,
+    marginBottom: space.xs,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: space.sm + 2,
+  },
+  tabButtonText: {
+    ...font.sub,
+    fontWeight: "600",
+    color: color.textMuted,
+  },
+  tabButtonTextActive: {
+    color: color.brand,
+    fontWeight: "700",
+  },
+  tabButtonIndicator: {
+    position: "absolute",
+    bottom: -2,
+    height: 3,
+    width: "60%",
+    borderRadius: radius.pill,
+    backgroundColor: color.brand,
   },
   searchWrap: {
     paddingHorizontal: space.lg,

@@ -10,6 +10,9 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { jobCompany, jobSalary, jobType, JOB_TYPES } from "../../lib/jobs";
 import { businessInitials } from "../../lib/businesses";
 import { Badge, Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton } from "../../components/ui";
+import { loadCache, saveCache } from "../../lib/offlineCache";
+
+const JOBS_CACHE_KEY = "jobs-browse";
 
 type JobListing = {
   id: string;
@@ -52,6 +55,7 @@ export default function JobsListScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [showingCached, setShowingCached] = useState(false);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const pageRef = useRef(0);
@@ -76,12 +80,24 @@ export default function JobsListScreen() {
     }
     const page = (data as JobListing[]) ?? [];
     setJobs(page);
+    setShowingCached(false);
     setHasMore(page.length === PAGE_SIZE);
+    saveCache<JobListing[]>(JOBS_CACHE_KEY, page);
   }, [buildQuery]);
 
   useEffect(() => {
+    let cancelled = false;
+    loadCache<JobListing[]>(JOBS_CACHE_KEY).then((cached) => {
+      if (cancelled || !cached || !cached.length) return;
+      setJobs((current) => (current.length ? current : cached));
+      setShowingCached(true);
+      setIsLoading(false);
+    });
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   const loadMore = useCallback(async () => {
@@ -160,7 +176,7 @@ export default function JobsListScreen() {
             </View>
           ))}
         </View>
-      ) : hasError ? (
+      ) : hasError && !jobs.length ? (
         <ErrorState onRetry={() => { setIsLoading(true); load().finally(() => setIsLoading(false)); }} />
       ) : (
         <FlatList
@@ -169,11 +185,20 @@ export default function JobsListScreen() {
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
           ListHeaderComponent={
-            filtered.length ? (
-              <Text style={styles.countText}>
-                {filtered.length} open {filtered.length === 1 ? "role" : "roles"}
-              </Text>
-            ) : null
+            <>
+              {hasError ? (
+                <View style={styles.offlineBanner}>
+                  <Text style={styles.offlineBannerText}>
+                    {showingCached ? "You're offline — showing your last saved jobs." : "Couldn't refresh — showing what we last loaded."}
+                  </Text>
+                </View>
+              ) : null}
+              {filtered.length ? (
+                <Text style={styles.countText}>
+                  {filtered.length} open {filtered.length === 1 ? "role" : "roles"}
+                </Text>
+              ) : null}
+            </>
           }
           ListEmptyComponent={
             <EmptyState
@@ -265,6 +290,13 @@ function buildStyles(color: ColorPalette) {
   },
   filterContent: { paddingHorizontal: space.lg, gap: space.sm },
   countText: { ...font.caption, color: color.textMuted, marginBottom: space.md },
+  offlineBanner: {
+    marginBottom: space.md,
+    backgroundColor: color.goldTint,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  offlineBannerText: { ...font.sub, color: color.text, fontWeight: "600" },
   listContent: { padding: space.lg, paddingBottom: space.huge },
   footer: { paddingVertical: space.lg, alignItems: "center" },
   card: {

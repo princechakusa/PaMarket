@@ -15,6 +15,9 @@ import {
   type RentalListingSummary,
 } from "../../lib/rentals";
 import { Chip, GlassBackButton } from "../../components/ui";
+import { loadCache, saveCache } from "../../lib/offlineCache";
+
+const RENTALS_CACHE_KEY = "rentals-browse";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -54,9 +57,11 @@ export default function RentalsListScreen() {
   const [vehicles, setVehicles] = useState<RentalListingSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showingCached, setShowingCached] = useState(false);
   const [filters, setFilters] = useState<RentalFilters>(DEFAULT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
   const activeCount = useMemo(() => countActive(filters), [filters]);
+  const isDefaultFilters = activeCount === 0;
 
   const load = useCallback(async () => {
     setError(null);
@@ -74,13 +79,33 @@ export default function RentalsListScreen() {
       p_offset: 0,
     });
     if (rpcError) setError(rpcError.message);
-    else setVehicles((data as RentalListingSummary[]) ?? []);
-  }, [filters]);
+    else {
+      const page = (data as RentalListingSummary[]) ?? [];
+      setVehicles(page);
+      setShowingCached(false);
+      // Only the default (unfiltered) result is cached — caching every
+      // filter combination isn't worth the complexity for an offline
+      // fallback whose whole point is "show something reasonable".
+      if (isDefaultFilters) saveCache<RentalListingSummary[]>(RENTALS_CACHE_KEY, page);
+    }
+  }, [filters, isDefaultFilters]);
 
   useEffect(() => {
+    let cancelled = false;
+    if (isDefaultFilters) {
+      loadCache<RentalListingSummary[]>(RENTALS_CACHE_KEY).then((cached) => {
+        if (cancelled || !cached || !cached.length) return;
+        setVehicles((current) => (current.length ? current : cached));
+        setShowingCached(true);
+        setIsLoading(false);
+      });
+    }
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
-  }, [load]);
+    return () => {
+      cancelled = true;
+    };
+  }, [load, isDefaultFilters]);
 
   return (
     <View style={styles.container}>
@@ -101,7 +126,7 @@ export default function RentalsListScreen() {
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
-      ) : error ? (
+      ) : error && !vehicles.length ? (
         <View style={styles.centered}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
@@ -112,6 +137,15 @@ export default function RentalsListScreen() {
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            error ? (
+              <View style={styles.offlineBanner}>
+                <Text style={styles.offlineBannerText}>
+                  {showingCached ? "You're offline — showing your last saved vehicles." : "Couldn't refresh — showing what we last loaded."}
+                </Text>
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.centered}>
               <Text style={styles.emptyText}>No rental vehicles available yet.</Text>
@@ -264,6 +298,18 @@ function buildStyles(color: ColorPalette) {
     errorText: {
       fontSize: 13,
       color: color.danger,
+    },
+    offlineBanner: {
+      margin: 12,
+      marginBottom: 4,
+      backgroundColor: color.goldTint,
+      borderRadius: 12,
+      padding: 12,
+    },
+    offlineBannerText: {
+      fontSize: 12.5,
+      fontWeight: "600",
+      color: color.text,
     },
     header: {
       flexDirection: "row",
