@@ -11,3 +11,4 @@ export { EmptyState } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
 export { ConfirmModal } from "./ConfirmModal";
 export { ToastHost, toast } from "./Toast";
+export { FeatureIcon } from "./FeatureIcon";

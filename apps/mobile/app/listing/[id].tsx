@@ -36,6 +36,7 @@ import {
   Button,
   Card,
   ErrorState,
+  FeatureIcon,
   GlassBackButton,
   ListSkeleton,
   SectionHeader,
@@ -275,19 +276,30 @@ export default function ListingDetailScreen() {
   const conditionLabel = CONDITION_LABELS[conditionRaw] ?? "";
 
   // Category attributes (excluding condition, which gets its own badge).
-  const attrRows = useMemo(() => {
-    if (!listing?.attributes || !listing.category) return [];
+  // "chips" fields (property/vehicles/rooms/pets features) are split out
+  // into their own checklist instead of one comma-joined details row.
+  const { attrRows, featureItems, featureSectionLabel } = useMemo(() => {
+    if (!listing?.attributes || !listing.category) {
+      return { attrRows: [] as { label: string; value: string }[], featureItems: [] as string[], featureSectionLabel: "Features" };
+    }
     const schema = attrSchema(listing.category);
     const attrs = listing.attributes;
     const rows: { label: string; value: string }[] = [];
+    let features: string[] = [];
+    let featureLabel = "Features";
     for (const field of schema) {
       if (field.key === "condition") continue;
       const raw = attrs[field.key];
       if (raw == null || raw === "") continue;
+      if (field.type === "chips") {
+        features = Array.isArray(raw) ? raw.map(String) : [String(raw)];
+        featureLabel = field.label;
+        continue;
+      }
       const value = Array.isArray(raw) ? raw.join(", ") : String(raw);
       rows.push({ label: field.label, value: field.suffix ? `${value} ${field.suffix}` : value });
     }
-    return rows;
+    return { attrRows: rows, featureItems: features, featureSectionLabel: featureLabel };
   }, [listing]);
 
   async function handleToggleSave() {
@@ -427,17 +439,27 @@ export default function ListingDetailScreen() {
     const existing = candidates[0];
     if (existing) {
       const members = Array.isArray(existing.members) ? existing.members : [];
-      const patch: { members?: string[]; listing_id?: string } = {};
+      const patch: { members?: string[]; listing_id?: string; business_id?: string } = {};
       if (!members.includes(myId) || !members.includes(listing.seller_id)) {
         patch.members = [myId, listing.seller_id];
       }
       if (!existing.listing_id) {
         patch.listing_id = listing.id;
       }
+      // A conversation started before this listing was assigned to a shop
+      // (or one whose business_id never got set) needs backfilling here too
+      // — otherwise it stays stuck in the Personal tab forever even though
+      // it's really a business inquiry.
+      if (listing.business_id && !existing.business_id) {
+        patch.business_id = listing.business_id;
+      }
       if (Object.keys(patch).length) {
         await supabase.from("conversations").update(patch).eq("id", existing.id);
       }
-      router.push({ pathname: "/chat/[id]", params: { id: existing.id } });
+      router.push({
+        pathname: "/chat/[id]",
+        params: { id: existing.id, name: seller?.name || listing.seller_name || "", avatar: seller?.avatar ?? "" },
+      });
       return;
     }
 
@@ -446,9 +468,13 @@ export default function ListingDetailScreen() {
         id: convId,
         members: [myId, listing.seller_id],
         listing_id: listing.id,
+        business_id: listing.business_id ?? null,
       });
     }
-    router.push({ pathname: "/chat/[id]", params: { id: convId } });
+    router.push({
+      pathname: "/chat/[id]",
+      params: { id: convId, name: seller?.name || listing.seller_name || "", avatar: seller?.avatar ?? "" },
+    });
   }
 
   function onGalleryScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -623,55 +649,83 @@ export default function ListingDetailScreen() {
             <Text style={styles.description}>{listing.description || "No description provided."}</Text>
           </View>
 
-          {/* Category attributes */}
-          {attrRows.length ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Details</Text>
-              <Card padded={false} elevated={false} style={styles.attrCard}>
-                {attrRows.map((row, i) => (
-                  <View key={row.label} style={[styles.attrRow, i > 0 && styles.attrRowBorder]}>
-                    <Text style={styles.attrLabel}>{row.label}</Text>
-                    <Text style={styles.attrValue}>{row.value}</Text>
-                  </View>
-                ))}
-              </Card>
+          {/* Category attributes — Details + Features side by side; when a
+              category has no "chips" (features) field, Details takes the
+              full width instead of leaving an empty second column. */}
+          {attrRows.length || featureItems.length ? (
+            <View style={styles.twoCol}>
+              {attrRows.length ? (
+                <View style={styles.colCard}>
+                  <Text style={styles.colTitle}>Details</Text>
+                  {attrRows.map((row, i) => (
+                    <View key={row.label} style={[styles.colRow, i > 0 && styles.colRowBorder]}>
+                      <Text style={styles.colRowLabel} numberOfLines={1}>{row.label}</Text>
+                      <Text style={styles.colRowValue}>{row.value}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              {featureItems.length ? (
+                <View style={styles.colCard}>
+                  <Text style={styles.colTitle}>{featureSectionLabel}</Text>
+                  {featureItems.map((f, i) => (
+                    <View key={f} style={[styles.featureRow, i > 0 && styles.colRowBorder]}>
+                      <View style={styles.featureRowLabel}>
+                        <FeatureIcon name={f} color={color.brand} size={13} />
+                        <Text style={styles.featureRowText} numberOfLines={1}>{f}</Text>
+                      </View>
+                      <View style={styles.featureCheck}>
+                        <Svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke={color.success} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round">
+                          <Polyline points="20 6 9 17 4 12" />
+                        </Svg>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
             </View>
           ) : null}
 
-          {/* Seller card */}
+          {/* Seller card — two-box split: identity on the left, real trust
+              signals (rating + verified) on the right. No invented
+              transaction-count/response-time stats — those don't exist. */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Seller</Text>
             <Pressable
               style={({ pressed }) => [styles.sellerCard, shadow.sm, pressed && styles.pressed]}
               onPress={() => router.push({ pathname: "/profile/[id]", params: { id: listing.seller_id } })}
             >
-              <View style={styles.sellerAvatar}>
-                {seller?.avatar ? (
-                  <Image source={{ uri: seller.avatar }} style={styles.sellerAvatarImage} contentFit="cover" cachePolicy="memory-disk" />
-                ) : (
-                  <Text style={styles.sellerAvatarInitial}>{sellerInitials(seller?.name || listing.seller_name)}</Text>
-                )}
-              </View>
-              <View style={styles.sellerBody}>
+              <View style={styles.sellerLeft}>
+                <View style={styles.sellerAvatar}>
+                  {seller?.avatar ? (
+                    <Image source={{ uri: seller.avatar }} style={styles.sellerAvatarImage} contentFit="cover" cachePolicy="memory-disk" />
+                  ) : (
+                    <Text style={styles.sellerAvatarInitial}>{sellerInitials(seller?.name || listing.seller_name)}</Text>
+                  )}
+                </View>
                 <View style={styles.sellerNameRow}>
                   <Text style={styles.sellerName} numberOfLines={1}>
                     {seller?.name || listing.seller_name || "Seller"}
                   </Text>
                   {seller?.verified ? <VerifiedBadge compact /> : null}
                 </View>
-                <View style={styles.sellerRatingRow}>
+                {memberSince(sellerCreatedAt) ? (
+                  <Text style={styles.sellerMeta}>Member since {memberSince(sellerCreatedAt)}</Text>
+                ) : null}
+              </View>
+              <View style={styles.sellerRight}>
+                <View style={styles.sellerRightRow}>
                   <StarRow rating={avgRating} />
                   <Text style={styles.sellerRatingText}>
                     {reviews.length ? `${avgRating.toFixed(1)} (${reviews.length})` : "No reviews yet"}
                   </Text>
                 </View>
-                {memberSince(sellerCreatedAt) ? (
-                  <Text style={styles.sellerMeta}>Member since {memberSince(sellerCreatedAt)}</Text>
+                {seller?.verified ? (
+                  <View style={[styles.sellerRightRow, styles.sellerRightRowBorder]}>
+                    <Text style={styles.sellerVerifiedText}>Verified Seller</Text>
+                  </View>
                 ) : null}
               </View>
-              <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color.textMuted} strokeWidth={2}>
-                <Polyline points="9 18 15 12 9 6" />
-              </Svg>
             </Pressable>
           </View>
 
@@ -927,21 +981,42 @@ function buildStyles(color: ColorPalette) {
   },
   description: { ...font.body, color: color.textSub, lineHeight: 23 },
 
-  attrCard: { backgroundColor: color.surfaceAlt, paddingHorizontal: space.lg },
-  attrRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: space.md, gap: space.lg },
-  attrRowBorder: { borderTopWidth: 1, borderTopColor: color.divider },
-  attrLabel: { ...font.sub, color: color.textMuted },
-  attrValue: { ...font.sub, color: color.text, fontWeight: "700", flexShrink: 1, textAlign: "right" },
+  twoCol: { flexDirection: "row", gap: space.sm, marginTop: space.xl, alignItems: "stretch" },
+  colCard: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: color.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: color.border,
+    padding: space.md,
+  },
+  colTitle: { ...font.micro, color: color.textMuted, textTransform: "uppercase", marginBottom: space.sm },
+  colRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: space.xs + 2, gap: space.sm },
+  colRowBorder: { borderTopWidth: 1, borderTopColor: color.divider },
+  colRowLabel: { ...font.caption, color: color.textSub, fontWeight: "600", flexShrink: 1 },
+  colRowValue: { ...font.caption, color: color.text, fontWeight: "800", flexShrink: 0, textAlign: "right" },
+  featureRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: space.xs + 2, gap: space.sm },
+  featureRowLabel: { flexDirection: "row", alignItems: "center", gap: space.xs + 2, flexShrink: 1, minWidth: 0 },
+  featureRowText: { ...font.caption, color: color.textSub, fontWeight: "600", flexShrink: 1 },
+  featureCheck: {
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: color.successTint,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   sellerCard: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: space.md,
+    gap: space.sm,
     backgroundColor: color.surface,
     borderRadius: radius.lg,
     padding: space.md,
   },
   pressed: { opacity: 0.9 },
+  sellerLeft: { flex: 1.3, minWidth: 0 },
   sellerAvatar: {
     width: 52,
     height: 52,
@@ -953,12 +1028,22 @@ function buildStyles(color: ColorPalette) {
   },
   sellerAvatarImage: { width: "100%", height: "100%" },
   sellerAvatarInitial: { ...font.h3, color: color.brand },
-  sellerBody: { flex: 1, gap: 3 },
-  sellerNameRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  sellerNameRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.sm },
   sellerName: { ...font.title, color: color.text, flexShrink: 1 },
-  sellerRatingRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   sellerRatingText: { ...font.caption, color: color.textMuted },
-  sellerMeta: { ...font.caption, color: color.textMuted },
+  sellerMeta: { ...font.caption, color: color.textMuted, marginTop: 2 },
+  sellerRight: {
+    flex: 1,
+    backgroundColor: color.surfaceAlt,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    justifyContent: "center",
+    gap: space.xs,
+  },
+  sellerRightRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 3 },
+  sellerRightRowBorder: { borderTopWidth: 1, borderTopColor: color.divider, paddingTop: space.xs + 2 },
+  sellerVerifiedText: { ...font.caption, color: color.goldDark, fontWeight: "800" },
 
   safetyTip: { backgroundColor: color.goldTint, borderRadius: radius.md, padding: space.md, marginTop: space.xl },
   safetyTipTitle: { ...font.caption, color: color.text, marginBottom: 2 },
