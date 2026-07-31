@@ -131,19 +131,23 @@
     var base = { '@context': 'https://schema.org', name: l.title, description: l.description || l.title, image: image, url: canonicalUrl };
     var cond = schemaCondition(l);
     var priceValidUntil = l.expires_at ? String(l.expires_at).slice(0, 10) : undefined;
+    // Google's Merchant listing rich-result check requires offers.validFrom —
+    // the date the offer became valid, i.e. when the listing was posted
+    // (Search Console, 2026-07-31: "Missing field validFrom (in offers)").
+    var validFrom = l.created_at ? String(l.created_at).slice(0, 10) : undefined;
 
     if (l.category === 'property') {
       var rentalType = (l.attributes && l.attributes.rentalType) || '';
       return Object.assign(base, {
         '@type': 'RealEstateListing', category: catLabel, datePosted: l.created_at,
         address: { '@type': 'PostalAddress', addressLocality: l.city || l.suburb || undefined, addressRegion: l.province || undefined, addressCountry: 'ZW' },
-        offers: { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', availability: 'https://schema.org/InStock', businessFunction: /rent/i.test(rentalType) ? 'http://purl.org/goodrelations/v1#LeaseOut' : 'http://purl.org/goodrelations/v1#Sell', priceValidUntil: priceValidUntil, seller: sellerNode(l), url: canonicalUrl }
+        offers: { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', availability: 'https://schema.org/InStock', businessFunction: /rent/i.test(rentalType) ? 'http://purl.org/goodrelations/v1#LeaseOut' : 'http://purl.org/goodrelations/v1#Sell', priceValidUntil: priceValidUntil, validFrom: validFrom, seller: sellerNode(l), url: canonicalUrl }
       });
     }
     if (l.category === 'vehicles') {
       var veh = Object.assign(base, {
         '@type': 'Vehicle', category: catLabel, itemCondition: cond, areaServed: { '@type': 'Country', name: 'Zimbabwe' },
-        offers: { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', availability: 'https://schema.org/InStock', itemCondition: cond, priceValidUntil: priceValidUntil, seller: sellerNode(l), hasMerchantReturnPolicy: merchantReturnPolicy(l), areaServed: { '@type': 'Country', name: 'Zimbabwe' }, url: canonicalUrl }
+        offers: { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', availability: 'https://schema.org/InStock', itemCondition: cond, priceValidUntil: priceValidUntil, validFrom: validFrom, seller: sellerNode(l), hasMerchantReturnPolicy: merchantReturnPolicy(l), areaServed: { '@type': 'Country', name: 'Zimbabwe' }, url: canonicalUrl }
       });
       var rbv = ratingBlock(reviews);
       if (rbv) { veh.aggregateRating = rbv.aggregateRating; veh.review = rbv.review; }
@@ -162,7 +166,7 @@
       };
     }
     // Default: Product
-    var offer = { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', availability: 'https://schema.org/InStock', itemCondition: cond, priceValidUntil: priceValidUntil, seller: sellerNode(l), hasMerchantReturnPolicy: merchantReturnPolicy(l), shippingDetails: offerShippingDetails(l), areaServed: { '@type': 'Country', name: 'Zimbabwe' }, url: canonicalUrl };
+    var offer = { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', availability: 'https://schema.org/InStock', itemCondition: cond, priceValidUntil: priceValidUntil, validFrom: validFrom, seller: sellerNode(l), hasMerchantReturnPolicy: merchantReturnPolicy(l), shippingDetails: offerShippingDetails(l), areaServed: { '@type': 'Country', name: 'Zimbabwe' }, url: canonicalUrl };
     var product = Object.assign(base, { '@type': 'Product', category: catLabel, sku: l.id, productID: l.id, itemCondition: cond, offers: offer });
     if (l.attributes) {
       if (l.attributes.brand) product.brand = { '@type': 'Brand', name: l.attributes.brand };
@@ -215,6 +219,7 @@
       offers: {
         '@type': 'Offer', price: v.daily_rate || undefined, priceCurrency: 'USD',
         availability: v.is_available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        validFrom: v.created_at ? String(v.created_at).slice(0, 10) : undefined,
         businessFunction: 'http://purl.org/goodrelations/v1#LeaseOut',
         areaServed: { '@type': 'Country', name: 'Zimbabwe' },
         hasMerchantReturnPolicy: { '@type': 'MerchantReturnPolicy', applicableCountry: 'ZW', returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted' },
@@ -263,7 +268,7 @@
       store.hasOfferCatalog = {
         '@type': 'OfferCatalog', name: b.name + ' — listings',
         itemListElement: products.slice(0, 20).map(function (l) {
-          return { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', itemOffered: { '@type': 'Product', name: l.title, url: listingUrl(l) } };
+          return { '@type': 'Offer', price: l.price, priceCurrency: l.currency || 'USD', validFrom: l.created_at ? String(l.created_at).slice(0, 10) : undefined, itemOffered: { '@type': 'Product', name: l.title, url: listingUrl(l) } };
         })
       };
     }
