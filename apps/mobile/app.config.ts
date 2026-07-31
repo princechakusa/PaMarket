@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.0",
+  version: "1.29.2",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -37,11 +37,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       // on file with a matching ITSEncryptionExportComplianceCode, which
       // this app has never filed.
       ITSAppUsesNonExemptEncryption: false,
+      // Without this, iOS never wakes the app for a silent/data-only FCM
+      // push (lib/push.ts registers for remote messages via
+      // @react-native-firebase/messaging) — it's Android-only otherwise
+      // since Android has no equivalent background-mode gate.
+      UIBackgroundModes: ["remote-notification"],
     },
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 110,
+    versionCode: 112,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
@@ -61,6 +66,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-status-bar",
+    [
+      "expo-build-properties",
+      {
+        android: {
+          enableMinifyInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+        },
+        // React Native Firebase's Swift pods (FirebaseCoreInternal ->
+        // GoogleUtilities) don't define modules, so CocoaPods can't
+        // integrate them as static libraries without this — static
+        // framework linkage is what makes CocoaPods generate the module
+        // maps they need. Without it, `pod install` fails during
+        // INSTALL_PODS with "cannot yet be integrated as static libraries".
+        ios: {
+          useFrameworks: "static",
+        },
+      },
+    ],
     [
       "expo-splash-screen",
       {

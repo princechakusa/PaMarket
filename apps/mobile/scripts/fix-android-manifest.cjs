@@ -39,5 +39,42 @@ if (xml === before && !xml.includes('tools:replace="android:resource"')) {
   process.exit(1);
 }
 
+// expo-image-picker's CAMERA permission makes Android (and Play Console's
+// device catalog) assume camera hardware is REQUIRED to install the app,
+// excluding every camera-less device (some tablets, Android TV boxes,
+// etc.) even though camera capture is just one optional way to attach a
+// photo — gallery picking always works without one. Explicitly marking
+// these features as not-required overrides that implied requirement.
+const CAMERA_FEATURES = [
+  "android.hardware.camera",
+  "android.hardware.camera.any",
+  "android.hardware.camera.autofocus",
+  "android.hardware.camera.flash",
+  "android.hardware.camera.front",
+];
+for (const feature of CAMERA_FEATURES) {
+  const tag = `<uses-feature android:name="${feature}" android:required="false"/>`;
+  if (!xml.includes(tag)) {
+    xml = xml.replace("</manifest>", `    ${tag}\n</manifest>`);
+  }
+}
+
+// Android implicitly REQUIRES a touchscreen for every app unless told
+// otherwise — this alone excludes every Android TV box and Android Auto
+// head unit (neither has a touchscreen), and many Chromebooks. The legacy
+// Capacitor app must have declared this override; the native app's default
+// manifest doesn't, which is why Play Console reported Car -100%, TV -67%,
+// Chromebook -86% device support after the first native upload. Microphone
+// is optional for the same reason (RECORD_AUDIO is requested but voice
+// input/recording is never the only way to do anything in this app).
+const OPTIONAL_FEATURES = ["android.hardware.touchscreen", "android.hardware.microphone"];
+for (const feature of OPTIONAL_FEATURES) {
+  const tag = `<uses-feature android:name="${feature}" android:required="false"/>`;
+  if (!xml.includes(tag)) {
+    xml = xml.replace("</manifest>", `    ${tag}\n</manifest>`);
+  }
+}
+
 fs.writeFileSync(manifestPath, xml);
 console.log("[fix-android-manifest] patched default_notification_color merge conflict.");
+console.log("[fix-android-manifest] marked camera/touchscreen/microphone hardware as not-required.");

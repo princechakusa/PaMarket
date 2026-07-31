@@ -36,8 +36,9 @@ function defs() {
 // always gold, "Market" is always white-on-navy or navy-on-white, matching
 // the in-app Home header (components/BrandLogo.tsx's BrandWordmark).
 
-// Square icon (App Store hero, favicon): navy tile, stacked two lines so it
-// stays legible at launcher size.
+// Square icon (App Store hero, favicon): navy tile, "Pa" + "Market" on one
+// line (matches the in-app wordmark) — textLength pins the rendered width so
+// it can't overflow the tile regardless of the fallback font's metrics.
 function iconSvg({ size = 512, rounded = true } = {}) {
   const bg = `<rect width="512" height="512"${rounded ? ' rx="116"' : ""} fill="url(#navyGrad)"/>`;
   const glow = `<circle cx="410" cy="60" r="220" fill="url(#goldGlow)"/>`;
@@ -45,25 +46,26 @@ function iconSvg({ size = 512, rounded = true } = {}) {
   ${defs()}
   ${bg}
   ${glow}
-  <text x="256" y="234" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="108" font-weight="900" letter-spacing="-3" fill="${GOLD}">Pa</text>
-  <text x="256" y="330" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="108" font-weight="900" letter-spacing="-3" fill="${WHITE}">Market</text>
+  <text x="256" y="298" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="104" font-weight="900" letter-spacing="-2" textLength="410" lengthAdjust="spacingAndGlyphs">
+    <tspan fill="${GOLD}">Pa</tspan><tspan fill="${WHITE}">Market</tspan>
+  </text>
 </svg>`;
 }
 
-// Android adaptive-icon foreground layer: transparent background, wordmark
-// scaled down to stay inside the circular/squircle safe zone the OS masks
-// it with (roughly the middle 66% of the 512 canvas).
+// Android adaptive-icon foreground layer: transparent background, one-line
+// wordmark scaled down to stay inside the circular/squircle safe zone the OS
+// masks it with (roughly the middle 66% of the 512 canvas).
 function adaptiveForegroundSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <text x="256" y="245" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${GOLD}">Pa</text>
-  <text x="256" y="317" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${WHITE}">Market</text>
+  <text x="256" y="272" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="68" font-weight="900" letter-spacing="-1.5" textLength="300" lengthAdjust="spacingAndGlyphs">
+    <tspan fill="${GOLD}">Pa</tspan><tspan fill="${WHITE}">Market</tspan>
+  </text>
 </svg>`;
 }
 
 function adaptiveMonochromeSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <text x="256" y="245" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${WHITE}">Pa</text>
-  <text x="256" y="317" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2" fill="${WHITE}">Market</text>
+  <text x="256" y="272" text-anchor="middle" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="68" font-weight="900" letter-spacing="-1.5" fill="${WHITE}" textLength="300" lengthAdjust="spacingAndGlyphs">PaMarket</text>
 </svg>`;
 }
 
