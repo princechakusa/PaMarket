@@ -474,7 +474,10 @@ function showNotFound(){
 function render(v){
   const brand=(v.rental_brands&&v.rental_brands.label)||'';
   const title=(brand+' '+(v.model||'')).trim()+(v.year?' '+v.year:'');
-  const canonicalUrl='https://pamarketzw.com/rental-detail?id='+v.id;
+  // Canonical points at the static, pre-rendered r/*.html page (real content,
+  // no JS required to index) rather than this page's own URL — that page's
+  // own canonical points back here in agreement (tools/prerender.js).
+  const canonicalUrl=PMSchema.rentalUrl(v);
   const pageTitle=(title||'Rental Vehicle')+' Rental — PaMarket Zimbabwe';
   const pageDesc='Rent a '+(title||'vehicle')+' in Zimbabwe'+(v.daily_rate?' from $'+Number(v.daily_rate).toLocaleString()+'/day':'')+'. Book directly with a verified rental company on PaMarket.';
   document.title=pageTitle;

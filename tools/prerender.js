@@ -183,15 +183,16 @@ function shell(o) {
 }
 
 function renderListing(l, chrome) {
-  // Canonical is the live client-rendered page, NOT this static snapshot's
-  // own URL. sitemap.xml deliberately lists the l/*.html path so crawlers
-  // fetch real pre-rendered content (see generate-sitemap.js), but this
-  // page's own <link rel=canonical> and JSON-LD url must agree with
-  // detail.html's canonical (/detail?id=) or Google sees two pages each
-  // claiming to be the canonical for the same listing and picks one on its
-  // own — exactly the "Duplicate, Google chose different canonical than
-  // user" Search Console alert found 2026-07-28.
-  const url = SITE + '/detail?id=' + l.id;
+  // This static page IS the canonical — it's the one with real content
+  // (detail.html is a client-rendered shell that's empty until Supabase
+  // data loads, which makes Google's indexer do extra, unreliable work for
+  // no benefit). sitemap.xml already lists this l/*.html path, so this now
+  // matches: canonical, sitemap and JSON-LD url all agree on one URL.
+  // detail.html's own canonical now points HERE (PMSchema.listingUrl(l))
+  // so the two pages still agree — avoiding the "Duplicate, Google chose
+  // different canonical than user" alert (2026-07-28) the old self-vs-live
+  // split caused, just with the agreement flipped to the content-rich page.
+  const url = PMSchema.listingUrl(l);
   const catLabel = PMSchema.catLabelOf(l);
   const loc = PMSchema.locOf(l);
   const photos = (l.photos && l.photos.length) ? l.photos : [];
@@ -251,9 +252,10 @@ function renderListing(l, chrome) {
 }
 
 function renderRental(v, chrome) {
-  // See renderListing's comment: canonical must be the live page, not this
-  // static snapshot's own URL, or the two disagree on which is canonical.
-  const url = SITE + '/rental-detail?id=' + v.id;
+  // See renderListing's comment: this static page is the canonical (real
+  // content, matches sitemap.xml); rental-detail.html's own canonical now
+  // points here too, so the two pages still agree.
+  const url = PMSchema.rentalUrl(v);
   const title = PMSchema.rentalTitle(v);
   const media = (v.rental_vehicle_media || []).slice().sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
   const loc = [v.pickup_suburb, v.rental_locations && v.rental_locations.city].filter(Boolean).join(', ') || 'Zimbabwe';
@@ -337,9 +339,10 @@ function bizProdCard(l) {
 }
 
 function renderBusiness(b, chrome) {
-  // See renderListing's comment: canonical must be the live page, not this
-  // static snapshot's own URL, or the two disagree on which is canonical.
-  const url = SITE + '/business?id=' + b.id;
+  // See renderListing's comment: this static page is the canonical (real
+  // content, matches sitemap.xml); business.html's own canonical now
+  // points here too, so the two pages still agree.
+  const url = PMSchema.businessUrl(b);
   const products = b._products || [];
   const reviews = b._reviews || [];
   const verified = (b.verification_level || 0) > 0;

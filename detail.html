@@ -897,7 +897,10 @@ function renderListing(l,reviews){
   const catLabel=CAT_LABELS[l.category]||l.category;
   const pageTitle=l.title+' — '+PM.money(l.price,l.currency)+' | PaMarket Zimbabwe';
   const pageDesc=(l.description?l.description.slice(0,155):l.title+' — '+catLabel+' for sale in '+loc+' on PaMarket, Zimbabwe\'s free marketplace.');
-  const canonicalUrl='https://pamarketzw.com/detail?id='+l.id;
+  // Canonical points at the static, pre-rendered l/*.html page (real content,
+  // no JS required to index) rather than this page's own URL — that page's
+  // own canonical points back here in agreement (tools/prerender.js).
+  const canonicalUrl=PMSchema.listingUrl(l);
   document.title=pageTitle;
   document.getElementById('pageTitle').textContent=pageTitle;
   document.getElementById('metaDesc').setAttribute('content',pageDesc);

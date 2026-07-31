@@ -382,7 +382,10 @@ function injectSchema(b, url, reviews, listings){
 }
 
 function render(b, extras){
-  var url = 'https://pamarketzw.com/business?id=' + b.id;
+  // Canonical points at the static, pre-rendered b/*.html page (real content,
+  // no JS required to index) rather than this page's own URL — that page's
+  // own canonical points back here in agreement (tools/prerender.js).
+  var url = PMSchema.businessUrl(b);
   var reviews = extras.reviews || [], listings = extras.listings || [];
   var followers = extras.followers || 0, related = extras.related || [];
   setMeta(b, url);
