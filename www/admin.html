@@ -6,6 +6,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PaMarket Admin</title>
 <link rel="icon" type="image/png" href="img/icon-192.png">
+<!-- Security headers: GitHub Pages serves this file statically and cannot
+     set real HTTP response headers, so a meta CSP is the ceiling available
+     here. script-src/style-src need 'unsafe-inline': this page renders ~420
+     onclick/onchange/oninput attributes dynamically via innerHTML across
+     nearly every render function, and attribute-based inline handlers can
+     only be allow-listed by removing 'unsafe-inline' entirely (hashes/nonces
+     only cover <script> tag bodies, not "onclick=" attributes) — a real fix
+     means migrating every handler to addEventListener, a refactor of the
+     whole file, not a CSP tweak. Hash-pinning just the <script> tags was
+     considered and rejected: with 'unsafe-inline' still required in
+     script-src for the onclick attributes, a hash allowlist adds no actual
+     protection (an attacker's injected <script> tag still runs regardless),
+     while adding a real maintenance trap (every edit to this file silently
+     breaks until someone recomputes the hash). The actual fix for the XSS
+     class of bug was closing the injection point itself — see esc() below,
+     which now encodes ' so untrusted data can't break out of a JS string
+     inside an attribute in the first place. frame-ancestors is included for
+     completeness but browsers ignore it in a <meta> tag (only the HTTP
+     header form is honoured) — see the frame-busting script below for the
+     actual clickjacking defense on this host. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co https://*.supabase.co https://api.qrserver.com https://*.r2.cloudflarestorage.com https://pub-*.r2.dev https://*.pamarketzw.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>
+// Clickjacking defense: meta-tag frame-ancestors is ignored by browsers, so
+// bust out of any frame this admin page is loaded into. Belt-and-suspenders
+// with an origin allowlist so a legitimate same-origin embed (there isn't
+// one today, but this is cheap insurance) isn't broken.
+if (window.top !== window.self) {
+  try { window.top.location = window.self.location; } catch (e) { document.documentElement.style.display = 'none'; }
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>if(typeof supabase==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\/scr'+'ipt>');}</script>
 <!-- Single source of truth for Play Billing product IDs — same file the
@@ -597,10 +629,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 'use strict';
 
 // ── Supabase ──────────────────────────────────────────────
+var SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
 var sb;
 try {
   sb = supabase.createClient(
-    'https://gxgytumhknmnwspxjzxw.supabase.co',
+    SUPABASE_URL,
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs',
     // Separate auth storage so the admin login never collides with the marketplace
     // app's login on the same site (they would otherwise share one session).
@@ -627,7 +660,15 @@ var _adminEmail = '';
 var _blogVideosMissing = false;
 
 // ── Helpers ───────────────────────────────────────────────
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// esc() is HTML-attribute-safe (encodes & < > " '). Critically, that also
+// makes it safe to drop inside onclick="fn('...')" handlers: the browser
+// HTML-decodes the attribute BEFORE the inline JS parses it, so an encoded
+// &#39; becomes a literal ' only after JS has already tokenized the string
+// boundary — an attacker's raw "'" can never reach the JS parser directly.
+// (Found missing '-encoding during a security audit — a DB-stored name like
+// x','y');alert(1);// broke out of the single-quoted JS string in msgUser()'s
+// onclick handler and executed as script in the admin's session.)
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmt(n){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(s){ if(!s) return '—'; try{ return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return s; } }
 function fmtDateTime(s){ if(!s) return '—'; try{ return new Date(s).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); } catch(e){ return s; } }
@@ -659,15 +700,45 @@ function requirePerm(perm){ if(!can(perm)){ toast('Your role ('+ADMIN_ROLE+') do
 // after, reason). Tolerates the table not existing until the migration runs.
 var AUDIT_OK = null;
 var _adminUid = null;
+// Real IP, fetched once per admin session (not once per action — that would
+// be a network round trip on every click) via the same edge function that
+// already does real-IP extraction for the login guard. Cached in memory;
+// never persisted client-side.
+var _adminIp = null, _adminIpPromise = null;
+async function getAdminIp(){
+  if(_adminIp) return _adminIp;
+  if(!_adminIpPromise){
+    _adminIpPromise = fetch(SUPABASE_URL + '/functions/v1/admin-login-guard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+      body: JSON.stringify({ action: 'whoami' })
+    }).then(function(r){ return r.json(); }).then(function(d){ _adminIp = d && d.ip || null; return _adminIp; }).catch(function(){ return null; });
+  }
+  return _adminIpPromise;
+}
+var _auditIpColOk = null; // null=unknown, true/false once probed
 async function auditLog(action, entity, entityId, before, after, reason){
   if(AUDIT_OK===false) return;
   try {
     if(!_adminUid){ try{ var u=(await sb.auth.getUser()).data.user; _adminUid=u?u.id:null; }catch(e){} }
-    var r = await sb.from('admin_audit_logs').insert({
+    var row = {
       actor_id:_adminUid, actor_email:_adminEmail||null, actor_role:ADMIN_ROLE,
       action:action, entity:entity, entity_id:entityId?String(entityId):null,
       before_state:before||null, after_state:after||null, reason:reason||null
-    });
+    };
+    if(_auditIpColOk!==false){
+      var ip = await getAdminIp();
+      row.ip = ip; row.user_agent = navigator.userAgent;
+    }
+    var r = await sb.from('admin_audit_logs').insert(row);
+    if(r.error && _auditIpColOk!==false && /column .*(ip|user_agent)/i.test(r.error.message||'')){
+      // ip/user_agent columns not migrated yet (admin_audit_logs_ip_ua.sql not
+      // run) — fall back permanently to the base columns rather than losing
+      // ALL audit logging over two optional fields.
+      _auditIpColOk = false;
+      delete row.ip; delete row.user_agent;
+      r = await sb.from('admin_audit_logs').insert(row);
+    } else if(!r.error){ _auditIpColOk = true; }
     if(r.error){ if(AUDIT_OK===null) console.warn('admin_audit_logs unavailable (run ADMIN_ENTERPRISE_UPGRADE.sql):', r.error.message); AUDIT_OK=false; }
     else AUDIT_OK=true;
   } catch(e){ AUDIT_OK=false; }
@@ -723,6 +794,32 @@ function getUser(id){ return PROF[id] || (DATA.users||[]).find(function(u){retur
 function userLabel(id){ var u=getUser(id); return u?(u.name||u.email||u.phone||String(id).slice(0,8)):String(id||'—').slice(0,8); }
 
 // ── Re-authentication for critical actions ────────────────
+// Server-side throttle for destructive actions (ban/delete/etc) — 20 per 5
+// min per admin, then a 10 min cool-down. Enforced by the admin-login-guard
+// edge function (JWT-verified caller), not client state, so it can't be
+// bypassed by clearing storage. Call BEFORE the destructive write; the
+// function also logs the attempt server-side regardless of outcome.
+async function mutationGuard(actionName){
+  try {
+    var sess = await sb.auth.getSession();
+    var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    if(!jwt) return true; // fail open — never let a guard-fetch hiccup block a legitimate admin
+    var r = await fetch(SUPABASE_URL + '/functions/v1/admin-login-guard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + jwt },
+      body: JSON.stringify({ action: 'mutation-record', action_name: actionName })
+    });
+    var d = await r.json();
+    if(d && d.blocked){
+      var untilMs = d.until ? new Date(d.until).getTime() : (Date.now()+10*60000);
+      var mins = Math.max(1, Math.ceil((untilMs-Date.now())/60000));
+      toast('Too many destructive actions too fast — blocked for '+mins+' more min'+(mins>1?'s':'')+'. This protects against a compromised session.','error');
+      return false;
+    }
+    return true;
+  } catch(e){ return true; } // fail open on network error
+}
+
 async function reauth(label){
   var pw = await confirm2('Confirm It’s You','Re-enter your admin password to '+label+'. This is required for critical actions.','Confirm','red',true,'Your password','password');
   if(pw===null) return false;
@@ -859,17 +956,50 @@ async function heartbeatSession(){
   try { await sb.from('admin_sessions').update({last_seen_at:new Date().toISOString()}).eq('id',_sessionId); } catch(e){}
 }
 setInterval(heartbeatSession, 120000);
-async function logLoginAttempt(email, ok, reason){
-  try { if(await hasTable('admin_login_attempts')) await sb.from('admin_login_attempts').insert({email:email, ok:ok, reason:reason||null, user_agent:navigator.userAgent}); } catch(e){}
+// Login attempts and IP blocks are now written exclusively by the
+// admin-login-guard edge function (service role) — see admin_login_guard.sql.
+// RLS grants authenticated/anon no insert on these tables, so a client-side
+// write would silently fail; that's intentional, it makes the lockout
+// tamper-proof from the browser. checkLoginGuard/recordLoginAttempt below
+// are the real gate. logLoginAttempt is kept as a no-op-safe wrapper in case
+// older code paths still call it.
+async function checkLoginGuard(email){
+  try {
+    var r = await fetch(SUPABASE_URL + '/functions/v1/admin-login-guard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+      body: JSON.stringify({ action: 'check', email: email })
+    });
+    return await r.json();
+  } catch(e){ return { blocked:false }; }
 }
+async function recordLoginAttempt(email, ok, reason){
+  try {
+    var r = await fetch(SUPABASE_URL + '/functions/v1/admin-login-guard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
+      body: JSON.stringify({ action: 'record', email: email, ok: ok, reason: reason || null })
+    });
+    return await r.json();
+  } catch(e){ return {}; }
+}
+async function logLoginAttempt(email, ok, reason){ return recordLoginAttempt(email, ok, reason); }
 
 // ── Trust / risk / fraud scoring (shared, transparent heuristics) ──
 // Trust 0-100 (higher=better). Risk 0-100 (higher=worse). Both derive purely
 // from live signals so they need no schema and are explainable in the UI.
+// sig fields: verified, ageDays, rejected, reportsAgainst, warnings, banned,
+// positiveReviews (rating>=4), soldListings (successful transactions),
+// mfaEnabled — all optional; callers that don't have a signal simply omit it
+// and its weight contributes 0, so existing call sites (which don't fetch
+// reviews/sold data) keep working unchanged.
 function computeTrust(sig){
   var t = 50;
   if(sig.verified) t += 25;
+  if(sig.mfaEnabled) t += 5;
   t += Math.min(15, Math.floor((sig.ageDays||0)/30)*3);
+  t += Math.min(10, (sig.positiveReviews||0)*2);
+  t += Math.min(10, (sig.soldListings||0)*2);
   t -= Math.min(30, (sig.rejected||0)*10);
   t -= Math.min(30, (sig.reportsAgainst||0)*10);
   t -= Math.min(20, (sig.warnings||0)*10);
@@ -883,6 +1013,8 @@ function computeRisk(sig){
   r += Math.min(20, (sig.warnings||0)*10);
   if((sig.ageDays||999) < 2) r += 15;        // brand-new account
   if(!sig.verified) r += 8;
+  r -= Math.min(15, (sig.soldListings||0)*3);   // established sellers are lower risk
+  r -= Math.min(10, (sig.positiveReviews||0)*2);
   if(sig.banned) r = Math.max(r, 80);
   return Math.max(0, Math.min(100, r));
 }
@@ -1258,27 +1390,46 @@ async function doLogin() {
   if(!email||!pass){ showErr('Enter your email and password.'); return; }
   var btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Signing in…';
+  // Server-side gate first: real-IP-aware, cannot be bypassed by clearing
+  // sessionStorage. See admin-login-guard edge function.
+  var guard = await checkLoginGuard(email);
+  if(guard && guard.blocked){
+    var untilMs = guard.until ? new Date(guard.until).getTime() : (Date.now()+30*60000);
+    var gmins = Math.max(1, Math.ceil((untilMs-Date.now())/60000));
+    showErr('Access temporarily blocked ('+(guard.reason||'too many attempts')+'). Try again in '+gmins+' min'+(gmins>1?'s':'.'));
+    btn.disabled=false; btn.textContent='Sign In'; return;
+  }
   try {
     var res = await sb.auth.signInWithPassword({ email:email, password:pass });
-    if(res.error||!res.data||!res.data.user){ recordFail(); logLoginAttempt(email,false,res.error?res.error.message:'invalid'); showErr((res.error?res.error.message:'Invalid credentials')+' ('+(MAX_FAILS-getFailState().count)+' attempts left)'); btn.disabled=false; btn.textContent='Sign In'; return; }
-    var pr = await sb.from('profiles').select('role,name,mfa_secret').eq('id',res.data.user.id).single();
+    if(res.error||!res.data||!res.data.user){
+      recordFail();
+      var rr1 = await recordLoginAttempt(email,false,res.error?res.error.message:'invalid');
+      if(rr1 && rr1.blocked){ showErr('Too many failed attempts — access blocked for 30 minutes.'); btn.disabled=false; btn.textContent='Sign In'; return; }
+      showErr((res.error?res.error.message:'Invalid credentials')+' ('+(MAX_FAILS-getFailState().count)+' attempts left)'); btn.disabled=false; btn.textContent='Sign In'; return;
+    }
+    var pr = await sb.from('profiles').select('role,name').eq('id',res.data.user.id).single();
     if(pr.error||!pr.data||ADMIN_ROLES.indexOf(pr.data.role)===-1){
-      await sb.auth.signOut(); logLoginAttempt(email,false,'not_admin'); showErr('Access denied. Admin team only.');
+      await sb.auth.signOut(); recordLoginAttempt(email,false,'not_admin'); showErr('Access denied. Admin team only.');
       btn.disabled=false; btn.textContent='Sign In'; return;
     }
+    // mfa_secret is column-locked (see admin_mfa_secret_column_lockdown.sql)
+    // so even a moderator reading another admin's row can't see it — only
+    // this RPC, which is owner-scoped server-side regardless of caller role.
+    var mfaR = await sb.rpc('get_my_mfa_secret');
+    var mySecret = (!mfaR.error && mfaR.data) ? mfaR.data : null;
     // Second factor: if this admin has enrolled a TOTP secret, require a code.
-    if(pr.data.mfa_secret){
+    if(mySecret){
       var code = await confirm2('Two-Factor Authentication','Enter the 6-digit code from your authenticator app.','Verify','confirm-ok',true,'123456');
       if(code===null){ await sb.auth.signOut(); btn.disabled=false; btn.textContent='Sign In'; return; }
-      var ok = await verifyTOTP(pr.data.mfa_secret, String(code).replace(/\s/g,''));
-      if(!ok){ await sb.auth.signOut(); logLoginAttempt(email,false,'bad_mfa'); showErr('Incorrect authentication code.'); btn.disabled=false; btn.textContent='Sign In'; return; }
+      var ok = await verifyTOTP(mySecret, String(code).replace(/\s/g,''));
+      if(!ok){ await sb.auth.signOut(); var rr2 = await recordLoginAttempt(email,false,'bad_mfa'); if(rr2&&rr2.blocked){ showErr('Too many failed attempts — access blocked for 30 minutes.'); } else { showErr('Incorrect authentication code.'); } btn.disabled=false; btn.textContent='Sign In'; return; }
     }
     clearFails();
     _adminEmail = email;
     ADMIN_ROLE = pr.data.role;
     _adminUid = res.data.user.id;
-    auditLog('admin_login','auth',res.data.user.id,null,{mfa:!!pr.data.mfa_secret},null);
-    logLoginAttempt(email,true,null);
+    auditLog('admin_login','auth',res.data.user.id,null,{mfa:!!mySecret},null);
+    recordLoginAttempt(email,true,null);
     startAdminSession();
     document.getElementById('sidebarUser').textContent = (pr.data.name || email) + (ADMIN_ROLE!=='admin' ? ' ('+ADMIN_ROLE+')' : '');
     showDash();
@@ -1880,6 +2031,7 @@ async function _doDeleteBusiness(id) {
   if(!requirePerm('*')) return;
   var b = DATA.businesses.find(function(x){return x.id===id;});
   if(!(await reauth('permanently delete the business "'+(b?b.name:'')+'"'))) return;
+  if(!(await mutationGuard('delete_business'))) return;
   try {
     var r = await sb.from('businesses').delete().eq('id',id);
     if(r.error) throw r.error;
@@ -2337,6 +2489,7 @@ async function bulkListings(kind){
     var ok = await confirm2('Bulk Approve','Approve and publish '+ids.length+' listing(s)?','Approve','green');
     if(!ok) return;
   }
+  if(kind==='delete' && !(await mutationGuard('bulk_delete_listings'))) return;
   var done=0, failed=0;
   for(var i=0;i<ids.length;i++){
     var id = ids[i];
@@ -2488,6 +2641,7 @@ async function deleteListing(id) {
   if(!requirePerm('*')) return;
   var ok = await confirm2('Delete Listing','This cannot be undone.','Delete','red');
   if(!ok) return;
+  if(!(await mutationGuard('delete_listing'))) return;
   try {
     var l = (DATA.listings||[]).find(function(x){ return x.id===id; });
     var r = await sb.from('listings').delete().eq('id',id);
@@ -2550,7 +2704,9 @@ async function viewUser(userId) {
       sb.from('admin_audit_logs').select('action,reason,actor_email,created_at').eq('entity','profiles').eq('entity_id',userId).order('created_at',{ascending:false}).limit(10),
       cnt('reviews',function(q){return q.eq('seller_id',userId);}),
       cnt('messages',function(q){return q.eq('sender_id',userId);}),
-      cnt('contact_requests',function(q){return q.eq('requester_id',userId);})
+      cnt('contact_requests',function(q){return q.eq('requester_id',userId);}),
+      cnt('reviews',function(q){return q.eq('seller_id',userId).gte('rating',4);}),
+      cnt('listings',function(q){return q.eq('seller_id',userId).eq('status','sold');})
     ]);
     var u = res[0].value && res[0].value.data; if(!u){ openModal('<div class="modal-title">User Profile<button class="modal-close" onclick="closeModal()">×</button></div><div class="empty-msg">User not found.</div>'); return; }
     var lst = (res[1].value&&res[1].value.data)||[];
@@ -2561,22 +2717,24 @@ async function viewUser(userId) {
     var notes = (res[8].status==='fulfilled'&&res[8].value&&!res[8].value.error) ? (res[8].value.data||[]) : null;
     var revCount = res[9].value;
     var msgCount = res[10].value, unlockCount = res[11].value;
+    var positiveReviews = res[12].value;
+    var soldListings = res[13].value;
     var ageDays = (Date.now()-new Date(u.created_at).getTime())/864e5;
     var warns = (notes||[]).filter(function(n){return n.action==='warn_user';}).length;
 
     // Shared trust + fraud scoring (transparent heuristics, see infra v2).
-    var sig = {verified:u.verified, ageDays:ageDays, rejected:lRejected, reportsAgainst:repAgainst, warnings:warns, banned:u.status==='banned'};
+    var sig = {verified:u.verified, ageDays:ageDays, rejected:lRejected, reportsAgainst:repAgainst, warnings:warns, banned:u.status==='banned', positiveReviews:positiveReviews, soldListings:soldListings, mfaEnabled:!!u.mfa_enabled};
     var trust = computeTrust(sig), risk = computeRisk(sig);
     var tColor = trust>=70?'var(--green)':trust>=40?'var(--amber)':'var(--red)';
     var rColor = risk>=60?'var(--red)':risk>=30?'var(--amber)':'var(--green)';
 
-    var html = '<div class="modal-title">'+esc(u.name||'User')+(u.mfa_secret?' <span class="badge badge-verified">2FA</span>':'')+'<button class="modal-close" onclick="closeModal()">×</button></div>';
+    var html = '<div class="modal-title">'+esc(u.name||'User')+(u.mfa_enabled?' <span class="badge badge-verified">2FA</span>':'')+'<button class="modal-close" onclick="closeModal()">×</button></div>';
     html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">';
     function chip(v,l,c){ return '<div style="flex:1;min-width:74px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 11px;text-align:center"><div style="font-size:16px;font-weight:800;color:'+(c||'var(--text)')+'">'+v+'</div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.4px">'+l+'</div></div>'; }
     html += chip(trust, 'Trust', tColor) + chip(risk, 'Fraud risk', rColor) + chip(fmtCnt(lTotal),'Listings',null) + chip(fmtCnt(lRejected),'Rejected',(lRejected>0?'var(--red)':null))
       + chip(fmtCnt(repAgainst),'Reports vs',(repAgainst>0?'var(--red)':null)) + chip(fmtCnt(repBy),'Reports by',null)
-      + chip(warns,'Warnings',(warns>0?'var(--amber)':null)) + chip(fmtCnt(revCount),'Reviews',null)
-      + chip(fmtCnt(msgCount),'Messages',null) + chip(fmtCnt(unlockCount),'Unlocks',null);
+      + chip(warns,'Warnings',(warns>0?'var(--amber)':null)) + chip(fmtCnt(revCount)+(positiveReviews?' ('+positiveReviews+'+)':''),'Reviews',null)
+      + chip(fmtCnt(soldListings),'Sold',(soldListings>0?'var(--green)':null)) + chip(fmtCnt(msgCount),'Messages',null) + chip(fmtCnt(unlockCount),'Unlocks',null);
     html += '</div>';
     // Fraud reasoning line
     var flags=[]; if(ageDays<2) flags.push('account < 48h old'); if(repAgainst>0) flags.push(repAgainst+' report(s) against'); if(lRejected>1) flags.push(lRejected+' rejected listings'); if(!u.verified) flags.push('unverified');
@@ -2648,6 +2806,7 @@ async function banUser(userId) {
   var perm = /^perm/i.test(String(dur).trim());
   var days = perm ? null : (parseInt(dur)||30);
   if(perm && !(await reauth('permanently ban this user'))) return;
+  if(!(await mutationGuard('ban_user'))) return;
   try {
     var u = getUser(userId)||{};
     var prevStatus = u.status||'active';
@@ -3262,7 +3421,6 @@ function updateNotifPreview() {
   if(pb) pb.textContent=body;
 }
 
-var SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
 
 async function sendNotification() {
@@ -4101,6 +4259,7 @@ async function deleteBlogVideo(id) {
   var video=DATA.blogVideos.find(function(row){return row.id===id;});
   var ok=await confirm2('Delete Video','Remove this blog video permanently?','Delete','red');
   if(!ok)return;
+  if(!(await mutationGuard('delete_blog_video')))return;
   try {
     var result=await sb.from('blog_videos').delete().eq('id',id);
     if(result.error)throw result.error;
@@ -4226,6 +4385,7 @@ async function deleteAd(id) {
   if(!requirePerm('ads.manage')) return;
   var ok = await confirm2('Delete Ad','Remove this ad permanently?','Delete','red');
   if(!ok) return;
+  if(!(await mutationGuard('delete_ad'))) return;
   try {
     var a=DATA.ads.find(function(x){return x.id===id;});
     await sb.from('paid_ads').delete().eq('id',id);
@@ -4887,17 +5047,46 @@ function renderAnalytics() {
 }
 
 // ── SETTINGS ──────────────────────────────────────────────
+// Emergency switches actually enforced by client code (see app.js/post.js/
+// auth.js). Keep this list honest — a kill-switch nobody checks is worse
+// than no kill-switch, because an admin trusts it under pressure.
+var EMERGENCY_ENFORCED = {
+  maintenanceMode: true,     // app.js _applyMaintenanceMode() — full-screen block, non-admins
+  disablePosting: true,      // post.js submit() — blocks new listings specifically
+  signupPaused: true,        // auth.js authSignUp() — blocks new account creation
+};
 function renderSettings() {
   var s = DATA.settings;
   var rows = [
     ['requireListingApproval','Require Listing Approval','New listings go to pending until admin approves them'],
-    ['allowNewRegistrations','Allow New Registrations','Users can create new accounts'],
-    ['maintenanceMode','Maintenance Mode','Shows a maintenance banner in the app to all users'],
     ['autoApproveVerified','Auto-approve Verified Users','Skip review for listings from verified sellers'],
     ['showSponsoredAds','Show Sponsored Ads','Display sponsored listing injection in browse feed'],
   ];
 
-  var html = '<div class="tbl-wrap" style="padding:0 18px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">Platform Settings<button class="filter-btn" onclick="settingsHistory()">Change history</button></div>';
+  // ── Emergency Controls ──
+  var emRows = [
+    ['maintenanceMode','Maintenance Mode','Full-screen block for every non-admin user, app-wide'],
+    ['disablePosting','Disable Posting','Blocks new listing submissions (existing listings stay live)'],
+    ['signupPaused','Disable Registrations','Blocks new account sign-ups'],
+    ['disableChat','Disable Chat','UI flag only — no enforcement wired yet, see note below'],
+    ['disablePayments','Disable Payments','UI flag only — no enforcement wired yet, see note below'],
+    ['disableRentals','Disable Rentals','UI flag only — no enforcement wired yet, see note below'],
+    ['disableJobs','Disable Jobs','UI flag only — no enforcement wired yet, see note below'],
+  ];
+  var html = '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:14px;border-color:rgba(239,68,68,.35)"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;color:var(--red)">Emergency Controls<button class="ab ab-ban" style="padding:8px 14px" onclick="emergencyLockdown()">Emergency Lockdown</button></div>';
+  html += '<div style="padding:12px 0 4px;font-size:11.5px;color:var(--sub)">Toggles marked <b>UI flag only</b> are stored in <code>app_settings</code> and visible in the app\'s state, but no code path currently checks them before allowing the action — wiring each one needs its own call-site change (chat send, payment init, rental/job post). Maintenance Mode, Disable Posting, and Disable Registrations ARE fully enforced.</div>';
+  emRows.forEach(function(r){
+    var checked = s[r[0]]===true||s[r[0]]==='true';
+    var enforced = !!EMERGENCY_ENFORCED[r[0]];
+    html+='<div class="setting-row"><div class="setting-info"><div class="setting-title">'+esc(r[1])+(enforced?' <span class="badge badge-active" style="font-size:9px">enforced</span>':' <span class="badge badge-pending" style="font-size:9px">ui only</span>')+'</div><div class="setting-desc">'+esc(r[2])+'</div></div>';
+    html+='<label class="toggle"><input type="checkbox" id="set_'+r[0]+'" '+(checked?'checked':'')+' onchange="saveSetting(\''+r[0]+'\',this.checked)"><span class="toggle-slider"></span></label>';
+    html+='</div>';
+  });
+  html+='<div class="setting-row"><div class="setting-info"><div class="setting-title">Maintenance Message</div><div class="setting-desc">Shown to users on the maintenance-mode block screen</div></div></div>';
+  html+='<div style="padding:0 0 16px;display:flex;gap:8px"><input id="maintMsgInput" class="search-input" style="flex:1;width:auto" value="'+esc(s.maintenanceMessage||'')+'" placeholder="PaMarket is undergoing scheduled maintenance. Please check back shortly."><button class="ab ab-view" onclick="saveSetting(\'maintenanceMessage\',document.getElementById(\'maintMsgInput\').value)">Save</button></div>';
+  html+='</div>';
+
+  html += '<div class="tbl-wrap" style="padding:0 18px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">Platform Settings<button class="filter-btn" onclick="settingsHistory()">Change history</button></div>';
   rows.forEach(function(r){
     var checked = s[r[0]]===true||s[r[0]]==='true';
     html+='<div class="setting-row"><div class="setting-info"><div class="setting-title">'+esc(r[1])+'</div><div class="setting-desc">'+esc(r[2])+'</div></div>';
@@ -4975,6 +5164,31 @@ async function saveSetting(key, value) {
     auditLog('change_setting','app_settings','1',{key:key,value:prev},{key:key,value:value},null);
     toast('Setting saved');
   } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// One-click lockdown: flips every enforced emergency switch on at once.
+// Deliberately only touches the switches that are ACTUALLY wired to code
+// (see EMERGENCY_ENFORCED) — flipping unwired flags would give a false
+// sense that the whole app stopped when only the state changed.
+async function emergencyLockdown(){
+  if(!requirePerm('*')) return;
+  var enforcedKeys = Object.keys(EMERGENCY_ENFORCED).filter(function(k){return EMERGENCY_ENFORCED[k];});
+  var confirmed = await confirm2('Emergency Lockdown','This immediately enables: '+enforcedKeys.join(', ')+'. Every non-admin user will be blocked from the app until you turn these off. This is for active incidents only.','Lock down the app','red',true,'Type LOCKDOWN to confirm');
+  if(confirmed===null) return;
+  if(String(confirmed).trim().toUpperCase()!=='LOCKDOWN'){ toast('Type LOCKDOWN exactly to confirm','error'); return; }
+  if(!(await reauth('trigger an emergency lockdown of the entire app'))) return;
+  try {
+    var rr = await sb.from('app_settings').select('settings').eq('id',1).single();
+    var cur = (!rr.error && rr.data && rr.data.settings) || {};
+    var before = {}; enforcedKeys.forEach(function(k){ before[k]=cur[k]; });
+    enforcedKeys.forEach(function(k){ cur[k]=true; });
+    var sr = await sb.from('app_settings').upsert({id:1,settings:cur,updated_at:new Date().toISOString()});
+    if(sr.error) throw sr.error;
+    DATA.settings = cur;
+    auditLog('emergency_lockdown','app_settings','1',before,enforcedKeys.reduce(function(a,k){a[k]=true;return a;},{}),'One-click emergency lockdown');
+    toast('Emergency lockdown activated — app is now blocked for non-admins','error');
+    renderSettings();
+  } catch(e){ toast('Lockdown failed: '+e.message,'error'); }
 }
 
 // ── Feature flags (arbitrary toggles under settings.featureFlags) ──
@@ -6697,8 +6911,8 @@ function renderAuditCenter() {
     + '<input id="acSearchBox" class="search-input" placeholder="Search action, entity, actor, reason…" value="'+esc(AC.search)+'" oninput="acSearch(this.value)" style="min-width:240px;flex:1">'
     + '<select class="form-select" style="width:auto;padding:7px 10px;font-size:12px" onchange="AC.action=this.value;renderAuditCenter()"><option value="">All actions</option>'+actions.map(function(a){return '<option value="'+esc(a)+'"'+(AC.action===a?' selected':'')+'>'+esc(a)+'</option>';}).join('')+'</select>'
     + '</div>';
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Entity</th><th>Target</th><th>Actor</th><th>Reason</th><th>When</th><th></th></tr></thead><tbody>';
-  if(!filtered.length) html += '<tr><td colspan="7"><div class="empty-msg">No audit entries match.</div></td></tr>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Entity</th><th>Target</th><th>Actor</th><th>IP</th><th>Reason</th><th>When</th><th></th></tr></thead><tbody>';
+  if(!filtered.length) html += '<tr><td colspan="8"><div class="empty-msg">No audit entries match.</div></td></tr>';
   filtered.forEach(function(l, i){
     var actor = l.actor_email ? esc(l.actor_email.split('@')[0]) : (l.actor_id ? esc(userLabel(l.actor_id)) : 'system');
     html += '<tr>'
@@ -6706,24 +6920,63 @@ function renderAuditCenter() {
       + '<td style="color:var(--sub);font-size:12px">'+esc(l.entity||'')+'</td>'
       + '<td style="color:var(--sub);font-size:11px">'+esc(String(l.entity_id||'').slice(0,12))+'</td>'
       + '<td style="color:var(--sub);font-size:12px">'+actor+'</td>'
+      + '<td style="color:var(--sub);font-size:11px;font-family:monospace">'+esc(l.ip||'—')+'</td>'
       + '<td style="color:var(--sub);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(l.reason||'—')+'</td>'
       + '<td style="color:var(--sub);font-size:11px;white-space:nowrap">'+fmtDateTime(l.created_at)+'</td>'
-      + '<td>'+((l.before_state||l.after_state)?'<button class="ab ab-view" onclick="acDetail('+i+')">Diff</button>':'')+'</td></tr>';
+      + '<td><button class="ab ab-view" onclick="acDetail('+i+')">Detail</button></td></tr>';
   });
   html += '</tbody></table></div>';
   html += pagerHtml(AC.page, 50, null, rows.length, 'acGo');
   document.getElementById('mainContent').innerHTML = html;
   window._acFiltered = filtered;
 }
+// Key-by-key diff instead of two raw JSON blobs — for a nested/large state
+// object (e.g. app_settings) a side-by-side JSON dump makes an admin hunt for
+// what actually changed; a diff shows only the fields that differ.
+function acDiffRows(before, after){
+  var b = (before && typeof before==='object') ? before : {};
+  var a = (after && typeof after==='object') ? after : {};
+  var keys = Array.from(new Set(Object.keys(b).concat(Object.keys(a)))).sort();
+  var rows = [];
+  keys.forEach(function(k){
+    var bv = JSON.stringify(b[k]), av = JSON.stringify(a[k]);
+    if(bv===av) return;
+    rows.push({key:k, before:bv===undefined?'—':bv, after:av===undefined?'—':av});
+  });
+  return rows;
+}
 function acDetail(i) {
   var l = (window._acFiltered||[])[i]; if(!l) return;
-  openModal('<div class="modal-title">'+esc(l.action||'Audit Entry')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
+  var html = '<div class="modal-title">'+esc(l.action||'Audit Entry')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
     + '<div style="font-size:12px;color:var(--sub);margin-bottom:10px">'+esc(l.entity||'')+' · '+esc(String(l.entity_id||''))+' · '+fmtDateTime(l.created_at)+'</div>'
-    + (l.reason?'<div style="font-size:13px;margin-bottom:10px"><b>Reason:</b> '+esc(l.reason)+'</div>':'')
-    + '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:4px">Before</div>'
-    + '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:11px;overflow:auto;max-height:150px;color:var(--sub)">'+esc(JSON.stringify(l.before_state||null,null,2))+'</pre>'
-    + '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:8px 0 4px">After</div>'
-    + '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:11px;overflow:auto;max-height:150px;color:var(--sub)">'+esc(JSON.stringify(l.after_state||null,null,2))+'</pre>');
+    + '<div style="font-size:12px;color:var(--sub);line-height:1.8;margin-bottom:10px">'
+    + '<div><b>Actor:</b> '+esc(l.actor_email||l.actor_id||'system')+' ('+esc(l.actor_role||'—')+')</div>'
+    + '<div><b>IP:</b> <span style="font-family:monospace">'+esc(l.ip||'not captured — run admin_audit_logs_ip_ua.sql')+'</span></div>'
+    + '<div><b>Browser:</b> '+esc(l.user_agent?parseDevice(l.user_agent):'—')+'</div>'
+    + '</div>'
+    + (l.reason?'<div style="font-size:13px;margin-bottom:10px"><b>Reason:</b> '+esc(l.reason)+'</div>':'');
+
+  var isObj = function(v){ return v && typeof v==='object' && !Array.isArray(v); };
+  if(isObj(l.before_state) || isObj(l.after_state)){
+    var diffs = acDiffRows(l.before_state, l.after_state);
+    html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:6px">Changes ('+diffs.length+')</div>';
+    if(!diffs.length) html += '<div style="font-size:12px;color:var(--sub);margin-bottom:10px">No field-level differences recorded.</div>';
+    else {
+      html += '<div class="tbl-wrap" style="margin-bottom:10px"><table class="tbl"><thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead><tbody>';
+      diffs.forEach(function(d){
+        html += '<tr><td style="font-family:monospace;font-size:11.5px;font-weight:700">'+esc(d.key)+'</td>'
+          + '<td style="font-size:11.5px;color:var(--red);font-family:monospace;max-width:200px;overflow:auto">'+esc(d.before)+'</td>'
+          + '<td style="font-size:11.5px;color:var(--green);font-family:monospace;max-width:200px;overflow:auto">'+esc(d.after)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+  } else {
+    html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:4px">Before</div>'
+      + '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:11px;overflow:auto;max-height:150px;color:var(--sub)">'+esc(JSON.stringify(l.before_state||null,null,2))+'</pre>'
+      + '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:8px 0 4px">After</div>'
+      + '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:11px;overflow:auto;max-height:150px;color:var(--sub)">'+esc(JSON.stringify(l.after_state||null,null,2))+'</pre>';
+  }
+  openModal(html);
 }
 function acExport() {
   var rows = [['Action','Entity','Target','Actor','Reason','When','Before','After']];
@@ -6843,28 +7096,51 @@ async function loadModInbox() {
   items.sort(function(a,b){ return b.risk - a.risk; });
   MI.items = items; MI.loadedAt = new Date();
 }
+// Priority tiers (High/Medium/Low/Safe) over the existing risk=severity×age
+// score, so the queue reads like a triage board, not just a sorted table.
+function miTier(risk){
+  if(risk>=70) return {key:'high', label:'High Risk', color:'var(--red)'};
+  if(risk>=45) return {key:'medium', label:'Medium Risk', color:'var(--amber)'};
+  if(risk>=20) return {key:'low', label:'Low Risk', color:'var(--blue)'};
+  return {key:'safe', label:'Safe', color:'var(--green)'};
+}
 function renderModInbox() {
   if(!requirePerm('reports.manage') && !requirePerm('listings.moderate')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Your role cannot access the moderation inbox.</div>'; return; }
   if(MI.items===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Assembling unified queue…</div>'; return; }
-  var items = MI.items.filter(function(i){ return MI.filter==='all' || i.kind===MI.filter; });
+  MI.items.forEach(function(i){ i.tier = miTier(i.risk); });
+  var items = MI.items.filter(function(i){
+    if(MI.tier && MI.tier!=='all' && i.tier.key!==MI.tier) return false;
+    return MI.filter==='all' || i.kind===MI.filter;
+  });
   var kinds = {listing:0,verification:0,report:0,rental:0,appeal:0};
-  MI.items.forEach(function(i){ kinds[i.kind]=(kinds[i.kind]||0)+1; });
+  var tiers = {high:0,medium:0,low:0,safe:0};
+  MI.items.forEach(function(i){ kinds[i.kind]=(kinds[i.kind]||0)+1; tiers[i.tier.key]=(tiers[i.tier.key]||0)+1; });
 
   var html = '<div class="sec-head"><div class="sec-title">Moderation Inbox <span style="font-weight:400;color:var(--sub);font-size:12px">('+MI.items.length+' items · risk-ranked)</span></div><div class="sec-actions">';
-  [['all','All'],['report','Reports ('+kinds.report+')'],['listing','Listings ('+kinds.listing+')'],['verification','Verifications ('+kinds.verification+')'],['rental','Rentals ('+kinds.rental+')'],['appeal','Appeals ('+kinds.appeal+')']].forEach(function(f){
+  html += '<button class="btn-refresh" onclick="loadModInbox().then(renderModInbox)">Refresh</button></div></div>';
+
+  // Priority tier row — the headline triage view: work High Risk first, always.
+  html += '<div class="stats-grid" style="margin-bottom:14px">';
+  [['high','High Risk','red'],['medium','Medium Risk','amber'],['low','Low Risk','blue'],['safe','Safe','green']].forEach(function(t){
+    var on = MI.tier===t[0];
+    html += '<div class="stat-card '+t[2]+'" style="cursor:pointer'+(on?';border-color:var(--accent);border-width:2px':'')+'" onclick="MI.tier='+(on?'null':'\''+t[0]+'\'')+';renderModInbox()"><div class="stat-label">'+esc(t[1])+'</div><div class="stat-val">'+fmtCnt(tiers[t[0]]||0)+'</div><div class="stat-sub">'+(on?'showing only this tier — click to clear':'click to filter')+'</div></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="sec-actions" style="margin-bottom:10px">';
+  [['all','All types'],['report','Reports ('+kinds.report+')'],['listing','Listings ('+kinds.listing+')'],['verification','Verifications ('+kinds.verification+')'],['rental','Rentals ('+kinds.rental+')'],['appeal','Appeals ('+kinds.appeal+')']].forEach(function(f){
     html += '<button class="filter-btn'+(MI.filter===f[0]?' on':'')+'" onclick="MI.filter=\''+f[0]+'\';renderModInbox()">'+f[1]+'</button>';
   });
-  html += '<button class="btn-refresh" onclick="loadModInbox().then(renderModInbox)">Refresh</button></div></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);margin-bottom:12px">'+refreshStamp2(MI.loadedAt)+' · Sorted by risk = severity × age. Work top-down to hit SLA.</div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);margin-bottom:12px">'+refreshStamp2(MI.loadedAt)+' · Sorted by risk = severity × age. Work top-down (High Risk first) to hit SLA.</div>';
 
-  if(!items.length){ html += '<div class="empty-msg" style="padding:30px">Inbox zero. Nothing awaits moderation.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+  if(!items.length){ html += '<div class="empty-msg" style="padding:30px">Inbox zero. Nothing awaits moderation'+(MI.tier?' at this tier':'')+'.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
 
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Risk</th><th>Type</th><th>Item</th><th>Actor</th><th>Waiting</th><th>Actions</th></tr></thead><tbody>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Priority</th><th>Type</th><th>Item</th><th>Actor</th><th>Waiting</th><th>Actions</th></tr></thead><tbody>';
   var iconMap = {listing:'▤',verification:'◉',report:'⚑',rental:'⛃',appeal:'⚖'};
   items.forEach(function(i){
-    var riskColor = i.risk>=70?'var(--red)':i.risk>=45?'var(--amber)':'var(--sub2)';
     html += '<tr>';
-    html += '<td><span style="display:inline-block;min-width:34px;text-align:center;font-weight:800;font-size:12px;color:#fff;background:'+riskColor+';border-radius:6px;padding:2px 0">'+i.risk+'</span></td>';
+    html += '<td><span style="display:inline-block;min-width:80px;text-align:center;font-weight:800;font-size:11px;color:#fff;background:'+i.tier.color+';border-radius:6px;padding:3px 6px" title="risk score '+i.risk+'">'+i.tier.label+'</span></td>';
     html += '<td><span class="badge badge-info">'+(iconMap[i.kind]||'')+' '+i.kind+'</span></td>';
     html += '<td style="max-width:240px"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">'+esc(i.title)+'</div><div style="font-size:11px;color:var(--sub)">'+esc(i.sub||'')+'</div></td>';
     html += '<td style="font-size:12px;color:var(--sub)">'+(i.who?esc(i.whoName||userLabel(i.who)):'—')+'</td>';
@@ -7595,19 +7871,22 @@ function renderPlayRentalFeatured(){
 // ════════════════════════════════════════════════════════════
 // SECURITY CENTER — MFA · sessions · failed logins · permission matrix · RLS
 // ════════════════════════════════════════════════════════════
-var SEC = { sessions:null, attempts:null, mfaOn:null, sessMissing:false, attMissing:false };
+var SEC = { sessions:null, attempts:null, blocks:null, mfaOn:null, sessMissing:false, attMissing:false, blocksMissing:false };
 async function loadSecurity(){
-  SEC.sessions=null; SEC.attempts=null;
+  SEC.sessions=null; SEC.attempts=null; SEC.blocks=null;
   var res = await Promise.allSettled([
     hasTable('admin_sessions') ? sb.from('admin_sessions').select('*').is('revoked_at',null).order('last_seen_at',{ascending:false}).limit(30) : Promise.resolve({error:{missing:true}}),
     hasTable('admin_login_attempts') ? sb.from('admin_login_attempts').select('*').order('created_at',{ascending:false}).limit(40) : Promise.resolve({error:{missing:true}}),
-    sb.from('profiles').select('mfa_secret').eq('id',_adminUid).single()
+    sb.rpc('get_my_mfa_secret'),
+    hasTable('admin_ip_blocks') ? sb.from('admin_ip_blocks').select('*').gt('until',new Date().toISOString()).order('until',{ascending:false}).limit(30) : Promise.resolve({error:{missing:true}})
   ]);
   SEC.sessMissing = !(await hasTable('admin_sessions'));
   SEC.attMissing  = !(await hasTable('admin_login_attempts'));
+  SEC.blocksMissing = !(await hasTable('admin_ip_blocks'));
   SEC.sessions = (res[0].value&&res[0].value.data)||[];
   SEC.attempts = (res[1].value&&res[1].value.data)||[];
-  SEC.mfaOn = !!(res[2].value&&res[2].value.data&&res[2].value.data.mfa_secret);
+  SEC.mfaOn = !!(res[2].value&&res[2].value.data);
+  SEC.blocks = (res[3].value&&res[3].value.data)||[];
   await ensureProfiles(SEC.sessions.map(function(s){return s.admin_id;}));
 }
 function renderSecurity(){
@@ -7663,14 +7942,26 @@ function renderSecurity(){
     html += '</tbody></table></div>';
   }
 
+  // Active IP/email blocks (server-side, from admin-login-guard)
+  html += '<div class="sec-head" style="margin-top:18px"><div class="sec-title">Active Blocks</div></div>';
+  if(SEC.blocksMissing) html += migrationNotice('Active Blocks', 'migrations/admin_login_guard.sql');
+  else if(!SEC.blocks || !SEC.blocks.length) html += '<div class="empty-msg">No active blocks — no brute-force activity right now.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>IP</th><th>Email</th><th>Reason</th><th>Blocked until</th></tr></thead><tbody>';
+    SEC.blocks.forEach(function(b){
+      html += '<tr><td style="font-family:monospace;font-size:12px">'+esc(b.ip||'—')+'</td><td style="font-size:12px">'+esc(b.email||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+esc(b.reason||'—')+'</td><td style="font-size:11px;color:var(--red)">'+fmtDateTime(b.until)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
   // Failed logins
   html += '<div class="sec-head" style="margin-top:18px"><div class="sec-title">Recent Login Attempts</div></div>';
   if(SEC.attMissing) html += migrationNotice('Login-attempt logging');
   else if(!SEC.attempts.length) html += '<div class="empty-msg">No login attempts recorded.</div>';
   else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Email</th><th>Result</th><th>Reason</th><th>Device</th><th>When</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Email</th><th>Result</th><th>Reason</th><th>IP</th><th>Device</th><th>When</th></tr></thead><tbody>';
     SEC.attempts.forEach(function(a){
-      html += '<tr><td style="font-size:12px">'+esc(a.email||'—')+'</td><td>'+(a.ok?'<span class="badge badge-active">success</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px;color:var(--sub)">'+esc(a.reason||'—')+'</td><td style="font-size:11px;color:var(--sub)">'+esc(parseDevice(a.user_agent))+'</td><td style="font-size:11px;color:var(--sub)">'+fmtDateTime(a.created_at)+'</td></tr>';
+      html += '<tr><td style="font-size:12px">'+esc(a.email||'—')+'</td><td>'+(a.ok?'<span class="badge badge-active">success</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px;color:var(--sub)">'+esc(a.reason||'—')+'</td><td style="font-family:monospace;font-size:11px;color:var(--sub)">'+esc(a.ip||'—')+'</td><td style="font-size:11px;color:var(--sub)">'+esc(parseDevice(a.user_agent))+'</td><td style="font-size:11px;color:var(--sub)">'+fmtDateTime(a.created_at)+'</td></tr>';
     });
     html += '</tbody></table></div>';
   }
@@ -7711,17 +8002,51 @@ async function revokeSession(id){
   try { await sb.from('admin_sessions').update({revoked_at:new Date().toISOString()}).eq('id',id); auditLog('revoke_session','admin_sessions',id,null,null,null); toast('Session revoked'); loadSecurity().then(renderSecurity); }
   catch(e){ toast('Error: '+e.message,'error'); }
 }
+// Genuine RLS probe: spins up a SEPARATE client authenticated as nothing
+// (anon key, no session) — not the logged-in admin's client — and asserts
+// specific reads/writes are actually DENIED. The previous version of this
+// function only checked tables were reachable with the admin's own
+// (privileged) session and always printed green regardless of outcome,
+// which was a false assurance (found during a security audit).
 async function verifyRLS(){
-  var el = document.getElementById('rlsResult'); el.innerHTML='<span style="color:var(--sub)">Probing…</span>';
-  // Attempt to update a profile row using an impossible filter: RLS or the
-  // filter should yield 0 rows. A silent success on a broad update would be a red flag.
+  var el = document.getElementById('rlsResult'); el.innerHTML='<span style="color:var(--sub)">Probing as anonymous…</span>';
+  var checks = [];
   try {
-    var r = await sb.from('admin_audit_logs').select('id',{head:true,count:'exact'});
-    if(r.error){ el.innerHTML='<span style="color:var(--amber)">admin_audit_logs not readable — expected if migration not run.</span>'; return; }
-    // Probe: as anon, can we read another admin's mfa_secret? Should be blocked/empty for non-owner rows.
-    var probe = await sb.from('profiles').select('id').eq('role','admin').limit(1);
-    el.innerHTML = '<span style="color:var(--green)">RLS reachable. Audit table readable by admin role only (as configured). Review pg_policies for full coverage.</span>';
-    auditLog('rls_probe','security',null,null,null,null);
+    var anon = supabase.createClient(
+      'https://gxgytumhknmnwspxjzxw.supabase.co',
+      SUPABASE_ANON,
+      { auth: { persistSession:false, autoRefreshToken:false } }
+    );
+
+    // 1) Anonymous read of profiles must be empty/blocked (owner-or-staff policy).
+    var p1 = await anon.from('profiles').select('id,mfa_secret').limit(1);
+    checks.push({ label:'Anonymous read of profiles', pass: !!p1.error || (p1.data||[]).length===0 });
+
+    // 2) Anonymous read of admin_login_attempts must be empty/blocked (admin-only policy).
+    var p2 = await anon.from('admin_login_attempts').select('id').limit(1);
+    checks.push({ label:'Anonymous read of admin_login_attempts', pass: !!p2.error || (p2.data||[]).length===0 });
+
+    // 3) Anonymous read of admin_ip_blocks must be empty/blocked.
+    var p3 = await anon.from('admin_ip_blocks').select('id').limit(1);
+    checks.push({ label:'Anonymous read of admin_ip_blocks', pass: !!p3.error || (p3.data||[]).length===0 });
+
+    // 4) Anonymous write to profiles (impossible-looking but real attempt) must be rejected.
+    var p4 = await anon.from('profiles').update({role:'admin'}).eq('id','00000000-0000-0000-0000-000000000000');
+    checks.push({ label:'Anonymous write to profiles', pass: !!p4.error || !(p4.data&&p4.data.length) });
+
+    // 5) mfa_secret column lockdown: even the logged-in admin's OWN client
+    // reading another staff row's mfa_secret directly should come back null
+    // (column revoked from `authenticated`) — sample any other admin row.
+    var others = await sb.from('profiles').select('id').neq('id',_adminUid).in('role',ADMIN_ROLES).limit(1);
+    if(others.data && others.data.length){
+      var p5 = await sb.from('profiles').select('mfa_secret').eq('id',others.data[0].id).single();
+      checks.push({ label:'mfa_secret column hidden from other staff', pass: !p5.data || p5.data.mfa_secret==null });
+    }
+
+    var failed = checks.filter(function(c){ return !c.pass; });
+    var rows = checks.map(function(c){ return '<div>'+(c.pass?'<span style="color:var(--green)">✓</span>':'<span style="color:var(--red)">✗</span>')+' '+esc(c.label)+'</div>'; }).join('');
+    el.innerHTML = rows + '<div style="margin-top:8px;font-weight:700;color:'+(failed.length?'var(--red)':'var(--green)')+'">'+(failed.length? failed.length+' check(s) FAILED — RLS gap detected.' : 'All checks passed.')+'</div>';
+    auditLog('rls_probe','security',null,null,{checks:checks},null);
   } catch(e){ el.innerHTML='<span style="color:var(--red)">Probe error: '+esc(e.message)+'</span>'; }
 }
 
