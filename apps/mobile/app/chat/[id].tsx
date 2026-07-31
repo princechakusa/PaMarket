@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import Svg, { Path, Polyline } from "react-native-svg";
@@ -94,6 +94,28 @@ function Ticks({ read }: { read: boolean }) {
 
 function timeLabel(dateString: string): string {
   return new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Marking messages read used to be a single unguarded fire-and-forget
+// call — on a flaky connection that request could fail with no retry,
+// leaving a conversation permanently stuck "unread" in the Messages list
+// even though the user had genuinely opened and read it. Retries a few
+// times on failure; still best-effort (caller isn't blocked on this), but
+// no longer silently gives up after one bad network blip.
+async function markOtherMessagesRead(conversationId: string, otherUserId: string) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error } = await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq("conversation_id", conversationId)
+      .eq("sender_id", otherUserId)
+      .eq("read", false);
+    if (!error) return;
+    if (attempt < 3) await sleep(attempt * 500);
+    else console.warn("[chat] failed to mark messages read:", error.message);
+  }
 }
 
 export default function ChatScreen() {
@@ -203,12 +225,19 @@ export default function ChatScreen() {
     setListing((listingRes.data as ListingContext) ?? null);
     setMessages((msgsRes.data as MessageRow[]) ?? []);
 
-    if (oId) {
-      // Fire-and-forget — marking messages read doesn't need to block the
-      // screen from finishing its load.
-      supabase.from("messages").update({ read: true }).eq("conversation_id", id).eq("sender_id", oId).eq("read", false);
-    }
+    if (oId) markOtherMessagesRead(id, oId);
   }, [id, myId]);
+
+  // Re-attempt on every focus too (not just the initial mount) — this was
+  // previously a single unguarded fire-and-forget call with no error
+  // handling, so on Zimbabwe's often-flaky mobile data one failed request
+  // left the conversation permanently stuck "unread" in the Messages list,
+  // with no retry ever happening again for that conversation.
+  useFocusEffect(
+    useCallback(() => {
+      if (otherId && id) markOtherMessagesRead(id, otherId);
+    }, [id, otherId])
+  );
 
   useEffect(() => {
     setIsLoading(true);
