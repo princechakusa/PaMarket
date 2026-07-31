@@ -56,6 +56,10 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     notification: { title, body },
     data,
     android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', tag: data['conversationId'] || undefined } },
+    // iOS reads sound only from aps, never from the top-level `notification`
+    // block — this was missing entirely, so message pushes arrived silent
+    // on iOS even though Android's sound (set above) always worked.
+    apns: { payload: { aps: { sound: 'default' } } },
   };
   const url = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';
   const MAX = 3;

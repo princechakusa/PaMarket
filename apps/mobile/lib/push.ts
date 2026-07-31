@@ -62,14 +62,20 @@ export async function registerForPushNotifications(userId: string): Promise<void
       const requested = await Notifications.requestPermissionsAsync();
       granted = requested.granted;
     }
-    if (!granted) return;
+    if (!granted) {
+      console.warn("[push] permission not granted — skipping token registration");
+      return;
+    }
 
     // Firebase Cloud Messaging token. The backend sends via FCM HTTP v1 and
     // reads these values from public.push_tokens.
     const token = await getFirebaseMessagingToken();
-    if (!token || typeof token !== "string") return;
+    if (!token || typeof token !== "string") {
+      console.warn("[push] getFirebaseMessagingToken() returned no token");
+      return;
+    }
 
-    await supabase.from("push_tokens").upsert(
+    const { error } = await supabase.from("push_tokens").upsert(
       {
         user_id: userId,
         token,
@@ -77,9 +83,16 @@ export async function registerForPushNotifications(userId: string): Promise<void
       },
       { onConflict: "user_id" }
     );
-  } catch {
+    if (error) {
+      console.warn("[push] push_tokens upsert failed:", error.message);
+    } else {
+      console.log("[push] token registered:", token.slice(0, 12) + "...");
+    }
+  } catch (e) {
     // Push registration is best-effort — never block app usage on failure
-    // (e.g. emulator without Play Services, permission denial, etc).
+    // (e.g. emulator without Play Services, permission denial, etc) — but
+    // log it so this isn't a silent, undiagnosable failure.
+    console.warn("[push] registerForPushNotifications threw:", (e as Error)?.message || e);
   }
 }
 

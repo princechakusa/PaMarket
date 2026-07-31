@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
+import messaging from "@react-native-firebase/messaging";
 import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { AuthProvider, useAuth } from "../lib/auth";
@@ -67,7 +69,32 @@ function usePushNotifications() {
       const data = response.notification.request.content.data;
       if (data) navigateFromNotificationData(router, data);
     });
-    return () => subscription.remove();
+
+    // iOS-only: @react-native-firebase/messaging and expo-notifications both
+    // try to become UNUserNotificationCenterDelegate on iOS, and only one
+    // wins — so the listener above can silently stop receiving tap events
+    // for the FCM-delivered pushes lib/push.ts registers for (this app uses
+    // native FCM tokens, not Expo's push service). RNFB's own tap-detection
+    // APIs work independently of that delegate, so they're the reliable
+    // path on iOS. Android's intent-based handling isn't affected by this
+    // conflict, so the listener above already covers it there.
+    let unsubscribeOnOpen: (() => void) | undefined;
+    if (Platform.OS === "ios") {
+      messaging()
+        .getInitialNotification()
+        .then((remoteMessage) => {
+          const data = remoteMessage?.data;
+          if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
+        });
+      unsubscribeOnOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
+        if (remoteMessage?.data) navigateFromNotificationData(router, remoteMessage.data);
+      });
+    }
+
+    return () => {
+      subscription.remove();
+      unsubscribeOnOpen?.();
+    };
   }, [router]);
 }
 

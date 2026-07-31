@@ -62,7 +62,12 @@ async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, 
     notification: { title: title, body: body },
     data: fcmData,
     android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', image: imageUrl || undefined } },
-    apns: imageUrl ? { payload: { aps: {} }, fcm_options: { image: imageUrl } } : undefined,
+    // aps.sound was previously only set implicitly via the top-level
+    // `notification` block, which iOS does NOT read for sound — APNs only
+    // plays a sound when it's explicitly set inside `aps`. Android reads
+    // its own `android.notification.sound` above, which was already
+    // correct; this was an iOS-only silent-push bug.
+    apns: { payload: { aps: { sound: 'default' } }, ...(imageUrl ? { fcm_options: { image: imageUrl } } : {}) },
   };
   const fcmUrl = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';
   const res = await fetch(fcmUrl, {
