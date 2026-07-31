@@ -315,7 +315,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Insert notification records into DB so in-app notification centre shows them
+    // Insert notification records into DB so in-app notification centre shows them.
+    // push_sent: true because this function sends the FCM/web push itself below --
+    // without this flag, the notifications_dispatch_push trigger (see
+    // notification_push_dispatch_trigger.sql) would fire a SECOND push for every row.
     const now = Date.now();
     const dbRows = profiles.map((p) => ({
       id: crypto.randomUUID(),
@@ -326,6 +329,7 @@ Deno.serve(async (req) => {
       read: false,
       created_at: now,
       meta: { deepLink: deepLink, imageUrl: imageUrl },
+      push_sent: true,
     }));
     for (let i = 0; i < dbRows.length; i += 100) {
       await db.from('notifications').insert(dbRows.slice(i, i + 100));

@@ -66,6 +66,22 @@ Google Play Billing and Paynow), so those notification types don't apply.
         $cron$
       );
       ```
+- [ ] `notification_push_dispatch_trigger.sql` run in Supabase SQL Editor —
+      fixes ~20 notification types (rental listing/company decisions,
+      business verification/suspension, new reviews, new leads, job
+      application status changes, admin/moderation notices) that were
+      inserted straight into `notifications` by their own triggers and never
+      pushed at all, so they only ever showed in the in-app Notifications
+      screen, never the Android tray. Adds a `push_sent` column and a single
+      AFTER INSERT trigger that calls the new `dispatch-notification-push`
+      function for any row not already pushed (send-push's own inserts are
+      flagged `push_sent: true` so they're never double-sent).
+- [ ] `dispatch-notification-push` deployed as an Edge Function, with its
+      `AUTOMATION_SECRET` secret set to the **same value** already configured
+      for `automation-runner`:
+      ```bash
+      supabase functions deploy dispatch-notification-push
+      ```
 
 ## Verifying it's actually live
 
