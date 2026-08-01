@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.4",
+  version: "1.29.5",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -18,6 +18,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.pamarket.app",
+    // eas.json's production build profile can't use autoIncrement — that
+    // only works with a static app.json, not this dynamic app.config.ts —
+    // so this has to be bumped by hand before each store-distribution build.
+    // Ad Hoc/dev builds never touched App Store Connect, so 1 is the first
+    // real submission.
+    buildNumber: "1",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -46,7 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 114,
+    versionCode: 115,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
