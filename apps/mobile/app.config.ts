@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.5",
+  version: "1.29.6",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -52,7 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 115,
+    versionCode: 116,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
