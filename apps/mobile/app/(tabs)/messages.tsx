@@ -192,20 +192,22 @@ export default function MessagesScreen() {
   useEffect(() => {
     let cancelled = false;
     // Hydrate from the last successful load immediately — if the network
-    // call above fails (no connection), this stays on screen instead of an
-    // empty inbox, matching the home feed's behavior.
+    // call below fails (no connection), this stays on screen instead of an
+    // empty inbox, matching the home feed's behavior. The actual network
+    // load is left to the useFocusEffect below (which also covers initial
+    // mount, since focus fires immediately) — calling load() from both
+    // this effect AND that one fired it twice, back to back, every time
+    // this screen first opened.
     loadCache<ConversationSummary[]>(MESSAGES_CACHE_KEY).then((cached) => {
       if (cancelled || !cached || !cached.length) return;
       setSummaries((current) => (current.length ? current : cached));
       setShowingCached(true);
       setIsLoading(false);
     });
-    setIsLoading(true);
-    load().finally(() => setIsLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [load]);
+  }, []);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -256,7 +258,8 @@ export default function MessagesScreen() {
       if (summariesRef.current.length) {
         refreshUnreadCounts();
       } else {
-        load();
+        setIsLoading(true);
+        load().finally(() => setIsLoading(false));
       }
     }, [refreshUnreadCounts, load])
   );
