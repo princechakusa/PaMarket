@@ -97,7 +97,7 @@ export default function JobsHubScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: space.huge }}>
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-        <GlassBackButton onPress={() => router.back()} tone="dark" />
+        <GlassBackButton onPress={() => router.back()} tone="dark" flat />
         <Text style={styles.headerTitle}>Jobs</Text>
       </View>
 

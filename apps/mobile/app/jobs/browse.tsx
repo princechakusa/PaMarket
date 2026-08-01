@@ -134,7 +134,7 @@ export default function JobsListScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerRow}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Jobs</Text>
           <View style={{ width: 20 }} />
         </View>

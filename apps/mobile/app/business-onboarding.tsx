@@ -394,7 +394,7 @@ export default function BusinessOnboardingScreen() {
             </View>
             <View style={styles.rowGap}>
               <View style={[styles.backNavSlot, isSubmitting && styles.disabledNav]}>
-                <GlassBackButton onPress={goBack} />
+                <GlassBackButton onPress={goBack} flat />
               </View>
               <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={activate} disabled={isSubmitting}>
                 {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryButtonText}>{existingStatus === "active" ? "Save Changes" : "Activate Business"}</Text>}
@@ -431,7 +431,7 @@ function StepNav({ onBack, onNext, styles }: { onBack: () => void; onNext: () =>
   return (
     <View style={styles.rowGap}>
       <View style={styles.backNavSlot}>
-        <GlassBackButton onPress={onBack} />
+        <GlassBackButton onPress={onBack} flat />
       </View>
       <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={onNext}>
         <Text style={styles.primaryButtonText}>Continue</Text>

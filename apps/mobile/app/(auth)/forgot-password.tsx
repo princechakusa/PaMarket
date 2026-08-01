@@ -52,7 +52,7 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.subtitle}>
             We&apos;ve sent a password reset link to {email.trim()}.
           </Text>
-          <GlassBackButton onPress={() => router.replace("/(auth)/sign-in")} label="Sign In" />
+          <GlassBackButton onPress={() => router.replace("/(auth)/sign-in")} label="Sign In" flat />
         </View>
       </View>
     );
@@ -90,7 +90,7 @@ export default function ForgotPasswordScreen() {
         </Pressable>
 
         <View style={styles.backLink}>
-          <GlassBackButton onPress={() => router.back()} label="Sign In" />
+          <GlassBackButton onPress={() => router.back()} label="Sign In" flat />
         </View>
       </View>
     </KeyboardAvoidingView>

@@ -170,7 +170,7 @@ export default function EditJobScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
@@ -183,7 +183,7 @@ export default function EditJobScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <EmptyState title="Job not found" subtitle="This posting may have been removed." />
@@ -195,7 +195,7 @@ export default function EditJobScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle}>Edit Job</Text>
         <View style={{ width: 20 }} />
       </View>

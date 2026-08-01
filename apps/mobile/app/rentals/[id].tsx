@@ -361,7 +361,7 @@ export default function RentalVehicleDetailScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
@@ -374,7 +374,7 @@ export default function RentalVehicleDetailScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <Text style={styles.notFoundText}>Vehicle not found</Text>
@@ -386,7 +386,7 @@ export default function RentalVehicleDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {brandLabel(brandSlug)} {vehicle.model}
         </Text>

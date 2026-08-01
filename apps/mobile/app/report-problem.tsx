@@ -261,7 +261,7 @@ export default function ReportProblemScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>P</Text>
         </View>

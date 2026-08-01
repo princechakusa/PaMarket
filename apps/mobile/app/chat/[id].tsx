@@ -612,7 +612,7 @@ export default function ChatScreen() {
       keyboardVerticalOffset={0}
     >
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-        <GlassBackButton onPress={() => router.back()} />
+        <GlassBackButton onPress={() => router.back()} flat />
         <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
           <Avatar uri={displayAvatar} name={displayName} size={38} online={!conversationBusiness && otherOnline} />
           <View style={{ flex: 1, minWidth: 0 }}>

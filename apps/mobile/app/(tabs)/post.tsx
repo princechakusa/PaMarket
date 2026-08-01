@@ -283,7 +283,7 @@ export default function PostScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
-        <GlassBackButton onPress={handleHeaderBack} tone="light" />
+        <GlassBackButton onPress={handleHeaderBack} tone="light" flat />
         <Text style={styles.topbarTitle} numberOfLines={1}>
           Post a Free Ad
         </Text>

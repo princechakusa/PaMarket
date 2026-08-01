@@ -1,12 +1,17 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import Svg, { Polyline } from "react-native-svg";
 import { hitSlop as defaultHitSlop } from "../../lib/theme";
+import { useThemedStyles } from "../../lib/theme-provider";
 
-// One shared custom back button. It mirrors the rounded iOS-style control
-// used by the app's native Stack headers: a floating circular surface with a
-// single chevron. `label` is kept for accessibility only.
+// Two back-button looks, chosen explicitly per call site rather than
+// inferred: a floating circular glass surface (used when the button floats
+// directly over a photo/hero with nothing behind it, so it needs its own
+// contrast) and a plain inline arrow (used everywhere there's already a
+// header bar behind it — GlassHeader always passes flat on Android to match
+// the platform's native back-arrow convention; iOS keeps the glass circle
+// in both cases, unchanged).
 export type GlassTone = "auto" | "light" | "dark";
 
 type GlassBackButtonProps = {
@@ -15,25 +20,43 @@ type GlassBackButtonProps = {
   size?: number;
   label?: string;
   style?: StyleProp<ViewStyle>;
+  flat?: boolean;
 };
 
-function ChevronIcon({ color, size }: { color: string; size: number }) {
+function ChevronIcon({ color, size, strokeWidth = 2.5 }: { color: string; size: number; strokeWidth?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <Polyline points="15 18 9 12 15 6" />
     </Svg>
   );
 }
 
-export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Back", style }: GlassBackButtonProps) {
+export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Back", style, flat = false }: GlassBackButtonProps) {
   const router = useRouter();
-  void tone;
+  const themeColor = useThemedStyles((c) => c);
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     if (onPress) onPress();
     else if (router.canGoBack()) router.back();
   }
+
+  if (flat && Platform.OS === "android") {
+    const iconColor = tone === "light" ? "#FFFFFF" : tone === "dark" ? "#111827" : themeColor.text;
+    return (
+      <Pressable
+        onPress={handlePress}
+        hitSlop={defaultHitSlop}
+        accessibilityRole="button"
+        accessibilityLabel={label ? `Go back to ${label}` : "Go back"}
+        style={({ pressed }) => [styles.flatWrap, { opacity: pressed ? 0.5 : 1 }, style]}
+      >
+        <ChevronIcon color={iconColor} size={26} strokeWidth={2.4} />
+      </Pressable>
+    );
+  }
+
+  const iconColor = tone === "light" ? "#FFFFFF" : "#111827";
 
   return (
     <Pressable
@@ -47,12 +70,13 @@ export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Ba
           width: size,
           height: size,
           borderRadius: size / 2,
+          backgroundColor: tone === "light" ? "rgba(30,36,48,0.55)" : "rgba(255,255,255,0.92)",
           opacity: pressed ? 0.65 : 1,
         },
         style,
       ]}
     >
-      <ChevronIcon color="#111827" size={Math.round(size * 0.5)} />
+      <ChevronIcon color={iconColor} size={Math.round(size * 0.5)} />
     </Pressable>
   );
 }
@@ -61,11 +85,16 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.92)",
     shadowColor: "#101828",
     shadowOpacity: 0.12,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 5,
+  },
+  flatWrap: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

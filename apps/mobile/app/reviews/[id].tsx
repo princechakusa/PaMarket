@@ -165,7 +165,7 @@ export default function ReviewsScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
@@ -177,7 +177,7 @@ export default function ReviewsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {isOwn ? "My Reviews" : `${sellerName || (isBusiness ? "Shop" : "Seller")}'s Reviews`}
         </Text>

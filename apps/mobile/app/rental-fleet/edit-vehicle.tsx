@@ -203,7 +203,7 @@ export default function RentalEditVehicleScreen() {
       <View style={styles.centered}>
         <Text style={styles.blockedTitle}>Editing locked</Text>
         <Text style={styles.blockedBody}>Your company must be active to edit vehicles.</Text>
-        <GlassBackButton onPress={() => router.back()} />
+        <GlassBackButton onPress={() => router.back()} flat />
       </View>
     );
   }

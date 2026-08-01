@@ -237,7 +237,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -252,7 +252,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -267,7 +267,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -290,7 +290,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -305,7 +305,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -327,7 +327,7 @@ export default function RentalFleetDashboard() {
     return (
       <View style={styles.container}>
         <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>Rental Dashboard</Text>
           <View style={{ width: 36 }} />
         </View>
@@ -352,7 +352,7 @@ export default function RentalFleetDashboard() {
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
       <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <View style={styles.headerLogo}>
           <Text style={styles.headerLogoText}>{initial}</Text>
         </View>

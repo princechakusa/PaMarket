@@ -180,7 +180,7 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <GlassBackButton onPress={handleBack} tone="dark" style={[styles.backButton, { marginTop: insets.top + space.sm }]} />
+      <GlassBackButton onPress={handleBack} tone="dark" style={[styles.backButton, { marginTop: insets.top + space.sm }]} flat />
 
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, space.lg) + space.xl }]}

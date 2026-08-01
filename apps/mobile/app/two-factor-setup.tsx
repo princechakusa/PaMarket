@@ -200,7 +200,7 @@ export default function TwoFactorSetupScreen() {
         </>
       )}
       <View style={styles.backRow}>
-        <GlassBackButton onPress={() => router.back()} />
+        <GlassBackButton onPress={() => router.back()} flat />
       </View>
     </ScrollView>
   );

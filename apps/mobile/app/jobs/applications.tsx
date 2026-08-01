@@ -59,7 +59,7 @@ export default function MyApplicationsScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle}>My Applications</Text>
         <View style={{ width: 20 }} />
       </View>

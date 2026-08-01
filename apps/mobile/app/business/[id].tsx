@@ -171,7 +171,7 @@ export default function BusinessShopScreen() {
     return (
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
@@ -184,7 +184,7 @@ export default function BusinessShopScreen() {
     return (
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <Text style={styles.notFoundTitle}>Shop not found</Text>
@@ -198,7 +198,7 @@ export default function BusinessShopScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle} numberOfLines={1}>
           {business.name}
         </Text>

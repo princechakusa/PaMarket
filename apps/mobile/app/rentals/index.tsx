@@ -110,7 +110,7 @@ export default function RentalsListScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle}>Rentals</Text>
         <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
           <FilterIcon stroke={tones.textOnBrand} />

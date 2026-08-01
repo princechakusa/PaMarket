@@ -109,7 +109,7 @@ export default function ApplyJobScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
@@ -122,7 +122,7 @@ export default function ApplyJobScreen() {
     return (
       <View style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
         </View>
         <View style={styles.centered}>
           <Text style={styles.notFoundText}>Job not found</Text>
@@ -134,7 +134,7 @@ export default function ApplyJobScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" />
+        <GlassBackButton onPress={() => router.back()} tone="light" flat />
         <Text style={styles.headerTitle} numberOfLines={1}>
           Apply for this Job
         </Text>

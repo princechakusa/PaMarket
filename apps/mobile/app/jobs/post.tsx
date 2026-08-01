@@ -579,7 +579,7 @@ type Styles = ReturnType<typeof buildStyles>;
 function Header({ title, onBack, insetTop, styles }: { title: string; onBack: () => void; insetTop: number; styles: Styles }) {
   return (
     <View style={[styles.header, { paddingTop: insetTop + 10 }]}>
-      <GlassBackButton onPress={onBack} tone="light" />
+      <GlassBackButton onPress={onBack} tone="light" flat />
       <Text style={styles.headerTitle}>{title}</Text>
       <View style={{ width: 20 }} />
     </View>

@@ -48,7 +48,7 @@ export default function ActiveSessionsScreen() {
         <Text style={styles.dangerButtonText}>Sign Out All Other Devices</Text>
       </Pressable>
       <View style={styles.backRow}>
-        <GlassBackButton onPress={() => router.back()} />
+        <GlassBackButton onPress={() => router.back()} flat />
       </View>
     </ScrollView>
   );

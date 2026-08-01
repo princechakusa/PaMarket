@@ -40,7 +40,7 @@ export function GlassHeader({ title, onBack, tone = "auto", trailing, transparen
         />
       )}
       <View style={styles.row}>
-        <GlassBackButton onPress={onBack} tone={tone} />
+        <GlassBackButton onPress={onBack} tone={tone} flat />
         {title ? (
           <Text style={[styles.title, { color: titleColor }]} numberOfLines={1}>
             {title}

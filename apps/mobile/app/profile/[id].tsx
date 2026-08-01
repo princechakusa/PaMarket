@@ -215,7 +215,7 @@ export default function UserProfileScreen() {
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <GlassBackButton onPress={() => router.back()} />
+        <GlassBackButton onPress={() => router.back()} flat />
         <View style={styles.skeletonWrap}>
           <ListSkeleton count={5} />
         </View>
@@ -226,7 +226,7 @@ export default function UserProfileScreen() {
   if (!profile) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <GlassBackButton onPress={() => router.back()} />
+        <GlassBackButton onPress={() => router.back()} flat />
         <EmptyState title="Profile not found" subtitle="This user profile doesn't exist or was removed." />
       </View>
     );
@@ -246,7 +246,7 @@ export default function UserProfileScreen() {
         <View>
           <View style={styles.hero}>
             <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
-              <GlassBackButton onPress={() => router.back()} tone="light" />
+              <GlassBackButton onPress={() => router.back()} tone="light" flat />
             </View>
             <Text style={styles.headerTitle}>Seller profile</Text>
           </View>
