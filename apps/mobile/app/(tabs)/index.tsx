@@ -186,19 +186,11 @@ export default function HomeScreen() {
       saveCache<HomeCache>(HOME_CACHE_KEY, { listings: freshListings, businesses: freshBusinesses, ads: freshAds });
     }
 
+    // Unread notification/message counts are handled entirely by the
+    // useFocusEffect below (fires on this same initial mount too) --
+    // fetching them here as well just fired the same two count queries
+    // twice back to back on every first visit.
     if (session?.user) {
-      const [notifRes, msgRes] = await Promise.all([
-        supabase
-          .from("notifications")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", session.user.id)
-          .eq("read", false)
-          .neq("type", "message")
-          .or("category.is.null,category.neq.rental"),
-        supabase.from("messages").select("id", { count: "exact", head: true }).eq("read", false).neq("sender_id", session.user.id),
-      ]);
-      setUnreadNotifs(notifRes.count ?? 0);
-      setUnreadMessages(msgRes.count ?? 0);
       fetchSavedListingIds(session.user.id).then(setSavedIds);
     }
   }, [session]);

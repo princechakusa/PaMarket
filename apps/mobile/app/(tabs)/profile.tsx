@@ -241,14 +241,16 @@ export default function AccountScreen() {
   const load = useCallback(async () => {
     if (!session?.user) return;
     const myId = session.user.id;
-    const [profileRes, activeRes, unreadRes, bizRes, applicationsRes, reviewsRes, savedCountRes] = await Promise.all([
+    // Unread-messages is handled entirely by the useFocusEffect below (it
+    // also fires on this same initial mount) -- fetching it here too fired
+    // the same count query twice back to back on every first visit.
+    const [profileRes, activeRes, bizRes, applicationsRes, reviewsRes, savedCountRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id,name,email,phone,avatar,verified,bio,city,created_at,company_verified")
         .eq("id", myId)
         .maybeSingle(),
       supabase.from("listings").select("id", { count: "exact", head: true }).eq("seller_id", myId).eq("status", "active"),
-      supabase.from("messages").select("id", { count: "exact", head: true }).eq("read", false).neq("sender_id", myId),
       supabase.from("businesses").select("*").eq("owner_user_id", myId),
       supabase.from("applications").select("id", { count: "exact", head: true }).eq("applicant_id", myId),
       supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", myId).limit(200),
@@ -257,7 +259,6 @@ export default function AccountScreen() {
     if (profileRes.data) setProfile(profileRes.data as Profile);
     setCompanyVerified(!!(profileRes.data as any)?.company_verified);
     setActiveCount(activeRes.count ?? 0);
-    setUnreadMessages(unreadRes.count ?? 0);
     setApplicationsCount(applicationsRes.count ?? 0);
     setSavedCount(savedCountRes);
 
