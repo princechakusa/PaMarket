@@ -1,4 +1,4 @@
-import { Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import Svg, { Polyline } from "react-native-svg";
@@ -8,10 +8,10 @@ import { useThemedStyles } from "../../lib/theme-provider";
 // Two back-button looks, chosen explicitly per call site rather than
 // inferred: a floating circular glass surface (used when the button floats
 // directly over a photo/hero with nothing behind it, so it needs its own
-// contrast) and a plain inline arrow (used everywhere there's already a
-// header bar behind it — GlassHeader always passes flat on Android to match
-// the platform's native back-arrow convention; iOS keeps the glass circle
-// in both cases, unchanged).
+// contrast) and a plain inline arrow matching the native Stack header's own
+// back chevron (used everywhere there's already a header bar behind it, on
+// both platforms — explicit user direction: every screen should look like
+// the native-header ones, e.g. Legal Hub/Notifications settings).
 export type GlassTone = "auto" | "light" | "dark";
 
 type GlassBackButtonProps = {
@@ -41,7 +41,7 @@ export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Ba
     else if (router.canGoBack()) router.back();
   }
 
-  if (flat && Platform.OS === "android") {
+  if (flat) {
     const iconColor = tone === "light" ? "#FFFFFF" : tone === "dark" ? "#111827" : themeColor.text;
     return (
       <Pressable
