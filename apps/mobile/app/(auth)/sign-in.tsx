@@ -117,8 +117,15 @@ export default function SignInScreen() {
     return null;
   }
 
+  // A hard replace() unmounts this screen and mounts a brand-new Home tab
+  // from scratch (its own render/data cycle), instead of smoothly revealing
+  // whatever screen was already sitting underneath — that mismatch is what
+  // reads as a flicker. back() pops to reveal it directly; replace() is
+  // only the right call when there's truly nothing to go back to (sign-in
+  // opened via a deep link, with no prior screen in this stack).
   function handleBack() {
-    router.replace("/(tabs)");
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)");
   }
 
   async function handleSignIn() {
