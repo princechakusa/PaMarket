@@ -298,7 +298,7 @@ export default function AccountScreen() {
         .select("id", { count: "exact", head: true })
         .eq("read", false)
         .neq("sender_id", session.user.id)
-        .then(({ count }) => setUnreadMessages(count ?? 0));
+        .then(({ count }) => setUnreadMessages(count ?? 0), () => {});
     }, [session])
   );
 

@@ -237,20 +237,26 @@ export default function MessagesScreen() {
     if (!session?.user) return;
     const ids = summariesRef.current.map((s) => s.conversation.id);
     if (!ids.length) return;
-    const { data } = await supabase
-      .from("messages")
-      .select("conversation_id")
-      .in("conversation_id", ids)
-      .eq("read", false)
-      .neq("sender_id", session.user.id)
-      .limit(5000);
-    const counts = new Map<string, number>();
-    for (const m of (data as { conversation_id: string }[] | null) ?? []) {
-      counts.set(m.conversation_id, (counts.get(m.conversation_id) ?? 0) + 1);
+    // Called fire-and-forget from useFocusEffect below — must never throw
+    // out to an unhandled rejection on a dropped connection.
+    try {
+      const { data } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", ids)
+        .eq("read", false)
+        .neq("sender_id", session.user.id)
+        .limit(5000);
+      const counts = new Map<string, number>();
+      for (const m of (data as { conversation_id: string }[] | null) ?? []) {
+        counts.set(m.conversation_id, (counts.get(m.conversation_id) ?? 0) + 1);
+      }
+      setSummaries((current) =>
+        current.map((s) => ({ ...s, unreadCount: counts.get(s.conversation.id) ?? 0 }))
+      );
+    } catch (e) {
+      console.warn("[messages] failed to refresh unread counts:", e instanceof Error ? e.message : e);
     }
-    setSummaries((current) =>
-      current.map((s) => ({ ...s, unreadCount: counts.get(s.conversation.id) ?? 0 }))
-    );
   }, [session]);
 
   useFocusEffect(

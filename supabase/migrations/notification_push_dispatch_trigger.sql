@@ -41,14 +41,21 @@ set search_path = public, extensions, net
 as $$
 begin
   if coalesce(new.push_sent, false) = false then
-    perform net.http_post(
-      url := 'https://gxgytumhknmnwspxjzxw.supabase.co/functions/v1/dispatch-notification-push',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'x-automation-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'automation_secret')
-      ),
-      body := jsonb_build_object('notificationId', new.id)
-    );
+    begin
+      perform net.http_post(
+        url := 'https://gxgytumhknmnwspxjzxw.supabase.co/functions/v1/dispatch-notification-push',
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'x-automation-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'automation_secret')
+        ),
+        body := jsonb_build_object('notificationId', new.id)
+      );
+    exception when others then
+      -- This is an AFTER INSERT trigger -- an uncaught exception here would
+      -- roll back the notification insert itself, silently breaking every
+      -- notification type app-wide instead of just failing to push this one.
+      raise warning 'dispatch_pending_notification_push failed for %: %', new.id, sqlerrm;
+    end;
   end if;
   return new;
 end;

@@ -85,7 +85,8 @@ function usePushNotifications() {
         .then((remoteMessage) => {
           const data = remoteMessage?.data;
           if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
-        });
+        })
+        .catch(() => {});
       unsubscribeOnOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
         if (remoteMessage?.data) navigateFromNotificationData(router, remoteMessage.data);
       });

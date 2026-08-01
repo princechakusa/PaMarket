@@ -105,16 +105,24 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // times on failure; still best-effort (caller isn't blocked on this), but
 // no longer silently gives up after one bad network blip.
 async function markOtherMessagesRead(conversationId: string, otherUserId: string) {
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const { error } = await supabase
-      .from("messages")
-      .update({ read: true })
-      .eq("conversation_id", conversationId)
-      .eq("sender_id", otherUserId)
-      .eq("read", false);
-    if (!error) return;
-    if (attempt < 3) await sleep(attempt * 500);
-    else console.warn("[chat] failed to mark messages read:", error.message);
+  // Callers fire this without awaiting/catching it (best-effort, must never
+  // block or crash the chat screen) — the try/catch is what makes that
+  // safe, since an uncaught network error here would otherwise become an
+  // unhandled promise rejection.
+  try {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const { error } = await supabase
+        .from("messages")
+        .update({ read: true })
+        .eq("conversation_id", conversationId)
+        .eq("sender_id", otherUserId)
+        .eq("read", false);
+      if (!error) return;
+      if (attempt < 3) await sleep(attempt * 500);
+      else console.warn("[chat] failed to mark messages read:", error.message);
+    }
+  } catch (e) {
+    console.warn("[chat] failed to mark messages read:", e instanceof Error ? e.message : e);
   }
 }
 

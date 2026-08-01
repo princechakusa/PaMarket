@@ -231,13 +231,13 @@ export default function HomeScreen() {
         .eq("read", false)
         .neq("type", "message")
         .or("category.is.null,category.neq.rental")
-        .then(({ count }) => setUnreadNotifs(count ?? 0));
+        .then(({ count }) => setUnreadNotifs(count ?? 0), () => {});
       supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("read", false)
         .neq("sender_id", session.user.id)
-        .then(({ count }) => setUnreadMessages(count ?? 0));
+        .then(({ count }) => setUnreadMessages(count ?? 0), () => {});
     }, [session])
   );
 

@@ -1,10 +1,10 @@
 import { useRef } from "react";
-import { Animated, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import Svg, { Polyline } from "react-native-svg";
-import { hitSlop as defaultHitSlop } from "../../lib/theme";
+import { glass, hitSlop as defaultHitSlop } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 
 // Two back-button looks, chosen explicitly per call site rather than
@@ -72,6 +72,7 @@ function FlatBackButton({ onPress, tone, label, style, themeColor, isDark }: {
         <BlurView
           intensity={40}
           tint={isDark ? "dark" : "light"}
+          blurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
           style={[StyleSheet.absoluteFill, styles.flatGlassInner, { backgroundColor: glassTint }]}
         />
       </Animated.View>
