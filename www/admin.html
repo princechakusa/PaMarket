@@ -8349,8 +8349,14 @@ function renderAmosDashboard(){
 // ── Approval Queue ─────────────────────────────────────────
 async function loadAmosApprovalQueue(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100);
-  AMOS.drafts = (r.data||[]);
+  var res = await Promise.allSettled([
+    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100),
+    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code)').eq('status','approved').order('created_at',{ascending:false}).limit(100),
+    sb.from('amos_schedule').select('draft_id')
+  ]);
+  AMOS.drafts = (res[0].value && res[0].value.data) || [];
+  var scheduledDraftIds = new Set(((res[2].value && res[2].value.data)||[]).map(function(s){return s.draft_id;}));
+  AMOS.approvedUnscheduled = ((res[1].value && res[1].value.data)||[]).filter(function(d){ return !scheduledDraftIds.has(d.id); });
   updateAmosBadge();
 }
 var AMOS_EXPANDED_DRAFT = null;
@@ -8412,7 +8418,61 @@ function renderAmosApprovalQueue(){
       html += '</div>';
     });
   }
+
+  // ── Ready to Schedule (Module 3): approved drafts with no schedule row
+  //    yet, grouped by content item — "Schedule All" queues every approved
+  //    placement for that idea in one action, one amos_schedule row each,
+  //    individually editable afterward from the Publishing Queue tab. ────
+  html += '<div class="sec-head" style="margin-top:10px"><div class="sec-title">Ready to Schedule</div></div>';
+  if(!(AMOS.approvedUnscheduled||[]).length){
+    html += '<div class="empty-msg">Nothing approved is waiting to be scheduled. Approve a draft above and it will appear here.</div>';
+  } else {
+    var byItemSched = {};
+    AMOS.approvedUnscheduled.forEach(function(d){ (byItemSched[d.content_item_id]=byItemSched[d.content_item_id]||[]).push(d); });
+    Object.keys(byItemSched).forEach(function(itemId){
+      var group = byItemSched[itemId];
+      var item = group[0].amos_content_items || {};
+      html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:14px">';
+      html += '<div style="padding:16px 0 12px;font-size:14px;font-weight:800">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">· '+group.length+' approved placement(s)</span></div>';
+      group.forEach(function(d){
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)">';
+        html += '<span class="badge badge-pending" style="text-transform:capitalize;min-width:80px;text-align:center">'+esc(d.channel)+'</span>';
+        html += '<input type="datetime-local" id="amosSchedTime_'+d.id+'" class="search-input" style="flex:1;width:auto" value="'+defaultAmosScheduleTime()+'">';
+        html += '</div>';
+      });
+      html += '<div style="padding:12px 0 4px"><button class="btn-send" onclick="scheduleAmosContentItem(\''+itemId+'\')">Schedule All Approved</button></div>';
+      html += '</div>';
+    });
+  }
   document.getElementById('mainContent').innerHTML = html;
+}
+function defaultAmosScheduleTime(){
+  var d = new Date(Date.now() + 60*60*1000); // default: 1 hour from now
+  d.setSeconds(0,0);
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+async function scheduleAmosContentItem(itemId){
+  if(!requirePerm('*')) return;
+  var group = (AMOS.approvedUnscheduled||[]).filter(function(d){ return d.content_item_id===itemId; });
+  if(!group.length) return;
+  var rows = [];
+  for(var i=0;i<group.length;i++){
+    var d = group[i];
+    var input = document.getElementById('amosSchedTime_'+d.id);
+    var when = input ? input.value : null;
+    if(!when){ toast('Missing time for '+d.channel,'error'); return; }
+    rows.push({ draft_id:d.id, platform:d.channel, content_version:d.version||1, scheduled_for:new Date(when).toISOString(), status:'pending' });
+  }
+  var r = await sb.from('amos_schedule').insert(rows).select();
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  var inserted = r.data||[];
+  for(var j=0;j<inserted.length;j++){
+    await sb.from('amos_publish_audit').insert({ schedule_id: inserted[j].id, event:'scheduled', actor_email:_adminEmail||null });
+  }
+  auditLog('schedule_amos_content_item','amos_content_items',itemId,null,{scheduled_count:rows.length},null);
+  toast(rows.length+' placement(s) scheduled — view them in Content Calendar');
+  loadAmosApprovalQueue().then(renderAmosApprovalQueue);
 }
 function toggleAmosDraft(id){
   AMOS_EXPANDED_DRAFT = (AMOS_EXPANDED_DRAFT===id) ? null : id;
@@ -8487,27 +8547,121 @@ async function saveAmosDraftEdit(id){
   loadAmosApprovalQueue().then(renderAmosApprovalQueue);
 }
 
-// ── Content Calendar ───────────────────────────────────────
+// ── Content Calendar / Publishing Queue (Module 3) ──────────
+// "Publishing" here never means an external API call in Module 3 — see
+// docs/AMOS_MODULE_3_ARCHITECTURE.md. Process Due Now hands ready rows to
+// a human (status -> awaiting_manual_publish); Mark Published/Failed is
+// that human confirming what actually happened after they posted it
+// themselves.
+var AMOS_SCHED_STATUS_BADGE = {
+  pending:'badge-pending', publishing:'badge-pending', awaiting_manual_publish:'badge-pending',
+  published:'badge-active', failed:'badge-rejected', cancelled:'badge-rejected'
+};
 async function loadAmosCalendar(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(channel,draft_type,amos_content_items(title))').order('scheduled_for',{ascending:true}).limit(200);
+  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(channel,draft_type,body,amos_content_items(title))').order('scheduled_for',{ascending:true}).limit(200);
   AMOS.schedule = (r.data||[]);
 }
 function renderAmosCalendar(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Content Calendar</div></div>' + migrationNotice('The Content Calendar','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(AMOS.schedule===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
-  var html = '<div class="sec-head"><div class="sec-title">Content Calendar</div><button class="btn-refresh" onclick="loadAmosCalendar().then(renderAmosCalendar)">Refresh</button></div>';
+  var dueCount = (AMOS.schedule||[]).filter(function(s){ return s.status==='pending' && new Date(s.scheduled_for)<=new Date(); }).length;
+  var html = '<div class="sec-head"><div class="sec-title">Content Calendar / Publishing Queue</div><button class="btn-send" id="amosDispatchBtn" onclick="runAmosDispatchNow()">Process Due Now'+(dueCount?' ('+dueCount+')':'')+'</button></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">No platform is connected yet — "publishing" here means handing an approved, scheduled piece to a human to post manually, then confirming it here. Facebook/Instagram/LinkedIn/TikTok/X automation plugs into this same queue in a future module.</div>';
   if(!AMOS.schedule.length){
-    html += '<div class="empty-msg">Nothing scheduled yet. Approved drafts land here once publishing ships (Module 4).</div>';
+    html += '<div class="empty-msg">Nothing scheduled yet. Approve a draft in the Approval Queue, then use "Schedule All Approved" to add it here.</div>';
   } else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Item</th><th>Channel</th><th>Status</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Item</th><th>Platform</th><th>Status</th><th>Retry Count</th><th></th></tr></thead><tbody>';
     AMOS.schedule.forEach(function(s){
       var d = s.amos_content_drafts||{}, item = d.amos_content_items||{};
-      html += '<tr><td style="font-size:12px">'+fmtDateTime(s.scheduled_for)+'</td><td style="font-weight:600">'+esc(item.title||'—')+'</td><td>'+esc(d.channel||'—')+'</td><td>'+esc(s.status)+'</td></tr>';
+      html += '<tr><td style="font-size:12px">'+fmtDateTime(s.scheduled_for)+'</td><td style="font-weight:600">'+esc(item.title||'—')+'</td><td style="text-transform:capitalize">'+esc(s.platform||d.channel||'—')+'</td>';
+      html += '<td><span class="badge '+(AMOS_SCHED_STATUS_BADGE[s.status]||'badge-pending')+'">'+esc((s.status||'').replace(/_/g,' '))+'</span>'+(s.last_error?'<div style="font-size:10.5px;color:var(--red);margin-top:2px">'+esc(s.last_error)+'</div>':'')+'</td>';
+      html += '<td style="font-size:12px;color:var(--sub)">'+(s.attempts||0)+'</td>';
+      html += '<td style="white-space:nowrap">';
+      if(s.status==='awaiting_manual_publish'){
+        html += '<button class="ab ab-approve" onclick="markAmosScheduledPublished(\''+s.id+'\')">Mark Published</button> ';
+        html += '<button class="ab ab-reject" onclick="markAmosScheduledFailed(\''+s.id+'\')">Mark Failed</button>';
+      } else if(s.status==='failed'){
+        html += '<button class="ab ab-view" onclick="retryAmosScheduled(\''+s.id+'\')">Retry</button>';
+      } else if(s.status==='pending'){
+        html += '<button class="ab ab-reject" onclick="cancelAmosScheduled(\''+s.id+'\')">Cancel</button>';
+      } else {
+        html += '<span style="color:var(--sub2)">—</span>';
+      }
+      html += '</td></tr>';
     });
     html += '</tbody></table></div>';
   }
   document.getElementById('mainContent').innerHTML = html;
+}
+async function runAmosDispatchNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosDispatchBtn');
+  if(btn){ btn.disabled=true; btn.dataset.origText=btn.textContent; btn.textContent='Processing…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-publish-dispatcher', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast(body.claimed+' claimed, '+body.moved_to_awaiting_manual+' now awaiting manual publish'+(body.failed?', '+body.failed+' failed':''));
+    loadAmosCalendar().then(renderAmosCalendar);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Process Due Now'; } }
+}
+function findAmosSchedule(id){ return (AMOS.schedule||[]).find(function(s){ return s.id===id; }); }
+async function markAmosScheduledPublished(id){
+  if(!requirePerm('*')) return;
+  var s = findAmosSchedule(id);
+  if(!s) return;
+  var url = await confirm2('Mark Published','Paste the live post URL (optional)','Confirm Published','green',true,'https://facebook.com/...');
+  if(url===null) return;
+  var uid = (await sb.auth.getUser()).data.user;
+  var r = await sb.from('amos_schedule').update({ status:'published' }).eq('id',id).eq('status','awaiting_manual_publish');
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  await sb.from('amos_publish_log').insert({ schedule_id:id, channel:s.platform||(s.amos_content_drafts&&s.amos_content_drafts.channel)||'unknown', external_url: url||null });
+  await sb.from('amos_publish_audit').insert({ schedule_id:id, event:'manual_confirmed', detail: url?('URL: '+url):null, actor_id: uid?uid.id:null, actor_email:_adminEmail||null });
+  auditLog('mark_amos_published','amos_schedule',id,{status:s.status},{status:'published'},null);
+  toast('Marked published');
+  loadAmosCalendar().then(renderAmosCalendar);
+}
+async function markAmosScheduledFailed(id){
+  if(!requirePerm('*')) return;
+  var s = findAmosSchedule(id);
+  if(!s) return;
+  var reason = await confirm2('Mark Failed','What went wrong?','Mark Failed','red',true,'e.g. rejected by platform, content issue');
+  if(reason===null) return;
+  var r = await sb.from('amos_schedule').update({ status:'failed', last_error: reason||'Marked failed by admin', attempts:(s.attempts||0)+1 }).eq('id',id);
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  await sb.from('amos_publish_audit').insert({ schedule_id:id, event:'failed', detail: reason||null, actor_email:_adminEmail||null });
+  auditLog('mark_amos_failed','amos_schedule',id,{status:s.status},{status:'failed'},reason);
+  toast('Marked failed');
+  loadAmosCalendar().then(renderAmosCalendar);
+}
+async function retryAmosScheduled(id){
+  if(!requirePerm('*')) return;
+  var s = findAmosSchedule(id);
+  if(!s) return;
+  var r = await sb.from('amos_schedule').update({ status:'pending', last_error:null }).eq('id',id).eq('status','failed');
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  await sb.from('amos_publish_audit').insert({ schedule_id:id, event:'retried', actor_email:_adminEmail||null });
+  auditLog('retry_amos_scheduled','amos_schedule',id,{status:'failed'},{status:'pending'},null);
+  toast('Queued for retry');
+  loadAmosCalendar().then(renderAmosCalendar);
+}
+async function cancelAmosScheduled(id){
+  if(!requirePerm('*')) return;
+  var s = findAmosSchedule(id);
+  if(!s) return;
+  var r = await sb.from('amos_schedule').update({ status:'cancelled' }).eq('id',id).eq('status','pending');
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  await sb.from('amos_publish_audit').insert({ schedule_id:id, event:'cancelled', actor_email:_adminEmail||null });
+  auditLog('cancel_amos_scheduled','amos_schedule',id,{status:'pending'},{status:'cancelled'},null);
+  toast('Cancelled');
+  loadAmosCalendar().then(renderAmosCalendar);
 }
 
 // ── Campaign Manager ───────────────────────────────────────
@@ -8599,10 +8753,16 @@ async function loadAmosHealth(){
   if(await amosMissing()) return;
   var res = await Promise.allSettled([
     sb.from('amos_integrations').select('*').order('provider'),
-    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(20)
+    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(20),
+    sb.from('amos_schedule').select('status')
   ]);
   AMOS.integrations = (res[0].value && res[0].value.data) || [];
   AMOS.jobs = (res[1].value && res[1].value.data) || [];
+  var schedRows = (res[2].value && res[2].value.data) || [];
+  AMOS.pubPending = schedRows.filter(function(s){return s.status==='pending';}).length;
+  AMOS.pubAwaiting = schedRows.filter(function(s){return s.status==='awaiting_manual_publish';}).length;
+  AMOS.pubFailed = schedRows.filter(function(s){return s.status==='failed';}).length;
+  AMOS.pubPublished = schedRows.filter(function(s){return s.status==='published';}).length;
 }
 function renderAmosHealth(){
   if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">System Health is restricted to full admins.</div>'; return; }
@@ -8618,6 +8778,14 @@ function renderAmosHealth(){
   });
   html += '</tbody></table></div>';
   html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Only Facebook is seeded at launch, per the current rollout plan. Connecting a channel (Module 4+) is an OAuth flow that writes credentials_ref into this row — no schema change needed to add Instagram, LinkedIn, TikTok, X, or YouTube later.</div>';
+
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Publishing</div></div>';
+  html += '<div class="stats-grid">';
+  html += statCard('Pending','amber',fmtCnt((AMOS.pubPending!=null?AMOS.pubPending:'—')),'in the schedule queue','amosCalendar');
+  html += statCard('Awaiting Manual Publish','blue',fmtCnt((AMOS.pubAwaiting!=null?AMOS.pubAwaiting:'—')),'ready for a human to post','amosCalendar');
+  html += statCard('Failed','red',fmtCnt((AMOS.pubFailed!=null?AMOS.pubFailed:'—')),'needs review or retry','amosCalendar');
+  html += statCard('Published','green',fmtCnt((AMOS.pubPublished!=null?AMOS.pubPublished:'—')),'confirmed live','amosCalendar');
+  html += '</div>';
 
   html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">AMOS Job Runs</div><button class="btn-send" id="amosRunResearchBtn" onclick="runAmosResearchNow()">Run Market Intelligence Now</button></div>';
   html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Collects two signal types into Market Intelligence: internal search-log gaps (zero/low-result searches from the last 14 days) and upcoming ZW public holidays/school terms/salary periods within 21 days. No external APIs are called. Runs automatically once a day (06:00 UTC / 08:00 Harare) via pg_cron, or on demand with the button above.</div>';
