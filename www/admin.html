@@ -8251,7 +8251,7 @@ async function runExpireSubsAuto(){
 // Audit trail reuses admin_audit_logs (entity='amos_*'); job heartbeats
 // reuse job_runs (job='amos_*') — see docs/AMOS_ARCHITECTURE.md.
 // ════════════════════════════════════════════════════════════════════════
-var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null, seo:null };
+var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null, seo:null, competitors:null };
 
 async function amosMissing(){
   AMOS.missing = !(await hasTable('amos_settings'));
@@ -8706,13 +8706,25 @@ var AMOS_SIGNAL_LABELS = {
 };
 async function loadAmosIntelligence(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_market_intelligence').select('*').order('collected_at',{ascending:false}).limit(200);
-  AMOS.intel = (r.data||[]);
+  var res = await Promise.allSettled([
+    sb.from('amos_market_intelligence').select('*').order('collected_at',{ascending:false}).limit(200),
+    hasTable('amos_competitor_watchlist').then(function(has){ return has ? sb.from('amos_competitor_watchlist').select('*').order('created_at',{ascending:false}) : Promise.resolve({data:[]}); })
+  ]);
+  AMOS.intel = (res[0].value && res[0].value.data) || [];
+  AMOS.competitors = (res[1].value && res[1].value.data) || [];
 }
 function renderAmosIntelligence(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Market Intelligence</div></div>' + migrationNotice('Market Intelligence','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(AMOS.intel===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">Market Intelligence</div><button class="btn-refresh" onclick="loadAmosIntelligence().then(renderAmosIntelligence)">Refresh</button></div>';
+
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Advanced Intelligence (Module 8)</div></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Trending-search velocity and supply-gap detection run automatically once a day (06:15 UTC). Competitor check-ins run weekly (Mondays). Google Trends, Reddit, and news monitoring are not implemented — no credential or scraping infrastructure exists for them yet.</div>';
+  html += '<div style="display:flex;gap:8px;padding:0 0 16px;flex-wrap:wrap">';
+  html += '<button class="btn-send" id="amosAdvIntelBtn" onclick="runAmosAdvancedIntelligenceNow()">Run Advanced Intelligence Now</button>';
+  html += '<button class="btn-send" id="amosCompetitorBtn" onclick="runAmosCompetitorTrackerNow()">Track Competitors Now</button>';
+  html += '</div>';
+
   var byType = {};
   (AMOS.intel||[]).forEach(function(s){ (byType[s.signal_type]=byType[s.signal_type]||[]).push(s); });
   html += '<div class="stats-grid">';
@@ -8723,13 +8735,94 @@ function renderAmosIntelligence(){
   if(!(AMOS.intel||[]).length){
     html += '<div class="empty-msg">No signals collected yet. The Market Intelligence module (research runner) populates this table — competitor moves, trends, ZW public holidays/school terms/salary periods, local news, sporting events, economic trends, and PaMarket\'s own zero-result-search gaps.</div>';
   } else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Type</th><th>Topic</th><th>Score</th><th>Collected</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Type</th><th>Topic</th><th>Score</th><th>Rationale</th><th>Collected</th></tr></thead><tbody>';
     AMOS.intel.forEach(function(s){
-      html += '<tr><td>'+esc(AMOS_SIGNAL_LABELS[s.signal_type]||s.signal_type)+'</td><td style="font-weight:600">'+esc(s.topic)+'</td><td>'+(s.score!=null?s.score:'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(s.collected_at)+' ago</td></tr>';
+      html += '<tr><td>'+esc(AMOS_SIGNAL_LABELS[s.signal_type]||s.signal_type)+'</td><td style="font-weight:600">'+esc(s.topic)+'</td><td>'+(s.score!=null?s.score:'—')+'</td><td style="font-size:11.5px;color:var(--sub);max-width:280px">'+esc(s.rationale||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(s.collected_at)+' ago</td></tr>';
     });
     html += '</tbody></table></div>';
   }
+
+  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">Competitor Watchlist</div><button class="ab ab-view" onclick="addAmosCompetitor()">Add Competitor</button></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Admin-maintained — AMOS doesn\'t discover competitors automatically. Add real ones here; the weekly tracker turns this list into a check-in reminder in the signals above.</div>';
+  if(!(AMOS.competitors||[]).length){
+    html += '<div class="empty-msg">No competitors added yet.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Website</th><th>Notes</th><th>Status</th><th></th></tr></thead><tbody>';
+    AMOS.competitors.forEach(function(c){
+      html += '<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:12px">'+(c.website_url?('<a href="'+esc(c.website_url)+'" target="_blank" rel="noopener">'+esc(c.website_url)+'</a>'):'—')+'</td><td style="font-size:11.5px;color:var(--sub)">'+esc(c.notes||'—')+'</td><td>'+(c.active?'<span class="badge badge-active">active</span>':'<span class="badge badge-pending">inactive</span>')+'</td>';
+      html += '<td><button class="ab ab-reject" onclick="removeAmosCompetitor(\''+c.id+'\')">Remove</button></td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
   document.getElementById('mainContent').innerHTML = html;
+}
+async function addAmosCompetitor(){
+  if(!requirePerm('*')) return;
+  openModal(
+    '<div style="font-size:15px;font-weight:800;margin-bottom:10px">Add Competitor</div>'+
+    '<div style="margin-bottom:8px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Name</label><input id="amosCompName" class="search-input" style="width:100%" placeholder="e.g. Jiji Zimbabwe"></div>'+
+    '<div style="margin-bottom:8px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Website (optional)</label><input id="amosCompUrl" class="search-input" style="width:100%" placeholder="https://..."></div>'+
+    '<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Notes (optional)</label><input id="amosCompNotes" class="search-input" style="width:100%" placeholder="What they do differently, pricing, etc."></div>'+
+    '<div style="display:flex;gap:8px"><button class="btn-send" onclick="saveAmosCompetitor()">Add</button><button class="ab ab-view" onclick="closeModal()">Cancel</button></div>'
+  );
+}
+async function saveAmosCompetitor(){
+  var name = (document.getElementById('amosCompName')||{}).value;
+  if(!name || !name.trim()){ toast('Name is required','error'); return; }
+  var url = (document.getElementById('amosCompUrl')||{}).value || null;
+  var notes = (document.getElementById('amosCompNotes')||{}).value || null;
+  var uid = (await sb.auth.getUser()).data.user;
+  var r = await sb.from('amos_competitor_watchlist').insert({ name:name.trim(), website_url:url, notes:notes, created_by: uid?uid.id:null });
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('add_amos_competitor','amos_competitor_watchlist',null,null,{name:name.trim()},null);
+  toast('Competitor added');
+  closeModal();
+  loadAmosIntelligence().then(renderAmosIntelligence);
+}
+async function removeAmosCompetitor(id){
+  if(!requirePerm('*')) return;
+  var ok = await confirm2('Remove Competitor?','This stops future tracking for them.','Remove','red',false);
+  if(!ok) return;
+  var r = await sb.from('amos_competitor_watchlist').delete().eq('id',id);
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('remove_amos_competitor','amos_competitor_watchlist',id,null,null,null);
+  toast('Removed');
+  loadAmosIntelligence().then(renderAmosIntelligence);
+}
+async function runAmosAdvancedIntelligenceNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosAdvIntelBtn');
+  if(btn){ btn.disabled=true; btn.dataset.origText=btn.textContent; btn.textContent='Running…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-advanced-intelligence', {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast((body.trending_terms_found||0)+' trending term(s), '+(body.supply_gaps_found||0)+' supply gap(s) found');
+    loadAmosIntelligence().then(renderAmosIntelligence);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Run Advanced Intelligence Now'; } }
+}
+async function runAmosCompetitorTrackerNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosCompetitorBtn');
+  if(btn){ btn.disabled=true; btn.dataset.origText=btn.textContent; btn.textContent='Running…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-competitor-tracker', {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast(body.watchlist_empty ? 'Watchlist is empty — add a competitor first' : (body.competitors_tracked||0)+' competitor(s) tracked');
+    loadAmosIntelligence().then(renderAmosIntelligence);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Track Competitors Now'; } }
 }
 
 // ── AI Learning Dashboard ──────────────────────────────────
