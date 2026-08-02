@@ -516,6 +516,44 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg>
           Automation
         </button>
+        <div class="nav-section">Marketing (AMOS)</div>
+        <button class="nav-item" data-tab="amosDashboard" onclick="showTab('amosDashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          AMOS Dashboard
+        </button>
+        <button class="nav-item" data-tab="amosApprovalQueue" onclick="showTab('amosApprovalQueue')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Approval Queue
+          <span class="nav-badge" id="badge-amos-approval" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-tab="amosCalendar" onclick="showTab('amosCalendar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Content Calendar
+        </button>
+        <button class="nav-item" data-tab="amosCampaigns" onclick="showTab('amosCampaigns')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>
+          Campaign Manager
+        </button>
+        <button class="nav-item" data-tab="amosIntelligence" onclick="showTab('amosIntelligence')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Market Intelligence
+        </button>
+        <button class="nav-item" data-tab="amosLearning" onclick="showTab('amosLearning')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          AI Learning
+        </button>
+        <button class="nav-item" data-tab="amosHealth" onclick="showTab('amosHealth')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          System Health
+        </button>
+        <button class="nav-item" data-tab="amosAudit" onclick="showTab('amosAudit')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          Audit Trail
+        </button>
+        <button class="nav-item" data-tab="amosSettings" onclick="showTab('amosSettings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          AI Configuration
+        </button>
         <div class="nav-section">Business Platform</div>
         <button class="nav-item" data-tab="businesses" onclick="showTab('businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>
@@ -1287,6 +1325,9 @@ var TAB_TITLES = {
   modInbox:'Moderation Inbox', supportCenter:'Support Center', financeCenter:'Finance Center',
   playBilling:'Play Billing',
   securityCenter:'Security Center', automationCenter:'Automation Center',
+  amosDashboard:'AMOS Dashboard', amosApprovalQueue:'Approval Queue', amosCalendar:'Content Calendar',
+  amosCampaigns:'Campaign Manager', amosIntelligence:'Market Intelligence', amosLearning:'AI Learning',
+  amosHealth:'System Health', amosAudit:'Audit Trail', amosSettings:'AI Configuration',
   rentalDashboard:'Rental Admin', rentalApprovals:'Rental Approvals',
   rentalCompanies:'Rental Companies', rentalListings:'Rental Listings',
   rentalReports:'Rental Reports', rentalReviews:'Rental Reviews',
@@ -1319,7 +1360,16 @@ var TAB_LOADERS = {
   financeCenter: function(){ return loadFinance(); },
   playBilling:   function(){ return loadPlayBilling(); },
   securityCenter:function(){ return loadSecurity(); },
-  automationCenter: function(){ return loadAutomation(); }
+  automationCenter: function(){ return loadAutomation(); },
+  amosDashboard:     function(){ return loadAmosDashboard(); },
+  amosApprovalQueue: function(){ return loadAmosApprovalQueue(); },
+  amosCalendar:      function(){ return loadAmosCalendar(); },
+  amosCampaigns:     function(){ return loadAmosCampaigns(); },
+  amosIntelligence:  function(){ return loadAmosIntelligence(); },
+  amosLearning:      function(){ return loadAmosLearning(); },
+  amosHealth:        function(){ return loadAmosHealth(); },
+  amosAudit:         function(){ return loadAmosAudit(); },
+  amosSettings:      function(){ return loadAmosSettings(); }
 };
 function showTab(name) {
   currentTab = name;
@@ -1345,6 +1395,10 @@ function renderTab() {
     modInbox: renderModInbox, supportCenter: renderSupport, financeCenter: renderFinance,
     playBilling: renderPlayBilling,
     securityCenter: renderSecurity, automationCenter: renderAutomation,
+    amosDashboard: renderAmosDashboard, amosApprovalQueue: renderAmosApprovalQueue,
+    amosCalendar: renderAmosCalendar, amosCampaigns: renderAmosCampaigns,
+    amosIntelligence: renderAmosIntelligence, amosLearning: renderAmosLearning,
+    amosHealth: renderAmosHealth, amosAudit: renderAmosAudit, amosSettings: renderAmosSettings,
     rentalDashboard: renderRentalDashboard, rentalApprovals: renderRentalApprovals,
     rentalCompanies: renderRentalCompanies, rentalListings: renderRentalListings,
     rentalReports: renderRentalReports, rentalReviews: renderRentalReviews,
@@ -8174,6 +8228,330 @@ async function runExpireSubsAuto(){
     var n=(r.data||[]).length; auditLog('run_expire_subs','business_subscriptions',null,null,{count:n},'manual'); logJobRun('expire_subscriptions',true,'manual',n);
     toast(n+' subscription(s) expired');
   } catch(e){ toast('Error: '+e.message,'error'); logJobRun('expire_subscriptions',false,e.message); }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// AMOS — AI Marketing Operating System — Module 0: Foundation
+//
+// Schema: supabase/AMOS_MODULE_0_FOUNDATION.sql (run manually first).
+// No external API calls anywhere in this module — every function below
+// only ever talks to Supabase. Publishing, content generation, and
+// research collection are later modules; this one is UI + settings only.
+// Audit trail reuses admin_audit_logs (entity='amos_*'); job heartbeats
+// reuse job_runs (job='amos_*') — see docs/AMOS_ARCHITECTURE.md.
+// ════════════════════════════════════════════════════════════════════════
+var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false };
+
+async function amosMissing(){
+  AMOS.missing = !(await hasTable('amos_settings'));
+  return AMOS.missing;
+}
+
+// ── Dashboard ──────────────────────────────────────────────
+async function loadAmosDashboard(){
+  if(await amosMissing()) return;
+  var res = await Promise.allSettled([
+    sb.from('amos_settings').select('*').eq('country_code','ZW').maybeSingle(),
+    sb.from('amos_integrations').select('*').order('provider'),
+    sb.from('amos_content_drafts').select('id,status').eq('status','draft'),
+    sb.from('amos_schedule').select('id,status').eq('status','pending'),
+    sb.from('amos_content_items').select('id,status').eq('status','published'),
+    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(5)
+  ]);
+  AMOS.settings = res[0].value && res[0].value.data;
+  AMOS.integrations = (res[1].value && res[1].value.data) || [];
+  AMOS.pendingApproval = (res[2].value && res[2].value.data) || [];
+  AMOS.pendingSchedule = (res[3].value && res[3].value.data) || [];
+  AMOS.published = (res[4].value && res[4].value.data) || [];
+  AMOS.recentJobs = (res[5].value && res[5].value.data) || [];
+  updateAmosBadge();
+}
+function updateAmosBadge(){
+  var b = document.getElementById('badge-amos-approval');
+  if(!b) return;
+  var n = (AMOS.pendingApproval||[]).length;
+  b.style.display = n>0 ? '' : 'none'; b.textContent = n;
+}
+function renderAmosDashboard(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">AMOS Dashboard</div></div>' + migrationNotice('The AI Marketing Operating System','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(!AMOS.settings && AMOS.integrations===undefined){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading AMOS…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">AMOS Dashboard</div><button class="btn-refresh" onclick="loadAmosDashboard().then(renderAmosDashboard)">Refresh</button></div>';
+
+  html += '<div class="stats-grid">';
+  html += statCard('Pending Approval','amber',fmtCnt((AMOS.pendingApproval||[]).length),'drafts awaiting review','amosApprovalQueue');
+  html += statCard('Scheduled','blue',fmtCnt((AMOS.pendingSchedule||[]).length),'queued to publish','amosCalendar');
+  html += statCard('Published (all time)','green',fmtCnt((AMOS.published||[]).length),'content items live','amosCalendar');
+  html += statCard('Approval Mode','accent', AMOS.settings && AMOS.settings.approval_required===false ? 'Auto-publish' : 'Manual', 'per AI Configuration','amosSettings');
+  html += '</div>';
+
+  html += '<div class="sec-head" style="margin-top:6px"><div class="sec-title">Channel Health</div></div>';
+  html += '<div class="stats-grid">';
+  (AMOS.integrations||[]).forEach(function(i){
+    var cls = i.status==='connected' ? 'green' : i.status==='error' ? 'red' : 'amber';
+    html += statCard(i.provider.charAt(0).toUpperCase()+i.provider.slice(1), cls, i.status==='connected'?'Connected':(i.status==='error'?'Error':'Not connected'), i.last_error||'awaiting API credentials','amosHealth');
+  });
+  if(!(AMOS.integrations||[]).length) html += '<div class="empty-msg">No channels configured yet.</div>';
+  html += '</div>';
+
+  html += '<div class="sec-head" style="margin-top:6px"><div class="sec-title">Recent Job Runs</div></div>';
+  if(!(AMOS.recentJobs||[]).length) html += '<div class="empty-msg">No AMOS jobs have run yet — research/generation/publishing land in later modules.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Result</th><th>Detail</th><th>When</th></tr></thead><tbody>';
+    AMOS.recentJobs.forEach(function(j){
+      html += '<tr><td style="font-family:monospace;font-size:12px">'+esc(j.job)+'</td><td>'+(j.ok?'<span class="badge badge-active">ok</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px;color:var(--sub)">'+esc(j.detail||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(j.created_at)+' ago</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Approval Queue ─────────────────────────────────────────
+async function loadAmosApprovalQueue(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_content_drafts').select('*, amos_content_items(title,category)').eq('status','draft').order('created_at',{ascending:false}).limit(100);
+  AMOS.drafts = (r.data||[]);
+  updateAmosBadge();
+}
+function renderAmosApprovalQueue(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Approval Queue</div></div>' + migrationNotice('The Approval Queue','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.drafts===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Approval Queue</div><button class="btn-refresh" onclick="loadAmosApprovalQueue().then(renderAmosApprovalQueue)">Refresh</button></div>';
+  if(!AMOS.drafts.length){
+    html += '<div class="empty-msg">Nothing waiting on review. Drafts appear here once content generation ships (Module 2) — this queue is fully wired and will populate automatically, nothing further to build on the UI side.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Item</th><th>Channel</th><th>Type</th><th>Created</th><th></th></tr></thead><tbody>';
+    AMOS.drafts.forEach(function(d){
+      var item = d.amos_content_items || {};
+      html += '<tr><td style="font-weight:600">'+esc(item.title||'—')+'</td><td>'+esc(d.channel)+'</td><td>'+esc(d.draft_type)+'</td><td style="font-size:12px;color:var(--sub)">'+ago(d.created_at)+' ago</td><td><button class="ab ab-view" onclick="showTab(\'amosApprovalQueue\')">Review</button></td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Content Calendar ───────────────────────────────────────
+async function loadAmosCalendar(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(channel,draft_type,amos_content_items(title))').order('scheduled_for',{ascending:true}).limit(200);
+  AMOS.schedule = (r.data||[]);
+}
+function renderAmosCalendar(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Content Calendar</div></div>' + migrationNotice('The Content Calendar','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.schedule===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Content Calendar</div><button class="btn-refresh" onclick="loadAmosCalendar().then(renderAmosCalendar)">Refresh</button></div>';
+  if(!AMOS.schedule.length){
+    html += '<div class="empty-msg">Nothing scheduled yet. Approved drafts land here once publishing ships (Module 4).</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Item</th><th>Channel</th><th>Status</th></tr></thead><tbody>';
+    AMOS.schedule.forEach(function(s){
+      var d = s.amos_content_drafts||{}, item = d.amos_content_items||{};
+      html += '<tr><td style="font-size:12px">'+fmtDateTime(s.scheduled_for)+'</td><td style="font-weight:600">'+esc(item.title||'—')+'</td><td>'+esc(d.channel||'—')+'</td><td>'+esc(s.status)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Campaign Manager ───────────────────────────────────────
+async function loadAmosCampaigns(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_content_items').select('*').order('created_at',{ascending:false}).limit(100);
+  AMOS.items = (r.data||[]);
+}
+function renderAmosCampaigns(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Campaign Manager</div></div>' + migrationNotice('Campaign Manager','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.items===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Campaign Manager</div><button class="btn-refresh" onclick="loadAmosCampaigns().then(renderAmosCampaigns)">Refresh</button></div>';
+  if(!AMOS.items.length){
+    html += '<div class="empty-msg">No campaigns yet. Content items (the platform-agnostic idea behind every post/article/notification) appear here once the research + generation modules ship.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Created</th></tr></thead><tbody>';
+    AMOS.items.forEach(function(it){
+      html += '<tr><td style="font-weight:600">'+esc(it.title)+'</td><td>'+esc(it.category||'—')+'</td><td>'+esc(it.status)+'</td><td style="font-size:12px;color:var(--sub)">'+ago(it.created_at)+' ago</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Market Intelligence Dashboard ──────────────────────────
+var AMOS_SIGNAL_LABELS = {
+  competitor:'Competitor Moves', google_trends:'Google Trends', facebook_marketplace:'Facebook Marketplace',
+  reddit:'Reddit', seasonal:'Seasonal Buying', public_holiday:'Public Holidays', school_term:'School Terms',
+  salary_period:'Salary Periods', news:'Local News', sporting_event:'Sporting Events',
+  economic_trend:'Economic Trends', internal_search_gap:'Zero-Result Searches (PaMarket-only signal)'
+};
+async function loadAmosIntelligence(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_market_intelligence').select('*').order('collected_at',{ascending:false}).limit(200);
+  AMOS.intel = (r.data||[]);
+}
+function renderAmosIntelligence(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Market Intelligence</div></div>' + migrationNotice('Market Intelligence','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.intel===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Market Intelligence</div><button class="btn-refresh" onclick="loadAmosIntelligence().then(renderAmosIntelligence)">Refresh</button></div>';
+  var byType = {};
+  (AMOS.intel||[]).forEach(function(s){ (byType[s.signal_type]=byType[s.signal_type]||[]).push(s); });
+  html += '<div class="stats-grid">';
+  Object.keys(AMOS_SIGNAL_LABELS).forEach(function(t){
+    html += statCard(AMOS_SIGNAL_LABELS[t],'blue',fmtCnt((byType[t]||[]).length),'signals collected');
+  });
+  html += '</div>';
+  if(!(AMOS.intel||[]).length){
+    html += '<div class="empty-msg">No signals collected yet. The Market Intelligence module (research runner) populates this table — competitor moves, trends, ZW public holidays/school terms/salary periods, local news, sporting events, economic trends, and PaMarket\'s own zero-result-search gaps.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Type</th><th>Topic</th><th>Score</th><th>Collected</th></tr></thead><tbody>';
+    AMOS.intel.forEach(function(s){
+      html += '<tr><td>'+esc(AMOS_SIGNAL_LABELS[s.signal_type]||s.signal_type)+'</td><td style="font-weight:600">'+esc(s.topic)+'</td><td>'+(s.score!=null?s.score:'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(s.collected_at)+' ago</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── AI Learning Dashboard ──────────────────────────────────
+async function loadAmosLearning(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_learning_signals').select('*').order('created_at',{ascending:false}).limit(200);
+  AMOS.learning = (r.data||[]);
+}
+function renderAmosLearning(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">AI Learning</div></div>' + migrationNotice('The AI Learning Engine','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.learning===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">AI Learning</div><button class="btn-refresh" onclick="loadAmosLearning().then(renderAmosLearning)">Refresh</button></div>';
+  html += '<div class="stats-grid">';
+  html += statCard('Signals Recorded','blue',fmtCnt((AMOS.learning||[]).length),'published items tracked');
+  var strong = (AMOS.learning||[]).filter(function(s){return s.outcome_label==='strong';}).length;
+  html += statCard('Strong Performers','green',fmtCnt(strong),'outcome = strong');
+  html += '</div>';
+  if(!(AMOS.learning||[]).length){
+    html += '<div class="empty-msg">No performance data yet. Every published item will record posting time, platform, topic, category, keywords, media type, CTA, audience, reach, CTR, downloads, conversions, and engagement here — the schema is live now so the learning engine (a later module) never needs a breaking migration against real data. Once enough rows exist, this dashboard will surface optimal posting times, best-performing topics/media styles/keywords, and flag patterns to avoid repeating.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Channel</th><th>Topic</th><th>Posted</th><th>Reach</th><th>CTR</th><th>Outcome</th></tr></thead><tbody>';
+    AMOS.learning.forEach(function(s){
+      html += '<tr><td>'+esc(s.channel)+'</td><td style="font-weight:600">'+esc(s.topic||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(s.posted_at)+'</td><td>'+fmtCnt(s.reach)+'</td><td>'+(s.ctr!=null?s.ctr+'%':'—')+'</td><td>'+esc(s.outcome_label||'—')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── System Health ──────────────────────────────────────────
+async function loadAmosHealth(){
+  if(await amosMissing()) return;
+  var res = await Promise.allSettled([
+    sb.from('amos_integrations').select('*').order('provider'),
+    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(20)
+  ]);
+  AMOS.integrations = (res[0].value && res[0].value.data) || [];
+  AMOS.jobs = (res[1].value && res[1].value.data) || [];
+}
+function renderAmosHealth(){
+  if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">System Health is restricted to full admins.</div>'; return; }
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">System Health</div></div>' + migrationNotice('AMOS System Health','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.integrations===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">System Health</div><button class="btn-refresh" onclick="loadAmosHealth().then(renderAmosHealth)">Refresh</button></div>';
+
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">API Manager — Connected Channels</div></div>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Provider</th><th>Status</th><th>Consecutive Failures</th><th>Last Success</th><th>Last Error</th></tr></thead><tbody>';
+  (AMOS.integrations||[]).forEach(function(i){
+    var badge = i.status==='connected' ? '<span class="badge badge-active">connected</span>' : i.status==='error' ? '<span class="badge badge-rejected">error</span>' : '<span class="badge badge-pending">not connected</span>';
+    html += '<tr><td style="font-weight:600">'+esc(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Only Facebook is seeded at launch, per the current rollout plan. Connecting a channel (Module 4+) is an OAuth flow that writes credentials_ref into this row — no schema change needed to add Instagram, LinkedIn, TikTok, X, or YouTube later.</div>';
+
+  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">AMOS Job Runs</div></div>';
+  if(!(AMOS.jobs||[]).length) html += '<div class="empty-msg">No AMOS scheduled jobs exist yet — the research runner, content generator, and publisher are later modules. This table (job_runs, shared with the rest of the admin panel\'s Automation Center) will show their heartbeats once deployed.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Result</th><th>Rows</th><th>When</th></tr></thead><tbody>';
+    AMOS.jobs.forEach(function(j){
+      html += '<tr><td style="font-family:monospace;font-size:12px">'+esc(j.job)+'</td><td>'+(j.ok?'<span class="badge badge-active">ok</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td>'+(j.rows_affected!=null?j.rows_affected:'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(j.created_at)+' ago</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── Audit Trail (AMOS slice of admin_audit_logs) ───────────
+var AMOS_ENTITIES = ['amos_settings','amos_integrations','amos_content_items','amos_content_drafts','amos_schedule'];
+async function loadAmosAudit(){
+  AMOS.auditMissing = !(await hasTable('admin_audit_logs'));
+  if(AMOS.auditMissing){ AMOS.audit=[]; return; }
+  var r = await sb.from('admin_audit_logs').select('*').in('entity',AMOS_ENTITIES).order('created_at',{ascending:false}).limit(100);
+  AMOS.audit = (r.data||[]);
+}
+function renderAmosAudit(){
+  if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Audit Trail is restricted to full admins.</div>'; return; }
+  if(AMOS.audit===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">AMOS Audit Trail</div><button class="btn-refresh" onclick="loadAmosAudit().then(renderAmosAudit)">Refresh</button></div>';
+  if(AMOS.auditMissing) html += migrationNotice('Audit logging','ADMIN_ENTERPRISE_UPGRADE.sql');
+  else if(!AMOS.audit.length) html += '<div class="empty-msg">No AMOS actions logged yet. Every settings change, approval, rejection, and publish is recorded here via the same audit log used across the rest of the admin panel.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Entity</th></tr></thead><tbody>';
+    AMOS.audit.forEach(function(a){
+      html += '<tr><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(a.created_at)+'</td><td style="font-size:12px">'+esc(a.actor_email||a.actor_id||'system')+'</td><td>'+esc(a.action)+'</td><td style="font-family:monospace;font-size:12px">'+esc(a.entity)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── AI Configuration ────────────────────────────────────────
+async function loadAmosSettings(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_settings').select('*').eq('country_code','ZW').maybeSingle();
+  AMOS.settings = r.data || { country_code:'ZW', approval_required:true, ai_provider:'anthropic', video_provider:'google_veo', brand_voice:{} };
+}
+function renderAmosSettings(){
+  if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">AI Configuration is restricted to full admins.</div>'; return; }
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">AI Configuration</div></div>' + migrationNotice('AI Configuration','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(!AMOS.settings){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var s = AMOS.settings;
+  var html = '<div class="sec-head"><div class="sec-title">AI Configuration</div></div>';
+
+  html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">Publishing</div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Require Approval Before Publishing</div><div class="setting-desc">Every generated item enters the Approval Queue first. Turn off to auto-publish selected campaign types once you trust the pipeline.</div></div>';
+  html += '<label class="toggle"><input type="checkbox" '+(s.approval_required!==false?'checked':'')+' onchange="saveAmosSetting(\'approval_required\',this.checked)"><span class="toggle-slider"></span></label></div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Daily Batch</div><div class="setting-desc">Auto-run the daily research + content batch. Off until the research/generation modules are live.</div></div>';
+  html += '<label class="toggle"><input type="checkbox" '+(s.daily_batch_enabled?'checked':'')+' disabled><span class="toggle-slider"></span></label></div>';
+  html += '</div>';
+
+  html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">AI Providers</div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Content &amp; Copy — Anthropic Claude</div><div class="setting-desc">Primary AI brain for all generated text. Additional providers (e.g. OpenAI) can be added later without changing this schema — nothing to configure until then.</div></div><span class="badge badge-active">active</span></div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Video Generation — Google Veo</div><div class="setting-desc">Primary video provider. Pika/Runway/Canva remain available as fallback providers in the architecture, not wired yet.</div></div><span class="badge badge-active">active</span></div>';
+  html += '</div>';
+
+  html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">Brand Voice</div>';
+  html += '<div style="padding:12px 0;font-size:12.5px;color:var(--sub)">Tone: '+esc((s.brand_voice&&s.brand_voice.tone||[]).join(', ')||'—')+'</div>';
+  html += '<div style="padding:0 0 16px;font-size:12.5px;color:var(--sub)">Avoid: '+esc((s.brand_voice&&s.brand_voice.avoid||[]).join(', ')||'—')+'</div>';
+  html += '</div>';
+
+  html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">Weekly Report Recipients</div>';
+  html += '<div style="padding:12px 0;display:flex;gap:8px"><input id="amosReportRecipients" class="search-input" style="flex:1;width:auto" value="'+esc((s.report_recipients||[]).join(', '))+'" placeholder="founder@pamarketzw.com, ceo@pamarketzw.com"><button class="ab ab-view" onclick="saveAmosReportRecipients()">Save</button></div>';
+  html += '</div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+async function saveAmosSetting(field, value){
+  if(!requirePerm('*')) return;
+  var before = AMOS.settings ? AMOS.settings[field] : null;
+  var r = await sb.from('amos_settings').update({ [field]: value, updated_at: new Date().toISOString() }).eq('country_code','ZW').select().maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  AMOS.settings = r.data;
+  auditLog('update_amos_setting','amos_settings','ZW',{[field]:before},{[field]:value},null);
+  toast('Saved');
+}
+async function saveAmosReportRecipients(){
+  if(!requirePerm('*')) return;
+  var raw = document.getElementById('amosReportRecipients').value;
+  var list = raw.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var before = AMOS.settings ? AMOS.settings.report_recipients : null;
+  var r = await sb.from('amos_settings').update({ report_recipients:list, updated_at:new Date().toISOString() }).eq('country_code','ZW').select().maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  AMOS.settings = r.data;
+  auditLog('update_amos_setting','amos_settings','ZW',{report_recipients:before},{report_recipients:list},null);
+  toast('Report recipients saved');
 }
 
 // Keyboard shortcut: press / to focus the current tab's search box.
