@@ -8251,7 +8251,7 @@ async function runExpireSubsAuto(){
 // Audit trail reuses admin_audit_logs (entity='amos_*'); job heartbeats
 // reuse job_runs (job='amos_*') — see docs/AMOS_ARCHITECTURE.md.
 // ════════════════════════════════════════════════════════════════════════
-var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null, seo:null, competitors:null };
+var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null, seo:null, competitors:null, countries:null };
 
 async function amosMissing(){
   AMOS.missing = !(await hasTable('amos_settings'));
@@ -8269,7 +8269,8 @@ async function loadAmosDashboard(){
     sb.from('amos_content_items').select('id,status').eq('status','published'),
     sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(5),
     sb.from('job_runs').select('*').eq('job','amos_research_runner').order('created_at',{ascending:false}).limit(10),
-    sb.from('amos_market_intelligence').select('id').gte('collected_at', new Date().toISOString().slice(0,10)+'T00:00:00Z')
+    sb.from('amos_market_intelligence').select('id').gte('collected_at', new Date().toISOString().slice(0,10)+'T00:00:00Z'),
+    hasTable('amos_countries').then(function(has){ return has ? sb.from('amos_countries').select('*').order('active',{ascending:false}) : Promise.resolve({data:[]}); })
   ]);
   AMOS.settings = res[0].value && res[0].value.data;
   AMOS.integrations = (res[1].value && res[1].value.data) || [];
@@ -8279,6 +8280,7 @@ async function loadAmosDashboard(){
   AMOS.recentJobs = (res[5].value && res[5].value.data) || [];
   AMOS.researchRuns = (res[6].value && res[6].value.data) || [];
   AMOS.intelToday = (res[7].value && res[7].value.data) || [];
+  AMOS.countries = (res[8].value && res[8].value.data) || [];
   updateAmosBadge();
 }
 // Fixed daily schedule from AMOS_MODULE_1_SCHEDULE.sql: '0 6 * * *' (UTC).
@@ -8303,6 +8305,19 @@ function renderAmosDashboard(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">AMOS Dashboard</div></div>' + migrationNotice('The AI Marketing Operating System','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(!AMOS.settings && AMOS.integrations===undefined){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading AMOS…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">AMOS Dashboard</div><button class="btn-refresh" onclick="loadAmosDashboard().then(renderAmosDashboard)">Refresh</button></div>';
+
+  // ── Country selector (Module 9) — Zimbabwe is the only market with
+  //    real data; others are shown as configured-but-inactive rather
+  //    than hidden, so the multi-country schema is visibly ready without
+  //    pretending non-ZW markets have real content. ────────────────────
+  if((AMOS.countries||[]).length){
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 0 16px">';
+    AMOS.countries.forEach(function(c){
+      var isZW = c.country_code==='ZW';
+      html += '<span class="badge '+(c.active?'badge-active':'badge-pending')+'" style="'+(isZW?'font-weight:800':'opacity:.6')+'" title="'+(c.active?'Active market':'Schema-ready, no data yet')+'">'+esc(c.name)+(c.active?'':' (not yet configured)')+'</span>';
+    });
+    html += '</div>';
+  }
 
   // ── Research Status (Module 1 verification layer) ──
   var runs = AMOS.researchRuns||[];
