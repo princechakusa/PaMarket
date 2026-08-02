@@ -7,6 +7,8 @@
 -- (it belongs to Module 0). Run manually in the Supabase SQL Editor.
 -- ════════════════════════════════════════════════════════════════════════
 
+select cron.unschedule(jobid) from cron.job where jobname = 'amos-research-runner-daily';
+
 DELETE FROM amos_market_intelligence
   WHERE signal_type IN ('internal_search_gap','public_holiday','school_term','salary_period');
 
