@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Badge, GlassBackButton } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 function ChevronIcon() {
   return (
@@ -78,6 +79,8 @@ export default function JobsHubScreen() {
   const [applicationsCount, setApplicationsCount] = useState(0);
   const [companyVerified, setCompanyVerified] = useState(false);
 
+  useIOSNativeHeader({ backgroundColor: color.gold, tintColor: color.text, title: "Jobs" });
+
   useEffect(() => {
     if (!session?.user) return;
     const myId = session.user.id;
@@ -96,10 +99,12 @@ export default function JobsHubScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: space.huge }}>
-      <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-        <GlassBackButton onPress={() => router.back()} tone="dark" flat />
-        <Text style={styles.headerTitle}>Jobs</Text>
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
+          <GlassBackButton onPress={() => router.back()} tone="dark" flat />
+          <Text style={styles.headerTitle}>Jobs</Text>
+        </View>
+      ) : null}
 
       <View style={styles.intro}>
         <Text style={styles.introTitle}>What brings you here?</Text>

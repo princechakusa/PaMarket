@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import {
@@ -63,6 +64,22 @@ export default function RentalsListScreen() {
   const activeCount = useMemo(() => countActive(filters), [filters]);
   const isDefaultFilters = activeCount === 0;
 
+  useIOSNativeHeader({
+    backgroundColor: tones.brand,
+    tintColor: tones.textOnBrand,
+    title: "Rentals",
+    headerRight: () => (
+      <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
+        <FilterIcon stroke={tones.textOnBrand} />
+        {activeCount ? (
+          <View style={styles.filterCountDot}>
+            <Text style={styles.filterCountDotText}>{activeCount}</Text>
+          </View>
+        ) : null}
+      </Pressable>
+    ),
+  });
+
   const load = useCallback(async () => {
     setError(null);
     const { data, error: rpcError } = await supabase.rpc("rental_search_listings", {
@@ -109,18 +126,20 @@ export default function RentalsListScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle}>Rentals</Text>
-        <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
-          <FilterIcon stroke={tones.textOnBrand} />
-          {activeCount ? (
-            <View style={styles.filterCountDot}>
-              <Text style={styles.filterCountDotText}>{activeCount}</Text>
-            </View>
-          ) : null}
-        </Pressable>
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle}>Rentals</Text>
+          <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
+            <FilterIcon stroke={tones.textOnBrand} />
+            {activeCount ? (
+              <View style={styles.filterCountDot}>
+                <Text style={styles.filterCountDotText}>{activeCount}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        </View>
+      ) : null}
 
       {isLoading ? (
         <View style={styles.centered}>

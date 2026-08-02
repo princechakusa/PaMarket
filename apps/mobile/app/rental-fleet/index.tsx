@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line, Rect, Path, Circle } from "react-native-svg";
@@ -13,6 +13,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { GlassBackButton } from "../../components/ui";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 // Mirrors www/js/rentals-business.js H.pages.RentalDashboard — the fleet
 // owner's landing screen. Access state machine (verified against
@@ -107,6 +108,37 @@ export default function RentalFleetDashboard() {
   const [company, setCompany] = useState<RentalCompanyRecord | null>(null);
   const [fleet, setFleet] = useState<RentalFleetVehicle[]>([]);
   const [leads, setLeads] = useState<RentalLead[]>([]);
+
+  useIOSNativeHeader({
+    backgroundColor: tones.brand,
+    tintColor: tones.textOnBrand,
+    title: company ? undefined : "Rental Dashboard",
+    headerTitle: company
+      ? () => {
+          const name = company.company_name || businesses[0]?.name || "Rental Dashboard";
+          return (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={styles.headerLogo}>
+                <Text style={styles.headerLogoText}>{businessInitials(name)}</Text>
+              </View>
+              <View style={{ minWidth: 0 }}>
+                <Text style={styles.headerTitle} numberOfLines={1}>
+                  {name}
+                </Text>
+                <Text style={styles.headerSub}>Rentals Dashboard</Text>
+              </View>
+            </View>
+          );
+        }
+      : undefined,
+    headerRight: company
+      ? () => (
+          <Pressable onPress={() => router.push("/rental-fleet/profile")} hitSlop={8} style={styles.headerIconBtn}>
+            <ProfileIcon stroke={tones.textOnBrand} />
+          </Pressable>
+        )
+      : undefined,
+  });
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -236,11 +268,13 @@ export default function RentalFleetDashboard() {
   if (!session?.user) {
     return (
       <View style={styles.container}>
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rental Dashboard</Text>
-          <View style={{ width: 36 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Rental Dashboard</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <EmptyState title="Sign in required" subtitle="Sign in to manage your rental fleet." buttonLabel="Sign In" onPressButton={() => router.push("/(auth)/sign-in")} />
         </View>
@@ -251,11 +285,13 @@ export default function RentalFleetDashboard() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rental Dashboard</Text>
-          <View style={{ width: 36 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Rental Dashboard</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -266,11 +302,13 @@ export default function RentalFleetDashboard() {
   if (!businesses.length) {
     return (
       <View style={styles.container}>
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rental Dashboard</Text>
-          <View style={{ width: 36 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Rental Dashboard</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <EmptyState
             title="Business account required"
@@ -289,11 +327,13 @@ export default function RentalFleetDashboard() {
     router.replace(`/rental-fleet/setup?bizId=${biz.id}`);
     return (
       <View style={styles.container}>
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rental Dashboard</Text>
-          <View style={{ width: 36 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Rental Dashboard</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -304,11 +344,13 @@ export default function RentalFleetDashboard() {
   if (access.company_status === "rejected") {
     return (
       <View style={styles.container}>
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rental Dashboard</Text>
-          <View style={{ width: 36 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Rental Dashboard</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        ) : null}
         <View style={styles.rejectedBox}>
           <Text style={styles.rejectedTitle}>Application Not Approved</Text>
           <Text style={styles.rejectedBody}>
@@ -326,11 +368,13 @@ export default function RentalFleetDashboard() {
   if (!company) {
     return (
       <View style={styles.container}>
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rental Dashboard</Text>
-          <View style={{ width: 36 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Rental Dashboard</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -351,25 +395,27 @@ export default function RentalFleetDashboard() {
       contentContainerStyle={{ paddingBottom: 32 }}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
-      <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <View style={styles.headerLogo}>
-          <Text style={styles.headerLogoText}>{initial}</Text>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <View style={styles.headerLogo}>
+            <Text style={styles.headerLogoText}>{initial}</Text>
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {bizName}
+            </Text>
+            <Text style={styles.headerSub}>Rentals Dashboard</Text>
+          </View>
+          <Pressable
+            onPress={() => router.push("/rental-fleet/profile")}
+            hitSlop={8}
+            style={styles.headerIconBtn}
+          >
+            <ProfileIcon stroke={tones.textOnBrand} />
+          </Pressable>
         </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {bizName}
-          </Text>
-          <Text style={styles.headerSub}>Rentals Dashboard</Text>
-        </View>
-        <Pressable
-          onPress={() => router.push("/rental-fleet/profile")}
-          hitSlop={8}
-          style={styles.headerIconBtn}
-        >
-          <ProfileIcon stroke={tones.textOnBrand} />
-        </Pressable>
-      </View>
+      ) : null}
 
       <View style={styles.statsRow}>
         <StatCard num={fleet.length} label="Total Vehicles" styles={styles} />

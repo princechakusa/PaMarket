@@ -7,7 +7,7 @@ import messaging from "@react-native-firebase/messaging";
 import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { AuthProvider, useAuth } from "../lib/auth";
-import { ThemeProvider, useThemePreference } from "../lib/theme-provider";
+import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
 import { RatingPromptModal } from "../components/RatingPromptModal";
@@ -102,6 +102,7 @@ function usePushNotifications() {
 function RootNavigator() {
   const { pendingTwoFactor, isLoading } = useAuth();
   usePushNotifications();
+  const bg = useThemedStyles((c) => c.bg);
 
   useEffect(() => {
     if (!isLoading) {
@@ -114,7 +115,13 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    // contentStyle backgroundColor matters more than it looks: without it,
+    // the native push/pop transition briefly shows iOS's default white
+    // background before this screen's own themed background paints over
+    // it — the classic cause of a "flicker" during back navigation,
+    // especially visible in dark mode or moving between differently
+    // colored screens (e.g. Account -> a native-header settings screen).
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
       {/* The tabs group is a single stack node covering all 5 tabs (Home,
           Search, Post, Messages, Account) — a static title here would show
           on the back button regardless of which tab was actually active
@@ -124,16 +131,16 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" options={{ title: "" }} />
       <Stack.Screen name="(auth)" options={{ title: "Sign In" }} />
       <Stack.Screen name="login-callback" options={{ title: "Sign In" }} />
-      <Stack.Screen name="listing/[id]" options={{ headerShown: false, title: "Listing" }} />
+      <Stack.Screen name="listing/[id]" options={{ headerShown: Platform.OS === "ios", title: "Listing" }} />
       <Stack.Screen name="listing/edit/[id]" options={{ headerShown: true, title: "Edit Listing" }} />
-      <Stack.Screen name="business/[id]" options={{ headerShown: false, title: "Shop" }} />
+      <Stack.Screen name="business/[id]" options={{ headerShown: Platform.OS === "ios", title: "Shop" }} />
       <Stack.Screen name="business-onboarding" options={{ headerShown: true, title: "Create Business" }} />
       <Stack.Screen name="business-manage/[id]" options={{ headerShown: true, title: "Seller Center" }} />
       <Stack.Screen name="business-edit/[id]" options={{ headerShown: true, title: "Edit Business" }} />
       <Stack.Screen name="business-staff/[id]" options={{ headerShown: true, title: "Staff" }} />
-      <Stack.Screen name="profile/[id]" options={{ headerShown: false, title: "Profile" }} />
+      <Stack.Screen name="profile/[id]" options={{ headerShown: Platform.OS === "ios", title: "Profile" }} />
       <Stack.Screen name="notifications" options={{ headerShown: true, title: "Notifications" }} />
-      <Stack.Screen name="chat/[id]" options={{ headerShown: false, title: "Chat" }} />
+      <Stack.Screen name="chat/[id]" options={{ headerShown: Platform.OS === "ios", title: "Chat" }} />
       <Stack.Screen name="my-listings" options={{ headerShown: true, title: "My Listings" }} />
       <Stack.Screen name="favourites" options={{ headerShown: true, title: "Saved & Favourites" }} />
       <Stack.Screen name="edit-profile" options={{ headerShown: true, title: "Edit Profile" }} />
@@ -149,23 +156,23 @@ function RootNavigator() {
       <Stack.Screen name="help" options={{ headerShown: true, title: "Help" }} />
       <Stack.Screen name="legal-hub" options={{ headerShown: true, title: "Legal Hub" }} />
       <Stack.Screen name="legal-doc/[key]" options={{ headerShown: true, title: "" }} />
-      <Stack.Screen name="report-problem" options={{ headerShown: false, title: "Report a Problem" }} />
-      <Stack.Screen name="jobs/index" options={{ headerShown: false, title: "Jobs" }} />
-      <Stack.Screen name="jobs/browse" options={{ headerShown: false, title: "Jobs" }} />
-      <Stack.Screen name="jobs/[id]" options={{ headerShown: false, title: "Job" }} />
-      <Stack.Screen name="jobs/apply/[id]" options={{ headerShown: false, title: "Apply" }} />
-      <Stack.Screen name="jobs/applicants/[jobId]" options={{ headerShown: false, title: "Applicants" }} />
-      <Stack.Screen name="jobs/applications" options={{ headerShown: false, title: "My Applications" }} />
-      <Stack.Screen name="jobs/cv-profile" options={{ headerShown: false, title: "CV Profile" }} />
-      <Stack.Screen name="jobs/post" options={{ headerShown: false, title: "Post a Job" }} />
-      <Stack.Screen name="jobs/edit/[id]" options={{ headerShown: false, title: "Edit Job" }} />
-      <Stack.Screen name="jobs/hire-talent" options={{ headerShown: false, title: "Hire Talent" }} />
-      <Stack.Screen name="jobs/candidate/[id]" options={{ headerShown: false, title: "Candidate" }} />
-      <Stack.Screen name="jobs/contact-requests" options={{ headerShown: false, title: "Contact Requests" }} />
-      <Stack.Screen name="jobs/recruiter-subscription" options={{ headerShown: false, title: "Subscription" }} />
-      <Stack.Screen name="rentals/index" options={{ headerShown: false, title: "Rentals" }} />
-      <Stack.Screen name="rentals/[id]" options={{ headerShown: false, title: "Rental" }} />
-      <Stack.Screen name="rental-fleet/index" options={{ headerShown: false, title: "Fleet Dashboard" }} />
+      <Stack.Screen name="report-problem" options={{ headerShown: Platform.OS === "ios", title: "Report a Problem" }} />
+      <Stack.Screen name="jobs/index" options={{ headerShown: Platform.OS === "ios", title: "Jobs" }} />
+      <Stack.Screen name="jobs/browse" options={{ headerShown: Platform.OS === "ios", title: "Jobs" }} />
+      <Stack.Screen name="jobs/[id]" options={{ headerShown: Platform.OS === "ios", title: "Job" }} />
+      <Stack.Screen name="jobs/apply/[id]" options={{ headerShown: Platform.OS === "ios", title: "Apply" }} />
+      <Stack.Screen name="jobs/applicants/[jobId]" options={{ headerShown: Platform.OS === "ios", title: "Applicants" }} />
+      <Stack.Screen name="jobs/applications" options={{ headerShown: Platform.OS === "ios", title: "My Applications" }} />
+      <Stack.Screen name="jobs/cv-profile" options={{ headerShown: Platform.OS === "ios", title: "CV Profile" }} />
+      <Stack.Screen name="jobs/post" options={{ headerShown: Platform.OS === "ios", title: "Post a Job" }} />
+      <Stack.Screen name="jobs/edit/[id]" options={{ headerShown: Platform.OS === "ios", title: "Edit Job" }} />
+      <Stack.Screen name="jobs/hire-talent" options={{ headerShown: Platform.OS === "ios", title: "Hire Talent" }} />
+      <Stack.Screen name="jobs/candidate/[id]" options={{ headerShown: Platform.OS === "ios", title: "Candidate" }} />
+      <Stack.Screen name="jobs/contact-requests" options={{ headerShown: Platform.OS === "ios", title: "Contact Requests" }} />
+      <Stack.Screen name="jobs/recruiter-subscription" options={{ headerShown: Platform.OS === "ios", title: "Subscription" }} />
+      <Stack.Screen name="rentals/index" options={{ headerShown: Platform.OS === "ios", title: "Rentals" }} />
+      <Stack.Screen name="rentals/[id]" options={{ headerShown: Platform.OS === "ios", title: "Rental" }} />
+      <Stack.Screen name="rental-fleet/index" options={{ headerShown: Platform.OS === "ios", title: "Fleet Dashboard" }} />
       <Stack.Screen name="rental-fleet/setup" options={{ headerShown: true, title: "Company Profile" }} />
       <Stack.Screen name="rental-fleet/manage" options={{ headerShown: true, title: "Manage Fleet" }} />
       <Stack.Screen name="rental-fleet/add-vehicle" options={{ headerShown: true, title: "Add Rental Vehicle" }} />
@@ -174,8 +181,8 @@ function RootNavigator() {
       <Stack.Screen name="rental-fleet/analytics" options={{ headerShown: true, title: "Fleet Analytics" }} />
       <Stack.Screen name="rental-fleet/leads" options={{ headerShown: true, title: "Inquiries" }} />
       <Stack.Screen name="rental-fleet/profile" options={{ headerShown: true, title: "Company Profile" }} />
-      <Stack.Screen name="reviews/[id]" options={{ headerShown: false, title: "Reviews" }} />
-      <Stack.Screen name="shops/index" options={{ headerShown: false, title: "Shops" }} />
+      <Stack.Screen name="reviews/[id]" options={{ headerShown: Platform.OS === "ios", title: "Reviews" }} />
+      <Stack.Screen name="shops/index" options={{ headerShown: Platform.OS === "ios", title: "Shops" }} />
       <Stack.Screen name="two-factor-setup" options={{ headerShown: true, title: "Two-Factor Authentication" }} />
       <Stack.Screen name="change-password" options={{ headerShown: true, title: "Change Password" }} />
       <Stack.Screen name="delete-account" options={{ headerShown: true, title: "Delete Account" }} />

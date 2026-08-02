@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -15,6 +15,7 @@ import {
 } from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
 import { Avatar, Badge, Button, Card, EmptyState, GlassBackButton, VerifiedBadge } from "../../../components/ui";
+import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 
 function LockIcon() {
   return (
@@ -41,6 +42,8 @@ export default function CandidateCvScreen() {
   const [request, setRequest] = useState<ContactRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRequesting, setIsRequesting] = useState(false);
+
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Candidate profile" });
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -98,9 +101,11 @@ export default function CandidateCvScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -111,9 +116,11 @@ export default function CandidateCvScreen() {
   if (!candidate) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <EmptyState
             title="Profile unavailable"
@@ -145,11 +152,13 @@ export default function CandidateCvScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle}>Candidate profile</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle}>Candidate profile</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}>
         {/* ── Hero ────────────────────────────────────────── */}

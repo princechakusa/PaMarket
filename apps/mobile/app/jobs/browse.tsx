@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,6 +11,7 @@ import { jobCompany, jobSalary, jobType, JOB_TYPES } from "../../lib/jobs";
 import { businessInitials } from "../../lib/businesses";
 import { Badge, Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton } from "../../components/ui";
 import { loadCache, saveCache } from "../../lib/offlineCache";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const JOBS_CACHE_KEY = "jobs-browse";
 
@@ -59,6 +60,8 @@ export default function JobsListScreen() {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const pageRef = useRef(0);
+
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Jobs" });
 
   const buildQuery = useCallback((from: number, to: number) => {
     return supabase
@@ -132,12 +135,14 @@ export default function JobsListScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.headerRow}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Jobs</Text>
-          <View style={{ width: 20 }} />
-        </View>
+      <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? space.md : insets.top + 10 }]}>
+        {Platform.OS !== "ios" ? (
+          <View style={styles.headerRow}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Jobs</Text>
+            <View style={{ width: 20 }} />
+          </View>
+        ) : null}
         <View style={styles.searchBar}>
           <SearchIcon />
           <TextInput

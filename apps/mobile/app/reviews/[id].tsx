@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,7 @@ import { StarRow } from "../../components/StarRow";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 type Review = {
   reviewer_id: string;
@@ -76,6 +78,12 @@ export default function ReviewsScreen() {
 
   const isOwn = isBusiness ? session?.user?.id === businessOwnerId : session?.user?.id === id;
   const alreadyReviewed = reviews.some((r) => r.reviewer_id === session?.user?.id);
+
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: isOwn ? "My Reviews" : `${sellerName || (isBusiness ? "Shop" : "Seller")}'s Reviews`,
+  });
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -164,9 +172,11 @@ export default function ReviewsScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -176,13 +186,15 @@ export default function ReviewsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {isOwn ? "My Reviews" : `${sellerName || (isBusiness ? "Shop" : "Seller")}'s Reviews`}
-        </Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {isOwn ? "My Reviews" : `${sellerName || (isBusiness ? "Shop" : "Seller")}'s Reviews`}
+          </Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       <View style={styles.summaryCard}>
         <View style={styles.summaryRow}>

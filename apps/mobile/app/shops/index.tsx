@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { CATEGORIES } from "../../lib/constants";
 import { Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton, VerifiedBadge } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 // Dedicated shops directory — mirrors www/js/business-profile.js's
 // BusinessSearch page (H._bizSearch), which the mobile app never had: "See
@@ -44,6 +45,8 @@ export default function ShopsDirectoryScreen() {
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const pageRef = useRef(0);
+
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Shops" });
 
   const buildQuery = useCallback(
     (from: number, to: number) => {
@@ -116,12 +119,14 @@ export default function ShopsDirectoryScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.headerRow}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Shops</Text>
-          <View style={{ width: 38 }} />
-        </View>
+      <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? space.md : insets.top + 10 }]}>
+        {Platform.OS !== "ios" ? (
+          <View style={styles.headerRow}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Shops</Text>
+            <View style={{ width: 38 }} />
+          </View>
+        ) : null}
         <View style={styles.searchBar}>
           <SearchIcon />
           <TextInput

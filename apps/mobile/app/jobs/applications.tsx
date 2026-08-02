@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
@@ -8,6 +8,7 @@ import type { JobApplication } from "../../lib/jobs";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 function buildStatusTones(color: ColorPalette): Record<string, string> {
   return {
@@ -41,6 +42,8 @@ export default function MyApplicationsScreen() {
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My Applications" });
+
   const load = useCallback(async () => {
     if (!session?.user) return;
     const { data } = await supabase
@@ -58,11 +61,13 @@ export default function MyApplicationsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle}>My Applications</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle}>My Applications</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       {isLoading ? (
         <View style={styles.centered}>

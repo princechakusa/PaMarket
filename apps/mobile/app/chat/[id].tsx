@@ -20,7 +20,7 @@ import * as Clipboard from "expo-clipboard";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
-import Svg, { Path, Polyline } from "react-native-svg";
+import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import {
@@ -41,6 +41,7 @@ import { initPresence, isUserOnline, joinChatChannel } from "../../lib/chat-real
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Avatar, GlassBackButton, ListSkeleton, toast } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const EDIT_WINDOW_MS = 7 * 60 * 1000;
 
@@ -58,6 +59,16 @@ type ListingContext = {
   currency: string | null;
   photos: string[] | null;
 };
+
+function MoreIcon({ color }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill={color}>
+      <Circle cx={5} cy={12} r={2} />
+      <Circle cx={12} cy={12} r={2} />
+      <Circle cx={19} cy={12} r={2} />
+    </Svg>
+  );
+}
 
 function AttachIcon({ color }: { color: ColorPalette }) {
   return (
@@ -159,6 +170,7 @@ export default function ChatScreen() {
   const [isSendingImages, setIsSendingImages] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -195,6 +207,81 @@ export default function ChatScreen() {
     () => (hiddenIds.size ? messages.filter((m) => !hiddenIds.has(m.id)) : messages),
     [messages, hiddenIds]
   );
+
+  // Block status is per (me, otherId), not per-conversation — a business
+  // chat has no personal "other user" to block, only the two-person case.
+  useEffect(() => {
+    if (!myId || !otherId) {
+      setIsBlocked(false);
+      return;
+    }
+    supabase
+      .from("blocked_users")
+      .select("id")
+      .eq("blocker_id", myId)
+      .eq("blocked_id", otherId)
+      .maybeSingle()
+      .then(({ data }) => setIsBlocked(!!data));
+  }, [myId, otherId]);
+
+  async function toggleBlockOther() {
+    if (!myId || !otherId) return;
+    if (isBlocked) {
+      const { error } = await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", otherId);
+      if (!error) {
+        setIsBlocked(false);
+        toast("Unblocked");
+      }
+    } else {
+      Alert.alert(
+        `Block ${displayName}?`,
+        "They won't be able to message you, and you won't see messages from them. You can unblock them anytime from Settings.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Block",
+            style: "destructive",
+            onPress: async () => {
+              const { error } = await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: otherId });
+              if (!error) {
+                setIsBlocked(true);
+                toast(`Blocked ${displayName}`);
+              }
+            },
+          },
+        ]
+      );
+    }
+  }
+
+  function openChatMenu() {
+    if (!otherId || conversationBusiness) return;
+    const options: { label: string; action: () => void; destructive?: boolean }[] = [
+      { label: "View Profile", action: openProfile },
+      { label: isBlocked ? "Unblock User" : "Block User", action: toggleBlockOther, destructive: !isBlocked },
+    ];
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...options.map((o) => o.label), "Cancel"],
+          cancelButtonIndex: options.length,
+          destructiveButtonIndex: options.findIndex((o) => o.destructive),
+        },
+        (index) => {
+          if (index < options.length) options[index].action();
+        }
+      );
+    } else {
+      Alert.alert(displayName, undefined, [
+        ...options.map((o) => ({
+          text: o.label,
+          style: o.destructive ? ("destructive" as const) : undefined,
+          onPress: o.action,
+        })),
+        { text: "Cancel", style: "cancel" as const },
+      ]);
+    }
+  }
 
   const load = useCallback(async () => {
     if (!id || !myId) return;
@@ -612,6 +699,35 @@ export default function ChatScreen() {
     }
   };
 
+  useIOSNativeHeader({
+    backgroundColor: themeColor.surface,
+    tintColor: themeColor.text,
+    headerTitle: () => (
+      <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
+        <Avatar uri={displayAvatar} name={displayName} size={32} online={!conversationBusiness && otherOnline} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.headerName} numberOfLines={1}>
+            {displayName}
+          </Text>
+          <Text
+            style={[styles.headerSubtitle, otherTyping ? styles.subtitleTyping : otherOnline ? styles.subtitleOnline : styles.subtitleOffline]}
+            numberOfLines={1}
+          >
+            {subtitle}
+          </Text>
+        </View>
+      </Pressable>
+    ),
+    headerRight:
+      otherId && !conversationBusiness
+        ? () => (
+            <Pressable onPress={openChatMenu} hitSlop={10}>
+              <MoreIcon color={themeColor.text} />
+            </Pressable>
+          )
+        : undefined,
+  });
+
   return (
     <KeyboardAvoidingView
       key={keyboardAvoidingKey}
@@ -619,23 +735,30 @@ export default function ChatScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={0}
     >
-      <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-        <GlassBackButton onPress={() => router.back()} flat />
-        <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
-          <Avatar uri={displayAvatar} name={displayName} size={38} online={!conversationBusiness && otherOnline} />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.headerName} numberOfLines={1}>
-              {displayName}
-            </Text>
-            <Text
-              style={[styles.headerSubtitle, otherTyping ? styles.subtitleTyping : otherOnline ? styles.subtitleOnline : styles.subtitleOffline]}
-              numberOfLines={1}
-            >
-              {subtitle}
-            </Text>
-          </View>
-        </Pressable>
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
+          <GlassBackButton onPress={() => router.back()} flat />
+          <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
+            <Avatar uri={displayAvatar} name={displayName} size={38} online={!conversationBusiness && otherOnline} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.headerName} numberOfLines={1}>
+                {displayName}
+              </Text>
+              <Text
+                style={[styles.headerSubtitle, otherTyping ? styles.subtitleTyping : otherOnline ? styles.subtitleOnline : styles.subtitleOffline]}
+                numberOfLines={1}
+              >
+                {subtitle}
+              </Text>
+            </View>
+          </Pressable>
+          {otherId && !conversationBusiness ? (
+            <Pressable onPress={openChatMenu} hitSlop={10}>
+              <MoreIcon color={themeColor.text} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
 
       {listing ? (
         <Pressable

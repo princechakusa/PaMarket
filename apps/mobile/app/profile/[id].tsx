@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActionSheetIOS, Alert, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,10 +9,11 @@ import { useAuth } from "../../lib/auth";
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
 import { formatPrice, isFeatured, isNew, listingLocation, type Listing } from "../../lib/listings";
-import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge } from "../../components/ui";
+import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge, toast } from "../../components/ui";
 import { StarRow } from "../../components/StarRow";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 type FullProfile = PublicProfile & {
   bio: string | null;
@@ -119,8 +120,95 @@ export default function UserProfileScreen() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [business, setBusiness] = useState<BusinessLite | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const isOwn = session?.user?.id === id;
+  const myId = session?.user?.id;
+
+  useEffect(() => {
+    if (!myId || !id || isOwn) {
+      setIsBlocked(false);
+      return;
+    }
+    supabase
+      .from("blocked_users")
+      .select("id")
+      .eq("blocker_id", myId)
+      .eq("blocked_id", id)
+      .maybeSingle()
+      .then(({ data }) => setIsBlocked(!!data));
+  }, [myId, id, isOwn]);
+
+  async function toggleBlock() {
+    if (!myId || !id) return;
+    if (isBlocked) {
+      const { error } = await supabase.from("blocked_users").delete().eq("blocker_id", myId).eq("blocked_id", id);
+      if (!error) {
+        setIsBlocked(false);
+        toast("Unblocked");
+      }
+    } else {
+      Alert.alert(
+        `Block ${profile?.name || "this user"}?`,
+        "They won't be able to message you, and you won't see messages from them. You can unblock them anytime from Settings.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Block",
+            style: "destructive",
+            onPress: async () => {
+              const { error } = await supabase.from("blocked_users").insert({ blocker_id: myId, blocked_id: id });
+              if (!error) {
+                setIsBlocked(true);
+                toast(`Blocked ${profile?.name || "this user"}`);
+              }
+            },
+          },
+        ]
+      );
+    }
+  }
+
+  function openProfileMenu() {
+    const options: { label: string; action: () => void; destructive?: boolean }[] = [
+      { label: isBlocked ? "Unblock User" : "Block User", action: toggleBlock, destructive: !isBlocked },
+    ];
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...options.map((o) => o.label), "Cancel"],
+          cancelButtonIndex: options.length,
+          destructiveButtonIndex: options.findIndex((o) => o.destructive),
+        },
+        (index) => {
+          if (index < options.length) options[index].action();
+        }
+      );
+    } else {
+      Alert.alert(profile?.name || "Options", undefined, [
+        ...options.map((o) => ({
+          text: o.label,
+          style: o.destructive ? ("destructive" as const) : undefined,
+          onPress: o.action,
+        })),
+        { text: "Cancel", style: "cancel" as const },
+      ]);
+    }
+  }
+
+  useIOSNativeHeader({
+    backgroundColor: profile ? color.brand : color.bg,
+    tintColor: profile ? color.textOnBrand : color.text,
+    title: profile ? "Seller profile" : "",
+    headerRight:
+      profile && !isOwn
+        ? () => (
+            <Pressable onPress={openProfileMenu} hitSlop={10}>
+              <MoreIcon color={color.textOnBrand} />
+            </Pressable>
+          )
+        : undefined,
+  });
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -215,7 +303,7 @@ export default function UserProfileScreen() {
   if (isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <GlassBackButton onPress={() => router.back()} flat />
+        {Platform.OS !== "ios" ? <GlassBackButton onPress={() => router.back()} flat /> : null}
         <View style={styles.skeletonWrap}>
           <ListSkeleton count={5} />
         </View>
@@ -226,7 +314,7 @@ export default function UserProfileScreen() {
   if (!profile) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <GlassBackButton onPress={() => router.back()} flat />
+        {Platform.OS !== "ios" ? <GlassBackButton onPress={() => router.back()} flat /> : null}
         <EmptyState title="Profile not found" subtitle="This user profile doesn't exist or was removed." />
       </View>
     );
@@ -245,10 +333,12 @@ export default function UserProfileScreen() {
       ListHeaderComponent={
         <View>
           <View style={styles.hero}>
-            <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
-              <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            </View>
-            <Text style={styles.headerTitle}>Seller profile</Text>
+            {Platform.OS !== "ios" ? (
+              <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
+                <GlassBackButton onPress={() => router.back()} tone="light" flat />
+              </View>
+            ) : null}
+            {Platform.OS !== "ios" ? <Text style={styles.headerTitle}>Seller profile</Text> : null}
           </View>
 
           <View style={[styles.profileCard, shadow.lg]}>

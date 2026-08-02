@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -23,6 +24,7 @@ import { StarRow } from "../../components/StarRow";
 import { space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Card, GlassBackButton, VerifiedBadge } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
@@ -43,6 +45,20 @@ export default function BusinessShopScreen() {
   const [followerCount, setFollowerCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
+
+  useIOSNativeHeader({
+    backgroundColor: tones.brand,
+    tintColor: tones.textOnBrand,
+    title: business?.name || "Shop",
+    headerRight:
+      business && (business.verification_level ?? 0) >= 2
+        ? () => (
+            <View style={styles.verifiedPill}>
+              <Text style={styles.verifiedPillText}>Verified</Text>
+            </View>
+          )
+        : undefined,
+  });
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -170,9 +186,11 @@ export default function BusinessShopScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -183,9 +201,11 @@ export default function BusinessShopScreen() {
   if (!business) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <Text style={styles.notFoundTitle}>Shop not found</Text>
         </View>
@@ -197,19 +217,21 @@ export default function BusinessShopScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {business.name}
-        </Text>
-        {isVerified ? (
-          <View style={styles.verifiedPill}>
-            <Text style={styles.verifiedPillText}>Verified</Text>
-          </View>
-        ) : (
-          <View style={{ width: 60 }} />
-        )}
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {business.name}
+          </Text>
+          {isVerified ? (
+            <View style={styles.verifiedPill}>
+              <Text style={styles.verifiedPillText}>Verified</Text>
+            </View>
+          ) : (
+            <View style={{ width: 60 }} />
+          )}
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={{ paddingBottom: isOwner ? 24 : 90 }}>
         <View style={styles.cover}>

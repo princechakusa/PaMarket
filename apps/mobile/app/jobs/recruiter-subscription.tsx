@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
@@ -10,6 +10,7 @@ import { toast } from "../../components/ui/Toast";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { purchaseProduct } from "../../lib/iap";
 import { RECRUITER_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
 
@@ -39,6 +40,8 @@ export default function RecruiterSubscriptionScreen() {
   const [jobsPosted, setJobsPosted] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
+
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Recruiter Plan" });
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -80,9 +83,11 @@ export default function RecruiterSubscriptionScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -94,11 +99,13 @@ export default function RecruiterSubscriptionScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle}>Recruiter Plan</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle}>Recruiter Plan</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <View style={styles.hero}>

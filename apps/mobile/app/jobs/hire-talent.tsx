@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import {
   EXP_LEVEL_LABEL,
   JOB_CATEGORIES,
@@ -65,6 +66,17 @@ export default function HireTalentScreen() {
   const [openOnly, setOpenOnly] = useState(false);
   const [tab, setTab] = useState<FilterTab>("sector");
   const pageRef = useRef(0);
+
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: "Find candidates",
+    headerRight: () => (
+      <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
+        <Text style={styles.headerLink}>Requests</Text>
+      </Pressable>
+    ),
+  });
 
   const buildQuery = useCallback((from: number, to: number) => {
     return supabase
@@ -178,14 +190,16 @@ export default function HireTalentScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.headerRow}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Find candidates</Text>
-          <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
-            <Text style={styles.headerLink}>Requests</Text>
-          </Pressable>
-        </View>
+      <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? space.md : insets.top + 10 }]}>
+        {Platform.OS !== "ios" ? (
+          <View style={styles.headerRow}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Find candidates</Text>
+            <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
+              <Text style={styles.headerLink}>Requests</Text>
+            </Pressable>
+          </View>
+        ) : null}
         <View style={styles.searchBar}>
           <SearchIcon />
           <TextInput

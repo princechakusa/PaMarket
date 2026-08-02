@@ -4,6 +4,7 @@ import {
   FlatList,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -46,6 +47,7 @@ import {
 } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, hitSlop, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at,attributes";
@@ -197,6 +199,29 @@ export default function ListingDetailScreen() {
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const galleryRef = useRef<FlatList<string>>(null);
+
+  useIOSNativeHeader({
+    transparent: true,
+    backgroundColor: "transparent",
+    tintColor: "#FFFFFF",
+    headerRight: () => (
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Pressable style={styles.iconButton} onPress={shareListing} hitSlop={hitSlop}>
+          <ShareIcon />
+        </Pressable>
+        {session?.user?.id !== listing?.seller_id ? (
+          <Pressable style={styles.iconButton} onPress={handleToggleSave} hitSlop={hitSlop}>
+            <HeartIcon filled={isSaved} dangerColor={color.danger} />
+          </Pressable>
+        ) : null}
+        {session?.user?.id !== listing?.seller_id ? (
+          <Pressable style={styles.iconButton} onPress={() => setReportOpen(true)} hitSlop={hitSlop}>
+            <FlagIcon />
+          </Pressable>
+        ) : null}
+      </View>
+    ),
+  });
 
   const load = useCallback(async () => {
     setError(null);
@@ -487,9 +512,11 @@ export default function ListingDetailScreen() {
     return (
       <View style={styles.container}>
         <Skeleton width={width} height={330} radius={0} />
-        <View style={[styles.topBar, { top: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" />
+          </View>
+        ) : null}
         <View style={styles.content}>
           <Skeleton width={140} height={30} style={{ marginTop: space.md }} />
           <Skeleton width="80%" height={22} style={{ marginTop: space.sm }} />
@@ -505,9 +532,11 @@ export default function ListingDetailScreen() {
   if (error === "not-found" || !listing) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <View style={[styles.topBar, { top: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" />
+          </View>
+        ) : null}
         <ErrorState
           title="Listing not found"
           subtitle="This listing may have been removed or is no longer available."
@@ -519,9 +548,11 @@ export default function ListingDetailScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <View style={[styles.topBar, { top: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" />
+          </View>
+        ) : null}
         <ErrorState
           onRetry={() => {
             setIsLoading(true);
@@ -569,6 +600,7 @@ export default function ListingDetailScreen() {
             </View>
           )}
 
+          {Platform.OS !== "ios" ? (
           <View style={[styles.topBar, { top: insets.top + 10 }]}>
             <GlassBackButton onPress={() => router.back()} tone="light" />
             <View style={{ flex: 1 }} />
@@ -586,6 +618,7 @@ export default function ListingDetailScreen() {
               </Pressable>
             ) : null}
           </View>
+          ) : null}
 
           {photos.length > 1 ? (
             <View style={styles.photoCounter}>

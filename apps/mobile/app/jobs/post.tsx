@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ import { useAuth } from "../../lib/auth";
 import { CITIES_BY_PROVINCE, PROVINCES } from "../../lib/constants";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { JOB_CATEGORIES, JOB_TYPES, recruiterPlanEntitlements } from "../../lib/jobs";
 import { friendlyError } from "../../lib/safety";
 import { JOB_CREDIT_PRODUCTS } from "../../lib/billing-products";
@@ -91,6 +93,8 @@ export default function PostJobScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
+
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Post a Job" });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -577,6 +581,7 @@ export default function PostJobScreen() {
 type Styles = ReturnType<typeof buildStyles>;
 
 function Header({ title, onBack, insetTop, styles }: { title: string; onBack: () => void; insetTop: number; styles: Styles }) {
+  if (Platform.OS === "ios") return null;
   return (
     <View style={[styles.header, { paddingTop: insetTop + 10 }]}>
       <GlassBackButton onPress={onBack} tone="light" flat />

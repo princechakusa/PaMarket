@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +21,7 @@ import { businessInitials } from "../../lib/businesses";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 function PhoneIcon({ stroke }: { stroke: string }) {
   return (
@@ -121,6 +123,12 @@ export default function RentalVehicleDetailScreen() {
   const [availability, setAvailability] = useState<AvailabilityBlock[]>([]);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+
+  useIOSNativeHeader({
+    backgroundColor: tones.brand,
+    tintColor: tones.textOnBrand,
+    title: vehicle ? `${brandLabel(brandSlug)} ${vehicle.model}` : "Vehicle",
+  });
   const [isBooking, setIsBooking] = useState(false);
 
   const upcomingDays = useMemo(() => {
@@ -360,9 +368,11 @@ export default function RentalVehicleDetailScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -373,9 +383,11 @@ export default function RentalVehicleDetailScreen() {
   if (!vehicle) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <Text style={styles.notFoundText}>Vehicle not found</Text>
         </View>
@@ -385,13 +397,15 @@ export default function RentalVehicleDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {brandLabel(brandSlug)} {vehicle.model}
-        </Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {brandLabel(brandSlug)} {vehicle.model}
+          </Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
         <View style={styles.photoWrap}>

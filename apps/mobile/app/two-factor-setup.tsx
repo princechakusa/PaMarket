@@ -13,7 +13,6 @@ import QRCode from "react-native-qrcode-svg";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import { GlassBackButton } from "../components/ui";
 import { createTotpSecret, totpUri, verifyTotpCode } from "../lib/totp";
 import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
@@ -199,9 +198,6 @@ export default function TwoFactorSetupScreen() {
           </View>
         </>
       )}
-      <View style={styles.backRow}>
-        <GlassBackButton onPress={() => router.back()} flat />
-      </View>
     </ScrollView>
   );
 }
@@ -274,6 +270,5 @@ function buildStyles(color: ColorPalette) {
     },
     dangerButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "700" },
     buttonDisabled: { opacity: 0.6 },
-    backRow: { alignSelf: "flex-start", paddingTop: 14 },
   });
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import {
   AVAILABILITY_OPTIONS,
   JOB_CATEGORIES,
@@ -87,6 +89,7 @@ export default function CvProfileScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My CV / Job Profile" });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -248,11 +251,13 @@ export default function CvProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle}>My CV / Job Profile</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle}>My CV / Job Profile</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       {isLoading ? (
         <View style={styles.centered}>

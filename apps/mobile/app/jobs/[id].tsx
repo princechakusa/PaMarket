@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { businessInitials } from "../../lib/businesses";
 import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
 import { isFeatured } from "../../lib/listings";
@@ -85,6 +86,20 @@ export default function JobDetailScreen() {
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
 
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: job ? jobCompany(job.description, job.seller_name) : "Job",
+    headerRight:
+      job && session?.user?.id !== job.seller_id
+        ? () => (
+            <Pressable onPress={handleToggleSave} hitSlop={10}>
+              <HeartIcon filled={isSaved} />
+            </Pressable>
+          )
+        : undefined,
+  });
+
   const load = useCallback(async () => {
     if (!id) return;
     const { data } = await supabase.from("listings").select(JOB_COLUMNS).eq("id", id).maybeSingle();
@@ -124,9 +139,11 @@ export default function JobDetailScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -137,9 +154,11 @@ export default function JobDetailScreen() {
   if (!job) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <EmptyState title="Job not found" subtitle="This posting may have been closed or removed." />
         </View>
@@ -182,19 +201,21 @@ export default function JobDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {company}
-        </Text>
-        {isOwner ? (
-          <View style={{ width: 20 }} />
-        ) : (
-          <Pressable onPress={handleToggleSave} hitSlop={10}>
-            <HeartIcon filled={isSaved} />
-          </Pressable>
-        )}
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {company}
+          </Text>
+          {isOwner ? (
+            <View style={{ width: 20 }} />
+          ) : (
+            <Pressable onPress={handleToggleSave} hitSlop={10}>
+              <HeartIcon filled={isSaved} />
+            </Pressable>
+          )}
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 110 }}>
         <Card style={styles.headCard}>

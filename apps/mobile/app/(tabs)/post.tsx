@@ -15,6 +15,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Polyline } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
@@ -28,6 +29,17 @@ import { PhotoGrid } from "../../components/post/PhotoGrid";
 import { Button, Card, Chip, GlassBackButton } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
+import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+
+function HeaderBackChevron({ color, onPress }: { color: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={12} style={{ paddingRight: 8, paddingVertical: 4 }}>
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+        <Polyline points="15 18 9 12 15 6" />
+      </Svg>
+    </Pressable>
+  );
+}
 
 const TITLE_PLACEHOLDERS: Record<string, string> = {
   property: "e.g. 3 Bedroom House in Borrowdale",
@@ -80,6 +92,15 @@ export default function PostScreen() {
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
+  // headerLeft stays custom (not the OS default) — this "back" button steps
+  // back one wizard stage at a time (see handleHeaderBack below), which the
+  // real native back action (pop the navigation stack) can't express.
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: "Post a Free Ad",
+    headerLeft: () => <HeaderBackChevron color={color.textOnBrand} onPress={handleHeaderBack} />,
+  });
   const params = useLocalSearchParams<{ businessId?: string }>();
   const [state, setState] = useState<PostState>(INITIAL_STATE);
   const [error, setError] = useState<string | null>(null);
@@ -282,13 +303,15 @@ export default function PostScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
-        <GlassBackButton onPress={handleHeaderBack} tone="light" flat />
-        <Text style={styles.topbarTitle} numberOfLines={1}>
-          Post a Free Ad
-        </Text>
-        <View style={styles.topbarSpacer} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
+          <GlassBackButton onPress={handleHeaderBack} tone="light" flat />
+          <Text style={styles.topbarTitle} numberOfLines={1}>
+            Post a Free Ad
+          </Text>
+          <View style={styles.topbarSpacer} />
+        </View>
+      ) : null}
 
       <View style={styles.stepsBar}>
         {[1, 2, 3, 4].map((n) => (

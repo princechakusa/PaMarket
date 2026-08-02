@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -9,6 +9,7 @@ import { conversationIdFor, isPersonalConversationFor, type ConversationRow } fr
 import { color, font, radius, shadow, space, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
 import { Avatar, Badge, Button, Card, EmptyState, GlassBackButton, toast, VerifiedBadge } from "../../../components/ui";
+import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 
 type ApplicationStatus = "pending" | "shortlisted" | "declined";
 
@@ -103,6 +104,8 @@ export default function JobApplicantsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [notAllowed, setNotAllowed] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants" });
 
   const load = useCallback(async () => {
     if (!jobId || !session?.user) return;
@@ -225,9 +228,11 @@ export default function JobApplicantsScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -238,11 +243,13 @@ export default function JobApplicantsScreen() {
   if (notAllowed) {
     return (
       <View style={styles.container}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Applicants</Text>
-          <View style={{ width: 20 }} />
-        </View>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle}>Applicants</Text>
+            <View style={{ width: 20 }} />
+          </View>
+        ) : null}
         <View style={styles.centered}>
           <EmptyState title="Applicants unavailable" subtitle="Only the employer who posted this job can review applications." />
         </View>
@@ -252,11 +259,13 @@ export default function JobApplicantsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <GlassBackButton onPress={() => router.back()} tone="light" flat />
-        <Text style={styles.headerTitle}>Applicants</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      {Platform.OS !== "ios" ? (
+        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+          <GlassBackButton onPress={() => router.back()} tone="light" flat />
+          <Text style={styles.headerTitle}>Applicants</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      ) : null}
 
       <FlatList
         data={apps}
