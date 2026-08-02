@@ -133,7 +133,8 @@ export default function JobApplicantsScreen() {
       .select("id,job_id,job_title,company,applicant_id,applicant_name,applicant_phone,applicant_email,message,status,employer_id,applied_at,answers")
       .eq("job_id", jobId)
       .eq("employer_id", session.user.id)
-      .order("applied_at", { ascending: false });
+      .order("applied_at", { ascending: false })
+      .limit(500);
 
     const nextApps = ((applicationRows as JobApplicant[]) ?? []).filter((row) => row.employer_id === session.user.id);
     setApps(nextApps);

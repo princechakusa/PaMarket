@@ -40,7 +40,7 @@ import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { initPresence, isUserOnline, joinChatChannel } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { Avatar, GlassBackButton, ListSkeleton, toast } from "../../components/ui";
+import { Avatar, ErrorState, GlassBackButton, ListSkeleton, toast } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const EDIT_WINDOW_MS = 7 * 60 * 1000;
@@ -156,6 +156,7 @@ export default function ChatScreen() {
   const [listing, setListing] = useState<ListingContext | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [replyTarget, setReplyTarget] = useState<MessageRow | null>(null);
@@ -285,8 +286,20 @@ export default function ChatScreen() {
 
   const load = useCallback(async () => {
     if (!id || !myId) return;
-    const { data: conv } = await supabase.from("conversations").select("id,members,listing_id,business_id").eq("id", id).maybeSingle();
-    if (!conv) return;
+    const { data: conv, error: convError } = await supabase
+      .from("conversations")
+      .select("id,members,listing_id,business_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (convError) {
+      setLoadError("Unable to load this conversation. Check your connection and try again.");
+      return;
+    }
+    if (!conv) {
+      setLoadError("This conversation no longer exists.");
+      return;
+    }
+    setLoadError(null);
     setConversation(conv as ConversationRow);
 
     const oId = otherMember(conv as ConversationRow, myId);
@@ -315,6 +328,10 @@ export default function ChatScreen() {
         .limit(200),
     ]);
 
+    if (msgsRes.error) {
+      setLoadError("Unable to load messages. Check your connection and try again.");
+      return;
+    }
     setOtherProfile((profileRes.data as Profile) ?? null);
     setConversationBusiness((bizRes.data as { id: string; name: string | null; logo: string | null } | null) ?? null);
     setListing((listingRes.data as ListingContext) ?? null);
@@ -433,7 +450,7 @@ export default function ChatScreen() {
     setInputText("");
     setReplyTarget(null);
 
-    const { data: inserted } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from("messages")
       .insert({
         conversation_id: id,
@@ -445,7 +462,17 @@ export default function ChatScreen() {
       })
       .select("id")
       .single();
-    // Optimistic message stays visible on error; matches web behavior.
+
+    if (insertError) {
+      // The optimistic message was already shown — remove it rather than
+      // leave it looking permanently "sent" when it never was (this was
+      // silently swallowed before, most visibly when trg_check_message_block
+      // rejects the insert because either party has blocked the other).
+      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+      const isBlocked = /block exists between these users/i.test(insertError.message);
+      toast(isBlocked ? "This message couldn't be delivered." : "Message not sent — try again.", 3000, true);
+      return;
+    }
 
     // Pattern-matched scam categories get auto-flagged for moderator review
     // regardless of whether either party reports it — see lib/safety.ts
@@ -789,6 +816,17 @@ export default function ChatScreen() {
       {isLoading ? (
         <View style={{ padding: space.lg, flex: 1 }}>
           <ListSkeleton count={6} />
+        </View>
+      ) : loadError ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <ErrorState
+            title="Unable to load messages"
+            subtitle={loadError}
+            onRetry={() => {
+              setIsLoading(true);
+              load().finally(() => setIsLoading(false));
+            }}
+          />
         </View>
       ) : (
         <FlatList

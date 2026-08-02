@@ -56,7 +56,7 @@ export default function BusinessListingsScreen() {
     if (!id) return;
     const [bizRes, listingsRes] = await Promise.all([
       supabase.from("businesses").select("*").eq("id", id).maybeSingle(),
-      supabase.from("listings").select(LISTING_COLUMNS).eq("business_id", id).order("created_at", { ascending: false }),
+      supabase.from("listings").select(LISTING_COLUMNS).eq("business_id", id).order("created_at", { ascending: false }).limit(500),
     ]);
     if (bizRes.data) {
       const biz = bizRes.data as Business;

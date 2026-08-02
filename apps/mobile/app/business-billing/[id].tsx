@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -122,10 +122,11 @@ export default function BusinessBillingScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>Billed through Google Play</Text>
+        <Text style={styles.infoTitle}>{Platform.OS === "ios" ? "Billed through the App Store" : "Billed through Google Play"}</Text>
         <Text style={styles.infoText}>
-          All purchases are made and managed through Google Play. To update your payment method or cancel a
-          subscription, use the Google Play Store app.
+          {Platform.OS === "ios"
+            ? "All purchases are made and managed through the App Store. To update your payment method or cancel a subscription, go to Settings → [your name] → Subscriptions."
+            : "All purchases are made and managed through Google Play. To update your payment method or cancel a subscription, use the Google Play Store app."}
         </Text>
       </View>
 

@@ -265,26 +265,63 @@ Deno.serve(async (req) => {
     else if (target !== 'all' && target !== 'sellers' && target !== 'buyers') q = q.eq('id', target);
     if (provinces && provinces.length > 0) q = q.in('province', provinces);
 
-    const profilesResult = await q.limit(5000);
-    if (profilesResult.error) throw profilesResult.error;
-
-    let profiles = profilesResult.data || [];
+    // A single .limit(5000) here used to silently truncate a 'notify all
+    // users' broadcast to whatever the first 5000 rows happened to be in
+    // arbitrary DB order — at 100k+ users that's the vast majority of the
+    // audience never reached, with no error or indication anything was
+    // truncated. Paginate through the FULL matching set instead. (This
+    // function's downstream work — notification inserts, FCM/web-push sends
+    // — is already properly chunked in batches of 100/25, so raising this
+    // to the true total doesn't change that part's behavior, just what
+    // reaches it. For audiences large enough to approach this Edge
+    // Function's execution time limit, this would need to move to a
+    // queued/background-worker fan-out instead of one synchronous
+    // invocation — not a concern yet at current volumes, but worth knowing
+    // before this cap is the reason a broadcast times out instead of
+    // silently under-delivering.)
+    let profiles: Record<string, unknown>[] = [];
+    {
+      const PAGE = 1000;
+      let from = 0;
+      for (;;) {
+        const page = await q.range(from, from + PAGE - 1);
+        if (page.error) throw page.error;
+        const rows = page.data || [];
+        profiles.push(...rows);
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+    }
 
     // FCM tokens live in the isolated push_tokens table (security_hardening_2026_06.sql
     // dropped profiles.push_token so it's no longer publicly readable) — join them in
     // by user id, same as notify-message does, instead of querying the dropped column.
     const tokenMap: Record<string, string> = {};
-    if (profiles.length > 0) {
-      const tokenRows = await db.from('push_tokens').select('user_id, token').in('user_id', profiles.map((p) => p['id']));
+    for (let i = 0; i < profiles.length; i += 500) {
+      const idsBatch = profiles.slice(i, i + 500).map((p) => p['id']);
+      const tokenRows = await db.from('push_tokens').select('user_id, token').in('user_id', idsBatch);
       if (tokenRows.error) console.warn('push_tokens lookup:', tokenRows.error.message);
       for (const t of (tokenRows.data || [])) tokenMap[t['user_id']] = t['token'];
     }
-    profiles = profiles.map((p) => ({ ...p, push_token: tokenMap[p['id']] || null }));
+    profiles = profiles.map((p) => ({ ...p, push_token: tokenMap[p['id'] as string] || null }));
 
     if (target === 'sellers' || target === 'buyers') {
-      const listingsResult = await db.from('listings').select('seller_id').neq('status', 'banned').limit(10000);
-      const sellerSet = new Set((listingsResult.data || []).map((l) => l['seller_id']));
-      profiles = profiles.filter((p) => target === 'sellers' ? sellerSet.has(p['id']) : !sellerSet.has(p['id']));
+      // Same truncation risk as the profiles fetch above — an active
+      // marketplace can easily exceed 10,000 listings, silently
+      // misclassifying sellers past that point as "buyers" (or dropping
+      // them from a 'sellers' broadcast entirely).
+      const sellerSet = new Set<string>();
+      const PAGE = 1000;
+      let from = 0;
+      for (;;) {
+        const page = await db.from('listings').select('seller_id').neq('status', 'banned').range(from, from + PAGE - 1);
+        if (page.error) break;
+        const rows = page.data || [];
+        for (const l of rows) sellerSet.add(l['seller_id'] as string);
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+      profiles = profiles.filter((p) => target === 'sellers' ? sellerSet.has(p['id'] as string) : !sellerSet.has(p['id'] as string));
     }
 
     // Notification preferences apply to both the in-app centre and device push.

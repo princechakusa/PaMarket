@@ -47,6 +47,7 @@ create policy "leads_insert"
 -- duplicated) and adds read access for the lead's own creator.
 drop policy if exists "leads_owner_select" on public.business_leads;
 drop policy if exists "owner_read_leads" on public.business_leads;
+drop policy if exists "leads_select" on public.business_leads;
 create policy "leads_select"
   on public.business_leads for select to authenticated
   using (

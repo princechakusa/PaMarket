@@ -21,10 +21,12 @@ import {
   endConnection,
   finishTransaction,
   fetchProducts,
+  getAvailablePurchases,
   initConnection,
   purchaseErrorListener,
   purchaseUpdatedListener,
   requestPurchase,
+  restorePurchases as restorePurchasesNative,
   type Product,
   type ProductSubscription,
   type Purchase,
@@ -260,6 +262,78 @@ export async function purchaseProduct(productId: string, ctx: PurchaseContext = 
   }
 
   return resultPromise;
+}
+
+export type RestoreResult = {
+  ok: boolean;
+  restoredCount: number;
+  failedCount: number;
+  errors: string[];
+};
+
+// Required by Apple Guideline 3.1.1 for any app selling subscriptions: lets
+// a user recover entitlements after a reinstall / new device / re-login
+// without paying again. Only subscription products are restorable here —
+// this app's consumables (boosts, job credits, slot packs) are genuinely
+// consumed on purchase, so the platform has nothing left to restore for
+// them; StoreKit/Play would simply return nothing for those SKUs.
+//
+// The client never grants anything itself: every purchase returned by the
+// platform is re-submitted to the same server-side verify endpoint used for
+// a fresh purchase (Apple's real receipt/JWS validation, Apple's servers as
+// the source of truth for subscription status), and only finished once the
+// server confirms the entitlement is active.
+export async function restoreAllPurchases(): Promise<RestoreResult> {
+  if (!connected) {
+    return { ok: false, restoredCount: 0, failedCount: 0, errors: ["Store connection isn't ready yet. Please try again in a moment."] };
+  }
+
+  try {
+    await restorePurchasesNative();
+  } catch (e) {
+    console.warn("iap: restorePurchases (native sync) failed, continuing with getAvailablePurchases anyway", e);
+  }
+
+  let purchases: Purchase[] = [];
+  try {
+    purchases = (await getAvailablePurchases()) as Purchase[];
+  } catch (e) {
+    return { ok: false, restoredCount: 0, failedCount: 0, errors: [(e as Error).message || "Could not reach the store."] };
+  }
+
+  const subscriptionPurchases = purchases.filter((p) => isSubscriptionProduct(p.productId));
+  if (subscriptionPurchases.length === 0) {
+    return { ok: true, restoredCount: 0, failedCount: 0, errors: [] };
+  }
+
+  const platform = Platform.OS === "ios" ? "ios" : "android";
+  let restoredCount = 0;
+  const errors: string[] = [];
+
+  for (const purchase of subscriptionPurchases) {
+    const productId = purchase.productId;
+    const family = familyOf(productId);
+    const purchaseToken = purchase.purchaseToken;
+    if (!family || !purchaseToken) continue;
+
+    const isIosSubscription = platform === "ios";
+    const tokenForServer =
+      isIosSubscription && "originalTransactionIdentifierIOS" in purchase && purchase.originalTransactionIdentifierIOS
+        ? purchase.originalTransactionIdentifierIOS
+        : purchaseToken;
+
+    const fn = verifyEndpointFor(platform, family);
+    const result = await callVerifyEndpoint(fn, { productId, purchaseToken: tokenForServer });
+
+    if (result.ok) {
+      restoredCount += 1;
+      await finishTransaction({ purchase, isConsumable: false }).catch((e) => console.warn("iap: restore finishTransaction failed", e));
+    } else {
+      errors.push(result.error || `Could not restore ${productId}`);
+    }
+  }
+
+  return { ok: true, restoredCount, failedCount: errors.length, errors };
 }
 
 export type { Product, ProductSubscription };

@@ -46,7 +46,7 @@ export default function BusinessAnalyticsScreen() {
     setIsOwner(true);
     setTier(planEntitlements((biz as any).plan_id).analytics);
     const [listingsRes, leadRows] = await Promise.all([
-      supabase.from("listings").select("id,title,views,clicks,price,currency").eq("business_id", id),
+      supabase.from("listings").select("id,title,views,clicks,price,currency").eq("business_id", id).order("views", { ascending: false }).limit(500),
       fetchBusinessLeads(id),
     ]);
     setListings((listingsRes.data as unknown as Listing[]) ?? []);

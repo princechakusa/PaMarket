@@ -11,7 +11,7 @@ import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
-import { purchaseProduct } from "../../lib/iap";
+import { purchaseProduct, restoreAllPurchases } from "../../lib/iap";
 import { RECRUITER_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
 
 const PLAN_ORDER = ["free", "recruiter"];
@@ -40,6 +40,7 @@ export default function RecruiterSubscriptionScreen() {
   const [jobsPosted, setJobsPosted] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Recruiter Plan" });
 
@@ -157,6 +158,26 @@ export default function RecruiterSubscriptionScreen() {
             </View>
           );
         })}
+
+        <Pressable
+          style={styles.restoreButton}
+          disabled={isRestoring}
+          onPress={async () => {
+            setIsRestoring(true);
+            const result = await restoreAllPurchases();
+            setIsRestoring(false);
+            if (!result.ok) {
+              toast(result.errors[0] || "Couldn't restore purchases. Try again.");
+            } else if (result.restoredCount > 0) {
+              toast("Purchases restored");
+              load();
+            } else {
+              toast("No previous purchases found to restore");
+            }
+          }}
+        >
+          {isRestoring ? <ActivityIndicator color={color.brand} /> : <Text style={styles.restoreButtonText}>Restore Purchases</Text>}
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -205,5 +226,7 @@ function buildStyles(color: ColorPalette) {
   featureText: { fontSize: 12.5, color: color.text },
   upgradeButton: { backgroundColor: color.brand, borderRadius: 12, paddingVertical: 12, alignItems: "center", marginTop: 14 },
   upgradeButtonText: { color: color.textOnBrand, fontSize: 13.5, fontWeight: "700" },
+  restoreButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 4 },
+  restoreButtonText: { fontSize: 13, fontWeight: "700", color: color.brand },
   });
 }

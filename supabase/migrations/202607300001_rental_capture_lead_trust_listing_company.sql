@@ -95,7 +95,17 @@ exception
 end;
 $$;
 
-revoke all on function public.rental_capture_lead(uuid, uuid, text, text, date, date) from public, anon, authenticated;
+-- The old 6-param signature this was meant to retire may already be gone
+-- (applied by hand previously, same as the other migrations in this batch)
+-- — revoke has no "if exists", so guard it explicitly rather than fail the
+-- whole migration over cleanup of something already cleaned up.
+do $$
+begin
+  revoke all on function public.rental_capture_lead(uuid, uuid, text, text, date, date) from public, anon, authenticated;
+exception when undefined_function then
+  null;
+end
+$$;
 drop function if exists public.rental_capture_lead(uuid, uuid, text, text, date, date);
 
 revoke all on function public.rental_capture_lead(uuid, text, text, date, date) from public;

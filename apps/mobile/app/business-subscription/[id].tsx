@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -9,8 +9,9 @@ import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { purchaseProduct } from "../../lib/iap";
+import { purchaseProduct, restoreAllPurchases } from "../../lib/iap";
 import { SHOP_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
+import { deepLinkToSubscriptions } from "expo-iap";
 
 const PLAN_ORDER = ["free", "starter", "pro", "premium"];
 
@@ -37,6 +38,7 @@ export default function BusinessSubscriptionScreen() {
   const [staffCount, setStaffCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
@@ -76,11 +78,29 @@ export default function BusinessSubscriptionScreen() {
   const curPlanId = (business as any).plan_id || "free";
   const ent = planEntitlements(curPlanId);
 
-  async function downgrade(planId: string) {
-    if (!business) return;
-    await supabase.from("businesses").update({ plan_id: planId }).eq("id", business.id);
-    setBusiness({ ...business, ...({ plan_id: planId } as any) });
-    toast(`Plan changed to ${planEntitlements(planId).name}`);
+  // Plan changes away from a paid plan are not something this app can do
+  // itself — `businesses.plan_id` is protected server-side (only the
+  // verified-purchase/webhook path can write it, see
+  // billing_entitlement_enforcement_2026_07.sql's protect_business_plan_id
+  // trigger) since it's the record of what Apple/Google are actually
+  // billing for. Cancelling or switching tiers has to happen in the
+  // platform's own subscription management; our webhook + the daily
+  // expire_lapsed_play_subscriptions() sweep pick up the change
+  // automatically once the store confirms it.
+  async function manageSubscription() {
+    const productId = PRODUCT_ID_BY_PLAN[curPlanId];
+    try {
+      await deepLinkToSubscriptions(
+        Platform.OS === "android" && productId ? { skuAndroid: productId, packageNameAndroid: "com.pamarket.app" } : undefined
+      );
+      toast("Changes made there will update your plan here automatically.");
+    } catch {
+      toast(
+        Platform.OS === "ios"
+          ? "Open Settings → Apple ID → Subscriptions to manage your plan."
+          : "Open the Google Play Store app → Subscriptions to manage your plan."
+      );
+    }
   }
 
   async function upgrade(planId: string, planName: string) {
@@ -172,14 +192,36 @@ export default function BusinessSubscriptionScreen() {
                   )}
                 </Pressable>
               ) : (
-                <Pressable style={styles.downgradeButton} onPress={() => downgrade(planId)}>
-                  <Text style={styles.downgradeButtonText}>{planId === "free" ? "Downgrade to Free" : "Downgrade"}</Text>
+                <Pressable style={styles.downgradeButton} onPress={manageSubscription}>
+                  <Text style={styles.downgradeButtonText}>Manage subscription</Text>
                 </Pressable>
               )
             ) : null}
           </View>
         );
       })}
+
+      {isOwner ? (
+        <Pressable
+          style={styles.restoreButton}
+          disabled={isRestoring}
+          onPress={async () => {
+            setIsRestoring(true);
+            const result = await restoreAllPurchases();
+            setIsRestoring(false);
+            if (!result.ok) {
+              toast(result.errors[0] || "Couldn't restore purchases. Try again.");
+            } else if (result.restoredCount > 0) {
+              toast("Purchases restored");
+              load();
+            } else {
+              toast("No previous purchases found to restore");
+            }
+          }}
+        >
+          {isRestoring ? <ActivityIndicator color={tones.brand} /> : <Text style={styles.restoreButtonText}>Restore Purchases</Text>}
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 }
@@ -217,5 +259,7 @@ function buildStyles(color: ColorPalette) {
     upgradeButtonText: { fontSize: 12.5, fontWeight: "700", color: color.textOnBrand },
     downgradeButton: { paddingVertical: 11, borderRadius: 10, borderWidth: 1, borderColor: color.border, alignItems: "center" },
     downgradeButtonText: { fontSize: 12.5, fontWeight: "700", color: color.text },
+    restoreButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 8 },
+    restoreButtonText: { fontSize: 13, fontWeight: "700", color: color.brand },
   });
 }

@@ -7,7 +7,8 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
-import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
+import { fetchSellerRatingSummary, sellerInitials, type PublicProfile } from "../../lib/sellers";
+import { REPORT_REASONS } from "../../lib/safety";
 import { formatPrice, isFeatured, isNew, listingLocation, type Listing } from "../../lib/listings";
 import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge, toast } from "../../components/ui";
 import { StarRow } from "../../components/StarRow";
@@ -126,7 +127,7 @@ export default function UserProfileScreen() {
   const insets = useSafeAreaInsets();
 
   const [profile, setProfile] = useState<FullProfile | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [ratingSummary, setRatingSummary] = useState({ count: 0, average: 0 });
   const [listings, setListings] = useState<Listing[]>([]);
   const [business, setBusiness] = useState<BusinessLite | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,9 +180,56 @@ export default function UserProfileScreen() {
     }
   }
 
+  // target_id is the profile being viewed (`id`), never `myId` — this
+  // screen's menu is only ever rendered for !isOwn (see the headerRight
+  // wiring below), so self-reporting isn't reachable from here at all. The
+  // `myId === id` check below is still real defense-in-depth, and the
+  // database itself also rejects it independently (reports_no_self_report
+  // check constraint, migration 202608030004) — this UI guard is not the
+  // only thing standing between a user and reporting themselves.
+  async function submitReport(reason: string) {
+    if (!myId || !id) return;
+    if (myId === id) return;
+    const { error: reportError } = await supabase.from("reports").insert({
+      target_type: "user",
+      target_id: id,
+      reason,
+      reporter_id: myId,
+    });
+    if (reportError) {
+      if (/duplicate|unique/i.test(reportError.message)) {
+        toast("You've already reported this user.");
+      } else if (/rate|limit|too many/i.test(reportError.message)) {
+        toast("You've submitted too many reports recently. Please try again later.", 3000, true);
+      } else {
+        toast("Couldn't submit report. Please try again.", 3000, true);
+      }
+      return;
+    }
+    toast("Thanks — this user has been reported to our moderation team.");
+  }
+
+  function openReportReasonMenu() {
+    const reasons = REPORT_REASONS.user;
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: [...reasons, "Cancel"], cancelButtonIndex: reasons.length },
+        (index) => {
+          if (index < reasons.length) submitReport(reasons[index]);
+        }
+      );
+    } else {
+      Alert.alert("Report user", "Why are you reporting this user?", [
+        ...reasons.map((reason) => ({ text: reason, onPress: () => submitReport(reason) })),
+        { text: "Cancel", style: "cancel" as const },
+      ]);
+    }
+  }
+
   function openProfileMenu() {
     const options: { label: string; action: () => void; destructive?: boolean }[] = [
       { label: isBlocked ? "Unblock User" : "Block User", action: toggleBlock, destructive: !isBlocked },
+      { label: "Report User", action: openReportReasonMenu, destructive: true },
     ];
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -222,9 +270,9 @@ export default function UserProfileScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    const [profileRes, reviewsRes, listingsRes, businessRes] = await Promise.all([
+    const [profileRes, ratingSummaryRes, listingsRes, businessRes] = await Promise.all([
       supabase.from("profiles_public").select("id,name,avatar,verified,bio,city,created_at").eq("id", id).maybeSingle(),
-      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", id).limit(200),
+      fetchSellerRatingSummary(id),
       supabase
         .from("listings")
         .select("id,seller_id,seller_name,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,created_at")
@@ -236,7 +284,7 @@ export default function UserProfileScreen() {
       supabase.from("businesses").select("id,name").eq("owner_user_id", id).maybeSingle(),
     ]);
     setProfile((profileRes.data as FullProfile) ?? null);
-    setReviews((reviewsRes.data as Review[]) ?? []);
+    setRatingSummary(ratingSummaryRes);
     setListings((listingsRes.data as Listing[]) ?? []);
     setBusiness((businessRes.data as BusinessLite) ?? null);
   }, [id]);
@@ -246,7 +294,7 @@ export default function UserProfileScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
-  const avgRating = averageRating(reviews);
+  const avgRating = ratingSummary.average;
 
   async function messageUser() {
     if (!session?.user || !id) {
@@ -373,8 +421,8 @@ export default function UserProfileScreen() {
 
             <View style={styles.statsCard}>
               <Pressable style={styles.statItem} onPress={() => router.push({ pathname: "/reviews/[id]", params: { id } })}>
-                <Text style={[styles.statValue, styles.statGold]}>{reviews.length ? avgRating.toFixed(1) : "0"}</Text>
-                <Text style={styles.statLabel}>{reviews.length ? `${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "No reviews"}</Text>
+                <Text style={[styles.statValue, styles.statGold]}>{ratingSummary.count ? avgRating.toFixed(1) : "0"}</Text>
+                <Text style={styles.statLabel}>{ratingSummary.count ? `${ratingSummary.count} review${ratingSummary.count === 1 ? "" : "s"}` : "No reviews"}</Text>
               </Pressable>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -393,7 +441,7 @@ export default function UserProfileScreen() {
             <Pressable style={styles.ratingLine} onPress={() => router.push({ pathname: "/reviews/[id]", params: { id } })}>
               <StarRow rating={avgRating} size={13} />
               <Text style={styles.ratingText}>
-                {reviews.length ? `${avgRating.toFixed(1)} from ${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "No reviews yet"}
+                {ratingSummary.count ? `${avgRating.toFixed(1)} from ${ratingSummary.count} review${ratingSummary.count === 1 ? "" : "s"}` : "No reviews yet"}
               </Text>
             </Pressable>
 

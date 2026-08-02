@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,19 +18,15 @@ import type { Business } from "../lib/businesses";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
-// Mirrors www/js/business-onboarding.js STEPS. Payment/subscription is
-// deferred (Play Billing out of scope) — the wizard only ever submits the
-// Free plan; picking a paid plan just shows "Coming soon".
-const STEPS = ["details", "category", "plan", "activate"] as const;
+// Mirrors www/js/business-onboarding.js STEPS. Every business onboards on
+// the Free plan — paid plans are only ever purchased through the real
+// StoreKit/Play Billing flow on business-subscription/[id].tsx (reachable
+// from Seller Center right after onboarding completes), never from here.
+// This screen used to show priced paid tiers that just alerted "Coming
+// soon" when tapped — a real App Review risk (priced-but-inert products).
+const STEPS = ["details", "category", "activate"] as const;
 type Step = (typeof STEPS)[number];
-const STEP_LABELS: Record<Step, string> = { details: "Details", category: "Category", plan: "Plan", activate: "Activate" };
-
-const BIZ_PLANS = [
-  { id: "free", name: "Free", price: 0, tagline: "Get started", features: ["Up to 3 listings", "Basic visibility"] },
-  { id: "starter", name: "Starter", price: 9.99, tagline: "For small sellers", features: ["Up to 15 listings", "Standard ranking"] },
-  { id: "pro", name: "Pro", price: 19.99, tagline: "Grow faster", features: ["Up to 60 listings", "Higher ranking"] },
-  { id: "premium", name: "Premium", price: 29.99, tagline: "Maximum reach", features: ["Unlimited listings", "Top ranking"] },
-];
+const STEP_LABELS: Record<Step, string> = { details: "Details", category: "Category", activate: "Activate" };
 
 const BIZ_TYPES = [
   { id: "individual", label: "Individual", sub: "Sole trader / personal" },
@@ -91,7 +86,7 @@ function blankDraft(phone?: string, email?: string): Draft {
     city: "",
     suburb: "",
     categories: [],
-    planId: "",
+    planId: "free",
   };
 }
 
@@ -204,9 +199,6 @@ export default function BusinessOnboardingScreen() {
       setStep("category");
     } else if (step === "category") {
       if (!draft.categories.length) { toast("Pick at least one category"); return; }
-      setStep("plan");
-    } else if (step === "plan") {
-      if (!draft.planId) { toast("Select a plan to continue"); return; }
       setStep("activate");
     }
   }
@@ -217,20 +209,9 @@ export default function BusinessOnboardingScreen() {
     else router.back();
   }
 
-  function selectPlan(planId: string) {
-    if (planId !== "free") {
-      // Paid plans activate only through a verified Google Play purchase —
-      // that native IAP flow is explicitly deferred in this migration.
-      Alert.alert("Paid Plans", "Coming soon. Continue with the Free plan for now — you can upgrade later.");
-      return;
-    }
-    update("planId", planId);
-  }
-
   async function activate() {
     if (!draft.name || !draft.phone || !draft.province || !draft.city) { setStep("details"); return; }
     if (!draft.categories.length) { setStep("category"); return; }
-    if (!draft.planId) { setStep("plan"); return; }
 
     setIsSubmitting(true);
     // New businesses go to pending_activation for admin review; editing an
@@ -355,42 +336,16 @@ export default function BusinessOnboardingScreen() {
           </>
         ) : null}
 
-        {step === "plan" ? (
-          <>
-            <Text style={styles.intro}>Choose a plan to activate your business. Even the Free plan must be selected to go live.</Text>
-            {BIZ_PLANS.map((p) => {
-              const sel = draft.planId === p.id;
-              return (
-                <Pressable key={p.id} style={[styles.planCard, sel && styles.planCardActive]} onPress={() => selectPlan(p.id)}>
-                  <View style={styles.planHeaderRow}>
-                    <Text style={[styles.planName, sel && styles.planNameActive]}>{p.name}</Text>
-                    <Text style={styles.planPrice}>{p.price === 0 ? "Free" : `$${p.price}/mo`}</Text>
-                  </View>
-                  <Text style={styles.planTagline}>{p.tagline}{p.price > 0 ? " · Coming soon" : ""}</Text>
-                  <View style={styles.chipsWrap}>
-                    {p.features.map((f) => (
-                      <View key={f} style={styles.featurePill}>
-                        <Text style={styles.featurePillText}>{f}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </Pressable>
-              );
-            })}
-            <StepNav onBack={goBack} onNext={goNext} styles={styles} />
-          </>
-        ) : null}
-
         {step === "activate" ? (
           <>
-            <Text style={styles.intro}>Review your details, then activate to get your business live on PaMarket.</Text>
+            <Text style={styles.intro}>Review your details, then activate to get your business live on PaMarket. You'll start on the Free plan — upgrade any time from Seller Center.</Text>
             <View style={styles.reviewCard}>
               <ReviewRow label="Name" value={draft.name || "—"} styles={styles} />
               <ReviewRow label="Type" value={BIZ_TYPES.find((t) => t.id === draft.bizType)?.label ?? draft.bizType} styles={styles} />
               <ReviewRow label="Categories" value={draft.categories.map((id) => CATEGORIES.find((c) => c.id === id)?.name ?? id).join(", ") || "—"} styles={styles} />
               <ReviewRow label="Phone" value={draft.phone || "—"} styles={styles} />
               <ReviewRow label="Location" value={[draft.suburb, draft.city, draft.province].filter(Boolean).join(", ") || "—"} styles={styles} />
-              <ReviewRow label="Plan" value={BIZ_PLANS.find((p) => p.id === draft.planId)?.name ?? "—"} last styles={styles} />
+              <ReviewRow label="Plan" value="Free" last styles={styles} />
             </View>
             <View style={styles.rowGap}>
               <View style={[styles.backNavSlot, isSubmitting && styles.disabledNav]}>

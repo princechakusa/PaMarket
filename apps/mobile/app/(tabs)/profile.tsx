@@ -18,7 +18,7 @@ import { supabase } from "../../lib/supabase";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import type { Profile } from "../../lib/profiles";
-import { averageRating, type Review } from "../../lib/sellers";
+import { fetchSellerRatingSummary } from "../../lib/sellers";
 import { fetchValidSavedCount } from "../../lib/saves";
 import { clearPushToken } from "../../lib/push";
 import { businessInitials, type Business } from "../../lib/businesses";
@@ -244,7 +244,7 @@ export default function AccountScreen() {
     // Unread-messages is handled entirely by the useFocusEffect below (it
     // also fires on this same initial mount) -- fetching it here too fired
     // the same count query twice back to back on every first visit.
-    const [profileRes, activeRes, bizRes, applicationsRes, reviewsRes, savedCountRes] = await Promise.all([
+    const [profileRes, activeRes, bizRes, applicationsRes, ratingSummary, savedCountRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id,name,email,phone,avatar,verified,bio,city,created_at,company_verified")
@@ -253,7 +253,7 @@ export default function AccountScreen() {
       supabase.from("listings").select("id", { count: "exact", head: true }).eq("seller_id", myId).eq("status", "active"),
       supabase.from("businesses").select("*").eq("owner_user_id", myId),
       supabase.from("applications").select("id", { count: "exact", head: true }).eq("applicant_id", myId),
-      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", myId).limit(200),
+      fetchSellerRatingSummary(myId),
       fetchValidSavedCount(myId),
     ]);
     if (profileRes.data) setProfile(profileRes.data as Profile);
@@ -262,9 +262,8 @@ export default function AccountScreen() {
     setApplicationsCount(applicationsRes.count ?? 0);
     setSavedCount(savedCountRes);
 
-    const reviews = (reviewsRes.data as Review[] | null) ?? [];
-    setReviewCount(reviews.length);
-    setRating(averageRating(reviews));
+    setReviewCount(ratingSummary.count);
+    setRating(ratingSummary.average);
 
     const biz = (bizRes.data as Business[] | null) ?? [];
     setBusinesses(biz);
@@ -294,11 +293,8 @@ export default function AccountScreen() {
     useCallback(() => {
       if (!session?.user) return;
       supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .eq("read", false)
-        .neq("sender_id", session.user.id)
-        .then(({ count }) => setUnreadMessages(count ?? 0), () => {});
+        .rpc("get_unread_message_count")
+        .then(({ data }) => setUnreadMessages(data ?? 0), () => {});
     }, [session])
   );
 

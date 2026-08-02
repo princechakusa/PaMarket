@@ -5,7 +5,7 @@ import { supabase } from "./supabase";
 // Save works end-to-end and Favourites shows real data across devices.
 
 export async function fetchSavedListingIds(userId: string): Promise<Set<string>> {
-  const { data } = await supabase.from("user_saves").select("listing_id").eq("user_id", userId);
+  const { data } = await supabase.from("user_saves").select("listing_id").eq("user_id", userId).limit(2000);
   return new Set((data ?? []).map((r: { listing_id: string }) => r.listing_id));
 }
 

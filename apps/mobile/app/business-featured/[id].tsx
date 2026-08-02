@@ -47,8 +47,8 @@ export default function BusinessFeaturedScreen() {
     setIsOwner(true);
     const baseline = planEntitlements((biz as any).plan_id).featuredSlots;
     const [{ data: rows }, { data: packs }] = await Promise.all([
-      supabase.from("listings").select("id,title,photos,boost,featured_until").eq("business_id", id),
-      supabase.from("featured_slot_packs").select("extra_slots").eq("business_id", id).eq("status", "consumed"),
+      supabase.from("listings").select("id,title,photos,boost,featured_until").eq("business_id", id).order("created_at", { ascending: false }).limit(500),
+      supabase.from("featured_slot_packs").select("extra_slots").eq("business_id", id).eq("status", "consumed").limit(500),
     ]);
     const extra = (packs as { extra_slots: number }[] | null)?.reduce((sum, p) => sum + p.extra_slots, 0) ?? 0;
     setSlots(baseline + extra);

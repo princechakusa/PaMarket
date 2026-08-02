@@ -17,6 +17,7 @@ import { formatPrice, type Listing } from "../lib/listings";
 import { listingStatus } from "../lib/safety";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
+import { ErrorState } from "../components/ui";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
@@ -40,15 +41,21 @@ export default function MyListingsScreen() {
   const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("listings")
       .select(LISTING_COLUMNS)
       .eq("seller_id", session.user.id)
       .order("created_at", { ascending: false })
       .limit(300);
+    if (error) {
+      setLoadError("Unable to load your listings. Check your connection and try again.");
+      return;
+    }
+    setLoadError(null);
     setListings((data as Listing[]) ?? []);
   }, [session]);
 
@@ -85,6 +92,21 @@ export default function MyListingsScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color={tones.brand} />
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={styles.centered}>
+        <ErrorState
+          title="Unable to load your listings"
+          subtitle={loadError}
+          onRetry={() => {
+            setIsLoading(true);
+            load().finally(() => setIsLoading(false));
+          }}
+        />
       </View>
     );
   }

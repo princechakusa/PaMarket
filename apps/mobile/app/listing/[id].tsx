@@ -26,7 +26,7 @@ import { formatPrice, isFeatured, type Listing } from "../../lib/listings";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { recordLead, type LeadType } from "../../lib/business-leads";
-import { averageRating, sellerInitials, type PublicProfile, type Review } from "../../lib/sellers";
+import { fetchSellerRatingSummary, sellerInitials, type PublicProfile } from "../../lib/sellers";
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
@@ -187,7 +187,7 @@ export default function ListingDetailScreen() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<PublicProfile | null>(null);
   const [sellerCreatedAt, setSellerCreatedAt] = useState<string | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [ratingSummary, setRatingSummary] = useState({ count: 0, average: 0 });
   const [similar, setSimilar] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -243,9 +243,9 @@ export default function ListingDetailScreen() {
     setListing(found);
 
     const sellerId = found.seller_id;
-    const [profileRes, reviewsRes, similarRes] = await Promise.all([
+    const [profileRes, ratingSummaryRes, similarRes] = await Promise.all([
       supabase.from("profiles_public").select("id,name,avatar,verified,created_at").eq("id", sellerId).maybeSingle(),
-      supabase.from("reviews").select("reviewer_id,rating,created_at").eq("seller_id", sellerId).limit(200),
+      fetchSellerRatingSummary(sellerId),
       found.category
         ? supabase
             .from("listings")
@@ -263,7 +263,7 @@ export default function ListingDetailScreen() {
       setSeller(prof);
       setSellerCreatedAt(prof.created_at ?? null);
     }
-    if (!reviewsRes.error && reviewsRes.data) setReviews(reviewsRes.data as Review[]);
+    setRatingSummary(ratingSummaryRes);
     if (!similarRes.error && similarRes.data) setSimilar(similarRes.data as Listing[]);
 
     supabase.rpc("increment_listing_view", { listing_id: found.id }).then(
@@ -291,7 +291,7 @@ export default function ListingDetailScreen() {
   }, [session?.user?.id, listing]);
 
   const isOwner = session?.user?.id === listing?.seller_id;
-  const avgRating = useMemo(() => averageRating(reviews), [reviews]);
+  const avgRating = ratingSummary.average;
   const categoryName = useMemo(
     () => CATEGORIES.find((c) => c.id === listing?.category)?.name ?? listing?.category ?? "Listing",
     [listing]
@@ -750,7 +750,7 @@ export default function ListingDetailScreen() {
                 <View style={styles.sellerRightRow}>
                   <StarRow rating={avgRating} />
                   <Text style={styles.sellerRatingText}>
-                    {reviews.length ? `${avgRating.toFixed(1)} (${reviews.length})` : "No reviews yet"}
+                    {ratingSummary.count ? `${avgRating.toFixed(1)} (${ratingSummary.count})` : "No reviews yet"}
                   </Text>
                 </View>
                 {seller?.verified ? (

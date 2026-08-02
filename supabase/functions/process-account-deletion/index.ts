@@ -97,11 +97,21 @@ Deno.serve(async (req) => {
 
     // ── conversations.members is a uuid[], not a foreign key — it will NOT
     //    cascade automatically. Remove the user from every conversation they
-    //    belong to; delete conversations that would be left with 0 members. ──
+    //    belong to; delete conversations that would be left with 0 members.
+    //    Paginated and processed concurrently per page — a long-lived
+    //    business/support account can have thousands of conversations, and
+    //    an unbounded select + sequential per-conversation loop risked this
+    //    function timing out before finishing. ──
     try {
-      const convRes = await db.from('conversations').select('id, members').contains('members', [userId])
-      if (convRes.data) {
-        for (const conv of convRes.data as any[]) {
+      const PAGE = 500
+      let from = 0
+      let any = false
+      for (;;) {
+        const convRes = await db.from('conversations').select('id, members').contains('members', [userId]).range(from, from + PAGE - 1)
+        if (convRes.error) throw convRes.error
+        const rows = (convRes.data as any[]) || []
+        if (rows.length) any = true
+        await Promise.all(rows.map(async (conv) => {
           const remaining = (conv.members || []).filter((m: string) => m !== userId)
           if (remaining.length === 0) {
             await db.from('messages').delete().eq('conversation_id', conv.id)
@@ -109,11 +119,54 @@ Deno.serve(async (req) => {
           } else {
             await db.from('conversations').update({ members: remaining }).eq('id', conv.id)
           }
-        }
-        deletedTables.push('conversations', 'messages')
+        }))
+        if (rows.length < PAGE) break
+        from += PAGE
       }
+      if (any) deletedTables.push('conversations', 'messages')
     } catch (e) {
       console.warn('conversation cleanup failed (continuing):', (e as Error).message)
+    }
+
+    // ── R2 objects are not tracked by Postgres — nothing cascades. Every
+    //    upload path this app issues signed URLs for is scoped to
+    //    `{prefix}/{userId}/...` (see get-r2-upload-url), so listing and
+    //    deleting everything under each of those prefixes is complete.
+    //    Best-effort — a storage failure must never block the deletion. ──
+    try {
+      const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = await import('npm:@aws-sdk/client-s3')
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${Deno.env.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: Deno.env.get('R2_ACCESS_KEY_ID')!,
+          secretAccessKey: Deno.env.get('R2_SECRET_ACCESS_KEY')!,
+        },
+      })
+      const bucket = Deno.env.get('R2_PUBLIC_BUCKET')!
+      const prefixes = ['listings', 'chat', 'cv', 'verification', 'profiles', 'rentals'].map((p) => `${p}/${userId}/`)
+      let anyDeleted = false
+
+      for (const prefix of prefixes) {
+        let continuationToken: string | undefined
+        for (;;) {
+          const listRes = await s3.send(
+            new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken })
+          )
+          const keys = (listRes.Contents || []).map((o) => o.Key).filter((k): k is string => !!k)
+          if (keys.length) {
+            anyDeleted = true
+            await s3.send(
+              new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys.map((Key) => ({ Key })) } })
+            )
+          }
+          if (!listRes.IsTruncated) break
+          continuationToken = listRes.NextContinuationToken
+        }
+      }
+      if (anyDeleted) deletedTables.push('r2_storage')
+    } catch (e) {
+      console.warn('R2 storage cleanup failed (continuing):', (e as Error).message)
     }
 
     // ── Everything below cascades automatically via

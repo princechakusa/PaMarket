@@ -1,4 +1,13 @@
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { Image } from "react-native";
 import { supabase } from "./supabase";
+
+// Photos straight off a modern phone camera are commonly 3000-4000px wide
+// and several MB each — full resolution nobody actually needs since these
+// only ever get displayed at feed/detail-screen sizes. Uploading them
+// unresized wastes R2 storage/egress and makes every listing/profile/chat
+// image load slower for everyone, at 100k-users scale that adds up fast.
+const MAX_DIMENSION = 1600;
 
 // Mirrors www/js/supabase.js H.uploadToR2: get a short-lived presigned PUT
 // URL from the get-r2-upload-url edge function, then PUT the blob directly
@@ -43,8 +52,29 @@ export async function uploadToR2(blob: Blob, key: string, contentType: string): 
   return publicUrl ?? signedUrl.split("?")[0];
 }
 
+function getImageSize(uri: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
+  });
+}
+
 export async function uploadImageUriToR2(uri: string, key: string): Promise<string> {
-  const response = await fetch(uri);
+  let uploadUri = uri;
+  try {
+    const { width, height } = await getImageSize(uri);
+    if (Math.max(width, height) > MAX_DIMENSION) {
+      // Only one dimension is passed so the manipulator preserves aspect
+      // ratio itself — passing both would stretch non-square images.
+      const resizeParam = width >= height ? { width: MAX_DIMENSION } : { height: MAX_DIMENSION };
+      const rendered = await ImageManipulator.manipulate(uri).resize(resizeParam).renderAsync();
+      const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
+      uploadUri = saved.uri;
+    }
+  } catch {
+    // If resizing fails for any reason, fall back to uploading the original —
+    // never block the user's upload on an optimization.
+  }
+  const response = await fetch(uploadUri);
   const blob = await response.blob();
   return uploadToR2(blob, key, "image/jpeg");
 }

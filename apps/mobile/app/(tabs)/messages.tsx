@@ -209,21 +209,45 @@ export default function MessagesScreen() {
     };
   }, []);
 
+  // Scoped to just this user's own conversations, not the whole `messages`
+  // table — an unfiltered `table: "messages"` subscription means every
+  // message sent by ANY user on the platform gets pushed to EVERY client
+  // with this screen mounted, each of which then re-runs the full load()
+  // below (profiles + listings + businesses + up to 1,000 messages + 5,000
+  // unread rows). At real scale that's a fan-out multiplier that gets worse
+  // with both more users AND more messages — this is the single biggest
+  // scalability fix in this screen. Capped to the most recent 300
+  // conversation ids so the filter string itself can't grow unbounded for
+  // a power/business account with a huge conversation history; anything
+  // older still gets picked up by the focus-based refresh below.
+  const conversationIdsKey = useMemo(
+    () =>
+      summaries
+        .map((s) => s.conversation.id)
+        .slice(0, 300)
+        .join(","),
+    [summaries]
+  );
+
   useEffect(() => {
-    if (!session?.user) return;
+    if (!session?.user || !conversationIdsKey) return;
     // Unique topic per call — a fixed topic can collide with a same-named
     // channel from a previous mount still mid-teardown, throwing "cannot add
     // postgres_changes callbacks after subscribe()" on remount.
     const channel = supabase
       .channel(`messages-list-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
-        load();
-      })
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=in.(${conversationIdsKey})` },
+        () => {
+          load();
+        }
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session, load]);
+  }, [session, load, conversationIdsKey]);
 
   // Lightweight focus refresh — re-checks just the unread flag for
   // conversations already on screen, instead of re-running the full `load()`

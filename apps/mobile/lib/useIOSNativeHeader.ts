@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Platform } from "react-native";
 import { useNavigation } from "expo-router";
 
@@ -44,19 +44,45 @@ type NativeHeaderOptions = {
 export function useIOSNativeHeader(options: NativeHeaderOptions) {
   const navigation = useNavigation();
 
+  // Every call site passes headerTitle/headerRight/headerLeft as a fresh
+  // inline arrow function — a new reference on every single render of the
+  // screen. If the effect below depended on those references directly,
+  // navigation.setOptions() would fire on every re-render, including every
+  // frame of an interactive swipe-back gesture, forcing the native header
+  // to reconcile mid-drag — this is what made back-navigation feel
+  // sluggish/draggy after these screens moved to native headers. Storing
+  // the latest option values in a ref and depending only on their
+  // *presence* (not identity) means the effect — and setOptions — only
+  // re-runs when something actually meaningful changes (theme colors,
+  // title text, or a callback appearing/disappearing), while the stable
+  // wrapper functions handed to React Navigation always read through to
+  // the current value at call time.
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   useLayoutEffect(() => {
     if (Platform.OS !== "ios") return;
     navigation.setOptions({
-      headerTransparent: !!options.transparent,
-      ...(options.transparent ? {} : { headerStyle: { backgroundColor: options.backgroundColor } }),
-      headerTintColor: options.tintColor,
-      headerTitle: options.headerTitle ?? options.title ?? "",
-      ...(options.headerRight ? { headerRight: options.headerRight } : {}),
-      ...(options.headerLeft ? { headerLeft: options.headerLeft } : {}),
+      headerTransparent: !!optionsRef.current.transparent,
+      ...(optionsRef.current.transparent
+        ? {}
+        : { headerStyle: { backgroundColor: optionsRef.current.backgroundColor } }),
+      headerTintColor: optionsRef.current.tintColor,
+      headerTitle: optionsRef.current.headerTitle
+        ? () => optionsRef.current.headerTitle!()
+        : optionsRef.current.title ?? "",
+      ...(optionsRef.current.headerRight ? { headerRight: () => optionsRef.current.headerRight!() } : {}),
+      ...(optionsRef.current.headerLeft ? { headerLeft: () => optionsRef.current.headerLeft!() } : {}),
     } as never);
-    // Deliberately depending on the whole `options` object's relevant
-    // fields individually (not the object itself, which is a fresh
-    // reference every render) — callers pass inline object literals.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, options.backgroundColor, options.tintColor, options.title, options.headerTitle, options.headerRight, options.headerLeft, options.transparent]);
+  }, [
+    navigation,
+    options.backgroundColor,
+    options.tintColor,
+    options.title,
+    options.transparent,
+    !!options.headerTitle,
+    !!options.headerRight,
+    !!options.headerLeft,
+  ]);
 }

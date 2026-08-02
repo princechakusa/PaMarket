@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
-import { signInWithOAuthProvider } from "../../lib/oauth";
+import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { GoogleButton } from "../../components/GoogleButton";
+import { AppleButton } from "../../components/AppleButton";
 import { PasswordField } from "../../components/PasswordField";
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
@@ -32,6 +33,7 @@ export default function SignUpScreen() {
   const [consent, setConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
 
@@ -102,6 +104,18 @@ export default function SignUpScreen() {
     }
   }
 
+  async function handleApple() {
+    setError(null);
+    setIsAppleLoading(true);
+    try {
+      await signInWithApple();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Apple sign-in failed");
+    } finally {
+      setIsAppleLoading(false);
+    }
+  }
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -110,6 +124,11 @@ export default function SignUpScreen() {
           <Text style={styles.subtitle}>Join Zimbabwe&apos;s largest marketplace</Text>
         </View>
 
+        {Platform.OS === "ios" ? (
+          <View style={{ marginBottom: 10 }}>
+            <AppleButton onPress={handleApple} isLoading={isAppleLoading} label="Sign up with Apple" />
+          </View>
+        ) : null}
         <GoogleButton onPress={handleGoogle} isLoading={isGoogleLoading} label="Sign up with Google" />
 
         <View style={styles.divider}>

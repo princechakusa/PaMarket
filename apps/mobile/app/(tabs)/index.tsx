@@ -233,11 +233,8 @@ export default function HomeScreen() {
         .or("category.is.null,category.neq.rental")
         .then(({ count }) => setUnreadNotifs(count ?? 0), () => {});
       supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .eq("read", false)
-        .neq("sender_id", session.user.id)
-        .then(({ count }) => setUnreadMessages(count ?? 0), () => {});
+        .rpc("get_unread_message_count")
+        .then(({ data }) => setUnreadMessages(data ?? 0), () => {});
     }, [session])
   );
 

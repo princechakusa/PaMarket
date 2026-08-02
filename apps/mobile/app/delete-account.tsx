@@ -7,34 +7,31 @@ import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
-// Mirrors www/js/security_pages.js pages.DeleteAccount / H.purgeMyAccount.
-// Primary path is the server-side delete_my_account() RPC; falls back to
-// deleting own-row data directly (RLS permits own-row deletes) if that
-// function isn't installed yet.
-async function purgeMyAccount(userId: string): Promise<{ ok: boolean }> {
-  let rpcOk = false;
-  try {
-    const { error } = await supabase.rpc("delete_my_account");
-    if (!error) rpcOk = true;
-  } catch {
-    // function not installed yet — use fallback
-  }
-  if (!rpcOk) {
-    const uidText = String(userId);
-    await Promise.allSettled([
-      supabase.from("listings").delete().eq("seller_id", userId),
-      supabase.from("messages").delete().eq("sender_id", uidText),
-      supabase.from("applications").delete().eq("applicant_id", userId),
-      supabase.from("reviews").delete().eq("reviewer_id", userId),
-      supabase.from("user_saves").delete().eq("user_id", userId),
-      supabase.from("saved_searches").delete().eq("user_id", userId),
-      supabase.from("notifications").delete().eq("user_id", uidText),
-      supabase.from("conversation_deletions").delete().eq("user_id", userId),
-      supabase.from("verifications").delete().eq("user_id", userId),
-      supabase.from("company_verifications").delete().eq("user_id", userId),
-      supabase.from("profiles").delete().eq("id", userId),
-    ]);
-  }
+// The RPC this used to call (`delete_my_account`) has never actually
+// existed in the database — every call silently fell through to a
+// client-side fallback that deleted rows from a handful of tables but
+// never touched the real auth.users row, so a "deleted" account's email/
+// password/OAuth identity kept working forever (the account itself was
+// never gone, just some of its data). delete-my-account is the real fix:
+// a server-side function (using the service-role key, since deleting
+// another table's rows via RLS-scoped client calls can't reach auth.users
+// at all) that cleans up non-cascading data (conversations.members is a
+// uuid[], not a real FK) and then actually deletes the Supabase Auth user
+// — cascading FKs on auth.users(id) take care of profiles, listings,
+// businesses, reviews, etc. automatically from there.
+async function purgeMyAccount(): Promise<{ ok: boolean; error?: string }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  if (!token) return { ok: false, error: "Not signed in" };
+
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+  const res = await fetch(`${supabaseUrl}/functions/v1/delete-my-account`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body?.success) return { ok: false, error: body?.error || `Server error (${res.status})` };
+
   await supabase.auth.signOut();
   return { ok: true };
 }
@@ -64,7 +61,12 @@ export default function DeleteAccountScreen() {
     if (!session?.user) return;
     setIsDeleting(true);
     try {
-      await purgeMyAccount(session.user.id);
+      const result = await purgeMyAccount();
+      if (!result.ok) {
+        setIsDeleting(false);
+        toast(result.error || "Something went wrong — try again", 3000, true);
+        return;
+      }
       toast("Your account and data have been deleted");
       router.replace("/(auth)/sign-in");
     } catch {
