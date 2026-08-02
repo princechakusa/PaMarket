@@ -1,35 +1,35 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
-import { PUBLISHERS } from '../_shared/amos-publishers/registry.ts'
+import { buildPublisherRegistry } from '../_shared/amos-publishers/registry.ts'
 
 // Deploy:  supabase functions deploy amos-publish-dispatcher --no-verify-jwt
 // (same reason as amos-research-runner/amos-content-generator: the cron
 // path — not scheduled yet, manual-trigger only for now — calls this with
 // only x-automation-secret, no apikey/Authorization header.)
 //
-// AMOS Module 3 — Publishing Control Layer dispatcher.
+// AMOS Module 3 (queue/manual workflow) + Module 4 (real Facebook
+// publishing, added without changing the queue/schema design).
 //
-// NO EXTERNAL PLATFORM API CALLS. Every publisher in PUBLISHERS except
-// 'manual' is a stub that returns ok:false — this dispatcher hardcodes the
-// 'manual' adapter for every claimed row regardless of its real target
-// platform, on purpose, per the Module 3 architecture doc. A schedule
-// row's `platform` column always reflects the real intended destination
-// (Facebook, Instagram, etc.) for display and for a future module to key
-// off; only the *publish mechanism* is manual-only right now. Swapping to
-// PUBLISHERS[schedule.platform] later is the entire code change needed to
-// turn on real per-platform publishing — no schema or dispatcher redesign.
+// Per-row routing: if amos_integrations has a 'connected' row for the
+// schedule's platform, use that platform's real adapter (today: only
+// Facebook can actually be 'connected', since it's the only adapter with
+// a real implementation — Instagram/LinkedIn/TikTok/X remain stubs until
+// their own modules ship). Otherwise fall back to ManualPublisher. This
+// is the one-line change the Module 3 doc predicted: swapping a hardcoded
+// 'manual' lookup for a platform-keyed one, no schema or queue redesign.
 //
 // Flow per run:
 //   1. Claim due rows: amos_schedule where status='pending' and
 //      scheduled_for <= now(), oldest first, capped per run so one
 //      invocation can't run unbounded.
-//   2. For each claimed row: set status='publishing', call
-//      ManualPublisher.publish() (always succeeds — it just means "ready
-//      for a human"), then set status='awaiting_manual_publish' and write
-//      an amos_publish_audit 'claimed' event.
-//   3. A claim failing (row disappeared, DB error) marks that row
-//      'failed' with last_error set and increments attempts — never
-//      blocks the rest of the batch.
+//   2. For each claimed row: set status='publishing', resolve the
+//      adapter (real platform adapter if connected, else manual), call
+//      publish(). Manual always returns 'awaiting_manual_publish' (a
+//      human still has to act). A real adapter returns 'published'
+//      immediately on success, with external_post_id/external_url
+//      recorded straight into amos_publish_log — no human step needed.
+//   3. A claim or publish failure marks that row 'failed' with
+//      last_error set and increments attempts — never blocks the batch.
 //
 // Same dual-auth pattern as every other amos-* function:
 //   1. Cron path — x-automation-secret header (not scheduled yet).
@@ -112,13 +112,14 @@ Deno.serve(async (req) => {
   const summary = {
     claimed: 0,
     moved_to_awaiting_manual: 0,
+    auto_published: 0,
     failed: 0,
     errors: [] as string[],
   }
 
   const finish = async (ok: boolean) => {
     const finishedAt = Date.now()
-    const detail = `${summary.claimed} claimed, ${summary.moved_to_awaiting_manual} awaiting manual publish, ${summary.failed} failed`
+    const detail = `${summary.claimed} claimed, ${summary.auto_published} auto-published, ${summary.moved_to_awaiting_manual} awaiting manual publish, ${summary.failed} failed`
 
     await db.from('job_runs').insert({
       job: 'amos_publish_dispatcher',
@@ -158,6 +159,17 @@ Deno.serve(async (req) => {
 
     summary.claimed = (due || []).length
 
+    // Which platforms actually have a connected, working real adapter —
+    // checked once per run, not once per row. Today this can only ever
+    // contain 'facebook' (the only adapter with a real implementation);
+    // Instagram/LinkedIn/TikTok/X stay manual-only until their own
+    // modules ship real adapters, even if someone marks their
+    // amos_integrations row 'connected' prematurely.
+    const REAL_ADAPTER_PLATFORMS = new Set(['facebook'])
+    const { data: connectedIntegrations } = await db.from('amos_integrations').select('provider, status').eq('status', 'connected')
+    const connectedPlatforms = new Set((connectedIntegrations || []).map((i) => i.provider).filter((p) => REAL_ADAPTER_PLATFORMS.has(p)))
+    const publishers = buildPublisherRegistry(db)
+
     for (const row of due || []) {
       try {
         // Claim: mark 'publishing' before doing anything, so a crashed
@@ -168,11 +180,13 @@ Deno.serve(async (req) => {
         await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'claimed', actor_id: triggeredBy.actorId, actor_email: triggeredBy.actorEmail })
 
         const draft = row.amos_content_drafts as unknown as { channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null } | null
-        const publisher = PUBLISHERS.manual // hardcoded on purpose — see file header comment
+        const platform = draft?.channel || row.platform || 'unknown'
+        const useReal = connectedPlatforms.has(platform)
+        const publisher = useReal ? publishers[platform] : publishers.manual
         const result = await publisher.publish({
           draftId: row.draft_id,
           scheduleId: row.id,
-          channel: draft?.channel || row.platform || 'unknown',
+          channel: platform,
           draftType: draft?.draft_type || 'unknown',
           body: draft?.body ?? null,
           cta: draft?.cta ?? null,
@@ -182,6 +196,19 @@ Deno.serve(async (req) => {
         if (result.ok && result.status === 'awaiting_manual_publish') {
           await db.from('amos_schedule').update({ status: 'awaiting_manual_publish', publish_method: 'manual', attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
           summary.moved_to_awaiting_manual++
+        } else if (result.ok && result.status === 'published') {
+          // Real adapter succeeded — no human step needed. Write the
+          // publish log immediately (external_post_id/external_url come
+          // straight from the platform's own API response).
+          await db.from('amos_schedule').update({ status: 'published', publish_method: 'api', attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
+          await db.from('amos_publish_log').insert({
+            schedule_id: row.id, channel: platform,
+            external_post_id: result.externalPostId || null,
+            external_url: result.externalUrl || null,
+            raw_response: (result.rawResponse ?? null) as never,
+          })
+          await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'manual_confirmed', detail: `auto-published via ${platform} API` })
+          summary.auto_published++
         } else {
           await db.from('amos_schedule').update({ status: 'failed', last_error: result.error || 'Unknown publisher error', attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
           await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'failed', detail: result.error || null })

@@ -1,6 +1,6 @@
 # AMOS — AI Marketing Operating System — Architecture
 
-**Status:** Draft for approval. No production code yet.
+**Status:** Approved and in active build-out. Modules 0-4 shipped (see §9 roadmap for per-module status); Module 5 onward proceeding autonomously per approved architecture, stopping only for the four conditions defined at the start of that work phase (major security risk, destructive migration, architecture cannot support a requirement, missing external credential).
 **Scope:** Full system design — services, agents, database schema, workflows, admin UI, integrations, security, rollout plan.
 **Fits into:** the existing PaMarket stack (Supabase Postgres + Edge Functions, `www/admin.html` single-file admin panel, `pg_cron` + `pg_net` scheduling, manual SQL migrations). AMOS is additive — it does not replace or fork any of that, it's a new set of tables, edge functions, and one admin tab layered on top, following the same conventions as `ADMIN_ENTERPRISE_V2.sql` and `automation-runner`.
 
@@ -225,23 +225,23 @@ All of it follows the existing panel's non-negotiables: **feature-detect** (`has
 
 Each module below is a self-contained increment — built, tested, and shipped one at a time per your instruction, in this order because each one unblocks the next:
 
-**Module 0 — Foundation**
-`AMOS_SETUP.sql` (all tables in §4, RLS, `is_admin_team()` reuse), `amos_settings` seeded with `approval_required=true`, empty Admin tab shell with feature-detection notice.
+**Module 0 — Foundation ✅ shipped**
+`AMOS_MODULE_0_FOUNDATION.sql` (all core tables, RLS, `is_admin_team()` reuse), `amos_settings` seeded with `approval_required=true`, "Marketing (AMOS)" admin tab shell with feature-detection notices.
 
-**Module 1 — Research**
-`amos-research-runner` (starts with internal `search_logs` gap analysis + Zimbabwe news RSS — zero external auth needed, immediately useful), Trend Dashboard UI, `amos_job_runs` wired into Automation Center pattern.
+**Module 1 — Research ✅ shipped**
+`amos-research-runner` (internal `search_logs` gap analysis + `amos_zw_calendar` upcoming-event signals — zero external auth needed), Market Intelligence Dashboard, daily `pg_cron` schedule, run-status verification layer (`job_runs.started_at`/`trigger_type`).
 
-**Module 2 — Content generation (draft-only, no publishing)**
-`amos-content-generator` producing the full daily set into `amos_content_drafts`, Approval Queue UI, AI Settings tab (OpenAI/Anthropic key management).
+**Module 2 — Content generation (draft-only, no publishing) ✅ shipped**
+`amos-content-generator` producing all 7 placements per topic into `amos_content_drafts`, real Approval Queue (Approve/Edit/Reject), self-reported quality scores, real marketplace categories, `amos_content_feedback` learning-data capture, rate limiting.
 
-**Module 3 — Human-in-the-loop publishing groundwork**
-Content Calendar UI, manual "copy this draft" workflow so drafts are usable immediately even with zero platform integrations connected — this alone delivers the brief's daily-content-batch goal without waiting on any OAuth app-review process.
+**Module 3 — Human-in-the-loop publishing groundwork ✅ shipped**
+Publishing Queue (formerly the Content Calendar stub), "Schedule All Approved" per content idea, manual publish confirmation workflow, `amos_publish_audit` timeline, full retry/cancel support. No external platform API calls.
 
-**Module 4 — First live channel**
-Wire one platform end-to-end (recommend **Facebook**, since Graph API is the most mature and PaMarket likely already has a Page) — `amos-publisher`, `amos_integrations` row, API Manager connect flow, real `amos_publish_log`.
+**Module 4 — First live channel ✅ shipped (Facebook connected pending a real Page token)**
+`FacebookPublisher` fully implemented against the Meta Graph API, credential storage via Vault-backed `amos_set_integration_credential`/`amos_get_vault_secret` RPCs, API Manager Connect/Disconnect UI. Dispatcher auto-routes to the real adapter only when `amos_integrations.status='connected'`; falls back to manual otherwise — verified safe with Facebook in its real default disconnected state. **Blocked on a real Facebook Page access token** (no such credential exists in this project) — code is production-ready, connect via System Health → API Manager once a token is available.
 
 **Module 5 — Remaining channels**
-Instagram (shares the Meta token), then Email (Resend, already integrated — fast), then Push (FCM, already integrated — fast), then LinkedIn/X/TikTok as their app-review/paid-tier requirements clear.
+Instagram (shares the Meta token), then Email (Resend, already integrated), then Push (FCM, already integrated), then LinkedIn/X/TikTok as their app-review/paid-tier requirements clear.
 
 **Module 6 — Analytics & reporting**
 `amos-analytics-collector`, `amos_metrics_daily`, Analytics & Growth Dashboard, weekly `amos_reports` + email digest.

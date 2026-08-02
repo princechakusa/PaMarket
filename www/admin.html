@@ -8749,6 +8749,37 @@ function renderAmosLearning(){
 }
 
 // ── System Health ──────────────────────────────────────────
+function connectAmosFacebook(){
+  if(!requirePerm('*')) return;
+  openModal(
+    '<div style="font-size:15px;font-weight:800;margin-bottom:10px">Connect Facebook</div>'+
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">Requires a Facebook Page access token with pages_manage_posts permission, from developers.facebook.com for the Page you manage. Stored in Supabase Vault — never shown again after saving.</div>'+
+    '<div style="margin-bottom:8px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Page ID</label><input id="amosFbPageId" class="search-input" style="width:100%" placeholder="1234567890"></div>'+
+    '<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Page Access Token</label><input id="amosFbToken" type="password" class="search-input" style="width:100%" placeholder="EAAxxxxx..."></div>'+
+    '<div style="display:flex;gap:8px"><button class="btn-send" onclick="saveAmosFacebookConnection()">Connect</button><button class="ab ab-view" onclick="closeModal()">Cancel</button></div>'
+  );
+}
+async function saveAmosFacebookConnection(){
+  var pageId = (document.getElementById('amosFbPageId')||{}).value;
+  var token = (document.getElementById('amosFbToken')||{}).value;
+  if(!pageId || !token){ toast('Both fields are required','error'); return; }
+  var r = await sb.rpc('amos_set_integration_credential', { p_provider:'facebook', p_secret_name:'facebook_page_token', p_secret_value: pageId.trim()+':'+token.trim() });
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('connect_amos_integration','amos_integrations','facebook',null,{status:'connected'},null);
+  toast('Facebook connected — scheduled Facebook posts will now auto-publish');
+  closeModal();
+  loadAmosHealth().then(renderAmosHealth);
+}
+async function disconnectAmosIntegration(provider){
+  if(!requirePerm('*')) return;
+  var ok = await confirm2('Disconnect '+provider.charAt(0).toUpperCase()+provider.slice(1)+'?','Scheduled posts for this platform will fall back to manual publishing until reconnected.','Disconnect','red',false);
+  if(!ok) return;
+  var r = await sb.from('amos_integrations').update({ status:'not_connected', credentials_ref:null }).eq('provider',provider);
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('disconnect_amos_integration','amos_integrations',provider,{status:'connected'},{status:'not_connected'},null);
+  toast(provider+' disconnected');
+  loadAmosHealth().then(renderAmosHealth);
+}
 async function loadAmosHealth(){
   if(await amosMissing()) return;
   var res = await Promise.allSettled([
@@ -8771,13 +8802,15 @@ function renderAmosHealth(){
   var html = '<div class="sec-head"><div class="sec-title">System Health</div><button class="btn-refresh" onclick="loadAmosHealth().then(renderAmosHealth)">Refresh</button></div>';
 
   html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">API Manager — Connected Channels</div></div>';
-  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Provider</th><th>Status</th><th>Consecutive Failures</th><th>Last Success</th><th>Last Error</th></tr></thead><tbody>';
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Provider</th><th>Status</th><th>Consecutive Failures</th><th>Last Success</th><th>Last Error</th><th></th></tr></thead><tbody>';
   (AMOS.integrations||[]).forEach(function(i){
     var badge = i.status==='connected' ? '<span class="badge badge-active">connected</span>' : i.status==='error' ? '<span class="badge badge-rejected">error</span>' : '<span class="badge badge-pending">not connected</span>';
-    html += '<tr><td style="font-weight:600">'+esc(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td></tr>';
+    html += '<tr><td style="font-weight:600">'+esc(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td>';
+    html += '<td>'+(i.provider==='facebook' ? (i.status==='connected' ? '<button class="ab ab-reject" onclick="disconnectAmosIntegration(\'facebook\')">Disconnect</button>' : '<button class="ab ab-view" onclick="connectAmosFacebook()">Connect</button>') : '<span style="color:var(--sub2);font-size:11px">no adapter yet</span>')+'</td>';
+    html += '</tr>';
   });
   html += '</tbody></table></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Only Facebook is seeded at launch, per the current rollout plan. Connecting a channel (Module 4+) is an OAuth flow that writes credentials_ref into this row — no schema change needed to add Instagram, LinkedIn, TikTok, X, or YouTube later.</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Facebook publishes via a Page access token (Meta Graph API), not a full OAuth flow — get one from developers.facebook.com for the Page you manage. The token is stored in Supabase Vault, never in this table or in browser code. Instagram/LinkedIn/TikTok/X have no real adapter yet — connecting them here does nothing until their own module ships.</div>';
 
   html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Publishing</div></div>';
   html += '<div class="stats-grid">';
