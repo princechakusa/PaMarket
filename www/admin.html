@@ -554,6 +554,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           AI Configuration
         </button>
+        <button class="nav-item" data-tab="amosAnalytics" onclick="showTab('amosAnalytics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics &amp; Growth
+        </button>
         <div class="nav-section">Business Platform</div>
         <button class="nav-item" data-tab="businesses" onclick="showTab('businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>
@@ -1327,7 +1331,7 @@ var TAB_TITLES = {
   securityCenter:'Security Center', automationCenter:'Automation Center',
   amosDashboard:'AMOS Dashboard', amosApprovalQueue:'Approval Queue', amosCalendar:'Content Calendar',
   amosCampaigns:'Campaign Manager', amosIntelligence:'Market Intelligence', amosLearning:'AI Learning',
-  amosHealth:'System Health', amosAudit:'Audit Trail', amosSettings:'AI Configuration',
+  amosHealth:'System Health', amosAudit:'Audit Trail', amosSettings:'AI Configuration', amosAnalytics:'Analytics & Growth',
   rentalDashboard:'Rental Admin', rentalApprovals:'Rental Approvals',
   rentalCompanies:'Rental Companies', rentalListings:'Rental Listings',
   rentalReports:'Rental Reports', rentalReviews:'Rental Reviews',
@@ -1369,7 +1373,8 @@ var TAB_LOADERS = {
   amosLearning:      function(){ return loadAmosLearning(); },
   amosHealth:        function(){ return loadAmosHealth(); },
   amosAudit:         function(){ return loadAmosAudit(); },
-  amosSettings:      function(){ return loadAmosSettings(); }
+  amosSettings:      function(){ return loadAmosSettings(); },
+  amosAnalytics:     function(){ return loadAmosAnalytics(); }
 };
 function showTab(name) {
   currentTab = name;
@@ -1398,7 +1403,7 @@ function renderTab() {
     amosDashboard: renderAmosDashboard, amosApprovalQueue: renderAmosApprovalQueue,
     amosCalendar: renderAmosCalendar, amosCampaigns: renderAmosCampaigns,
     amosIntelligence: renderAmosIntelligence, amosLearning: renderAmosLearning,
-    amosHealth: renderAmosHealth, amosAudit: renderAmosAudit, amosSettings: renderAmosSettings,
+    amosHealth: renderAmosHealth, amosAudit: renderAmosAudit, amosSettings: renderAmosSettings, amosAnalytics: renderAmosAnalytics,
     rentalDashboard: renderRentalDashboard, rentalApprovals: renderRentalApprovals,
     rentalCompanies: renderRentalCompanies, rentalListings: renderRentalListings,
     rentalReports: renderRentalReports, rentalReviews: renderRentalReviews,
@@ -8240,7 +8245,7 @@ async function runExpireSubsAuto(){
 // Audit trail reuses admin_audit_logs (entity='amos_*'); job heartbeats
 // reuse job_runs (job='amos_*') — see docs/AMOS_ARCHITECTURE.md.
 // ════════════════════════════════════════════════════════════════════════
-var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false };
+var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null };
 
 async function amosMissing(){
   AMOS.missing = !(await hasTable('amos_settings'));
@@ -8976,6 +8981,99 @@ async function saveAmosReportRecipients(){
   AMOS.settings = r.data;
   auditLog('update_amos_setting','amos_settings','ZW',{report_recipients:before},{report_recipients:list},null);
   toast('Report recipients saved');
+}
+
+// ── Analytics & Growth (Module 6) ───────────────────────────
+async function loadAmosAnalytics(){
+  if(await amosMissing()) return;
+  var today = new Date().toISOString().slice(0,10);
+  var since30 = new Date(Date.now()-30*24*3600e3).toISOString().slice(0,10);
+  var res = await Promise.allSettled([
+    sb.from('amos_metrics_daily').select('*').gte('date',since30).order('date',{ascending:true}),
+    sb.from('job_runs').select('*').eq('job','amos_analytics_collector').order('created_at',{ascending:false}).limit(1)
+  ]);
+  AMOS.metrics = (res[0].value && res[0].value.data) || [];
+  AMOS.lastAnalyticsRun = (res[1].value && res[1].value.data && res[1].value.data[0]) || null;
+}
+function amosMetricSum(metric, channel){
+  return (AMOS.metrics||[]).filter(function(m){ return m.metric===metric && (!channel || m.channel===channel); }).reduce(function(s,m){return s+Number(m.value);},0);
+}
+function amosMetricToday(metric, channel){
+  var today = new Date().toISOString().slice(0,10);
+  var row = (AMOS.metrics||[]).find(function(m){ return m.metric===metric && m.date===today && (!channel || m.channel===channel); });
+  return row ? Number(row.value) : null;
+}
+function renderAmosAnalytics(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Analytics &amp; Growth</div></div>' + migrationNotice('Analytics & Growth','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.metrics===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">Analytics &amp; Growth</div><button class="btn-send" id="amosAnalyticsRunBtn" onclick="runAmosAnalyticsNow()">Collect Metrics Now</button></div>';
+
+  if(!(AMOS.metrics||[]).length){
+    html += '<div class="empty-msg">No metrics collected yet. Click "Collect Metrics Now" to run the analytics collector for the first time — it also runs automatically once a day (06:30 UTC) once AMOS_MODULE_6_ANALYTICS.sql\'s schedule is set up.</div>';
+    document.getElementById('mainContent').innerHTML = html;
+    return;
+  }
+
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Marketplace metrics are real PaMarket data (listings, active users). "AMOS" metrics track the marketing system\'s own funnel. Social-platform insights (reach, engagement) will appear here once a channel is actually connected and publishing live — none are yet.</div>';
+
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Marketplace — Today</div></div>';
+  html += '<div class="stats-grid">';
+  html += statCard('Listings Created','blue',fmtCnt(amosMetricToday('listings_created','marketplace')),'today');
+  html += statCard('Active Users (24h)','green',fmtCnt(amosMetricToday('active_users_24h','marketplace')),'today');
+  html += statCard('Active Users (7d)','accent',fmtCnt(amosMetricToday('active_users_7d','marketplace')),'rolling window');
+  html += statCard('New Users','amber',fmtCnt(amosMetricToday('new_users','marketplace')),'today');
+  html += '</div>';
+
+  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">AMOS Funnel — Last 30 Days</div></div>';
+  html += '<div class="stats-grid">';
+  html += statCard('Drafts Generated','blue',fmtCnt(amosMetricSum('drafts_generated','amos')),'last 30 days','amosApprovalQueue');
+  html += statCard('Approved','green',fmtCnt(amosMetricSum('drafts_approved','amos')),'last 30 days','amosApprovalQueue');
+  html += statCard('Rejected','red',fmtCnt(amosMetricSum('drafts_rejected','amos')),'last 30 days','amosApprovalQueue');
+  html += statCard('Published','accent',fmtCnt(amosMetricSum('items_published','amos')),'last 30 days','amosCalendar');
+  html += '</div>';
+
+  var approved = amosMetricSum('drafts_approved','amos'), generated = amosMetricSum('drafts_generated','amos');
+  var approvalRate = generated>0 ? Math.round(approved/generated*100) : null;
+  if(approvalRate!=null){
+    html += '<div style="font-size:12.5px;color:var(--sub);padding:0 0 16px">Approval rate (last 30 days): <b style="color:'+scoreColor(approvalRate)+'">'+approvalRate+'%</b> of generated drafts were approved — a low rate here is a signal to review AI Configuration\'s brand voice settings or Market Intelligence\'s topic selection.</div>';
+  }
+
+  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">Category Mix — Today</div></div>';
+  var catMetrics = (AMOS.metrics||[]).filter(function(m){ return m.metric.indexOf('category_')===0 && m.date===new Date().toISOString().slice(0,10); });
+  if(!catMetrics.length){
+    html += '<div class="empty-msg">No new listings recorded today yet.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Category</th><th>New Listings Today</th></tr></thead><tbody>';
+    catMetrics.sort(function(a,b){return b.value-a.value;}).forEach(function(m){
+      var cat = m.metric.replace('category_','').replace('_listings','');
+      html += '<tr><td style="font-weight:600;text-transform:capitalize">'+esc(cat)+'</td><td>'+fmtCnt(m.value)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  if(AMOS.lastAnalyticsRun){
+    html += '<div style="font-size:11px;color:var(--sub2);padding:16px 0 0">Last collection run: '+(AMOS.lastAnalyticsRun.ok?'succeeded':'had errors')+' '+ago(AMOS.lastAnalyticsRun.created_at)+' ago ('+esc(AMOS.lastAnalyticsRun.trigger_type||'—')+').</div>';
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+async function runAmosAnalyticsNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosAnalyticsRunBtn');
+  if(btn){ btn.disabled=true; btn.dataset.origText=btn.textContent; btn.textContent='Collecting…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-analytics-collector', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast((body.metrics_written||0)+' metric(s) collected');
+    loadAmosAnalytics().then(renderAmosAnalytics);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Collect Metrics Now'; } }
 }
 
 // Keyboard shortcut: press / to focus the current tab's search box.
