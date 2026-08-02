@@ -8309,6 +8309,15 @@ function renderAmosDashboard(){
     html += '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--red)">Most recent run failed ('+ago(lastRun.created_at)+' ago): '+esc(lastRun.detail||'no detail recorded')+'</div>';
   }
 
+  // ── Content Generation Status (Module 2) ──
+  var genRuns = (AMOS.recentJobs||[]).filter(function(j){ return j.job==='amos_content_generator'; });
+  var lastGen = genRuns[0];
+  html += '<div class="sec-head" style="margin-top:6px"><div class="sec-title" style="font-size:13px">Content Generation</div><button class="btn-send" id="amosDashGenBtn" onclick="runAmosContentGenerationNow().then(function(){loadAmosDashboard().then(renderAmosDashboard);})">Generate Content Now</button></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Picks the top unused Market Intelligence signal and drafts Facebook, Instagram, LinkedIn, X, blog, push, and email content for it. Draft-only — nothing publishes. Every draft needs approval in the Approval Queue.</div>';
+  if(lastGen){
+    html += '<div style="font-size:12.5px;color:var(--sub);margin-bottom:10px">Last run: '+(lastGen.ok?'<span style="color:var(--green)">succeeded</span>':'<span style="color:var(--red)">failed</span>')+' '+ago(lastGen.created_at)+' ago — '+esc(lastGen.detail||'')+'</div>';
+  }
+
   html += '<div class="stats-grid">';
   html += statCard('Pending Approval','amber',fmtCnt((AMOS.pendingApproval||[]).length),'drafts awaiting review','amosApprovalQueue');
   html += statCard('Scheduled','blue',fmtCnt((AMOS.pendingSchedule||[]).length),'queued to publish','amosCalendar');
@@ -8340,25 +8349,105 @@ function renderAmosDashboard(){
 // ── Approval Queue ─────────────────────────────────────────
 async function loadAmosApprovalQueue(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_content_drafts').select('*, amos_content_items(title,category)').eq('status','draft').order('created_at',{ascending:false}).limit(100);
+  var r = await sb.from('amos_content_drafts').select('*, amos_content_items(title,category)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100);
   AMOS.drafts = (r.data||[]);
   updateAmosBadge();
 }
+var AMOS_EXPANDED_DRAFT = null;
 function renderAmosApprovalQueue(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Approval Queue</div></div>' + migrationNotice('The Approval Queue','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(AMOS.drafts===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">Approval Queue</div><button class="btn-refresh" onclick="loadAmosApprovalQueue().then(renderAmosApprovalQueue)">Refresh</button></div>';
   if(!AMOS.drafts.length){
-    html += '<div class="empty-msg">Nothing waiting on review. Drafts appear here once content generation ships (Module 2) — this queue is fully wired and will populate automatically, nothing further to build on the UI side.</div>';
+    html += '<div class="empty-msg">Nothing waiting on review. Every AI-generated draft — Facebook, Instagram, LinkedIn, X, blog, push, and email — lands here with status \'draft\' and stays here until an admin approves, edits, or rejects it. Nothing publishes automatically.</div>';
   } else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Item</th><th>Channel</th><th>Type</th><th>Created</th><th></th></tr></thead><tbody>';
+    // Group by content item so the 7 placements for one idea review together.
+    var byItem = {};
     AMOS.drafts.forEach(function(d){
-      var item = d.amos_content_items || {};
-      html += '<tr><td style="font-weight:600">'+esc(item.title||'—')+'</td><td>'+esc(d.channel)+'</td><td>'+esc(d.draft_type)+'</td><td style="font-size:12px;color:var(--sub)">'+ago(d.created_at)+' ago</td><td><button class="ab ab-view" onclick="showTab(\'amosApprovalQueue\')">Review</button></td></tr>';
+      var key = d.content_item_id;
+      (byItem[key] = byItem[key] || []).push(d);
     });
-    html += '</tbody></table></div>';
+    Object.keys(byItem).forEach(function(itemId){
+      var group = byItem[itemId];
+      var item = group[0].amos_content_items || {};
+      html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:14px">';
+      html += '<div style="padding:16px 0 10px;font-size:14px;font-weight:800;border-bottom:1px solid var(--border)">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">'+esc(item.category||'')+' · '+group.length+' placement(s)</span></div>';
+      group.forEach(function(d){
+        var expanded = AMOS_EXPANDED_DRAFT===d.id;
+        html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="toggleAmosDraft(\''+d.id+'\')">';
+        html += '<div><span class="badge badge-pending" style="text-transform:capitalize">'+esc(d.channel)+'</span> <span style="font-size:11.5px;color:var(--sub);margin-left:6px">'+esc(d.draft_type)+(d.status==='edited'?' · edited':'')+' · '+ago(d.created_at)+' ago</span></div>';
+        html += '<div style="font-size:11px;color:var(--sub2)">'+(expanded?'▲ collapse':'▼ expand')+'</div>';
+        html += '</div>';
+        if(expanded){
+          html += '<div style="margin-top:10px">';
+          html += '<textarea id="amosDraftBody_'+d.id+'" class="search-input" style="width:100%;min-height:140px;resize:vertical;font-family:inherit;white-space:pre-wrap">'+esc(d.body||'')+'</textarea>';
+          if(d.performance_rationale) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px"><b>Why this should perform well:</b> '+esc(d.performance_rationale)+'</div>';
+          if(d.hashtags && d.hashtags.length) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:4px"><b>Hashtags:</b> '+esc(d.hashtags.join(' '))+'</div>';
+          html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
+          html += '<button class="ab ab-approve" onclick="approveAmosDraft(\''+d.id+'\')">Approve</button>';
+          html += '<button class="ab ab-view" onclick="saveAmosDraftEdit(\''+d.id+'\')">Save Edit</button>';
+          html += '<button class="ab ab-reject" onclick="rejectAmosDraft(\''+d.id+'\')">Reject</button>';
+          html += '</div></div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    });
   }
   document.getElementById('mainContent').innerHTML = html;
+}
+function toggleAmosDraft(id){
+  AMOS_EXPANDED_DRAFT = (AMOS_EXPANDED_DRAFT===id) ? null : id;
+  renderAmosApprovalQueue();
+}
+function findAmosDraft(id){
+  return (AMOS.drafts||[]).find(function(d){ return d.id===id; });
+}
+async function approveAmosDraft(id){
+  if(!requirePerm('*')) return;
+  var d = findAmosDraft(id);
+  if(!d) return;
+  var uid = (await sb.auth.getUser()).data.user;
+  var r = await sb.from('amos_content_drafts').update({ status:'approved', reviewed_by: uid?uid.id:null, reviewed_at:new Date().toISOString() }).eq('id',id).eq('status', d.status);
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('approve_amos_draft','amos_content_drafts',id,{status:d.status},{status:'approved'},null);
+  toast('Draft approved — ready to schedule (Module 4 adds actual publishing)');
+  AMOS_EXPANDED_DRAFT = null;
+  loadAmosApprovalQueue().then(renderAmosApprovalQueue);
+}
+async function rejectAmosDraft(id){
+  if(!requirePerm('*')) return;
+  var d = findAmosDraft(id);
+  if(!d) return;
+  var reason = await confirm2('Reject Draft','Reason (optional)','Reject','red',true,'e.g. off-brand tone, factual issue');
+  if(reason===null) return;
+  var uid = (await sb.auth.getUser()).data.user;
+  var r = await sb.from('amos_content_drafts').update({ status:'rejected', reviewed_by: uid?uid.id:null, reviewed_at:new Date().toISOString() }).eq('id',id).eq('status', d.status);
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  if(reason){
+    await sb.from('amos_content_revisions').insert({ draft_id:id, edited_by: uid?uid.id:null, before_body:d.body, after_body:d.body, reason: reason });
+  }
+  auditLog('reject_amos_draft','amos_content_drafts',id,{status:d.status},{status:'rejected'},reason);
+  toast('Draft rejected');
+  AMOS_EXPANDED_DRAFT = null;
+  loadAmosApprovalQueue().then(renderAmosApprovalQueue);
+}
+async function saveAmosDraftEdit(id){
+  if(!requirePerm('*')) return;
+  var d = findAmosDraft(id);
+  if(!d) return;
+  var textarea = document.getElementById('amosDraftBody_'+id);
+  if(!textarea) return;
+  var newBody = textarea.value;
+  if(newBody === d.body){ toast('No changes to save'); return; }
+  var uid = (await sb.auth.getUser()).data.user;
+  var r = await sb.from('amos_content_drafts').update({ body:newBody, status:'edited', version:(d.version||1)+1 }).eq('id',id).select().maybeSingle();
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  await sb.from('amos_content_revisions').insert({ draft_id:id, edited_by: uid?uid.id:null, before_body:d.body, after_body:newBody, reason:'manual edit before approval' });
+  auditLog('edit_amos_draft','amos_content_drafts',id,{body:d.body},{body:newBody},null);
+  toast('Edit saved');
+  loadAmosApprovalQueue().then(renderAmosApprovalQueue);
 }
 
 // ── Content Calendar ───────────────────────────────────────
@@ -8525,16 +8614,37 @@ async function runAmosResearchNow(){
   } catch(e){ toast('Error: '+e.message,'error'); }
   finally { btns.forEach(function(b){ b.disabled = false; b.textContent = b.dataset.origText||'Run Now'; }); }
 }
+async function runAmosContentGenerationNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosDashGenBtn');
+  if(btn){ btn.disabled = true; btn.dataset.origText = btn.textContent; btn.textContent = 'Generating…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-content-generator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    if(body.drafts_written){
+      toast('Generated '+body.drafts_written+' draft(s) for "'+(body.topic_selected||'topic')+'"'+(body.placements_failed&&body.placements_failed.length?' ('+body.placements_failed.length+' placement(s) failed — see Audit Trail)':''));
+    } else {
+      toast('No drafts generated: '+((body.errors&&body.errors[0])||'unknown error'),'error');
+    }
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled = false; btn.textContent = btn.dataset.origText||'Generate Content Now'; } }
+}
 
 // ── Audit Trail (AMOS slice of admin_audit_logs, plus the full job_runs
-//    history for amos_research_runner — the per-execution audit record:
-//    trigger type, start time, status, data collected, error detail) ──
+//    history for every amos-* edge function — the per-execution audit
+//    record: trigger type, start time, status, data collected, error) ──
 var AMOS_ENTITIES = ['amos_settings','amos_integrations','amos_content_items','amos_content_drafts','amos_schedule','amos_market_intelligence'];
 async function loadAmosAudit(){
   AMOS.auditMissing = !(await hasTable('admin_audit_logs'));
   var res = await Promise.allSettled([
     AMOS.auditMissing ? Promise.resolve({data:[]}) : sb.from('admin_audit_logs').select('*').in('entity',AMOS_ENTITIES).order('created_at',{ascending:false}).limit(100),
-    sb.from('job_runs').select('*').eq('job','amos_research_runner').order('created_at',{ascending:false}).limit(50)
+    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(80)
   ]);
   AMOS.audit = (res[0].value && res[0].value.data) || [];
   AMOS.researchRunHistory = (res[1].value && res[1].value.data) || [];
@@ -8544,15 +8654,15 @@ function renderAmosAudit(){
   if(AMOS.audit===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">AMOS Audit Trail</div><button class="btn-refresh" onclick="loadAmosAudit().then(renderAmosAudit)">Refresh</button></div>';
 
-  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Research Execution Record</div></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">One row per amos-research-runner execution — every cron and manual run, whether it succeeded or failed.</div>';
-  if(!(AMOS.researchRunHistory||[]).length) html += '<div class="empty-msg">No research runs recorded yet.</div>';
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Automated Job Execution Record</div></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">One row per amos-research-runner or amos-content-generator execution — every cron and manual run, whether it succeeded or failed.</div>';
+  if(!(AMOS.researchRunHistory||[]).length) html += '<div class="empty-msg">No automated job runs recorded yet.</div>';
   else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Trigger</th><th>Started</th><th>Status</th><th>Data Collected</th><th>Error</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Trigger</th><th>Started</th><th>Status</th><th>Data Collected</th><th>Error</th></tr></thead><tbody>';
     AMOS.researchRunHistory.forEach(function(r){
       var trig = r.trigger_type ? esc(r.trigger_type) : '—';
       var started = r.started_at ? fmtDateTime(r.started_at) : fmtDateTime(r.created_at);
-      html += '<tr><td>'+trig+'</td><td style="font-size:12px;color:var(--sub)">'+started+'</td><td>'+(r.ok?'<span class="badge badge-active">success</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px">'+esc(r.detail||'—')+'</td><td style="font-size:12px;color:var(--red)">'+(r.ok?'—':esc((r.meta&&r.meta.errors&&r.meta.errors.join('; '))||r.detail||'—'))+'</td></tr>';
+      html += '<tr><td style="font-family:monospace;font-size:11.5px">'+esc(r.job)+'</td><td>'+trig+'</td><td style="font-size:12px;color:var(--sub)">'+started+'</td><td>'+(r.ok?'<span class="badge badge-active">success</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px">'+esc(r.detail||'—')+'</td><td style="font-size:12px;color:var(--red)">'+(r.ok?'—':esc((r.meta&&r.meta.errors&&r.meta.errors.join('; '))||r.detail||'—'))+'</td></tr>';
     });
     html += '</tbody></table></div>';
   }
