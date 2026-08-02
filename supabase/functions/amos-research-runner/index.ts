@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 
 // Deploy:  supabase functions deploy amos-research-runner --no-verify-jwt
 // (required: the pg_cron path calls this with only x-automation-secret, no
@@ -102,6 +103,13 @@ Deno.serve(async (req) => {
       actorId: userData.user.id,
       actorEmail: profile.email || userData.user.email || null,
       actorRole: profile.role,
+    }
+
+    // Rate limit only the manual path — a scheduled cron run is never
+    // spammy, and the cron secret is already the higher-trust path.
+    const rate = await checkAmosRateLimit(db, 'amos-research-runner', userData.user.id, { windowMinutes: 10, maxCalls: 5 })
+    if (!rate.allowed) {
+      return json({ error: `Too many manual runs — try again in ${rate.retryAfterSeconds}s` }, 429)
     }
   }
 

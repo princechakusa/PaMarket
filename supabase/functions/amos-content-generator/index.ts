@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 
 // Deploy:  supabase functions deploy amos-content-generator --no-verify-jwt
 // (same reason as amos-research-runner: the pg_cron path — not wired up
@@ -52,6 +53,13 @@ function corsHeaders(req: Request) {
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
 const ANTHROPIC_MODEL = 'claude-sonnet-4-5-20250929'
+// Bump whenever systemPrompt's wording changes meaningfully — stored on
+// every draft so a future prompt-quality comparison can group drafts by
+// which wording produced them.
+const PROMPT_VERSION = 'v2-quality-layer'
+
+const REAL_CATEGORIES = ['property','vehicles','rooms','electronics','jobs','furniture','fashion','services','agriculture','pets','kids','other'] as const
+const CAMPAIGN_TYPES = ['seasonal','promotional','spotlight','evergreen','urgent'] as const
 
 type Placement = {
   channel: 'facebook' | 'instagram' | 'linkedin' | 'x' | 'website' | 'push' | 'email'
@@ -133,6 +141,14 @@ Deno.serve(async (req) => {
       actorEmail: profile.email || userData.user.email || null,
       actorRole: profile.role,
     }
+
+    // Content generation is 7 API calls per run — a tighter window than
+    // the research runner, since it's both more expensive (API cost) and
+    // slower per call.
+    const rate = await checkAmosRateLimit(db, 'amos-content-generator', userData.user.id, { windowMinutes: 15, maxCalls: 3 })
+    if (!rate.allowed) {
+      return json({ error: `Too many manual runs — try again in ${rate.retryAfterSeconds}s` }, 429)
+    }
   }
 
   const summary = {
@@ -207,14 +223,21 @@ Deno.serve(async (req) => {
     }
     summary.topic_selected = topic.topic
 
-    // ── 2. Create the content item ─────────────────────────────────────
+    // ── 2. Classify the topic (category / target audience / campaign
+    //    type) with one lightweight call, before creating the content
+    //    item — so the item is tagged correctly from the moment it exists
+    //    rather than backfilled after the fact. ─────────────────────────
     const categoryHint = (topic.raw && topic.raw.category_hint) || null
+    const classification = await classifyTopic(anthropicKey, topic.topic, topic.rationale, topic.signal_type, categoryHint)
+
     const { data: item, error: itemError } = await db
       .from('amos_content_items')
       .insert({
         country_code: topic.country_code || 'ZW',
         title: topic.topic,
-        category: mapCategory(categoryHint),
+        category: classification.category,
+        target_audience: classification.targetAudience,
+        campaign_type: classification.campaignType,
         market_intelligence_id: topic.id,
         status: 'drafted',
         created_by: triggeredBy.actorId,
@@ -229,9 +252,16 @@ Deno.serve(async (req) => {
     const tone = (settings?.brand_voice?.tone || ['professional', 'trustworthy', 'modern', 'friendly', 'helpful']).join(', ')
     const avoid = (settings?.brand_voice?.avoid || ['clickbait', 'misleading claims', 'copying competitors']).join(', ')
 
-    const systemPrompt = `You are writing marketing content for PaMarket, Zimbabwe's marketplace app for buying, selling, hiring, and getting hired (listings, jobs, vehicles, properties, rentals). Brand tone: ${tone}. Avoid: ${avoid}. Never invent statistics, prices, or claims about PaMarket that aren't given to you. Always end your response with a line starting exactly "WHY THIS WORKS:" followed by one sentence explaining why this piece should perform well with a Zimbabwean audience, referencing the specific context you were given.`
+    const systemPrompt = `You are writing marketing content for PaMarket, Zimbabwe's marketplace app for buying, selling, hiring, and getting hired (listings, jobs, vehicles, properties, rentals). Brand tone: ${tone}. Avoid: ${avoid}. Never invent statistics, prices, or claims about PaMarket that aren't given to you.
 
-    const userContext = `Topic/signal: "${topic.topic}"\nWhy this is relevant right now: ${topic.rationale || 'no additional context'}\nSignal type: ${topic.signal_type}`
+After writing the content, append these exact tagged lines (each on its own line, in this order, nothing after them):
+WHY THIS WORKS: <one sentence on why this should perform well with a Zimbabwean audience, referencing the specific context you were given>
+RELEVANCE SCORE: <0-100, how well this content matches the given topic/signal>
+BRAND ALIGNMENT SCORE: <0-100, how well this matches the brand tone and avoids the listed pitfalls>
+ENGAGEMENT PREDICTION SCORE: <0-100, your honest estimate of how likely this specific piece is to get engagement from a Zimbabwean marketplace audience — do not default to high numbers>
+SEO VALUE SCORE: <0-100 if this is a blog/article placement with real search-ranking potential, or 0 if not applicable>`
+
+    const userContext = `Topic/signal: "${topic.topic}"\nWhy this is relevant right now: ${topic.rationale || 'no additional context'}\nSignal type: ${topic.signal_type}\nTarget audience: ${classification.targetAudience || 'general PaMarket users in Zimbabwe'}`
 
     // ── 4. Generate each placement, isolated ───────────────────────────
     for (const placement of PLACEMENTS) {
@@ -247,6 +277,11 @@ Deno.serve(async (req) => {
           performance_rationale: draft.rationale,
           ai_provider: 'anthropic',
           ai_model: ANTHROPIC_MODEL,
+          prompt_version: PROMPT_VERSION,
+          relevance_score: draft.scores.relevance,
+          brand_alignment_score: draft.scores.brandAlignment,
+          engagement_prediction_score: draft.scores.engagementPrediction,
+          seo_value_score: draft.scores.seoValue,
           status: 'draft',
         })
         if (draftError) throw draftError
@@ -270,12 +305,53 @@ Deno.serve(async (req) => {
   }
 })
 
-function mapCategory(hint: string | null): string | null {
-  if (!hint) return null
-  const h = hint.toLowerCase()
-  if (h.includes('school') || h.includes('education')) return 'seasonal'
-  if (h.includes('apparel') || h.includes('electronics') || h.includes('gifts') || h.includes('groceries') || h.includes('decor')) return 'marketplace'
-  return 'seasonal'
+// One lightweight call to tag the content item before any placement copy
+// is written — keeps classification independent of any single placement's
+// wording, and means every draft under this item inherits a consistent
+// category/audience/campaign_type rather than each placement guessing on
+// its own. "Business" is deliberately never a possible output value here;
+// the instructions explicitly redirect it to 'services', the app's real
+// category for business/service-provider content.
+async function classifyTopic(
+  apiKey: string,
+  topic: string,
+  rationale: string | null,
+  signalType: string,
+  categoryHint: string | null
+): Promise<{ category: string | null; targetAudience: string | null; campaignType: string | null }> {
+  const prompt = `Topic: "${topic}"\nContext: ${rationale || 'none'}\nSignal type: ${signalType}\nCategory hint: ${categoryHint || 'none'}\n\nClassify this for a Zimbabwean marketplace app (PaMarket). Respond with EXACTLY these three tagged lines and nothing else:\nCATEGORY: <one of: ${REAL_CATEGORIES.join(', ')} — if the topic is about a business/service provider in general, use 'services', never invent a 'business' category>\nTARGET AUDIENCE: <one short phrase describing who this content should reach, e.g. "first-time car buyers in Harare">\nCAMPAIGN TYPE: <one of: ${CAMPAIGN_TYPES.join(', ')}>`
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: ANTHROPIC_MODEL, max_tokens: 150, messages: [{ role: 'user', content: prompt }] }),
+    })
+    if (!res.ok) return { category: null, targetAudience: null, campaignType: null }
+    const data = await res.json()
+    const text: string = (data.content || []).map((b: { type: string; text?: string }) => b.text || '').join('\n')
+
+    const categoryMatch = text.match(/CATEGORY:\s*(\w+)/i)
+    const audienceMatch = text.match(/TARGET AUDIENCE:\s*(.+)/i)
+    const campaignMatch = text.match(/CAMPAIGN TYPE:\s*(\w+)/i)
+
+    const category = categoryMatch && REAL_CATEGORIES.includes(categoryMatch[1].toLowerCase() as typeof REAL_CATEGORIES[number]) ? categoryMatch[1].toLowerCase() : null
+    const campaignType = campaignMatch && CAMPAIGN_TYPES.includes(campaignMatch[1].toLowerCase() as typeof CAMPAIGN_TYPES[number]) ? campaignMatch[1].toLowerCase() : null
+    const targetAudience = audienceMatch ? audienceMatch[1].trim().split('\n')[0].slice(0, 200) : null
+
+    return { category, targetAudience, campaignType }
+  } catch {
+    // Classification is a best-effort enrichment, not load-bearing —
+    // generation proceeds with null tags rather than failing the whole run.
+    return { category: null, targetAudience: null, campaignType: null }
+  }
+}
+
+function clampScore(raw: string | undefined): number | null {
+  if (!raw) return null
+  const n = parseInt(raw, 10)
+  if (Number.isNaN(n)) return null
+  return Math.max(0, Math.min(100, n))
 }
 
 async function generatePlacement(
@@ -283,7 +359,13 @@ async function generatePlacement(
   systemPrompt: string,
   userContext: string,
   placement: Placement
-): Promise<{ body: string; cta: string | null; hashtags: string[] | null; rationale: string | null }> {
+): Promise<{
+  body: string
+  cta: string | null
+  hashtags: string[] | null
+  rationale: string | null
+  scores: { relevance: number | null; brandAlignment: number | null; engagementPrediction: number | null; seoValue: number | null }
+}> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -310,14 +392,21 @@ async function generatePlacement(
   const text: string = (data.content || []).map((b: { type: string; text?: string }) => b.text || '').join('\n').trim()
   if (!text) throw new Error('Empty response from model')
 
-  // Split off the mandated "WHY THIS WORKS:" line; everything before it is
-  // the actual draft body.
-  const whyMatch = text.match(/WHY THIS WORKS:\s*(.+)$/is)
-  const rationale = whyMatch ? whyMatch[1].trim() : null
+  // Split off the mandated tagged trailer (WHY THIS WORKS + 4 scores);
+  // everything before the first tagged line is the actual draft body.
+  const whyMatch = text.match(/WHY THIS WORKS:\s*(.+)/i)
+  const rationale = whyMatch ? whyMatch[1].split('\n')[0].trim() : null
   const body = whyMatch ? text.slice(0, whyMatch.index).trim() : text
+
+  const scores = {
+    relevance: clampScore(text.match(/RELEVANCE SCORE:\s*(\d+)/i)?.[1]),
+    brandAlignment: clampScore(text.match(/BRAND ALIGNMENT SCORE:\s*(\d+)/i)?.[1]),
+    engagementPrediction: clampScore(text.match(/ENGAGEMENT PREDICTION SCORE:\s*(\d+)/i)?.[1]),
+    seoValue: clampScore(text.match(/SEO VALUE SCORE:\s*(\d+)/i)?.[1]),
+  }
 
   const hashtagMatches = body.match(/#\w+/g)
   const hashtags = hashtagMatches && hashtagMatches.length ? hashtagMatches : null
 
-  return { body, cta: null, hashtags, rationale }
+  return { body, cta: null, hashtags, rationale, scores }
 }

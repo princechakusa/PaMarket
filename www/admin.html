@@ -8349,11 +8349,12 @@ function renderAmosDashboard(){
 // ── Approval Queue ─────────────────────────────────────────
 async function loadAmosApprovalQueue(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_content_drafts').select('*, amos_content_items(title,category)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100);
+  var r = await sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100);
   AMOS.drafts = (r.data||[]);
   updateAmosBadge();
 }
 var AMOS_EXPANDED_DRAFT = null;
+function scoreColor(n){ return n>=70 ? 'var(--green)' : n>=40 ? 'var(--amber)' : 'var(--red)'; }
 function renderAmosApprovalQueue(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Approval Queue</div></div>' + migrationNotice('The Approval Queue','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(AMOS.drafts===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
@@ -8371,7 +8372,14 @@ function renderAmosApprovalQueue(){
       var group = byItem[itemId];
       var item = group[0].amos_content_items || {};
       html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:14px">';
-      html += '<div style="padding:16px 0 10px;font-size:14px;font-weight:800;border-bottom:1px solid var(--border)">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">'+esc(item.category||'')+' · '+group.length+' placement(s)</span></div>';
+      html += '<div style="padding:16px 0 10px;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-size:14px;font-weight:800">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">· '+group.length+' placement(s)</span></div>';
+      html += '<div style="margin-top:4px;font-size:11px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap">';
+      if(item.category) html += '<span class="badge badge-pending" style="text-transform:capitalize">'+esc(item.category)+'</span>';
+      if(item.campaign_type) html += '<span class="badge badge-pending" style="text-transform:capitalize">'+esc(item.campaign_type)+'</span>';
+      if(item.country_code) html += '<span class="badge badge-pending">'+esc(item.country_code)+'</span>';
+      if(item.target_audience) html += '<span style="color:var(--sub)">Audience: '+esc(item.target_audience)+'</span>';
+      html += '</div></div>';
       group.forEach(function(d){
         var expanded = AMOS_EXPANDED_DRAFT===d.id;
         html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
@@ -8379,11 +8387,20 @@ function renderAmosApprovalQueue(){
         html += '<div><span class="badge badge-pending" style="text-transform:capitalize">'+esc(d.channel)+'</span> <span style="font-size:11.5px;color:var(--sub);margin-left:6px">'+esc(d.draft_type)+(d.status==='edited'?' · edited':'')+' · '+ago(d.created_at)+' ago</span></div>';
         html += '<div style="font-size:11px;color:var(--sub2)">'+(expanded?'▲ collapse':'▼ expand')+'</div>';
         html += '</div>';
+        if(d.relevance_score!=null || d.brand_alignment_score!=null || d.engagement_prediction_score!=null){
+          html += '<div style="display:flex;gap:12px;margin-top:6px;font-size:10.5px;color:var(--sub)">';
+          if(d.relevance_score!=null) html += '<span>Relevance <b style="color:'+scoreColor(d.relevance_score)+'">'+d.relevance_score+'</b></span>';
+          if(d.brand_alignment_score!=null) html += '<span>Brand fit <b style="color:'+scoreColor(d.brand_alignment_score)+'">'+d.brand_alignment_score+'</b></span>';
+          if(d.engagement_prediction_score!=null) html += '<span>Engagement <b style="color:'+scoreColor(d.engagement_prediction_score)+'">'+d.engagement_prediction_score+'</b></span>';
+          if(d.seo_value_score!=null && d.seo_value_score>0) html += '<span>SEO <b style="color:'+scoreColor(d.seo_value_score)+'">'+d.seo_value_score+'</b></span>';
+          html += '</div>';
+        }
         if(expanded){
           html += '<div style="margin-top:10px">';
           html += '<textarea id="amosDraftBody_'+d.id+'" class="search-input" style="width:100%;min-height:140px;resize:vertical;font-family:inherit;white-space:pre-wrap">'+esc(d.body||'')+'</textarea>';
           if(d.performance_rationale) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px"><b>Why this should perform well:</b> '+esc(d.performance_rationale)+'</div>';
           if(d.hashtags && d.hashtags.length) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:4px"><b>Hashtags:</b> '+esc(d.hashtags.join(' '))+'</div>';
+          html += '<div style="font-size:10.5px;color:var(--sub2);margin-top:6px">'+esc(d.ai_provider||'')+(d.ai_model?' · '+esc(d.ai_model):'')+(d.prompt_version?' · prompt '+esc(d.prompt_version):'')+'</div>';
           html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
           html += '<button class="ab ab-approve" onclick="approveAmosDraft(\''+d.id+'\')">Approve</button>';
           html += '<button class="ab ab-view" onclick="saveAmosDraftEdit(\''+d.id+'\')">Save Edit</button>';
@@ -8404,6 +8421,23 @@ function toggleAmosDraft(id){
 function findAmosDraft(id){
   return (AMOS.drafts||[]).find(function(d){ return d.id===id; });
 }
+// Writes one amos_content_feedback row per approve/edit/reject action —
+// the pre-publish training signal for a future Learning Engine (deletes
+// are covered separately by a DB trigger, AMOS_MODULE_2_QUALITY_LAYER.sql,
+// so they're preserved even if a row is removed outside this UI).
+async function recordAmosFeedback(action, d, extra){
+  var item = d.amos_content_items || {};
+  var uid = (await sb.auth.getUser()).data.user;
+  var row = Object.assign({
+    draft_id: d.id, content_item_id: d.content_item_id, action: action,
+    channel: d.channel, draft_type: d.draft_type, category: item.category||null, topic: item.title||null,
+    ai_provider: d.ai_provider, ai_model: d.ai_model, prompt_version: d.prompt_version,
+    relevance_score: d.relevance_score, brand_alignment_score: d.brand_alignment_score,
+    engagement_prediction_score: d.engagement_prediction_score, seo_value_score: d.seo_value_score,
+    before_body: d.body, actor_id: uid?uid.id:null, actor_email: _adminEmail||null
+  }, extra||{});
+  try { await sb.from('amos_content_feedback').insert(row); } catch(e){ /* best effort — never blocks the actual action */ }
+}
 async function approveAmosDraft(id){
   if(!requirePerm('*')) return;
   var d = findAmosDraft(id);
@@ -8412,6 +8446,7 @@ async function approveAmosDraft(id){
   var r = await sb.from('amos_content_drafts').update({ status:'approved', reviewed_by: uid?uid.id:null, reviewed_at:new Date().toISOString() }).eq('id',id).eq('status', d.status);
   if(r.error){ toast('Error: '+r.error.message,'error'); return; }
   auditLog('approve_amos_draft','amos_content_drafts',id,{status:d.status},{status:'approved'},null);
+  recordAmosFeedback('approved', d, {});
   toast('Draft approved — ready to schedule (Module 4 adds actual publishing)');
   AMOS_EXPANDED_DRAFT = null;
   loadAmosApprovalQueue().then(renderAmosApprovalQueue);
@@ -8429,6 +8464,7 @@ async function rejectAmosDraft(id){
     await sb.from('amos_content_revisions').insert({ draft_id:id, edited_by: uid?uid.id:null, before_body:d.body, after_body:d.body, reason: reason });
   }
   auditLog('reject_amos_draft','amos_content_drafts',id,{status:d.status},{status:'rejected'},reason);
+  recordAmosFeedback('rejected', d, {reason: reason||null});
   toast('Draft rejected');
   AMOS_EXPANDED_DRAFT = null;
   loadAmosApprovalQueue().then(renderAmosApprovalQueue);
@@ -8446,6 +8482,7 @@ async function saveAmosDraftEdit(id){
   if(r.error){ toast('Error: '+r.error.message,'error'); return; }
   await sb.from('amos_content_revisions').insert({ draft_id:id, edited_by: uid?uid.id:null, before_body:d.body, after_body:newBody, reason:'manual edit before approval' });
   auditLog('edit_amos_draft','amos_content_drafts',id,{body:d.body},{body:newBody},null);
+  recordAmosFeedback('edited', d, {after_body: newBody, reason:'manual edit before approval'});
   toast('Edit saved');
   loadAmosApprovalQueue().then(renderAmosApprovalQueue);
 }
