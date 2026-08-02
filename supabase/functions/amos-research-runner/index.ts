@@ -222,13 +222,16 @@ Deno.serve(async (req) => {
   const detail = ok
     ? `${summary.search_gaps_found} search gap(s), ${summary.calendar_signals_written} calendar signal(s)`
     : summary.errors.join('; ').slice(0, 2000)
+  const finishedAt = Date.now()
 
   await db.from('job_runs').insert({
     job: 'amos_research_runner',
     ok,
     detail,
     rows_affected: summary.search_gaps_found + summary.calendar_signals_written,
-    meta: { ...summary, triggered_by: triggeredBy.actorRole, duration_ms: Date.now() - startedAt },
+    started_at: new Date(startedAt).toISOString(),
+    trigger_type: triggeredBy.actorRole === 'system' ? 'cron' : 'manual',
+    meta: { ...summary, triggered_by: triggeredBy.actorRole, duration_ms: finishedAt - startedAt },
   })
 
   // Cron runs are routine and already heartbeat via job_runs above; only
@@ -242,10 +245,10 @@ Deno.serve(async (req) => {
       action: 'run_amos_research_runner',
       entity: 'amos_market_intelligence',
       entity_id: null,
-      after_state: { ...summary, duration_ms: Date.now() - startedAt },
+      after_state: { ...summary, duration_ms: finishedAt - startedAt },
       reason: 'manual trigger from AMOS System Health',
     })
   }
 
-  return json({ success: ok, ...summary, duration_ms: Date.now() - startedAt }, ok ? 200 : 207)
+  return json({ success: ok, ...summary, duration_ms: finishedAt - startedAt }, ok ? 200 : 207)
 })

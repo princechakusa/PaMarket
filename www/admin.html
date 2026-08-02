@@ -8256,7 +8256,9 @@ async function loadAmosDashboard(){
     sb.from('amos_content_drafts').select('id,status').eq('status','draft'),
     sb.from('amos_schedule').select('id,status').eq('status','pending'),
     sb.from('amos_content_items').select('id,status').eq('status','published'),
-    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(5)
+    sb.from('job_runs').select('*').ilike('job','amos_%').order('created_at',{ascending:false}).limit(5),
+    sb.from('job_runs').select('*').eq('job','amos_research_runner').order('created_at',{ascending:false}).limit(10),
+    sb.from('amos_market_intelligence').select('id').gte('collected_at', new Date().toISOString().slice(0,10)+'T00:00:00Z')
   ]);
   AMOS.settings = res[0].value && res[0].value.data;
   AMOS.integrations = (res[1].value && res[1].value.data) || [];
@@ -8264,7 +8266,21 @@ async function loadAmosDashboard(){
   AMOS.pendingSchedule = (res[3].value && res[3].value.data) || [];
   AMOS.published = (res[4].value && res[4].value.data) || [];
   AMOS.recentJobs = (res[5].value && res[5].value.data) || [];
+  AMOS.researchRuns = (res[6].value && res[6].value.data) || [];
+  AMOS.intelToday = (res[7].value && res[7].value.data) || [];
   updateAmosBadge();
+}
+// Fixed daily schedule from AMOS_MODULE_1_SCHEDULE.sql: '0 6 * * *' (UTC).
+// pg_cron's own run/next-run state lives in Postgres superuser-only system
+// catalogs (cron.job / cron.job_run_details) that RLS cannot expose to the
+// browser, so "next scheduled run" here is computed from the known fixed
+// cron expression rather than read live — accurate for a static daily
+// schedule, and honestly a computed estimate rather than a live cron read.
+function amosNextResearchRun(){
+  var now = new Date();
+  var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 6, 0, 0));
+  if (next <= now) next.setUTCDate(next.getUTCDate()+1);
+  return next;
 }
 function updateAmosBadge(){
   var b = document.getElementById('badge-amos-approval');
@@ -8276,6 +8292,22 @@ function renderAmosDashboard(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">AMOS Dashboard</div></div>' + migrationNotice('The AI Marketing Operating System','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(!AMOS.settings && AMOS.integrations===undefined){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading AMOS…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">AMOS Dashboard</div><button class="btn-refresh" onclick="loadAmosDashboard().then(renderAmosDashboard)">Refresh</button></div>';
+
+  // ── Research Status (Module 1 verification layer) ──
+  var runs = AMOS.researchRuns||[];
+  var lastOk = runs.find(function(r){return r.ok;});
+  var lastRun = runs[0];
+  var failedRecent = runs.filter(function(r){return !r.ok;}).length;
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Research Status</div><button class="btn-send" id="amosDashRunBtn" onclick="runAmosResearchNow().then(function(){loadAmosDashboard().then(renderAmosDashboard);})">Run Now</button></div>';
+  html += '<div class="stats-grid">';
+  html += statCard('Last Successful Run', lastOk?'green':'red', lastOk?ago(lastOk.created_at)+' ago':'Never', lastOk?fmtDateTime(lastOk.created_at):'run it at least once','amosHealth');
+  html += statCard('Next Scheduled Run','blue', fmtDateTime(amosNextResearchRun().toISOString()), 'daily 06:00 UTC / 08:00 Harare','amosHealth');
+  html += statCard('Intelligence Collected Today','accent', fmtCnt((AMOS.intelToday||[]).length), 'signals in amos_market_intelligence','amosIntelligence');
+  html += statCard('Failed Runs (last 10)', failedRecent>0?'red':'green', fmtCnt(failedRecent), failedRecent>0?'check Audit Trail for detail':'no errors recently','amosAudit');
+  html += '</div>';
+  if(lastRun && !lastRun.ok){
+    html += '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--red)">Most recent run failed ('+ago(lastRun.created_at)+' ago): '+esc(lastRun.detail||'no detail recorded')+'</div>';
+  }
 
   html += '<div class="stats-grid">';
   html += statCard('Pending Approval','amber',fmtCnt((AMOS.pendingApproval||[]).length),'drafts awaiting review','amosApprovalQueue');
@@ -8462,12 +8494,14 @@ function renderAmosHealth(){
   html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Only Facebook is seeded at launch, per the current rollout plan. Connecting a channel (Module 4+) is an OAuth flow that writes credentials_ref into this row — no schema change needed to add Instagram, LinkedIn, TikTok, X, or YouTube later.</div>';
 
   html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">AMOS Job Runs</div><button class="btn-send" id="amosRunResearchBtn" onclick="runAmosResearchNow()">Run Market Intelligence Now</button></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Collects two signal types into Market Intelligence: internal search-log gaps (zero/low-result searches from the last 14 days) and upcoming ZW public holidays/school terms/salary periods within 21 days. No external APIs are called. Manual-trigger only — no cron schedule is enabled yet.</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Collects two signal types into Market Intelligence: internal search-log gaps (zero/low-result searches from the last 14 days) and upcoming ZW public holidays/school terms/salary periods within 21 days. No external APIs are called. Runs automatically once a day (06:00 UTC / 08:00 Harare) via pg_cron, or on demand with the button above.</div>';
   if(!(AMOS.jobs||[]).length) html += '<div class="empty-msg">No AMOS scheduled jobs exist yet — click "Run Market Intelligence Now" above to run the research runner for the first time.</div>';
   else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Result</th><th>Rows</th><th>When</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Result</th><th>Trigger</th><th>Rows</th><th>Duration</th><th>When</th></tr></thead><tbody>';
     AMOS.jobs.forEach(function(j){
-      html += '<tr><td style="font-family:monospace;font-size:12px">'+esc(j.job)+'</td><td>'+(j.ok?'<span class="badge badge-active">ok</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td>'+(j.rows_affected!=null?j.rows_affected:'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(j.created_at)+' ago</td></tr>';
+      var durMs = j.meta && j.meta.duration_ms;
+      var trig = j.trigger_type ? ('<span class="badge '+(j.trigger_type==='cron'?'badge-pending':'badge-active')+'">'+esc(j.trigger_type)+'</span>') : '<span style="color:var(--sub2)">—</span>';
+      html += '<tr><td style="font-family:monospace;font-size:12px">'+esc(j.job)+'</td><td>'+(j.ok?'<span class="badge badge-active">ok</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td>'+trig+'</td><td>'+(j.rows_affected!=null?j.rows_affected:'—')+'</td><td style="font-size:12px;color:var(--sub)">'+(durMs!=null?(durMs/1000).toFixed(1)+'s':'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(j.created_at)+' ago</td></tr>';
     });
     html += '</tbody></table></div>';
   }
@@ -8475,8 +8509,8 @@ function renderAmosHealth(){
 }
 async function runAmosResearchNow(){
   if(!requirePerm('*')) return;
-  var btn = document.getElementById('amosRunResearchBtn');
-  if(btn){ btn.disabled = true; btn.textContent = 'Running…'; }
+  var btns = [document.getElementById('amosRunResearchBtn'), document.getElementById('amosDashRunBtn')].filter(Boolean);
+  btns.forEach(function(b){ b.disabled = true; b.dataset.origText = b.textContent; b.textContent = 'Running…'; });
   try {
     var session = (await sb.auth.getSession()).data.session;
     if(!session){ toast('Session expired — please log in again','error'); return; }
@@ -8487,25 +8521,45 @@ async function runAmosResearchNow(){
     var body = await res.json().catch(function(){ return {}; });
     if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
     toast((body.search_gaps_found||0)+' search gap(s), '+(body.calendar_signals_written||0)+' calendar signal(s) collected'+(body.errors&&body.errors.length?' (with '+body.errors.length+' error(s) — see Audit Trail)':''));
-    loadAmosHealth().then(renderAmosHealth);
+    if(currentTab==='amosHealth') loadAmosHealth().then(renderAmosHealth);
   } catch(e){ toast('Error: '+e.message,'error'); }
-  finally { if(btn){ btn.disabled = false; btn.textContent = 'Run Market Intelligence Now'; } }
+  finally { btns.forEach(function(b){ b.disabled = false; b.textContent = b.dataset.origText||'Run Now'; }); }
 }
 
-// ── Audit Trail (AMOS slice of admin_audit_logs) ───────────
-var AMOS_ENTITIES = ['amos_settings','amos_integrations','amos_content_items','amos_content_drafts','amos_schedule'];
+// ── Audit Trail (AMOS slice of admin_audit_logs, plus the full job_runs
+//    history for amos_research_runner — the per-execution audit record:
+//    trigger type, start time, status, data collected, error detail) ──
+var AMOS_ENTITIES = ['amos_settings','amos_integrations','amos_content_items','amos_content_drafts','amos_schedule','amos_market_intelligence'];
 async function loadAmosAudit(){
   AMOS.auditMissing = !(await hasTable('admin_audit_logs'));
-  if(AMOS.auditMissing){ AMOS.audit=[]; return; }
-  var r = await sb.from('admin_audit_logs').select('*').in('entity',AMOS_ENTITIES).order('created_at',{ascending:false}).limit(100);
-  AMOS.audit = (r.data||[]);
+  var res = await Promise.allSettled([
+    AMOS.auditMissing ? Promise.resolve({data:[]}) : sb.from('admin_audit_logs').select('*').in('entity',AMOS_ENTITIES).order('created_at',{ascending:false}).limit(100),
+    sb.from('job_runs').select('*').eq('job','amos_research_runner').order('created_at',{ascending:false}).limit(50)
+  ]);
+  AMOS.audit = (res[0].value && res[0].value.data) || [];
+  AMOS.researchRunHistory = (res[1].value && res[1].value.data) || [];
 }
 function renderAmosAudit(){
   if(!requirePerm('*')){ document.getElementById('mainContent').innerHTML='<div class="empty-msg">Audit Trail is restricted to full admins.</div>'; return; }
   if(AMOS.audit===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">AMOS Audit Trail</div><button class="btn-refresh" onclick="loadAmosAudit().then(renderAmosAudit)">Refresh</button></div>';
+
+  html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Research Execution Record</div></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">One row per amos-research-runner execution — every cron and manual run, whether it succeeded or failed.</div>';
+  if(!(AMOS.researchRunHistory||[]).length) html += '<div class="empty-msg">No research runs recorded yet.</div>';
+  else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Trigger</th><th>Started</th><th>Status</th><th>Data Collected</th><th>Error</th></tr></thead><tbody>';
+    AMOS.researchRunHistory.forEach(function(r){
+      var trig = r.trigger_type ? esc(r.trigger_type) : '—';
+      var started = r.started_at ? fmtDateTime(r.started_at) : fmtDateTime(r.created_at);
+      html += '<tr><td>'+trig+'</td><td style="font-size:12px;color:var(--sub)">'+started+'</td><td>'+(r.ok?'<span class="badge badge-active">success</span>':'<span class="badge badge-rejected">failed</span>')+'</td><td style="font-size:12px">'+esc(r.detail||'—')+'</td><td style="font-size:12px;color:var(--red)">'+(r.ok?'—':esc((r.meta&&r.meta.errors&&r.meta.errors.join('; '))||r.detail||'—'))+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">Admin Actions</div></div>';
   if(AMOS.auditMissing) html += migrationNotice('Audit logging','ADMIN_ENTERPRISE_UPGRADE.sql');
-  else if(!AMOS.audit.length) html += '<div class="empty-msg">No AMOS actions logged yet. Every settings change, approval, rejection, and publish is recorded here via the same audit log used across the rest of the admin panel.</div>';
+  else if(!AMOS.audit.length) html += '<div class="empty-msg">No AMOS actions logged yet. Every settings change, approval, rejection, manual research trigger, and publish is recorded here via the same audit log used across the rest of the admin panel.</div>';
   else {
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Entity</th></tr></thead><tbody>';
     AMOS.audit.forEach(function(a){
