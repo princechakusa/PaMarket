@@ -8461,8 +8461,9 @@ function renderAmosHealth(){
   html += '</tbody></table></div>';
   html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Only Facebook is seeded at launch, per the current rollout plan. Connecting a channel (Module 4+) is an OAuth flow that writes credentials_ref into this row — no schema change needed to add Instagram, LinkedIn, TikTok, X, or YouTube later.</div>';
 
-  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">AMOS Job Runs</div></div>';
-  if(!(AMOS.jobs||[]).length) html += '<div class="empty-msg">No AMOS scheduled jobs exist yet — the research runner, content generator, and publisher are later modules. This table (job_runs, shared with the rest of the admin panel\'s Automation Center) will show their heartbeats once deployed.</div>';
+  html += '<div class="sec-head"><div class="sec-title" style="font-size:13px">AMOS Job Runs</div><button class="btn-send" id="amosRunResearchBtn" onclick="runAmosResearchNow()">Run Market Intelligence Now</button></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 12px">Collects two signal types into Market Intelligence: internal search-log gaps (zero/low-result searches from the last 14 days) and upcoming ZW public holidays/school terms/salary periods within 21 days. No external APIs are called. Manual-trigger only — no cron schedule is enabled yet.</div>';
+  if(!(AMOS.jobs||[]).length) html += '<div class="empty-msg">No AMOS scheduled jobs exist yet — click "Run Market Intelligence Now" above to run the research runner for the first time.</div>';
   else {
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Job</th><th>Result</th><th>Rows</th><th>When</th></tr></thead><tbody>';
     AMOS.jobs.forEach(function(j){
@@ -8471,6 +8472,24 @@ function renderAmosHealth(){
     html += '</tbody></table></div>';
   }
   document.getElementById('mainContent').innerHTML = html;
+}
+async function runAmosResearchNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosRunResearchBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Running…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-research-runner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok && res.status!==207){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast((body.search_gaps_found||0)+' search gap(s), '+(body.calendar_signals_written||0)+' calendar signal(s) collected'+(body.errors&&body.errors.length?' (with '+body.errors.length+' error(s) — see Audit Trail)':''));
+    loadAmosHealth().then(renderAmosHealth);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled = false; btn.textContent = 'Run Market Intelligence Now'; } }
 }
 
 // ── Audit Trail (AMOS slice of admin_audit_logs) ───────────
