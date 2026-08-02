@@ -43,6 +43,16 @@ function listingTag(listing: Listing): string {
   return listing.category ? listing.category.charAt(0).toUpperCase() + listing.category.slice(1) : "Listing";
 }
 
+function MoreIcon({ color: fill }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill={fill}>
+      <Circle cx={5} cy={12} r={2} />
+      <Circle cx={12} cy={12} r={2} />
+      <Circle cx={19} cy={12} r={2} />
+    </Svg>
+  );
+}
+
 function PinIcon({ size = 17, stroke = color.textMuted }: { size?: number; stroke?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2.3} strokeLinecap="round" strokeLinejoin="round">
@@ -336,6 +346,11 @@ export default function UserProfileScreen() {
             {Platform.OS !== "ios" ? (
               <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
                 <GlassBackButton onPress={() => router.back()} tone="light" flat />
+                {!isOwn ? (
+                  <Pressable onPress={openProfileMenu} hitSlop={10} style={{ marginLeft: "auto" }}>
+                    <MoreIcon color={color.textOnBrand} />
+                  </Pressable>
+                ) : null}
               </View>
             ) : null}
             {Platform.OS !== "ios" ? <Text style={styles.headerTitle}>Seller profile</Text> : null}
