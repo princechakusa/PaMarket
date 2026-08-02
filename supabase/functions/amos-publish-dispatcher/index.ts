@@ -7,16 +7,17 @@ import { buildPublisherRegistry } from '../_shared/amos-publishers/registry.ts'
 // path — not scheduled yet, manual-trigger only for now — calls this with
 // only x-automation-secret, no apikey/Authorization header.)
 //
-// AMOS Module 3 (queue/manual workflow) + Module 4 (real Facebook
-// publishing, added without changing the queue/schema design).
+// AMOS Module 3 (queue/manual workflow) + Module 4/5 (real Facebook,
+// Instagram, Push, Email publishing, added without changing the
+// queue/schema design).
 //
-// Per-row routing: if amos_integrations has a 'connected' row for the
-// schedule's platform, use that platform's real adapter (today: only
-// Facebook can actually be 'connected', since it's the only adapter with
-// a real implementation — Instagram/LinkedIn/TikTok/X remain stubs until
-// their own modules ship). Otherwise fall back to ManualPublisher. This
-// is the one-line change the Module 3 doc predicted: swapping a hardcoded
-// 'manual' lookup for a platform-keyed one, no schema or queue redesign.
+// Per-row routing (see the readiness checks below the due-rows query):
+// credential-gated platforms (facebook, instagram) need a 'connected' row
+// in amos_integrations; secret-gated platforms (push, email) need their
+// project-wide provider secret to already be set. Anything not ready, or
+// with no real adapter at all yet (linkedin/tiktok/x), falls back to
+// ManualPublisher. This is the one-line-per-platform change the Module 3
+// doc predicted: no schema or queue redesign needed to add a channel.
 //
 // Flow per run:
 //   1. Claim due rows: amos_schedule where status='pending' and
@@ -159,15 +160,33 @@ Deno.serve(async (req) => {
 
     summary.claimed = (due || []).length
 
-    // Which platforms actually have a connected, working real adapter —
-    // checked once per run, not once per row. Today this can only ever
-    // contain 'facebook' (the only adapter with a real implementation);
-    // Instagram/LinkedIn/TikTok/X stay manual-only until their own
-    // modules ship real adapters, even if someone marks their
-    // amos_integrations row 'connected' prematurely.
-    const REAL_ADAPTER_PLATFORMS = new Set(['facebook'])
+    // Which platforms have a real (non-stub) adapter, and how each one's
+    // readiness is determined — checked once per run, not once per row.
+    // Two different gating mechanisms, because they're genuinely
+    // different kinds of "connected":
+    //   - facebook/instagram: gated by amos_integrations.status, since
+    //     they need a specific admin-supplied credential (a Page token).
+    //   - push/email: gated by a project-wide secret already being set
+    //     (FIREBASE_SERVICE_ACCOUNT+VAPID / RESEND_API_KEY) — there's no
+    //     per-provider "connect" step for these, they either have the
+    //     secret or they don't, so amos_integrations doesn't apply.
+    // linkedin/tiktok/x remain stubs — not in either set — until their
+    // own modules ship real adapters.
+    const CREDENTIAL_GATED_PLATFORMS = new Set(['facebook', 'instagram'])
     const { data: connectedIntegrations } = await db.from('amos_integrations').select('provider, status').eq('status', 'connected')
-    const connectedPlatforms = new Set((connectedIntegrations || []).map((i) => i.provider).filter((p) => REAL_ADAPTER_PLATFORMS.has(p)))
+    const connectedPlatforms = new Set((connectedIntegrations || []).map((i) => i.provider).filter((p) => CREDENTIAL_GATED_PLATFORMS.has(p)))
+    // Instagram shares Facebook's connection (see instagram.ts) — if
+    // Facebook is connected, route Instagram to its real adapter too, and
+    // let InstagramPublisher itself decide pass/fail from there (today it
+    // always fails cleanly on the no-media-support limitation, which is
+    // still more accurate than silently treating it as unconnected).
+    if (connectedPlatforms.has('facebook')) connectedPlatforms.add('instagram')
+
+    const secretGatedReady = new Set<string>()
+    if (Deno.env.get('FIREBASE_SERVICE_ACCOUNT') && Deno.env.get('VAPID_PRIVATE_KEY')) secretGatedReady.add('push')
+    if (Deno.env.get('RESEND_API_KEY')) secretGatedReady.add('email')
+
+    const realAdapterReady = new Set([...connectedPlatforms, ...secretGatedReady])
     const publishers = buildPublisherRegistry(db)
 
     for (const row of due || []) {
@@ -181,7 +200,7 @@ Deno.serve(async (req) => {
 
         const draft = row.amos_content_drafts as unknown as { channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null } | null
         const platform = draft?.channel || row.platform || 'unknown'
-        const useReal = connectedPlatforms.has(platform)
+        const useReal = realAdapterReady.has(platform)
         const publisher = useReal ? publishers[platform] : publishers.manual
         const result = await publisher.publish({
           draftId: row.draft_id,

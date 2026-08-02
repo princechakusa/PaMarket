@@ -240,8 +240,8 @@ Publishing Queue (formerly the Content Calendar stub), "Schedule All Approved" p
 **Module 4 — First live channel ✅ shipped (Facebook connected pending a real Page token)**
 `FacebookPublisher` fully implemented against the Meta Graph API, credential storage via Vault-backed `amos_set_integration_credential`/`amos_get_vault_secret` RPCs, API Manager Connect/Disconnect UI. Dispatcher auto-routes to the real adapter only when `amos_integrations.status='connected'`; falls back to manual otherwise — verified safe with Facebook in its real default disconnected state. **Blocked on a real Facebook Page access token** (no such credential exists in this project) — code is production-ready, connect via System Health → API Manager once a token is available.
 
-**Module 5 — Remaining channels**
-Instagram (shares the Meta token), then Email (Resend, already integrated), then Push (FCM, already integrated), then LinkedIn/X/TikTok as their app-review/paid-tier requirements clear.
+**Module 5 — Remaining channels ✅ shipped**
+`PushPublisher` (fully live — reuses the existing `send-push` function/FCM setup, no new secret needed, ships with a deliberately conservative default audience rather than "all users"), `EmailPublisher` (real Resend integration, blocked on `RESEND_API_KEY` — falls back to manual until set), `InstagramPublisher` (real Graph API wiring sharing Facebook's connection, but Instagram has no text-only post type and AMOS doesn't generate media yet, so it always fails cleanly to manual). **Added along the way, not originally scoped**: a marketing-email unsubscribe mechanism (`marketing_email_opt_out`, per-user unsubscribe tokens, public `amos-unsubscribe` endpoint) — found missing during this module's build and fixed before `EmailPublisher` could responsibly go live, since no such mechanism existed anywhere in this codebase before. LinkedIn/X/TikTok remain stubs — none of their prerequisites (app review, paid API tier) exist yet.
 
 **Module 6 — Analytics & reporting**
 `amos-analytics-collector`, `amos_metrics_daily`, Analytics & Growth Dashboard, weekly `amos_reports` + email digest.
