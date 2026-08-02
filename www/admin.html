@@ -558,6 +558,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           Analytics &amp; Growth
         </button>
+        <button class="nav-item" data-tab="amosSeo" onclick="showTab('amosSeo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6M8 11h6"/></svg>
+          SEO Manager
+          <span class="nav-badge" id="badge-amos-seo" style="display:none">0</span>
+        </button>
         <div class="nav-section">Business Platform</div>
         <button class="nav-item" data-tab="businesses" onclick="showTab('businesses')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9l2-5h14l2 5"/><line x1="12" y1="13" x2="12" y2="17"/></svg>
@@ -1331,7 +1336,7 @@ var TAB_TITLES = {
   securityCenter:'Security Center', automationCenter:'Automation Center',
   amosDashboard:'AMOS Dashboard', amosApprovalQueue:'Approval Queue', amosCalendar:'Content Calendar',
   amosCampaigns:'Campaign Manager', amosIntelligence:'Market Intelligence', amosLearning:'AI Learning',
-  amosHealth:'System Health', amosAudit:'Audit Trail', amosSettings:'AI Configuration', amosAnalytics:'Analytics & Growth',
+  amosHealth:'System Health', amosAudit:'Audit Trail', amosSettings:'AI Configuration', amosAnalytics:'Analytics & Growth', amosSeo:'SEO Manager',
   rentalDashboard:'Rental Admin', rentalApprovals:'Rental Approvals',
   rentalCompanies:'Rental Companies', rentalListings:'Rental Listings',
   rentalReports:'Rental Reports', rentalReviews:'Rental Reviews',
@@ -1374,7 +1379,8 @@ var TAB_LOADERS = {
   amosHealth:        function(){ return loadAmosHealth(); },
   amosAudit:         function(){ return loadAmosAudit(); },
   amosSettings:      function(){ return loadAmosSettings(); },
-  amosAnalytics:     function(){ return loadAmosAnalytics(); }
+  amosAnalytics:     function(){ return loadAmosAnalytics(); },
+  amosSeo:           function(){ return loadAmosSeo(); }
 };
 function showTab(name) {
   currentTab = name;
@@ -1403,7 +1409,7 @@ function renderTab() {
     amosDashboard: renderAmosDashboard, amosApprovalQueue: renderAmosApprovalQueue,
     amosCalendar: renderAmosCalendar, amosCampaigns: renderAmosCampaigns,
     amosIntelligence: renderAmosIntelligence, amosLearning: renderAmosLearning,
-    amosHealth: renderAmosHealth, amosAudit: renderAmosAudit, amosSettings: renderAmosSettings, amosAnalytics: renderAmosAnalytics,
+    amosHealth: renderAmosHealth, amosAudit: renderAmosAudit, amosSettings: renderAmosSettings, amosAnalytics: renderAmosAnalytics, amosSeo: renderAmosSeo,
     rentalDashboard: renderRentalDashboard, rentalApprovals: renderRentalApprovals,
     rentalCompanies: renderRentalCompanies, rentalListings: renderRentalListings,
     rentalReports: renderRentalReports, rentalReviews: renderRentalReviews,
@@ -8245,7 +8251,7 @@ async function runExpireSubsAuto(){
 // Audit trail reuses admin_audit_logs (entity='amos_*'); job heartbeats
 // reuse job_runs (job='amos_*') — see docs/AMOS_ARCHITECTURE.md.
 // ════════════════════════════════════════════════════════════════════════
-var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null };
+var AMOS = { settings:null, integrations:null, drafts:null, schedule:null, items:null, intel:null, learning:null, jobs:null, audit:null, missing:false, metrics:null, lastAnalyticsRun:null, seo:null };
 
 async function amosMissing(){
   AMOS.missing = !(await hasTable('amos_settings'));
@@ -9074,6 +9080,76 @@ async function runAmosAnalyticsNow(){
     loadAmosAnalytics().then(renderAmosAnalytics);
   } catch(e){ toast('Error: '+e.message,'error'); }
   finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Collect Metrics Now'; } }
+}
+
+// ── SEO Manager (Module 7) ──────────────────────────────────
+async function loadAmosSeo(){
+  if(await amosMissing()) return;
+  var r = await sb.from('amos_seo_recommendations').select('*').eq('status','open').order('impact_estimate',{ascending:false}).order('created_at',{ascending:false}).limit(200);
+  AMOS.seo = (r.data||[]);
+  var b = document.getElementById('badge-amos-seo');
+  if(b){ var n=(AMOS.seo||[]).length; b.style.display = n>0?'':'none'; b.textContent=n; }
+}
+function renderAmosSeo(){
+  if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">SEO Manager</div></div>' + migrationNotice('SEO Manager','AMOS_MODULE_0_FOUNDATION.sql'); return; }
+  if(AMOS.seo===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
+  var html = '<div class="sec-head"><div class="sec-title">SEO Manager</div><button class="btn-send" id="amosSeoRunBtn" onclick="runAmosSeoNow()">Scan Now</button></div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Recommendations come from directly inspecting real listing/category data (missing titles, thin descriptions, no photos, thin categories) — no Google Search Console connection exists yet, so keyword-based recommendations aren\'t generated. Runs automatically weekly (Mondays 07:00 UTC) once AMOS_MODULE_7_SEO.sql\'s schedule is set up.</div>';
+
+  var impactCounts = {high:0, medium:0, low:0};
+  (AMOS.seo||[]).forEach(function(r){ if(impactCounts[r.impact_estimate]!=null) impactCounts[r.impact_estimate]++; });
+  html += '<div class="stats-grid">';
+  html += statCard('High Impact','red',fmtCnt(impactCounts.high),'fix first');
+  html += statCard('Medium Impact','amber',fmtCnt(impactCounts.medium),'worth addressing');
+  html += statCard('Total Open','blue',fmtCnt((AMOS.seo||[]).length),'recommendations');
+  html += '</div>';
+
+  if(!(AMOS.seo||[]).length){
+    html += '<div class="empty-msg">No open SEO recommendations. Click "Scan Now" to check listings and categories for common issues.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Type</th><th>Page</th><th>Issue</th><th>Impact</th><th></th></tr></thead><tbody>';
+    AMOS.seo.forEach(function(r){
+      var impactBadge = r.impact_estimate==='high' ? 'badge-rejected' : r.impact_estimate==='medium' ? 'badge-pending' : 'badge-active';
+      html += '<tr><td style="text-transform:capitalize">'+esc(r.page_type)+'</td><td style="font-family:monospace;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.page_ref)+'">'+esc(r.page_ref)+'</td><td style="font-size:12.5px">'+esc(r.suggested_value)+'</td><td><span class="badge '+impactBadge+'">'+esc(r.impact_estimate||'—')+'</span></td>';
+      html += '<td style="white-space:nowrap"><button class="ab ab-approve" onclick="applyAmosSeoRecommendation(\''+r.id+'\')">Applied</button> <button class="ab ab-reject" onclick="dismissAmosSeoRecommendation(\''+r.id+'\')">Dismiss</button></td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  document.getElementById('mainContent').innerHTML = html;
+}
+async function applyAmosSeoRecommendation(id){
+  if(!requirePerm('*')) return;
+  var r = await sb.from('amos_seo_recommendations').update({ status:'applied' }).eq('id',id).eq('status','open');
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('apply_amos_seo_recommendation','amos_seo_recommendations',id,{status:'open'},{status:'applied'},null);
+  toast('Marked applied');
+  loadAmosSeo().then(renderAmosSeo);
+}
+async function dismissAmosSeoRecommendation(id){
+  if(!requirePerm('*')) return;
+  var r = await sb.from('amos_seo_recommendations').update({ status:'dismissed' }).eq('id',id).eq('status','open');
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('dismiss_amos_seo_recommendation','amos_seo_recommendations',id,{status:'open'},{status:'dismissed'},null);
+  toast('Dismissed');
+  loadAmosSeo().then(renderAmosSeo);
+}
+async function runAmosSeoNow(){
+  if(!requirePerm('*')) return;
+  var btn = document.getElementById('amosSeoRunBtn');
+  if(btn){ btn.disabled=true; btn.dataset.origText=btn.textContent; btn.textContent='Scanning…'; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-seo-runner', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast((body.recommendations_written||0)+' new recommendation(s) from '+(body.listings_scanned||0)+' listing(s) scanned');
+    loadAmosSeo().then(renderAmosSeo);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Scan Now'; } }
 }
 
 // Keyboard shortcut: press / to focus the current tab's search box.
