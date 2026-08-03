@@ -22,7 +22,7 @@ function chunkKey(key: string, index: number) {
   return `${key}_chunk_${index}`;
 }
 
-const SecureStoreAdapter = {
+export const SecureStoreAdapter = {
   async getItem(key: string) {
     const chunkCountRaw = await SecureStore.getItemAsync(`${key}_chunks`);
     if (!chunkCountRaw) {
@@ -73,9 +73,18 @@ const SecureStoreAdapter = {
   },
 };
 
+// Exactly the key supabase-js derives by default (`sb-<project-ref>-auth-
+// token`), just stated explicitly so lib/auth.tsx can read the persisted
+// session back out when getSession() can't return one. Passing the same
+// value the default would have produced means existing users' stored
+// sessions still resolve — do NOT change this string, it would sign
+// everyone out on their next launch.
+export const AUTH_STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split(".")[0]}-auth-token`;
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: SecureStoreAdapter,
+    storageKey: AUTH_STORAGE_KEY,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
