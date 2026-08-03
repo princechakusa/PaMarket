@@ -40,6 +40,7 @@ import { buildPublisherRegistry } from '../_shared/amos-publishers/registry.ts'
 const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',
   'https://www.pamarketzw.com',
+  'https://admin.pamarketzw.com',
 ])
 
 function corsHeaders(req: Request) {

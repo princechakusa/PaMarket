@@ -17,7 +17,7 @@ import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 //
 // Same dual-auth + rate-limit pattern as every other amos-* function.
 
-const ALLOWED_ORIGINS = new Set(['https://pamarketzw.com', 'https://www.pamarketzw.com'])
+const ALLOWED_ORIGINS = new Set(['https://pamarketzw.com', 'https://www.pamarketzw.com', 'https://admin.pamarketzw.com'])
 function corsHeaders(req: Request) {
   const origin = req.headers.get('origin') ?? ''
   const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com'

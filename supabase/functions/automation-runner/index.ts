@@ -7,6 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',
   'https://www.pamarketzw.com',
+  'https://admin.pamarketzw.com',
 ])
 
 function corsHeaders(req: Request) {

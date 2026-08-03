@@ -5,6 +5,7 @@
 const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',
   'https://www.pamarketzw.com',
+  'https://admin.pamarketzw.com',
 ]);
 
 function corsHeaders(req: Request) {
