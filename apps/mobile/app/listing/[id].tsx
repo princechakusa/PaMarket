@@ -30,7 +30,7 @@ import { fetchSellerRatingSummary, sellerInitials, type PublicProfile } from "..
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
-import { REPORT_REASONS } from "../../lib/safety";
+import { REPORT_REASONS, friendlyError } from "../../lib/safety";
 import { StarRow } from "../../components/StarRow";
 import { ListingCard } from "../../components/ListingCard";
 import {
@@ -385,7 +385,8 @@ export default function ListingDetailScreen() {
       reporter_id: session.user.id,
     });
     if (reportError && !/duplicate|unique/i.test(reportError.message)) {
-      toast("Couldn't submit report. Please try again.", 3000, true);
+      console.warn("[report] listing report failed:", reportError.message);
+      toast(friendlyError(reportError).message, 3500, true);
       return;
     }
     toast("Thanks — this listing has been reported.");

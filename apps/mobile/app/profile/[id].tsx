@@ -202,7 +202,8 @@ export default function UserProfileScreen() {
       } else if (/rate|limit|too many/i.test(reportError.message)) {
         toast("You've submitted too many reports recently. Please try again later.", 3000, true);
       } else {
-        toast("Couldn't submit report. Please try again.", 3000, true);
+        console.warn("[report] user report failed:", reportError.message);
+        toast(reportError.message || "Couldn't submit report. Please try again.", 3500, true);
       }
       return;
     }
