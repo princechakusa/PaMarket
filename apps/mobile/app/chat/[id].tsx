@@ -180,6 +180,10 @@ export default function ChatScreen() {
   // closes over the initial state) can read the CURRENT padding.
   const keyboardHeightRef = useRef(0);
   keyboardHeightRef.current = keyboardHeight;
+  // The composer's bottom edge in screen coordinates while NOTHING is
+  // lifting it. Recorded only when the lift is 0 (see the composer's
+  // onLayout), so it's always a clean reference point that can't drift.
+  const composerRestingBottomRef = useRef<number | null>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -197,21 +201,34 @@ export default function ChatScreen() {
     // Padding by the raw endCoordinates.height then over-shot, leaving a
     // large gap between composer and keyboard — that assumes the container
     // ends exactly at the bottom of the screen, which isn't true here.
-    // measureInWindow gives the composer's real bottom edge in screen
-    // coordinates, and endCoordinates.screenY is the keyboard's real top
-    // edge in the same coordinate space, so their difference is exactly
-    // how much of the composer the keyboard covers — correct regardless
-    // of header height, safe areas, or where the container actually sits.
-    // The current padding is added back before comparing so re-measuring
-    // while already lifted can't feed back on itself.
+    // The lift is the gap between where the composer RESTS (its bottom edge
+    // in screen coordinates with nothing lifting it — captured in the
+    // composer's onLayout, see composerRestingBottomRef) and the keyboard's
+    // real top edge (endCoordinates.screenY, same coordinate space). That's
+    // exactly how much of the composer the keyboard would cover, and it's
+    // correct regardless of header height, safe areas, or where the
+    // container sits.
+    //
+    // Deliberately measured against a resting reference rather than
+    // measuring live and adding the current lift back: locking the phone
+    // with the keyboard open and unlocking fires several keyboard events in
+    // quick succession, and any event landing after the lift state updated
+    // but before the layout actually moved would double-count the lift and
+    // leave a permanent gap above the keyboard.
     const showSub = Keyboard.addListener(showEvent, (e) => {
       setKeyboardVisible(true);
       if (Platform.OS !== "ios") return;
       const keyboardTop = e?.endCoordinates?.screenY;
       if (typeof keyboardTop !== "number") return;
+      const restingBottom = composerRestingBottomRef.current;
+      if (restingBottom != null) {
+        setKeyboardHeight(Math.max(0, restingBottom - keyboardTop));
+        return;
+      }
+      // No resting measurement yet (keyboard opened before the composer
+      // ever laid out unlifted) — fall back to a live measurement.
       composerRef.current?.measureInWindow((_x, y, _w, h) => {
-        const unliftedBottom = y + h + keyboardHeightRef.current;
-        setKeyboardHeight(Math.max(0, unliftedBottom - keyboardTop));
+        setKeyboardHeight(Math.max(0, y + h + keyboardHeightRef.current - keyboardTop));
       });
     });
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
@@ -1022,6 +1039,16 @@ export default function ChatScreen() {
 
       <View
         ref={composerRef}
+        // Capture the composer's resting bottom edge only while nothing is
+        // lifting it — that's the stable reference the keyboard listener
+        // measures against. Layout re-fires whenever the lift returns to 0
+        // (keyboard dismissed, rotation, etc.), so it stays current.
+        onLayout={() => {
+          if (Platform.OS !== "ios" || keyboardHeightRef.current !== 0) return;
+          composerRef.current?.measureInWindow((_x, y, _w, h) => {
+            composerRestingBottomRef.current = y + h;
+          });
+        }}
         style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.xs : Math.max(insets.bottom, space.md) }]}
       >
         <Pressable style={styles.attachButton} onPress={handleAttach} hitSlop={6}>
