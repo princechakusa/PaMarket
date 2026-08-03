@@ -312,7 +312,33 @@ Deno.serve(async (req) => {
     const tone = (settings?.brand_voice?.tone || ['professional', 'trustworthy', 'modern', 'friendly', 'helpful']).join(', ')
     const avoid = (settings?.brand_voice?.avoid || ['clickbait', 'misleading claims', 'copying competitors']).join(', ')
 
-    const systemPrompt = `You are writing marketing content for PaMarket, Zimbabwe's marketplace app for buying, selling, hiring, and getting hired (listings, jobs, vehicles, properties, rentals). Brand tone: ${tone}. Avoid: ${avoid}. Never invent statistics, prices, or claims about PaMarket that aren't given to you.
+    // Ground the copy in real inventory instead of letting the model
+    // invent plausible-sounding product claims. Caught live: a Heroes' Day
+    // draft confidently claimed PaMarket sellers stock "memorial wreaths"
+    // and "patriotic bunting" — nothing in the schema backs that, the
+    // model just filled the gap with something that sounded right. Pull a
+    // small real sample from the classified category so specific product
+    // claims can only ever reference listings that actually exist; when
+    // none are found, the prompt tells the model explicitly to stay
+    // general rather than invent categories that sound plausible.
+    let realListingsContext = 'No matching live listings were found for this category — do NOT claim specific products, item types, or availability exist on PaMarket. Write only general brand/marketplace messaging (e.g. "browse listings near you", "connect with local sellers") without naming specific product categories as being in stock.'
+    if (classification.category) {
+      const { data: sampleListings } = await db
+        .from('listings')
+        .select('title, category, price, currency, city')
+        .eq('category', classification.category)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(8)
+      if (sampleListings && sampleListings.length) {
+        realListingsContext = `Real, currently-live PaMarket listings in this category (you may reference these as genuine examples of what's available, but do not claim broader availability than what's shown — ${sampleListings.length} example(s), there may or may not be more):\n` +
+          sampleListings.map((l) => `- "${l.title}" (${l.currency || ''}${l.price ?? '?'}, ${l.city || 'Zimbabwe'})`).join('\n')
+      }
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10)
+
+    const systemPrompt = `You are writing marketing content for PaMarket, Zimbabwe's marketplace app for buying, selling, hiring, and getting hired (listings, jobs, vehicles, properties, rentals). Today's date is ${todayStr} — use this for any relative dates, years, or "coming up" language; never assume or guess a different year. Brand tone: ${tone}. Avoid: ${avoid}. Never invent statistics, prices, or claims about PaMarket that aren't given to you. If no real listings are supplied for a category, do not claim that category of product is available — write general marketplace messaging instead.
 
 After writing the content, append these exact tagged lines (each on its own line, in this order, nothing after them):
 WHY THIS WORKS: <one sentence on why this should perform well with a Zimbabwean audience, referencing the specific context you were given>
@@ -321,7 +347,7 @@ BRAND ALIGNMENT SCORE: <0-100, how well this matches the brand tone and avoids t
 ENGAGEMENT PREDICTION SCORE: <0-100, your honest estimate of how likely this specific piece is to get engagement from a Zimbabwean marketplace audience — do not default to high numbers>
 SEO VALUE SCORE: <0-100 if this is a blog/article placement with real search-ranking potential, or 0 if not applicable>`
 
-    const userContext = `Topic/signal: "${topic.topic}"\nWhy this is relevant right now: ${topic.rationale || 'no additional context'}\nSignal type: ${topic.signal_type}\nTarget audience: ${classification.targetAudience || 'general PaMarket users in Zimbabwe'}`
+    const userContext = `Today's date: ${todayStr}\nTopic/signal: "${topic.topic}"\nWhy this is relevant right now: ${topic.rationale || 'no additional context'}\nSignal type: ${topic.signal_type}\nTarget audience: ${classification.targetAudience || 'general PaMarket users in Zimbabwe'}\n\n${realListingsContext}`
 
     // ── 4. Generate each placement, isolated ───────────────────────────
     for (const placement of PLACEMENTS) {
