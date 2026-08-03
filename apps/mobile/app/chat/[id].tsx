@@ -170,15 +170,40 @@ export default function ChatScreen() {
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const [isSendingImages, setIsSendingImages] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    // iOS drives the lift from the keyboard's OWN reported height rather
+    // than KeyboardAvoidingView's frame math. KAV measures its frame via
+    // onLayout (coordinates relative to its PARENT) but compares that
+    // against the keyboard's SCREEN position — with the native iOS header
+    // now shown on this screen, the content starts ~header-height below
+    // the screen top, so KAV under-padded by exactly that amount. Since
+    // the header is taller than the composer, the entire composer ended up
+    // behind the keyboard, which is exactly the reported symptom. (The
+    // same bug is why jobs/post.tsx carries a hardcoded
+    // keyboardVerticalOffset={90} magic number.) endCoordinates.height is
+    // measured from the bottom of the screen, so padding the container by
+    // it lifts the composer to sit exactly on top of the keyboard — with
+    // no dependency on header height at all.
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardVisible(true);
+      if (Platform.OS === "ios") setKeyboardHeight(e?.endCoordinates?.height ?? 0);
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+      setKeyboardHeight(0);
+    });
     const willHideSub =
-      Platform.OS === "ios" ? Keyboard.addListener("keyboardWillHide", () => setKeyboardVisible(false)) : null;
+      Platform.OS === "ios"
+        ? Keyboard.addListener("keyboardWillHide", () => {
+            setKeyboardVisible(false);
+            setKeyboardHeight(0);
+          })
+        : null;
     // The KeyboardAvoidingView correctly shrinks the visible chat area when
     // the keyboard opens, but the FlatList's own scroll offset doesn't move
     // with it — nothing re-triggers a scroll (onContentSizeChange only
@@ -193,6 +218,7 @@ export default function ChatScreen() {
     const appStateSub = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
         setKeyboardVisible(false);
+        setKeyboardHeight(0);
         Keyboard.dismiss();
       } else {
         setKeyboardAvoidingKey((key) => key + 1);
@@ -778,9 +804,13 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       key={keyboardAvoidingKey}
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={0}
+      // iOS: behavior is deliberately undefined (KAV renders as a plain
+      // View) because its own padding math is what was broken here — the
+      // real keyboard height is applied directly below instead. Android
+      // keeps behavior="height", which works there and is unaffected by
+      // this bug (no native header shown on Android for this screen).
+      style={[styles.container, Platform.OS === "ios" ? { paddingBottom: keyboardHeight } : null]}
+      behavior={Platform.OS === "ios" ? undefined : "height"}
     >
       {Platform.OS !== "ios" ? (
         <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
