@@ -852,6 +852,15 @@ export default function ChatScreen() {
         <FlatList
           ref={listRef}
           style={{ flex: 1 }}
+          // iOS's automatic keyboard-inset handling (default true on RN
+          // 0.71+) and this screen's own manual KeyboardAvoidingView can
+          // both try to make room for the keyboard at once — one already
+          // reported symptom (the whole composer row disappearing, not
+          // just scrolled to the wrong spot) matches the two adjustments
+          // compounding and pushing content off-screen rather than just
+          // under-adjusting. Disabling the automatic one leaves
+          // KeyboardAvoidingView as the single source of truth.
+          automaticallyAdjustKeyboardInsets={false}
           data={visibleMessages}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messagesList}
