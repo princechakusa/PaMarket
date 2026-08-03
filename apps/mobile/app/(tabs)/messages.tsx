@@ -287,10 +287,26 @@ export default function MessagesScreen() {
     useCallback(() => {
       if (summariesRef.current.length) {
         refreshUnreadCounts();
-      } else {
-        setIsLoading(true);
-        load().finally(() => setIsLoading(false));
+        return;
       }
+      setIsLoading(true);
+      // On a dead/flaky connection this query can hang rather than fail
+      // fast, leaving the tab behind its loading skeleton indefinitely —
+      // which reads as "Messages never opens". Falling through to the
+      // normal empty/offline state after a few seconds is strictly better;
+      // the screen already handles having no data.
+      let settled = false;
+      const stopLoading = () => {
+        if (settled) return;
+        settled = true;
+        setIsLoading(false);
+      };
+      const timeout = setTimeout(stopLoading, 8000);
+      load().finally(() => {
+        clearTimeout(timeout);
+        stopLoading();
+      });
+      return () => clearTimeout(timeout);
     }, [refreshUnreadCounts, load])
   );
 
