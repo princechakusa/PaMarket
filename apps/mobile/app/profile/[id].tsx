@@ -203,7 +203,7 @@ export default function UserProfileScreen() {
         toast("You've submitted too many reports recently. Please try again later.", 3000, true);
       } else {
         console.warn("[report] user report failed:", reportError.message);
-        toast(reportError.message || "Couldn't submit report. Please try again.", 3500, true);
+        toast("Couldn't submit report. Please try again.", 3500, true);
       }
       return;
     }

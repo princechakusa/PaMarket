@@ -386,7 +386,8 @@ export default function ListingDetailScreen() {
     });
     if (reportError && !/duplicate|unique/i.test(reportError.message)) {
       console.warn("[report] listing report failed:", reportError.message);
-      toast(friendlyError(reportError).message, 3500, true);
+      const friendly = friendlyError(reportError);
+      toast(friendly.blocked ? friendly.message : "Couldn't submit report. Please try again.", 3500, true);
       return;
     }
     toast("Thanks — this listing has been reported.");

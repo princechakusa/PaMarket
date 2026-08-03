@@ -179,6 +179,17 @@ export default function ChatScreen() {
     const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
     const willHideSub =
       Platform.OS === "ios" ? Keyboard.addListener("keyboardWillHide", () => setKeyboardVisible(false)) : null;
+    // The KeyboardAvoidingView correctly shrinks the visible chat area when
+    // the keyboard opens, but the FlatList's own scroll offset doesn't move
+    // with it — nothing re-triggers a scroll (onContentSizeChange only
+    // fires when the message content itself changes, not when the
+    // available viewport shrinks), so the most recent message(s) end up
+    // hidden behind the keyboard until the user manually scrolls.
+    // keyboardDidShow (not Will) so this runs after the show animation has
+    // actually finished and the list's real height has settled.
+    const didShowSub = Keyboard.addListener("keyboardDidShow", () => {
+      listRef.current?.scrollToEnd({ animated: true });
+    });
     const appStateSub = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
         setKeyboardVisible(false);
@@ -191,6 +202,7 @@ export default function ChatScreen() {
       showSub.remove();
       hideSub.remove();
       willHideSub?.remove();
+      didShowSub.remove();
       appStateSub.remove();
     };
   }, []);
@@ -601,7 +613,7 @@ export default function ChatScreen() {
     });
     if (reportError) {
       console.warn("[report] message report failed:", reportError.message);
-      toast(reportError.message || "Couldn't submit report. Please try again.", 3500, true);
+      toast("Couldn't submit report. Please try again.", 3500, true);
       return;
     }
     toast("Report submitted. Thank you.");

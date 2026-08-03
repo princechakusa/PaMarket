@@ -1,0 +1,14 @@
+-- Root cause of the report-submission bug, found via the app's own error
+-- message once the client stopped swallowing it:
+--   null value in column "id" of relation "reports" violates not-null constraint
+--
+-- public.reports.id is `text not null` with NO default value generator.
+-- Every report insert from the app (listing, user, and message reports)
+-- never supplies an `id` — it always relied on the table generating one,
+-- the way virtually every other table in this schema does. Without a
+-- default, every single insert failed at the database level. This has
+-- nothing to do with the RLS/rate-limit/self-report work done earlier —
+-- those fixes were real and necessary, but this was the actual blocker
+-- underneath all of them the whole time. Prior verification passed only
+-- because the test inserts explicitly supplied an id by hand.
+alter table public.reports alter column id set default gen_random_uuid()::text;
