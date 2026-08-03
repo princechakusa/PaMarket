@@ -477,14 +477,17 @@ export default function ChatScreen() {
     // Pattern-matched scam categories get auto-flagged for moderator review
     // regardless of whether either party reports it — see lib/safety.ts
     // scamRisk() for what this covers and why it flags rather than blocks.
+    // reports has no chat_id/message_id columns (confirmed against the live
+    // schema) — target_type/target_id is the only way this table records
+    // what's being reported.
     if (text && inserted?.id && scamRisk(text) !== "none") {
-      await supabase.from("reports").insert({
+      const { error: flagError } = await supabase.from("reports").insert({
         target_type: "message",
         target_id: inserted.id,
-        chat_id: id,
         reason: "Scam or fraud (auto-flagged)",
         reporter_id: myId,
       });
+      if (flagError) console.warn("[report] auto-flag insert failed:", flagError.message);
     }
   }
 
@@ -586,16 +589,21 @@ export default function ChatScreen() {
   }
 
   async function reportMessage(target: MessageRow, reason: string) {
-    // reports table supports target_type='message' with message_id + chat_id
-    // (moderation_backend_phase_a.sql + fix_reports_target_types.sql).
-    await supabase.from("reports").insert({
+    // reports has no message_id/chat_id columns — confirmed against the
+    // live schema. This insert previously always failed (unknown column)
+    // and was never checked for an error, so it silently did nothing while
+    // still claiming success below.
+    const { error: reportError } = await supabase.from("reports").insert({
       target_type: "message",
       target_id: target.id,
-      message_id: target.id,
-      chat_id: id ?? null,
       reason,
       reporter_id: myId ?? null,
     });
+    if (reportError) {
+      console.warn("[report] message report failed:", reportError.message);
+      toast(reportError.message || "Couldn't submit report. Please try again.", 3500, true);
+      return;
+    }
     toast("Report submitted. Thank you.");
   }
 
