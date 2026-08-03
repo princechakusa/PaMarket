@@ -26,7 +26,9 @@ export function CategoryPicker({ onSelect }: { onSelect: (id: string) => void })
       <View style={styles.grid}>
         {CATEGORIES.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelect(c.id)}>
-            <Image source={CAT_ICONS[c.id]} style={styles.icon} />
+            <View style={styles.iconChip}>
+              <Image source={CAT_ICONS[c.id]} style={styles.icon} />
+            </View>
             <Text style={styles.itemLabel} numberOfLines={2}>
               {c.name}
             </Text>
@@ -61,6 +63,21 @@ function buildStyles(color: ColorPalette) {
       borderRadius: 12,
       paddingVertical: 14,
       paddingHorizontal: 4,
+    },
+    // The cat_*.png assets are fully opaque with a white square baked into
+    // every image (same assets used on the Home screen's category grid) —
+    // a small white chip sized to the icon keeps that edge looking
+    // deliberate against this card's own themed (dark-in-dark-mode)
+    // background, instead of the image's white square butting straight up
+    // against the card.
+    iconChip: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: "#FFFFFF",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
     },
     icon: {
       width: 40,

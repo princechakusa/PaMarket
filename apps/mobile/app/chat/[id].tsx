@@ -831,6 +831,7 @@ export default function ChatScreen() {
       ) : (
         <FlatList
           ref={listRef}
+          style={{ flex: 1 }}
           data={visibleMessages}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messagesList}

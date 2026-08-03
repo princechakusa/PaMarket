@@ -103,6 +103,7 @@ function RootNavigator() {
   const { pendingTwoFactor, isLoading } = useAuth();
   usePushNotifications();
   const bg = useThemedStyles((c) => c.bg);
+  const headerColors = useThemedStyles((c) => ({ bg: c.bg, text: c.text }));
 
   useEffect(() => {
     if (!isLoading) {
@@ -121,7 +122,25 @@ function RootNavigator() {
     // it — the classic cause of a "flicker" during back navigation,
     // especially visible in dark mode or moving between differently
     // colored screens (e.g. Account -> a native-header settings screen).
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: bg } }}>
+    // Every screen below that uses plain `headerShown: true` (i.e. doesn't
+    // call useIOSNativeHeader to set its own header colors) was inheriting
+    // React Navigation's native-stack default header styling, which follows
+    // the OS-level light/dark appearance — NOT PaMarket's own in-app theme
+    // toggle (lib/theme-provider.tsx). Someone with the phone set to Light
+    // Mode but PaMarket set to Dark saw a light header bar sitting above an
+    // otherwise-dark screen. These defaults make the header follow the
+    // app's own resolved theme like everything else does, while any screen
+    // that explicitly sets its own header options (useIOSNativeHeader, or a
+    // per-screen headerStyle below) still overrides this as before.
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: bg },
+        headerStyle: { backgroundColor: headerColors.bg },
+        headerTintColor: headerColors.text,
+        headerTitleStyle: { color: headerColors.text },
+      }}
+    >
       {/* The tabs group is a single stack node covering all 5 tabs (Home,
           Search, Post, Messages, Account) — a static title here would show
           on the back button regardless of which tab was actually active

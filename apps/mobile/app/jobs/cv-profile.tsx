@@ -136,7 +136,13 @@ export default function CvProfileScreen() {
       setSector(p.sector || cv.sector || "");
       setExp(p.exp || cv.exp || "");
       setCity(p.city || cv.location || "");
-      setBio(p.bio || cv.summary || "");
+      // cv.summary is the job-profile's own bio — profiles.bio is a
+      // different field entirely (the general marketplace "About" bio
+      // edited from edit-profile.tsx). Reading/writing profiles.bio here
+      // was showing the marketplace bio inside the job profile, and saving
+      // this screen silently overwrote the marketplace bio with whatever
+      // was typed here.
+      setBio(cv.summary || "");
       setExpectedSalary(p.expected_salary || cv.expectedSalary || "");
       setCurrency(cv.currency || "USD");
       setSkills(cv.skills?.length ? cv.skills : (p.skills || "").split(",").map((s) => s.trim()).filter(Boolean));
@@ -233,7 +239,6 @@ export default function CvProfileScreen() {
         sector: sector.trim(),
         exp,
         city: city.trim(),
-        bio: bio.trim(),
         expected_salary: expectedSalary.trim(),
         skills: skills.join(","),
         cv_file_url: cvFileUrl.trim() || null,

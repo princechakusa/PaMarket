@@ -18,19 +18,17 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
   other: require("../../assets/cats/cat_other.png"),
 };
 
-// All 12 categories, 4 per row, plain (no card border/shadow wrapper, no
-// tinted icon box) — matches the actual home screen exactly: a plain
-// "Browse Categories" heading over a 4x3 grid of the real category cover
-// images. The earlier card-with-eyebrow-and-8-icons version didn't match
-// the app at all.
+// All 12 categories, 4 per row — a "Browse Categories" heading over a 4x3
+// grid of the real category cover images.
 //
 // The cat_*.png assets are fully opaque (no alpha channel) with a white
-// square baked into every image — they only look seamless/boxless when
-// placed on a pure white background matching that baked-in white. This is
-// hardcoded to #FFFFFF (not color.surface) because the images themselves
-// are static and always white regardless of theme — in dark mode
-// color.surface is near-black, which would make the white boxes far more
-// visible, not less.
+// square baked into every image, so each icon sits in its own small white
+// "iconChip" backing sized to just the image — that keeps the baked-in
+// white edge looking deliberate on any background. This used to make the
+// ENTIRE section hardcoded white (background, title, "See all", labels)
+// so the images had no visible seam — which meant the whole section never
+// respected the in-app dark mode toggle at all. Only the icon itself needs
+// a white backing; everything else here now follows the theme normally.
 export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory: (id: string) => void; onSeeAll: () => void }) {
   const styles = useThemedStyles(buildStyles);
   return (
@@ -44,7 +42,9 @@ export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory:
       <View style={styles.grid}>
         {CATEGORIES.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelectCategory(c.id)}>
-            <Image source={CAT_ICONS[c.id]} style={styles.icon} />
+            <View style={styles.iconChip}>
+              <Image source={CAT_ICONS[c.id]} style={styles.icon} />
+            </View>
             <Text style={styles.label} numberOfLines={2}>
               {c.name}
             </Text>
@@ -58,7 +58,7 @@ export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory:
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     section: {
-      backgroundColor: "#FFFFFF",
+      backgroundColor: color.bg,
       paddingHorizontal: space.lg,
       paddingTop: space.lg,
       paddingBottom: space.md,
@@ -71,11 +71,11 @@ function buildStyles(color: ColorPalette) {
     },
     title: {
       ...font.h3,
-      color: "#111827",
+      color: color.text,
     },
     seeAll: {
       ...font.caption,
-      color: "#1A3A8F",
+      color: color.brand,
     },
     grid: {
       flexDirection: "row",
@@ -87,6 +87,15 @@ function buildStyles(color: ColorPalette) {
       gap: space.sm,
       marginBottom: space.lg,
     },
+    iconChip: {
+      width: 64,
+      height: 64,
+      borderRadius: 16,
+      backgroundColor: "#FFFFFF",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
     icon: {
       width: 64,
       height: 64,
@@ -94,7 +103,7 @@ function buildStyles(color: ColorPalette) {
     },
     label: {
       ...font.caption,
-      color: "#111827",
+      color: color.text,
       textAlign: "center",
       paddingHorizontal: 2,
     },

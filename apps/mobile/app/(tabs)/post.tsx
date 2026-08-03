@@ -15,7 +15,6 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Polyline } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
@@ -30,16 +29,6 @@ import { Button, Card, Chip, GlassBackButton } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
-
-function HeaderBackChevron({ color, onPress }: { color: string; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} hitSlop={12} style={{ paddingRight: 8, paddingVertical: 4 }}>
-      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-        <Polyline points="15 18 9 12 15 6" />
-      </Svg>
-    </Pressable>
-  );
-}
 
 const TITLE_PLACEHOLDERS: Record<string, string> = {
   property: "e.g. 3 Bedroom House in Borrowdale",
@@ -92,17 +81,25 @@ export default function PostScreen() {
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
+  const params = useLocalSearchParams<{ businessId?: string }>();
+  const [state, setState] = useState<PostState>(INITIAL_STATE);
   // headerLeft stays custom (not the OS default) — this "back" button steps
   // back one wizard stage at a time (see handleHeaderBack below), which the
-  // real native back action (pop the navigation stack) can't express.
+  // real native back action (pop the navigation stack) can't express. Uses
+  // the same GlassBackButton (flat variant) every other screen's header
+  // uses, instead of a one-off chevron, so it looks and presses like every
+  // other back button in the app. Only shown once there's actually
+  // somewhere for it to go — at the true first step (no category picked
+  // yet), this is a tab root with nothing to go "back" to, so router.back()
+  // there was a silent no-op; showing no button here matches how every
+  // other tab root already behaves.
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
     title: "Post a Free Ad",
-    headerLeft: () => <HeaderBackChevron color={color.textOnBrand} onPress={handleHeaderBack} />,
+    headerLeft:
+      state.step > 1 || state.category ? () => <GlassBackButton onPress={handleHeaderBack} tone="light" flat /> : undefined,
   });
-  const params = useLocalSearchParams<{ businessId?: string }>();
-  const [state, setState] = useState<PostState>(INITIAL_STATE);
   const [error, setError] = useState<string | null>(null);
   const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -292,8 +289,15 @@ export default function PostScreen() {
       goBack();
     } else if (state.category) {
       update({ category: null });
-    } else {
+    } else if (router.canGoBack()) {
+      // Post is a tab root, not a pushed screen — when it was reached by
+      // tapping the tab bar (the common case) there's nothing on the stack
+      // to pop, and router.back() was a silent no-op here. Only pop if
+      // there's actually somewhere to go; otherwise fall through to the
+      // Home tab so the button always does something.
       router.back();
+    } else {
+      router.replace("/(tabs)");
     }
   }
 
