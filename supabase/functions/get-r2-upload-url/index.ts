@@ -7,6 +7,7 @@ const ALLOWED_ORIGINS = new Set([
   'https://pamarketzw.com',      // public website (image upload when posting)
   'https://www.pamarketzw.com',
   'https://admin.pamarketzw.com',
+  'https://pamarket.chakusaprince.workers.dev',
   'https://pamarket.app',
   'https://www.pamarket.app',
   'com.pamarket.app',       // Capacitor deep-link scheme, sent by some WebViews
