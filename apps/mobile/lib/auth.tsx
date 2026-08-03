@@ -52,20 +52,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      // getSession() reads the cached session from SecureStore — it's local
-      // and fast. The old code awaited checkTwoFactor() (a network query to
-      // profiles) before ever setting isLoading false, so EVERY logged-in
-      // user's app open was blocked on a full round trip just to protect the
-      // rare few with 2FA enabled. Now the app renders immediately with the
-      // cached session, and checkTwoFactor corrects it (session -> null,
-      // pendingTwoFactor -> true) the moment the check comes back if needed.
-      // The exposure window is a 2FA user's own session content for a few
-      // hundred milliseconds on their own device — not other users' data —
-      // a reasonable trade for cutting a network round trip off every launch.
-      setSession(data.session);
+    // getSession() can internally attempt a token-refresh network call when
+    // the stored session is near/past expiry — on a poor/no connection
+    // (a real scenario this app has to work on) that call can reject, or on
+    // some networks hang far longer than a launch should ever wait. Either
+    // way, isLoading must resolve regardless: the splash screen is gated on
+    // !isLoading in app/_layout.tsx, so previously a failed/hung refresh
+    // left the app stuck behind the splash screen forever — it looked like
+    // the app simply never opened. settled + the timeout below guarantee
+    // this unblocks within 6s no matter what the network does; worst case
+    // the user opens signed-out and can retry once online.
+    let settled = false;
+    const finishLoading = () => {
+      if (settled) return;
+      settled = true;
       setIsLoading(false);
+    };
+    const timeout = setTimeout(finishLoading, 6000);
+
+    supabase.auth.getSession().then(({ data }) => {
+      clearTimeout(timeout);
+      setSession(data.session);
+      finishLoading();
       checkTwoFactor(data.session);
+    }).catch((e) => {
+      clearTimeout(timeout);
+      console.warn("[auth] getSession failed (offline?):", e);
+      finishLoading();
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {
