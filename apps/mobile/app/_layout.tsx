@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import messaging from "@react-native-firebase/messaging";
 import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
@@ -240,15 +241,17 @@ function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ThemedStatusBar />
-        <ToastHost />
-        <AnnouncementModal />
-        <RatingPromptModal />
-        <RootNavigator />
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStatusBar />
+          <ToastHost />
+          <AnnouncementModal />
+          <RatingPromptModal />
+          <RootNavigator />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
