@@ -9,11 +9,20 @@ import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 // AMOS Module 10 — AI Media Generation (images).
 //
 // Generates one marketing image for a single amos_content_drafts row via
-// OpenAI's image API, uploads it to the R2 public bucket (same bucket/
-// credentials as get-r2-upload-url, direct SDK write since this runs
-// server-side and already holds the R2 secrets — no signed-URL
-// round trip needed), and records the result in amos_media_assets +
-// amos_content_drafts.media_asset_id.
+// Pollinations.ai's free image API (no key, no billing — both OpenAI's
+// gpt-image-1 and Google's Gemini image models were tried first and
+// both require a funded billing account even for their nominal "free
+// tier", so this is the option that actually works without payment).
+// Pollinations has no uptime SLA and rate-limits anonymous requests, so
+// this is a deliberate cost/reliability tradeoff, not the first choice —
+// swap PROVIDER below to 'openai' or 'gemini' once billing is added on
+// either, the rest of this file (R2 upload, media_assets bookkeeping,
+// publisher integration) does not need to change.
+//
+// Uploads the result to the R2 public bucket (same bucket/credentials as
+// get-r2-upload-url, direct SDK write since this runs server-side and
+// already holds the R2 secrets — no signed-URL round trip needed), and
+// records the result in amos_media_assets + amos_content_drafts.media_asset_id.
 //
 // DRAFT-ONLY, same posture as amos-content-generator: this function only
 // ever attaches an image to an existing draft. It never publishes
@@ -38,21 +47,22 @@ function corsHeaders(req: Request) {
 }
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
-const OPENAI_MODEL = 'gpt-image-1'
+const POLLINATIONS_MODEL = 'flux'
 
-// Placement -> pixel dimensions OpenAI's image API actually supports.
-// gpt-image-1 accepts exactly these three sizes; anything else 400s.
-const PLACEMENT_SIZE: Record<string, { size: string; format: string }> = {
-  facebook:        { size: '1536x1024', format: 'landscape' },
-  instagram:        { size: '1024x1024', format: 'square' },
-  linkedin:         { size: '1536x1024', format: 'landscape' },
-  x:                { size: '1536x1024', format: 'landscape' },
-  blog_header:      { size: '1536x1024', format: 'landscape' },
-  website_banner:   { size: '1536x1024', format: 'landscape' },
-  story:            { size: '1024x1536', format: 'portrait' },
-  square:           { size: '1024x1024', format: 'square' },
-  landscape:        { size: '1536x1024', format: 'landscape' },
-  portrait:         { size: '1024x1536', format: 'portrait' },
+// Placement -> target pixel dimensions, passed directly as Pollinations'
+// width/height query params (unlike Gemini, which took aspect ratio as
+// prompt text — Pollinations has a real width/height parameter).
+const PLACEMENT_SIZE: Record<string, { width: number; height: number; format: string }> = {
+  facebook:        { width: 1536, height: 1024, format: 'landscape' },
+  instagram:        { width: 1024, height: 1024, format: 'square' },
+  linkedin:         { width: 1536, height: 1024, format: 'landscape' },
+  x:                { width: 1536, height: 1024, format: 'landscape' },
+  blog_header:      { width: 1536, height: 1024, format: 'landscape' },
+  website_banner:   { width: 1536, height: 1024, format: 'landscape' },
+  story:            { width: 1024, height: 1536, format: 'portrait' },
+  square:           { width: 1024, height: 1024, format: 'square' },
+  landscape:        { width: 1536, height: 1024, format: 'landscape' },
+  portrait:         { width: 1024, height: 1536, format: 'portrait' },
 }
 
 const VALID_STYLES = new Set([
@@ -171,11 +181,9 @@ Deno.serve(async (req) => {
     return json({ success: ok, ...summary, duration_ms: finishedAt - startedAt }, ok ? 200 : 502)
   }
 
-  const openaiKey = Deno.env.get('OPENAI_API_KEY') || ''
-  if (!openaiKey) {
-    summary.error = 'OPENAI_API_KEY not configured — set it under Supabase → Edge Functions → amos-media-generator → Secrets.'
-    return await finish(false)
-  }
+  // Pollinations needs no API key — nothing to check here. If billing is
+  // later added to OpenAI/Gemini and this file is switched back to one of
+  // those, reinstate a key-presence check at this point.
 
   try {
     // ── 1. Load the draft + its content item + brand kit ──────────────
@@ -205,17 +213,12 @@ Deno.serve(async (req) => {
       .eq('country_code', item?.country_code || 'ZW')
       .maybeSingle()
 
-    // ── 2. Budget check (same RPC/backstop pattern as content-generator) ─
-    const ESTIMATED_CENTS_PER_IMAGE = 8
-    const { data: budgetOk, error: budgetError } = await db.rpc('amos_check_and_record_ai_spend', {
-      p_country_code: item?.country_code || 'ZW', p_estimated_cents: ESTIMATED_CENTS_PER_IMAGE,
-    })
-    if (budgetError) {
-      console.error('[amos-media-generator] budget check failed, failing open:', budgetError.message)
-    } else if (budgetOk === false) {
-      summary.error = 'Monthly AI budget limit reached — increase it in AI Configuration or wait for next month\'s reset.'
-      return await finish(false)
-    }
+    // Pollinations is free — no per-image spend to record. The budget RPC
+    // call is skipped entirely rather than called with 0 cents, since its
+    // purpose is capping real API spend and there is none here. Reinstate
+    // this check (with a real estimated cost) if this file is switched
+    // back to a billed provider.
+    const ESTIMATED_CENTS_PER_IMAGE = 0
 
     // ── 3. Build the prompt from brand kit + draft copy ────────────────
     const prompt = buildImagePrompt({
@@ -226,7 +229,7 @@ Deno.serve(async (req) => {
       brandKit,
     })
 
-    // ── 4. Create the pending media_assets row before calling OpenAI ───
+    // ── 4. Create the pending media_assets row before calling the API ──
     const { data: mediaRow, error: mediaInsertError } = await db
       .from('amos_media_assets')
       .insert({
@@ -237,8 +240,8 @@ Deno.serve(async (req) => {
         placement: placementKey,
         format: sizeConfig.format,
         prompt,
-        provider: 'openai',
-        model: OPENAI_MODEL,
+        provider: 'pollinations',
+        model: POLLINATIONS_MODEL,
         status: 'generating',
         created_by: triggeredBy.actorId,
       })
@@ -247,21 +250,20 @@ Deno.serve(async (req) => {
     if (mediaInsertError) throw mediaInsertError
     summary.media_asset_id = mediaRow.id
 
-    // ── 5. Call OpenAI ───────────────────────────────────────────────
-    const imageB64 = await generateImage(openaiKey, prompt, sizeConfig.size)
+    // ── 5. Call Pollinations ────────────────────────────────────────
+    const imageBytes = await generateImage(prompt, sizeConfig.width, sizeConfig.height)
 
     // ── 6. Upload to R2 ──────────────────────────────────────────────
-    const key = `amos/media/${draft.content_item_id}/${mediaRow.id}.png`
-    const publicUrl = await uploadToR2(imageB64, key)
+    const key = `amos/media/${draft.content_item_id}/${mediaRow.id}.jpg`
+    const publicUrl = await uploadToR2(imageBytes, key)
 
     // ── 7. Mark ready, link to the draft ────────────────────────────
-    const [w, h] = sizeConfig.size.split('x').map(Number)
     await db.from('amos_media_assets').update({
       status: 'ready',
       storage_key: key,
       url: publicUrl,
-      width: w,
-      height: h,
+      width: sizeConfig.width,
+      height: sizeConfig.height,
       generation_cost_cents: ESTIMATED_CENTS_PER_IMAGE,
       updated_at: new Date().toISOString(),
     }).eq('id', mediaRow.id)
@@ -312,37 +314,45 @@ function buildImagePrompt(args: {
     `Where people or scenes are shown, reflect Zimbabwean/Southern African context authentically.`,
     notes ? `Additional brand guidance: ${notes}.` : '',
     `Content context (do not render this text literally on the image unless it reads as a short headline naturally): ${draftBody.slice(0, 300)}`,
-    `Do not include any watermarks, placeholder text, or lorem ipsum. Do not misspell any text that does appear.`,
+    `No watermarks, no placeholder text, no lorem ipsum, no misspelled text.`,
   ].filter(Boolean).join(' ')
 }
 
-async function generateImage(apiKey: string, prompt: string, size: string): Promise<string> {
-  const res = await fetch('https://api.openai.com/v1/images/generations', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      prompt,
-      size,
-      n: 1,
-    }),
-  })
+// No SLA on this API — generation can occasionally hang rather than
+// error, so an explicit timeout lets the function fail cleanly (and
+// record a real 'failed' media_assets row) instead of running until the
+// platform kills it with no useful error message.
+const POLLINATIONS_TIMEOUT_MS = 45_000
+
+async function generateImage(prompt: string, width: number, height: number): Promise<Uint8Array> {
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+    `?model=${POLLINATIONS_MODEL}&width=${width}&height=${height}&nologo=true&safe=true`
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), POLLINATIONS_TIMEOUT_MS)
+  let res: Response
+  try {
+    res = await fetch(url, { signal: controller.signal })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Pollinations image generation timed out after ${POLLINATIONS_TIMEOUT_MS / 1000}s`)
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '')
-    throw new Error(`OpenAI image API error ${res.status}: ${errBody.slice(0, 300)}`)
+    throw new Error(`Pollinations image API error ${res.status}: ${errBody.slice(0, 300)}`)
   }
 
-  const data = await res.json()
-  const b64 = data?.data?.[0]?.b64_json
-  if (!b64) throw new Error('OpenAI response had no image data')
-  return b64
+  const buf = await res.arrayBuffer()
+  if (!buf.byteLength) throw new Error('Pollinations returned an empty image response')
+  return new Uint8Array(buf)
 }
 
-async function uploadToR2(base64Data: string, key: string): Promise<string> {
+async function uploadToR2(imageBytes: Uint8Array, key: string): Promise<string> {
   const s3 = new S3Client({
     region: 'auto',
     endpoint: `https://${Deno.env.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`,
@@ -352,14 +362,13 @@ async function uploadToR2(base64Data: string, key: string): Promise<string> {
     },
   })
 
-  const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))
   const bucket = Deno.env.get('R2_PUBLIC_BUCKET')!
 
   await s3.send(new PutObjectCommand({
     Bucket: bucket,
     Key: key,
-    Body: bytes,
-    ContentType: 'image/png',
+    Body: imageBytes,
+    ContentType: 'image/jpeg',
   }))
 
   return `${Deno.env.get('R2_PUBLIC_URL')}/${key}`
