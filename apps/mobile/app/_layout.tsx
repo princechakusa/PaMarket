@@ -226,6 +226,11 @@ function RootNavigator() {
 // Was hardcoded to `style="light"` regardless of theme — invisible white
 // icons on the light theme's white/near-white surfaces. Status bar style
 // now follows the resolved theme, same as every other native chrome piece.
+// Android is edge-to-edge from SDK 54 onwards (expo-status-bar dropped its
+// backgroundColor prop entirely), so the status bar is transparent and app
+// content draws behind it — there is no bar colour to set on either
+// platform. Only the icon style is ours to control, and it follows the
+// app's own resolved theme rather than the OS appearance.
 function ThemedStatusBar() {
   const { resolvedScheme } = useThemePreference();
   return <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />;
