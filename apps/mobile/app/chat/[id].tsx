@@ -173,25 +173,46 @@ export default function ChatScreen() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
+  // The composer row itself is what must clear the keyboard, so it's what
+  // gets measured (see the keyboard listener below).
+  const composerRef = useRef<View>(null);
+  // Mirrors keyboardHeight so the keyboard listener (registered once, so it
+  // closes over the initial state) can read the CURRENT padding.
+  const keyboardHeightRef = useRef(0);
+  keyboardHeightRef.current = keyboardHeight;
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    // iOS drives the lift from the keyboard's OWN reported height rather
-    // than KeyboardAvoidingView's frame math. KAV measures its frame via
-    // onLayout (coordinates relative to its PARENT) but compares that
-    // against the keyboard's SCREEN position — with the native iOS header
-    // now shown on this screen, the content starts ~header-height below
-    // the screen top, so KAV under-padded by exactly that amount. Since
-    // the header is taller than the composer, the entire composer ended up
-    // behind the keyboard, which is exactly the reported symptom. (The
-    // same bug is why jobs/post.tsx carries a hardcoded
-    // keyboardVerticalOffset={90} magic number.) endCoordinates.height is
-    // measured from the bottom of the screen, so padding the container by
-    // it lifts the composer to sit exactly on top of the keyboard — with
-    // no dependency on header height at all.
+    // iOS lifts the composer by the ACTUAL measured overlap between this
+    // container and the keyboard, rather than trusting either
+    // KeyboardAvoidingView's frame math or the raw keyboard height.
+    //
+    // KAV was the original bug: it measures its frame via onLayout
+    // (coordinates relative to its PARENT) but compares that against the
+    // keyboard's SCREEN position, so once this screen gained the native
+    // iOS header it under-padded by the header height and hid the composer
+    // completely. (That same bug is why jobs/post.tsx carries a hardcoded
+    // keyboardVerticalOffset={90} magic number.)
+    //
+    // Padding by the raw endCoordinates.height then over-shot, leaving a
+    // large gap between composer and keyboard — that assumes the container
+    // ends exactly at the bottom of the screen, which isn't true here.
+    // measureInWindow gives the composer's real bottom edge in screen
+    // coordinates, and endCoordinates.screenY is the keyboard's real top
+    // edge in the same coordinate space, so their difference is exactly
+    // how much of the composer the keyboard covers — correct regardless
+    // of header height, safe areas, or where the container actually sits.
+    // The current padding is added back before comparing so re-measuring
+    // while already lifted can't feed back on itself.
     const showSub = Keyboard.addListener(showEvent, (e) => {
       setKeyboardVisible(true);
-      if (Platform.OS === "ios") setKeyboardHeight(e?.endCoordinates?.height ?? 0);
+      if (Platform.OS !== "ios") return;
+      const keyboardTop = e?.endCoordinates?.screenY;
+      if (typeof keyboardTop !== "number") return;
+      composerRef.current?.measureInWindow((_x, y, _w, h) => {
+        const unliftedBottom = y + h + keyboardHeightRef.current;
+        setKeyboardHeight(Math.max(0, unliftedBottom - keyboardTop));
+      });
     });
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
       setKeyboardVisible(false);
@@ -806,7 +827,7 @@ export default function ChatScreen() {
       key={keyboardAvoidingKey}
       // iOS: behavior is deliberately undefined (KAV renders as a plain
       // View) because its own padding math is what was broken here — the
-      // real keyboard height is applied directly below instead. Android
+      // measured keyboard overlap is applied directly instead. Android
       // keeps behavior="height", which works there and is unaffected by
       // this bug (no native header shown on Android for this screen).
       style={[styles.container, Platform.OS === "ios" ? { paddingBottom: keyboardHeight } : null]}
@@ -999,7 +1020,10 @@ export default function ChatScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.xs : Math.max(insets.bottom, space.md) }]}>
+      <View
+        ref={composerRef}
+        style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.xs : Math.max(insets.bottom, space.md) }]}
+      >
         <Pressable style={styles.attachButton} onPress={handleAttach} hitSlop={6}>
           <AttachIcon color={themeColor} />
         </Pressable>
