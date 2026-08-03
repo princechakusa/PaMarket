@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.8",
+  version: "1.29.9",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -54,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 118,
+    versionCode: 119,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
@@ -80,20 +80,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         android: {
           enableMinifyInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
-          // Sentry reported an ANR in MainApplication.onCreate ->
-          // DefaultNewArchitectureEntryPoint.load() -> SoLoader.loadLibrary()
-          // -> DirectApkSoSource.loadDependencies() -> ZipFile$Source.initCEN()
-          // -- SoLoader hangs scanning the installed package's zip central
-          // directory to build its native-lib dependency map at cold start.
-          // Play's normal per-device .aab delivery already serves only the
-          // matching ABI's ~28 libs, but Play Console's Pre-launch report and
-          // "internal app sharing" install a UNIVERSAL build with all 4 ABIs
-          // (112 libs) on real device-farm hardware -- exactly the slow-scan
-          // scenario this crash matches. x86/x86_64 exist only for emulators
-          // and a handful of defunct Intel tablets, never a real Android
-          // phone, so dropping them halves the worst-case native-lib count
-          // with zero real-device impact.
-          buildArchs: ["armeabi-v7a", "arm64-v8a"],
+          // Reverted the armeabi-v7a/arm64-v8a-only restriction (added to
+          // fix a Sentry-reported SoLoader ANR at cold start) -- Play
+          // Console hard-blocked publishing over the resulting device-
+          // support reduction (Car/x86 units), with Save/Publish greyed out
+          // entirely and no acknowledge-and-proceed option. Shipping the
+          // rest of this release took priority; the ANR fix needs a
+          // different approach that doesn't drop device support.
         },
         // React Native Firebase's Swift pods (FirebaseCoreInternal ->
         // GoogleUtilities) don't define modules, so CocoaPods can't
