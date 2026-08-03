@@ -8608,7 +8608,7 @@ var AMOS_SCHED_STATUS_BADGE = {
 };
 async function loadAmosCalendar(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(channel,draft_type,body,amos_content_items(title))').order('scheduled_for',{ascending:true}).limit(200);
+  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(id,channel,draft_type,body,media_asset_id,amos_content_items(title),amos_media_assets!amos_content_drafts_media_asset_id_fkey(url,status))').order('scheduled_for',{ascending:true}).limit(200);
   AMOS.schedule = (r.data||[]);
 }
 function renderAmosCalendar(){
@@ -8628,6 +8628,15 @@ function renderAmosCalendar(){
       var atCap = s.status==='failed' && (s.attempts||0)>=(s.max_attempts||5);
       html += '<td style="font-size:12px;color:'+(atCap?'var(--red)':'var(--sub)')+'">'+(s.attempts||0)+' / '+(s.max_attempts||5)+(atCap?' (max reached)':'')+'</td>';
       html += '<td style="white-space:nowrap">';
+      var IMAGE_CHANNELS_CAL = {facebook:1,instagram:1,linkedin:1,x:1,website:1};
+      if(IMAGE_CHANNELS_CAL[d.channel] && s.status==='pending'){
+        var media = d.amos_media_assets;
+        if(media && media.status==='ready' && media.url){
+          html += '<span style="color:var(--green);font-size:11px">Image ✓</span> ';
+        } else {
+          html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\').then(function(){loadAmosCalendar().then(renderAmosCalendar);})">Generate Image</button> ';
+        }
+      }
       if(s.status==='awaiting_manual_publish'){
         html += '<button class="ab ab-approve" onclick="markAmosScheduledPublished(\''+s.id+'\')">Mark Published</button> ';
         html += '<button class="ab ab-reject" onclick="markAmosScheduledFailed(\''+s.id+'\')">Mark Failed</button>';
