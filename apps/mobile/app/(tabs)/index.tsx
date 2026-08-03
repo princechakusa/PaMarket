@@ -131,7 +131,7 @@ export default function HomeScreen() {
   useEffect(() => {
     SecureStore.getItemAsync(CITY_STORAGE_KEY).then((stored) => {
       if (stored) setCityFilter(stored);
-    });
+    }).catch(() => {});
   }, []);
 
   function selectCity(city: string) {

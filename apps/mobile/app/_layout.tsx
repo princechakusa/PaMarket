@@ -63,7 +63,7 @@ function usePushNotifications() {
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification.request.content.data;
       if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
-    });
+    }).catch(() => {});
 
     // Warm/background: app already running, user taps a push notification.
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {

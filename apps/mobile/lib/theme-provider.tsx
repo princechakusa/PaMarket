@@ -38,12 +38,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    SecureStore.getItemAsync(STORAGE_KEY).then((stored) => {
-      if (stored === "light" || stored === "dark" || stored === "system") {
-        setPreferenceState(stored);
-      }
-      setHydrated(true);
-    });
+    SecureStore.getItemAsync(STORAGE_KEY)
+      .then((stored) => {
+        if (stored === "light" || stored === "dark" || stored === "system") {
+          setPreferenceState(stored);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setHydrated(true));
   }, []);
 
   const resolvedScheme: ResolvedScheme = useMemo(() => {
