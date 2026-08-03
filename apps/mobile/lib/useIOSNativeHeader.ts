@@ -71,8 +71,19 @@ export function useIOSNativeHeader(options: NativeHeaderOptions) {
       headerTitle: optionsRef.current.headerTitle
         ? () => optionsRef.current.headerTitle!()
         : optionsRef.current.title ?? "",
-      ...(optionsRef.current.headerRight ? { headerRight: () => optionsRef.current.headerRight!() } : {}),
-      ...(optionsRef.current.headerLeft ? { headerLeft: () => optionsRef.current.headerLeft!() } : {}),
+      // Always include these two keys (as `undefined` when absent) rather
+      // than omitting them — React Navigation's setOptions() MERGES with
+      // whatever was set previously rather than replacing it wholesale. A
+      // screen whose headerLeft/headerRight can become present then absent
+      // again (e.g. a wizard's back button only showing past step 1, or a
+      // headerRight that only appears once async data has loaded) would
+      // otherwise leave React Navigation still holding the OLD wrapper
+      // function, which reads through optionsRef at call time — so it would
+      // later get called against a now-undefined value and crash with
+      // "undefined is not a function". Explicitly passing `undefined` here
+      // actually clears the previously-set option.
+      headerRight: optionsRef.current.headerRight ? () => optionsRef.current.headerRight!() : undefined,
+      headerLeft: optionsRef.current.headerLeft ? () => optionsRef.current.headerLeft!() : undefined,
     } as never);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
