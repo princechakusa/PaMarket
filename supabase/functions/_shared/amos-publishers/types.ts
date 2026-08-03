@@ -12,6 +12,7 @@ export interface DraftForPublish {
   body: string | null
   cta: string | null
   hashtags: string[] | null
+  imageUrl: string | null
 }
 
 export interface PublishResult {

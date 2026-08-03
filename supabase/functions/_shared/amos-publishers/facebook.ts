@@ -59,13 +59,22 @@ export class FacebookPublisher implements ContentPublisher {
     }
 
     try {
-      const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${pageId}/feed`, {
+      // With an image (Module 10), post to /photos with the image URL and
+      // caption together — Meta attaches the photo and uses `caption` as
+      // the post text in one call, still a single feed post either way.
+      // Without one, fall back to the original text-only /feed post so
+      // nothing here regresses for drafts generated before media support
+      // existed or for channels where image generation was skipped/failed.
+      const usePhoto = !!draft.imageUrl
+      const endpoint = usePhoto ? 'photos' : 'feed'
+      const payload = usePhoto
+        ? { url: draft.imageUrl, caption: draft.body, access_token: pageAccessToken }
+        : { message: draft.body, access_token: pageAccessToken }
+
+      const res = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${pageId}/${endpoint}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          message: draft.body,
-          access_token: pageAccessToken,
-        }),
+        body: JSON.stringify(payload),
       })
       const body = await res.json()
 
@@ -74,8 +83,11 @@ export class FacebookPublisher implements ContentPublisher {
         return { ok: false, status: 'failed', error: message, rawResponse: body }
       }
 
-      // Graph API returns "{pageId}_{postId}" as `id` for a Page feed post.
-      const externalPostId: string = body.id
+      // Graph API returns "{pageId}_{postId}" as `id` for a plain /feed post,
+      // but for a /photos post that same combined id comes back as
+      // `post_id` instead — `id` there is just the photo object's own id,
+      // which does not resolve as a post URL.
+      const externalPostId: string = usePhoto ? body.post_id : body.id
       const externalUrl = externalPostId ? `https://www.facebook.com/${externalPostId}` : undefined
 
       return { ok: true, status: 'published', externalPostId, externalUrl, rawResponse: body }

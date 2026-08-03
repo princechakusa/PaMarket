@@ -8382,8 +8382,8 @@ function renderAmosDashboard(){
 async function loadAmosApprovalQueue(){
   if(await amosMissing()) return;
   var res = await Promise.allSettled([
-    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100),
-    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code)').eq('status','approved').order('created_at',{ascending:false}).limit(100),
+    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100),
+    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error)').eq('status','approved').order('created_at',{ascending:false}).limit(100),
     sb.from('amos_schedule').select('draft_id')
   ]);
   AMOS.drafts = (res[0].value && res[0].value.data) || [];
@@ -8439,6 +8439,23 @@ function renderAmosApprovalQueue(){
           if(d.performance_rationale) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px"><b>Why this should perform well:</b> '+esc(d.performance_rationale)+'</div>';
           if(d.hashtags && d.hashtags.length) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:4px"><b>Hashtags:</b> '+esc(d.hashtags.join(' '))+'</div>';
           html += '<div style="font-size:10.5px;color:var(--sub2);margin-top:6px">'+esc(d.ai_provider||'')+(d.ai_model?' · '+esc(d.ai_model):'')+(d.prompt_version?' · prompt '+esc(d.prompt_version):'')+'</div>';
+          var IMAGE_CHANNELS = {facebook:1,instagram:1,linkedin:1,x:1,website:1};
+          if(IMAGE_CHANNELS[d.channel]){
+            var media = d.amos_media_assets;
+            html += '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)">';
+            if(media && media.status==='ready' && media.url){
+              html += '<img src="'+esc(media.url)+'" style="max-width:280px;width:100%;border-radius:8px;display:block;margin-bottom:8px" alt="Generated image">';
+              html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Regenerate Image</button>';
+            } else if(media && media.status==='generating'){
+              html += '<div style="font-size:11.5px;color:var(--sub)">Generating image…</div>';
+            } else if(media && media.status==='failed'){
+              html += '<div style="font-size:11.5px;color:var(--red)">Image generation failed'+(media.error?': '+esc(media.error):'')+'</div>';
+              html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')" style="margin-top:6px">Retry Image</button>';
+            } else {
+              html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Generate Image</button>';
+            }
+            html += '</div>';
+          }
           html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
           html += '<button class="ab ab-approve" onclick="approveAmosDraft(\''+d.id+'\')">Approve</button>';
           html += '<button class="ab ab-view" onclick="saveAmosDraftEdit(\''+d.id+'\')">Save Edit</button>';
@@ -8644,6 +8661,23 @@ async function runAmosDispatchNow(){
     loadAmosCalendar().then(renderAmosCalendar);
   } catch(e){ toast('Error: '+e.message,'error'); }
   finally { if(btn){ btn.disabled=false; btn.textContent=btn.dataset.origText||'Process Due Now'; } }
+}
+async function generateAmosImage(draftId, channel){
+  if(!requirePerm('*')) return;
+  toast('Generating image… this can take 15-30s');
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-media-generator', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+session.access_token },
+      body: JSON.stringify({ draftId: draftId, placement: channel })
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    toast('Image generated');
+    loadAmosApprovalQueue().then(renderAmosApprovalQueue);
+  } catch(e){ toast('Error: '+e.message,'error'); }
 }
 function findAmosSchedule(id){ return (AMOS.schedule||[]).find(function(s){ return s.id===id; }); }
 async function markAmosScheduledPublished(id){
