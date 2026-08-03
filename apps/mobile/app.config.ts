@@ -21,10 +21,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // eas.json's production build profile can't use autoIncrement — that
     // only works with a static app.json, not this dynamic app.config.ts —
     // so this has to be bumped by hand before each store-distribution build.
-    // 2 was already built and submitted to App Store Connect — this build
-    // carries the TestFlight bug-fix round on top of it (dark mode, back
-    // button, chat keyboard, CV bio leak), so it needs its own number.
-    buildNumber: "3",
+    // 3 was built but never submitted (superseded before it went out) — this
+    // build folds in the report-submission bug fixes on top of it, so it
+    // needs its own number.
+    buildNumber: "4",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
