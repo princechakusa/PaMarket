@@ -1,7 +1,34 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import { AUTH_STORAGE_KEY, SecureStoreAdapter, supabase } from "./supabase";
 import { verifyTotpCode } from "./totp";
+
+// supabase-js returns NO session from getSession() when the stored access
+// token has expired and it can't reach the auth server to refresh it —
+// which is exactly what happens with no connectivity. Every screen that
+// gates on `session` (Account and Messages hard-gate on it, showing a
+// "sign in required" screen) then behaves as if the user were signed out,
+// so offline the app looked like those tabs simply wouldn't open.
+//
+// The session is still sitting in SecureStore in that case — supabase only
+// clears it when the refresh is genuinely REJECTED (revoked/invalid refresh
+// token), not when the request merely fails to reach the network. So if
+// getSession() comes back empty but a stored session is still present, it's
+// a connectivity failure rather than a real sign-out, and honouring the
+// cached session keeps the app usable offline. autoRefreshToken picks up a
+// real refresh as soon as connectivity returns.
+async function readCachedSession(): Promise<Session | null> {
+  try {
+    const raw = await SecureStoreAdapter.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const cached = parsed?.currentSession ?? parsed;
+    if (cached?.access_token && cached?.user) return cached as Session;
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 type AuthContextValue = {
   session: Session | null;
@@ -70,18 +97,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     const timeout = setTimeout(finishLoading, 6000);
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       clearTimeout(timeout);
-      setSession(data.session);
+      // Empty session + a session still in storage means the refresh
+      // couldn't reach the network, not a real sign-out — see
+      // readCachedSession() above.
+      const resolved = data.session ?? (await readCachedSession());
+      setSession(resolved);
       finishLoading();
-      checkTwoFactor(data.session);
-    }).catch((e) => {
+      checkTwoFactor(resolved);
+    }).catch(async (e) => {
       clearTimeout(timeout);
       console.warn("[auth] getSession failed (offline?):", e);
+      setSession(await readCachedSession());
       finishLoading();
     });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      // A null session here only means "signed out" for an actual
+      // SIGNED_OUT event. A failed token refresh (offline) also reports a
+      // null session, and treating that as a sign-out would undo the
+      // cached-session restore above and lock the user out of Account /
+      // Messages again the moment the refresh timer fired.
+      if (!newSession && event !== "SIGNED_OUT") {
+        checkTwoFactor(await readCachedSession());
+        return;
+      }
       checkTwoFactor(newSession);
     });
 
