@@ -53,12 +53,20 @@ export class EmailPublisher implements ContentPublisher {
     // this codebase defaults — but every send still includes a working
     // one-click unsubscribe link (below), which is what makes that
     // default acceptable rather than presumptuous.
+    //
+    // Rotation (Production Readiness Audit, Critical #2 fix): ordered
+    // never-emailed-first, then longest-since-last-emailed. Without this,
+    // an unordered LIMIT query returns the same rows every single call —
+    // every campaign hit the identical first 50 users forever. Each send
+    // below records last_amos_marketing_email_at, so the next campaign's
+    // ORDER BY naturally rotates to whoever hasn't been reached recently.
     const { data: recipients, error: recipientsError } = await this.db
       .from('profiles')
       .select('id, email')
       .not('email', 'is', null)
       .eq('verified', true)
       .eq('marketing_email_opt_out', false)
+      .order('last_amos_marketing_email_at', { ascending: true, nullsFirst: true })
       .limit(MAX_RECIPIENTS)
     if (recipientsError) {
       return { ok: false, status: 'failed', error: `Could not load recipients: ${recipientsError.message}` }
@@ -86,8 +94,16 @@ export class EmailPublisher implements ContentPublisher {
         preheader: subject,
       })
       const result = await sendEmail({ to: row.email, subject, html })
-      if (result.ok) sent++
-      else failures.push(`${row.email}: ${result.error}`)
+      if (result.ok) {
+        sent++
+        // Record the send so the NEXT campaign's rotation naturally
+        // skips this recipient in favor of whoever hasn't been reached
+        // recently — this is what actually makes the ORDER BY above a
+        // real rotation instead of a one-time reordering.
+        await this.db.from('profiles').update({ last_amos_marketing_email_at: new Date().toISOString() }).eq('id', row.id)
+      } else {
+        failures.push(`${row.email}: ${result.error}`)
+      }
       await new Promise((resolve) => setTimeout(resolve, SEND_DELAY_MS))
     }
 

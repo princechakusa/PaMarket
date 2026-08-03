@@ -119,6 +119,20 @@ Deno.serve(async (req) => {
     errors: [] as string[],
   }
 
+  // Housekeeping (Production Readiness Audit, Medium #4 fix): purge
+  // amos_manual_trigger_log rows older than a day. Piggybacked onto this
+  // function's existing daily schedule rather than adding a dedicated
+  // cron entry for something this lightweight — best-effort, a failure
+  // here never blocks real research collection below.
+  try {
+    const { data: purged } = await db.rpc('amos_purge_old_trigger_log')
+    if (typeof purged === 'number' && purged > 0) console.log(`[amos-research-runner] purged ${purged} old rate-limit log row(s)`)
+  } catch (e) { console.warn('[amos-research-runner] trigger log purge failed (non-fatal):', e instanceof Error ? e.message : String(e)) }
+  try {
+    const { data: purgedUnsub } = await db.rpc('amos_purge_old_unsubscribe_attempts')
+    if (typeof purgedUnsub === 'number' && purgedUnsub > 0) console.log(`[amos-research-runner] purged ${purgedUnsub} old unsubscribe-attempt row(s)`)
+  } catch (e) { console.warn('[amos-research-runner] unsubscribe attempts purge failed (non-fatal):', e instanceof Error ? e.message : String(e)) }
+
   // ── Source 1: internal search gaps ──────────────────────────────────────
   try {
     const since = new Date(Date.now() - SEARCH_GAP_WINDOW_DAYS * 24 * 3600e3).toISOString()
@@ -231,6 +245,9 @@ Deno.serve(async (req) => {
     ? `${summary.search_gaps_found} search gap(s), ${summary.calendar_signals_written} calendar signal(s)`
     : summary.errors.join('; ').slice(0, 2000)
   const finishedAt = Date.now()
+
+  console.log(`[amos-research-runner] run finished ok=${ok} ${detail}`)
+  if (summary.errors.length) console.error('[amos-research-runner] errors:', summary.errors)
 
   await db.from('job_runs').insert({
     job: 'amos_research_runner',

@@ -716,6 +716,12 @@ var _blogVideosMissing = false;
 // x','y');alert(1);// broke out of the single-quoted JS string in msgUser()'s
 // onclick handler and executed as script in the admin's session.)
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// Production Readiness Audit fix (Low #1): esc() HTML-escapes but doesn't
+// validate URL scheme — a stored value like "javascript:alert(1)" would
+// still render as a clickable payload in an href. Used anywhere a
+// user/admin-entered URL (not a hardcoded app link) becomes a clickable
+// href, e.g. amos_competitor_watchlist.website_url.
+function safeUrl(u){ try{ var p=new URL(String(u||''),location.href); return (p.protocol==='http:'||p.protocol==='https:') ? p.href : null; }catch(e){ return null; } }
 function fmt(n){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(s){ if(!s) return '—'; try{ return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return s; } }
 function fmtDateTime(s){ if(!s) return '—'; try{ return new Date(s).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); } catch(e){ return s; } }
@@ -8602,7 +8608,8 @@ function renderAmosCalendar(){
       var d = s.amos_content_drafts||{}, item = d.amos_content_items||{};
       html += '<tr><td style="font-size:12px">'+fmtDateTime(s.scheduled_for)+'</td><td style="font-weight:600">'+esc(item.title||'—')+'</td><td style="text-transform:capitalize">'+esc(s.platform||d.channel||'—')+'</td>';
       html += '<td><span class="badge '+(AMOS_SCHED_STATUS_BADGE[s.status]||'badge-pending')+'">'+esc((s.status||'').replace(/_/g,' '))+'</span>'+(s.last_error?'<div style="font-size:10.5px;color:var(--red);margin-top:2px">'+esc(s.last_error)+'</div>':'')+'</td>';
-      html += '<td style="font-size:12px;color:var(--sub)">'+(s.attempts||0)+'</td>';
+      var atCap = s.status==='failed' && (s.attempts||0)>=(s.max_attempts||5);
+      html += '<td style="font-size:12px;color:'+(atCap?'var(--red)':'var(--sub)')+'">'+(s.attempts||0)+' / '+(s.max_attempts||5)+(atCap?' (max reached)':'')+'</td>';
       html += '<td style="white-space:nowrap">';
       if(s.status==='awaiting_manual_publish'){
         html += '<button class="ab ab-approve" onclick="markAmosScheduledPublished(\''+s.id+'\')">Mark Published</button> ';
@@ -8660,7 +8667,7 @@ async function markAmosScheduledFailed(id){
   if(!s) return;
   var reason = await confirm2('Mark Failed','What went wrong?','Mark Failed','red',true,'e.g. rejected by platform, content issue');
   if(reason===null) return;
-  var r = await sb.from('amos_schedule').update({ status:'failed', last_error: reason||'Marked failed by admin', attempts:(s.attempts||0)+1 }).eq('id',id);
+  var r = await sb.from('amos_schedule').update({ status:'failed', last_error: reason||'Marked failed by admin', locked_at:null }).eq('id',id);
   if(r.error){ toast('Error: '+r.error.message,'error'); return; }
   await sb.from('amos_publish_audit').insert({ schedule_id:id, event:'failed', detail: reason||null, actor_email:_adminEmail||null });
   auditLog('mark_amos_failed','amos_schedule',id,{status:s.status},{status:'failed'},reason);
@@ -8671,10 +8678,14 @@ async function retryAmosScheduled(id){
   if(!requirePerm('*')) return;
   var s = findAmosSchedule(id);
   if(!s) return;
-  var r = await sb.from('amos_schedule').update({ status:'pending', last_error:null }).eq('id',id).eq('status','failed');
+  // An explicit admin click resets attempts to 0 — a deliberate human
+  // retry is a fresh attempt at the max_attempts cap (claim_due_amos_schedule
+  // excludes rows at/over the cap), not the automated-retry loop that cap
+  // exists to guard against.
+  var r = await sb.from('amos_schedule').update({ status:'pending', last_error:null, attempts:0 }).eq('id',id).eq('status','failed');
   if(r.error){ toast('Error: '+r.error.message,'error'); return; }
   await sb.from('amos_publish_audit').insert({ schedule_id:id, event:'retried', actor_email:_adminEmail||null });
-  auditLog('retry_amos_scheduled','amos_schedule',id,{status:'failed'},{status:'pending'},null);
+  auditLog('retry_amos_scheduled','amos_schedule',id,{status:'failed'},{status:'pending',attempts:0},null);
   toast('Queued for retry');
   loadAmosCalendar().then(renderAmosCalendar);
 }
@@ -8764,7 +8775,8 @@ function renderAmosIntelligence(){
   } else {
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Website</th><th>Notes</th><th>Status</th><th></th></tr></thead><tbody>';
     AMOS.competitors.forEach(function(c){
-      html += '<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:12px">'+(c.website_url?('<a href="'+esc(c.website_url)+'" target="_blank" rel="noopener">'+esc(c.website_url)+'</a>'):'—')+'</td><td style="font-size:11.5px;color:var(--sub)">'+esc(c.notes||'—')+'</td><td>'+(c.active?'<span class="badge badge-active">active</span>':'<span class="badge badge-pending">inactive</span>')+'</td>';
+      var safeCompUrl = c.website_url ? safeUrl(c.website_url) : null;
+      html += '<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:12px">'+(safeCompUrl?('<a href="'+esc(safeCompUrl)+'" target="_blank" rel="noopener">'+esc(c.website_url)+'</a>'):(c.website_url?esc(c.website_url):'—'))+'</td><td style="font-size:11.5px;color:var(--sub)">'+esc(c.notes||'—')+'</td><td>'+(c.active?'<span class="badge badge-active">active</span>':'<span class="badge badge-pending">inactive</span>')+'</td>';
       html += '<td><button class="ab ab-reject" onclick="removeAmosCompetitor(\''+c.id+'\')">Remove</button></td></tr>';
     });
     html += '</tbody></table></div>';
@@ -8785,7 +8797,12 @@ async function addAmosCompetitor(){
 async function saveAmosCompetitor(){
   var name = (document.getElementById('amosCompName')||{}).value;
   if(!name || !name.trim()){ toast('Name is required','error'); return; }
-  var url = (document.getElementById('amosCompUrl')||{}).value || null;
+  var urlInput = (document.getElementById('amosCompUrl')||{}).value || '';
+  var url = null;
+  if(urlInput.trim()){
+    url = safeUrl(urlInput.trim());
+    if(!url){ toast('Website must be a valid http:// or https:// URL','error'); return; }
+  }
   var notes = (document.getElementById('amosCompNotes')||{}).value || null;
   var uid = (await sb.auth.getUser()).data.user;
   var r = await sb.from('amos_competitor_watchlist').insert({ name:name.trim(), website_url:url, notes:notes, created_by: uid?uid.id:null });

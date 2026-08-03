@@ -93,34 +93,36 @@ Deno.serve(async (req) => {
 
   const summary = { recommendations_written: 0, listings_scanned: 0, errors: [] as string[] }
 
-  const upsertRecommendation = async (opts: {
-    pageType: string; pageRef: string; recType: string; current: string | null; suggested: string; impact: string
-  }) => {
-    // Idempotent: skip if an OPEN recommendation for this exact
-    // page/issue already exists, so re-running daily doesn't pile up
-    // duplicates the admin already has queued to review.
-    const { data: existing } = await db
-      .from('amos_seo_recommendations')
-      .select('id')
-      .eq('page_type', opts.pageType)
-      .eq('page_ref', opts.pageRef)
-      .eq('recommendation_type', opts.recType)
-      .eq('status', 'open')
-      .maybeSingle()
-    if (existing) return
+  // Production Readiness Audit, High #2 fix: batch, not N+1. The old
+  // upsertRecommendation() ran one SELECT (idempotency check) plus a
+  // possible INSERT per issue found, per listing — up to 1,500 round
+  // trips for a 500-listing scan, against a table (amos_seo_recommendations)
+  // that until this same remediation pass had no supporting index either
+  // (idx_amos_seo_page, added in AMOS_AUDIT_REMEDIATION.sql). Now: one
+  // query loads every currently-open recommendation once, the scan loop
+  // only does in-memory Set lookups, and every new recommendation is
+  // queued into an array for a single batch insert at the end.
+  const { data: existingOpen, error: existingError } = await db
+    .from('amos_seo_recommendations')
+    .select('page_type, page_ref, recommendation_type')
+    .eq('status', 'open')
+  if (existingError) {
+    summary.errors.push('Could not load existing recommendations: ' + existingError.message)
+  }
+  const existingKeys = new Set(
+    (existingOpen || []).map((r) => `${r.page_type}|${r.page_ref}|${r.recommendation_type}`)
+  )
 
-    const { error } = await db.from('amos_seo_recommendations').insert({
-      country_code: 'ZW',
-      page_type: opts.pageType,
-      page_ref: opts.pageRef,
-      recommendation_type: opts.recType,
-      current_value: opts.current,
-      suggested_value: opts.suggested,
-      impact_estimate: opts.impact,
-      status: 'open',
+  type NewRecommendation = { page_type: string; page_ref: string; recommendation_type: string; current_value: string | null; suggested_value: string; impact_estimate: string }
+  const toInsert: NewRecommendation[] = []
+  const queueRecommendation = (opts: { pageType: string; pageRef: string; recType: string; current: string | null; suggested: string; impact: string }) => {
+    const key = `${opts.pageType}|${opts.pageRef}|${opts.recType}`
+    if (existingKeys.has(key)) return
+    existingKeys.add(key) // prevents queuing the same (page, issue) twice within this same run too
+    toInsert.push({
+      page_type: opts.pageType, page_ref: opts.pageRef, recommendation_type: opts.recType,
+      current_value: opts.current, suggested_value: opts.suggested, impact_estimate: opts.impact,
     })
-    if (error) summary.errors.push(`${opts.pageType}/${opts.pageRef}: ${error.message}`)
-    else summary.recommendations_written++
   }
 
   try {
@@ -137,41 +139,37 @@ Deno.serve(async (req) => {
     if (listingsError) throw listingsError
 
     summary.listings_scanned = (listings || []).length
-    let written = 0
 
     for (const listing of listings || []) {
-      if (written >= MAX_RECOMMENDATIONS_PER_RUN) break
+      if (toInsert.length >= MAX_RECOMMENDATIONS_PER_RUN) break
       const title = (listing.title || '').trim()
       const description = (listing.description || '').trim()
       const photos = listing.photos as unknown
 
       if (title.length < MIN_TITLE_LENGTH) {
-        await upsertRecommendation({
+        queueRecommendation({
           pageType: 'listing', pageRef: listing.id, recType: 'metadata',
           current: title || '(empty)',
           suggested: `Title is only ${title.length} character(s) — titles under ${MIN_TITLE_LENGTH} characters rank poorly and give buyers little to go on. Add the item's brand/model/condition/location.`,
           impact: 'medium',
         })
-        written++
       }
       if (description.length < MIN_DESCRIPTION_LENGTH) {
-        await upsertRecommendation({
+        queueRecommendation({
           pageType: 'listing', pageRef: listing.id, recType: 'metadata',
           current: description ? `${description.length} character(s)` : '(empty)',
           suggested: `Description is too short to be useful for search or buyers — aim for at least ${MIN_DESCRIPTION_LENGTH} characters covering condition, specs, and why a buyer should choose this listing.`,
           impact: 'medium',
         })
-        written++
       }
       const photoCount = Array.isArray(photos) ? photos.length : 0
       if (photoCount === 0) {
-        await upsertRecommendation({
+        queueRecommendation({
           pageType: 'listing', pageRef: listing.id, recType: 'technical',
           current: '0 photos',
           suggested: 'Listings with no photos get far less engagement and are less likely to be shared/indexed well by search image results. Prompt the seller to add at least one photo.',
           impact: 'high',
         })
-        written++
       }
     }
 
@@ -190,14 +188,22 @@ Deno.serve(async (req) => {
     }
     for (const [cat, count] of categoryCounts.entries()) {
       if (count < THIN_CATEGORY_THRESHOLD) {
-        await upsertRecommendation({
+        queueRecommendation({
           pageType: 'category', pageRef: cat, recType: 'internal_link',
           current: `${count} active listing(s)`,
           suggested: `This category has very few active listings, which reads as thin/low-value content to search engines and visitors alike. Consider a seller-acquisition push for this category, or de-emphasize it in main navigation until it has more inventory.`,
           impact: count === 0 ? 'high' : 'medium',
         })
-        written++
       }
+    }
+
+    // ── Single batch insert for everything queued above ─────────────────
+    if (toInsert.length) {
+      const { error: insertError } = await db.from('amos_seo_recommendations').insert(
+        toInsert.map((r) => ({ country_code: 'ZW', status: 'open', ...r }))
+      )
+      if (insertError) summary.errors.push('Batch insert failed: ' + insertError.message)
+      else summary.recommendations_written = toInsert.length
     }
 
     // ── Keyword-type recommendations require Search Console query data
@@ -208,6 +214,8 @@ Deno.serve(async (req) => {
     const ok = true // the GSC note above is informational, not a real failure
     const finishedAt = Date.now()
     const detail = `${summary.recommendations_written} new recommendation(s) from ${summary.listings_scanned} listing(s) scanned`
+
+    console.log(`[amos-seo-runner] run finished ok=${ok} ${detail}`)
 
     await db.from('job_runs').insert({
       job: 'amos_seo_runner',

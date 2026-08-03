@@ -122,6 +122,9 @@ Deno.serve(async (req) => {
     const finishedAt = Date.now()
     const detail = `${summary.claimed} claimed, ${summary.auto_published} auto-published, ${summary.moved_to_awaiting_manual} awaiting manual publish, ${summary.failed} failed`
 
+    console.log(`[amos-publish-dispatcher] run finished ok=${ok} ${detail}`)
+    if (summary.errors.length) console.error('[amos-publish-dispatcher] errors:', summary.errors)
+
     await db.from('job_runs').insert({
       job: 'amos_publish_dispatcher',
       ok,
@@ -149,16 +152,36 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { data: due, error: dueError } = await db
-      .from('amos_schedule')
-      .select('id, draft_id, platform, attempts, amos_content_drafts(channel, draft_type, body, cta, hashtags)')
-      .eq('status', 'pending')
-      .lte('scheduled_for', new Date().toISOString())
-      .order('scheduled_for', { ascending: true })
-      .limit(MAX_CLAIMS_PER_RUN)
-    if (dueError) throw dueError
+    // Release any row stuck in 'publishing' from a prior run that never
+    // resolved (crash, platform kill) before claiming new work — same
+    // stale-lock-release-then-claim order automation-runner uses.
+    await db.rpc('release_stale_amos_schedule_locks')
 
-    summary.claimed = (due || []).length
+    // Atomic claim: claim_due_amos_schedule uses FOR UPDATE SKIP LOCKED
+    // inside the RPC, so two overlapping dispatcher invocations (manual
+    // click + cron, or two admins) can never claim the same row — each
+    // row is atomically owned by exactly one caller the moment the
+    // UPDATE commits. Fixes the prior select-then-separately-update race
+    // (Production Readiness Audit, Critical #1).
+    const { data: claimedRows, error: claimError } = await db.rpc('claim_due_amos_schedule', { p_limit: MAX_CLAIMS_PER_RUN })
+    if (claimError) throw claimError
+
+    // The RPC returns amos_schedule rows without the joined draft — fetch
+    // drafts for the claimed batch in one query rather than one join per
+    // claim attempt (the RPC itself can't easily express a cross-table
+    // select and stay a simple, auditable SQL function).
+    const claimedIds = (claimedRows || []).map((r: { id: string }) => r.id)
+    const draftIds = (claimedRows || []).map((r: { draft_id: string }) => r.draft_id)
+    const { data: draftRows } = draftIds.length
+      ? await db.from('amos_content_drafts').select('id, channel, draft_type, body, cta, hashtags').in('id', draftIds)
+      : { data: [] as { id: string; channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null }[] }
+    const draftById = new Map((draftRows || []).map((d) => [d.id, d]))
+    const due = (claimedRows || []).map((r: { id: string; draft_id: string; platform: string | null; attempts: number }) => ({
+      id: r.id, draft_id: r.draft_id, platform: r.platform, attempts: r.attempts,
+      amos_content_drafts: draftById.get(r.draft_id) || null,
+    }))
+
+    summary.claimed = claimedIds.length
 
     // Which platforms have a real (non-stub) adapter, and how each one's
     // readiness is determined — checked once per run, not once per row.
@@ -191,11 +214,9 @@ Deno.serve(async (req) => {
 
     for (const row of due || []) {
       try {
-        // Claim: mark 'publishing' before doing anything, so a crashed
-        // run never leaves a row silently stuck in 'pending' looking
-        // untouched — same "claim, then work" pattern as the existing
-        // scheduled_notifications dispatch queue elsewhere in this repo.
-        await db.from('amos_schedule').update({ status: 'publishing', last_attempt_at: new Date().toISOString() }).eq('id', row.id)
+        // Already atomically claimed (status='publishing', locked_at set)
+        // by claim_due_amos_schedule above — no separate claim UPDATE
+        // needed here, just the audit trail entry.
         await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'claimed', actor_id: triggeredBy.actorId, actor_email: triggeredBy.actorEmail })
 
         const draft = row.amos_content_drafts as unknown as { channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null } | null
@@ -213,13 +234,13 @@ Deno.serve(async (req) => {
         })
 
         if (result.ok && result.status === 'awaiting_manual_publish') {
-          await db.from('amos_schedule').update({ status: 'awaiting_manual_publish', publish_method: 'manual', attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
+          await db.from('amos_schedule').update({ status: 'awaiting_manual_publish', publish_method: 'manual', locked_at: null }).eq('id', row.id)
           summary.moved_to_awaiting_manual++
         } else if (result.ok && result.status === 'published') {
           // Real adapter succeeded — no human step needed. Write the
           // publish log immediately (external_post_id/external_url come
           // straight from the platform's own API response).
-          await db.from('amos_schedule').update({ status: 'published', publish_method: 'api', attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
+          await db.from('amos_schedule').update({ status: 'published', publish_method: 'api', locked_at: null }).eq('id', row.id)
           await db.from('amos_publish_log').insert({
             schedule_id: row.id, channel: platform,
             external_post_id: result.externalPostId || null,
@@ -229,14 +250,14 @@ Deno.serve(async (req) => {
           await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'manual_confirmed', detail: `auto-published via ${platform} API` })
           summary.auto_published++
         } else {
-          await db.from('amos_schedule').update({ status: 'failed', last_error: result.error || 'Unknown publisher error', attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
+          await db.from('amos_schedule').update({ status: 'failed', last_error: result.error || 'Unknown publisher error', locked_at: null }).eq('id', row.id)
           await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'failed', detail: result.error || null })
           summary.failed++
         }
       } catch (rowError) {
         const message = rowError instanceof Error ? rowError.message : String(rowError)
         summary.errors.push(`Schedule ${row.id}: ${message}`)
-        await db.from('amos_schedule').update({ status: 'failed', last_error: message.slice(0, 2000), attempts: (row.attempts || 0) + 1 }).eq('id', row.id)
+        await db.from('amos_schedule').update({ status: 'failed', last_error: message.slice(0, 2000), locked_at: null }).eq('id', row.id)
         await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'failed', detail: message.slice(0, 2000) })
         summary.failed++
       }

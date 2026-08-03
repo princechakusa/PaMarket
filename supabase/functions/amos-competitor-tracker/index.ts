@@ -95,6 +95,9 @@ Deno.serve(async (req) => {
     ? 'Competitor watchlist is empty — add competitors in Market Intelligence to start tracking.'
     : `${summary.competitors_tracked} competitor(s) tracked`
 
+  console.log(`[amos-competitor-tracker] run finished ok=${ok} ${detail}`)
+  if (summary.errors.length) console.error('[amos-competitor-tracker] errors:', summary.errors)
+
   await db.from('job_runs').insert({
     job: 'amos_competitor_tracker', ok, detail,
     rows_affected: summary.competitors_tracked,

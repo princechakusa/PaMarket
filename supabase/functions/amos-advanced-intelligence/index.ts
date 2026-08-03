@@ -172,6 +172,8 @@ Deno.serve(async (req) => {
 
   const ok = summary.errors.length === 0
   const finishedAt = Date.now()
+  console.log(`[amos-advanced-intelligence] run finished ok=${ok} ${summary.trending_terms_found} trending term(s), ${summary.supply_gaps_found} supply gap(s)`)
+  if (summary.errors.length) console.error('[amos-advanced-intelligence] errors:', summary.errors)
   await db.from('job_runs').insert({
     job: 'amos_advanced_intelligence', ok,
     detail: `${summary.trending_terms_found} trending term(s), ${summary.supply_gaps_found} supply gap(s)`,

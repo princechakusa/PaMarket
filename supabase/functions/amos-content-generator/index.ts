@@ -159,13 +159,39 @@ Deno.serve(async (req) => {
     errors: [] as string[],
   }
 
+  // Production Readiness Audit, Critical #3 fix: write a job_runs row
+  // marked "in progress" BEFORE any real work starts, not only after
+  // everything finishes. A hard platform-level kill (timeout, OOM) is not
+  // a catchable JS exception — the old code's only job_runs write lived
+  // after the placement loop and inside a try/catch, so a mid-run kill
+  // produced ZERO record of the run ever having happened. Now, even in
+  // that worst case, an admin sees a run stuck at ok=false,
+  // detail='in progress' past its expected duration — a real signal
+  // instead of silence. finish() below UPDATEs this same row instead of
+  // inserting a fresh one.
+  let jobRunId: string | null = null
+  try {
+    const { data: inProgress } = await db.from('job_runs').insert({
+      job: 'amos_content_generator',
+      ok: false,
+      detail: 'in progress',
+      started_at: new Date(startedAt).toISOString(),
+      trigger_type: cronAuthOk ? 'cron' : 'manual',
+    }).select('id').single()
+    jobRunId = inProgress?.id ?? null
+  } catch (_e) { /* best effort — a failure to write the marker must never block the actual run */ }
+  console.log(`[amos-content-generator] run started, trigger=${cronAuthOk ? 'cron' : 'manual'}, job_run_id=${jobRunId ?? 'unrecorded'}`)
+
   const finish = async (ok: boolean) => {
     const finishedAt = Date.now()
     const detail = summary.topic_selected
       ? `"${summary.topic_selected}" — ${summary.drafts_written}/${PLACEMENTS.length} draft(s) written`
       : summary.errors.join('; ').slice(0, 2000)
 
-    await db.from('job_runs').insert({
+    console.log(`[amos-content-generator] run finished ok=${ok} ${detail}`)
+    if (summary.errors.length) console.error(`[amos-content-generator] errors:`, summary.errors)
+
+    const jobRunRow = {
       job: 'amos_content_generator',
       ok,
       detail,
@@ -173,7 +199,19 @@ Deno.serve(async (req) => {
       started_at: new Date(startedAt).toISOString(),
       trigger_type: triggeredBy.actorRole === 'system' ? 'cron' : 'manual',
       meta: { ...summary, triggered_by: triggeredBy.actorRole, duration_ms: finishedAt - startedAt },
-    })
+    }
+
+    // UPDATE the "in progress" marker written at the start rather than
+    // inserting a second row — one row per run, correctly reflecting
+    // in-progress -> resolved. Falls back to insert only if the marker
+    // write at the start failed for some reason (defensive, not the
+    // expected path).
+    if (jobRunId) {
+      const { error: updateError } = await db.from('job_runs').update(jobRunRow).eq('id', jobRunId)
+      if (updateError) await db.from('job_runs').insert(jobRunRow)
+    } else {
+      await db.from('job_runs').insert(jobRunRow)
+    }
 
     if (triggeredBy.actorRole !== 'system') {
       await db.from('admin_audit_logs').insert({
@@ -196,6 +234,26 @@ Deno.serve(async (req) => {
   const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY') || ''
   if (!anthropicKey) {
     summary.errors.push('ANTHROPIC_API_KEY not configured — set it under Supabase → Edge Functions → amos-content-generator → Secrets.')
+    return await finish(false)
+  }
+
+  // Production Readiness Audit, High #4 fix: a real spend ceiling, not
+  // just an unused budget_monthly_cents schema field. Rough per-run
+  // estimate (1 classification call + 7 placement calls, Claude Sonnet
+  // pricing) charged atomically against amos_settings.ai_budget_cents_limit
+  // via amos_check_and_record_ai_spend BEFORE any Anthropic call is made,
+  // so a misconfigured cron interval has a real backstop instead of an
+  // unbounded bill. Manual triggers are already rate-limited (3/15min);
+  // this is what protects the cron path, which has no such limit.
+  const ESTIMATED_CENTS_PER_RUN = 15
+  const { data: budgetOk, error: budgetError } = await db.rpc('amos_check_and_record_ai_spend', {
+    p_country_code: 'ZW', p_estimated_cents: ESTIMATED_CENTS_PER_RUN,
+  })
+  if (budgetError) {
+    console.error('[amos-content-generator] budget check failed, failing open:', budgetError.message)
+  } else if (budgetOk === false) {
+    summary.errors.push('Monthly AI budget limit reached (amos_settings.ai_budget_cents_limit) — increase it in AI Configuration or wait for next month\'s reset to generate more content.')
+    console.error('[amos-content-generator] blocked: monthly AI budget limit reached')
     return await finish(false)
   }
 
@@ -286,9 +344,12 @@ SEO VALUE SCORE: <0-100 if this is a blog/article placement with real search-ran
         })
         if (draftError) throw draftError
         summary.drafts_written++
+        console.log(`[amos-content-generator] ${placement.channel} draft written`)
       } catch (placementError) {
         summary.placements_failed.push(placement.channel)
-        summary.errors.push(`${placement.label}: ${placementError instanceof Error ? placementError.message : String(placementError)}`)
+        const message = placementError instanceof Error ? placementError.message : String(placementError)
+        summary.errors.push(`${placement.label}: ${message}`)
+        console.error(`[amos-content-generator] ${placement.channel} failed:`, message)
       }
     }
 
@@ -322,13 +383,13 @@ async function classifyTopic(
   const prompt = `Topic: "${topic}"\nContext: ${rationale || 'none'}\nSignal type: ${signalType}\nCategory hint: ${categoryHint || 'none'}\n\nClassify this for a Zimbabwean marketplace app (PaMarket). Respond with EXACTLY these three tagged lines and nothing else:\nCATEGORY: <one of: ${REAL_CATEGORIES.join(', ')} — if the topic is about a business/service provider in general, use 'services', never invent a 'business' category>\nTARGET AUDIENCE: <one short phrase describing who this content should reach, e.g. "first-time car buyers in Harare">\nCAMPAIGN TYPE: <one of: ${CAMPAIGN_TYPES.join(', ')}>`
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: ANTHROPIC_MODEL, max_tokens: 150, messages: [{ role: 'user', content: prompt }] }),
-    })
-    if (!res.ok) return { category: null, targetAudience: null, campaignType: null }
-    const data = await res.json()
+    // Best-effort enrichment, not load-bearing (per the function's own
+    // purpose — see the classifyTopic doc comment above) — still routed
+    // through the shared retry helper since a single transient 429/5xx
+    // shouldn't waste the whole classification for free, but any
+    // remaining failure after retries still degrades to nulls rather than
+    // failing the run.
+    const data = await callAnthropicWithRetry(apiKey, { model: ANTHROPIC_MODEL, max_tokens: 150, messages: [{ role: 'user', content: prompt }] }, 'classification')
     const text: string = (data.content || []).map((b: { type: string; text?: string }) => b.text || '').join('\n')
 
     const categoryMatch = text.match(/CATEGORY:\s*(\w+)/i)
@@ -354,6 +415,49 @@ function clampScore(raw: string | undefined): number | null {
   return Math.max(0, Math.min(100, n))
 }
 
+// Production Readiness Audit fix (item 10): retry/backoff for transient
+// Anthropic failures. Only retries on signals that are actually transient
+// (429 rate limit, 5xx server errors, network-level fetch failure) — a
+// real 400/401 (bad request, bad key) retrying would just waste time and
+// budget on a guaranteed-repeat failure. Capped at 2 retries with a short
+// fixed backoff, deliberately small: this function already runs close to
+// the platform's wall-clock ceiling (Production Readiness Audit,
+// Critical #3), so an aggressive/unbounded retry here would make that
+// risk worse, not better.
+const ANTHROPIC_MAX_RETRIES = 2
+const ANTHROPIC_RETRY_DELAY_MS = 1000
+
+async function callAnthropicWithRetry(apiKey: string, body: Record<string, unknown>, label: string): Promise<{ content?: { type: string; text?: string }[] }> {
+  let lastError: string = 'unknown error'
+  for (let attempt = 0; attempt <= ANTHROPIC_MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(body),
+      })
+
+      if (res.ok) return await res.json()
+
+      const errBody = await res.text().catch(() => '')
+      lastError = `Anthropic API error ${res.status}: ${errBody.slice(0, 300)}`
+      const transient = res.status === 429 || res.status >= 500
+      if (!transient || attempt === ANTHROPIC_MAX_RETRIES) throw new Error(lastError)
+      console.warn(`[amos-content-generator] ${label}: transient error (${res.status}), retrying in ${ANTHROPIC_RETRY_DELAY_MS}ms (attempt ${attempt + 1}/${ANTHROPIC_MAX_RETRIES})`)
+    } catch (fetchError) {
+      // A thrown non-transient error (from the block above) re-throws
+      // immediately; a genuine network-level failure falls through to the
+      // same retry path as a transient HTTP error.
+      if (fetchError instanceof Error && fetchError.message === lastError) throw fetchError
+      lastError = fetchError instanceof Error ? fetchError.message : String(fetchError)
+      if (attempt === ANTHROPIC_MAX_RETRIES) throw new Error(lastError)
+      console.warn(`[amos-content-generator] ${label}: network error, retrying (attempt ${attempt + 1}/${ANTHROPIC_MAX_RETRIES}):`, lastError)
+    }
+    await new Promise((resolve) => setTimeout(resolve, ANTHROPIC_RETRY_DELAY_MS))
+  }
+  throw new Error(lastError)
+}
+
 async function generatePlacement(
   apiKey: string,
   systemPrompt: string,
@@ -366,29 +470,14 @@ async function generatePlacement(
   rationale: string | null
   scores: { relevance: number | null; brandAlignment: number | null; engagementPrediction: number | null; seoValue: number | null }
 }> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      max_tokens: placement.maxTokens,
-      system: systemPrompt,
-      messages: [
-        { role: 'user', content: `${userContext}\n\nWrite this: ${placement.instructions}` },
-      ],
-    }),
-  })
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '')
-    throw new Error(`Anthropic API error ${res.status}: ${errBody.slice(0, 300)}`)
-  }
-
-  const data = await res.json()
+  const data = await callAnthropicWithRetry(apiKey, {
+    model: ANTHROPIC_MODEL,
+    max_tokens: placement.maxTokens,
+    system: systemPrompt,
+    messages: [
+      { role: 'user', content: `${userContext}\n\nWrite this: ${placement.instructions}` },
+    ],
+  }, placement.channel)
   const text: string = (data.content || []).map((b: { type: string; text?: string }) => b.text || '').join('\n').trim()
   if (!text) throw new Error('Empty response from model')
 

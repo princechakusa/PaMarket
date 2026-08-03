@@ -190,6 +190,9 @@ Deno.serve(async (req) => {
   const finishedAt = Date.now()
   const detail = `${summary.metrics_written} metric(s) written` + (summary.errors.length ? `, ${summary.errors.length} note(s)` : '')
 
+  console.log(`[amos-analytics-collector] run finished ok=${ok} ${detail}`)
+  if (summary.errors.length) console.error('[amos-analytics-collector] errors:', summary.errors)
+
   await db.from('job_runs').insert({
     job: 'amos_analytics_collector',
     ok,
