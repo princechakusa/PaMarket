@@ -13,6 +13,7 @@ export interface DraftForPublish {
   cta: string | null
   hashtags: string[] | null
   imageUrl: string | null
+  mediaType: 'image' | 'video' | null
 }
 
 export interface PublishResult {

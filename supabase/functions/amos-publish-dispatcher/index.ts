@@ -175,8 +175,8 @@ Deno.serve(async (req) => {
     const claimedIds = (claimedRows || []).map((r: { id: string }) => r.id)
     const draftIds = (claimedRows || []).map((r: { draft_id: string }) => r.draft_id)
     const { data: draftRows } = draftIds.length
-      ? await db.from('amos_content_drafts').select('id, channel, draft_type, body, cta, hashtags, amos_media_assets!amos_content_drafts_media_asset_id_fkey(url)').in('id', draftIds)
-      : { data: [] as { id: string; channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null; amos_media_assets: { url: string | null } | null }[] }
+      ? await db.from('amos_content_drafts').select('id, channel, draft_type, body, cta, hashtags, amos_media_assets!amos_content_drafts_media_asset_id_fkey(url,asset_type)').in('id', draftIds)
+      : { data: [] as { id: string; channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null; amos_media_assets: { url: string | null; asset_type: string | null } | null }[] }
     const draftById = new Map((draftRows || []).map((d) => [d.id, d]))
     const due = (claimedRows || []).map((r: { id: string; draft_id: string; platform: string | null; attempts: number }) => ({
       id: r.id, draft_id: r.draft_id, platform: r.platform, attempts: r.attempts,
@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
         // needed here, just the audit trail entry.
         await db.from('amos_publish_audit').insert({ schedule_id: row.id, event: 'claimed', actor_id: triggeredBy.actorId, actor_email: triggeredBy.actorEmail })
 
-        const draft = row.amos_content_drafts as unknown as { channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null; amos_media_assets: { url: string | null } | null } | null
+        const draft = row.amos_content_drafts as unknown as { channel: string; draft_type: string; body: string | null; cta: string | null; hashtags: string[] | null; amos_media_assets: { url: string | null; asset_type: string | null } | null } | null
         const platform = draft?.channel || row.platform || 'unknown'
         const useReal = realAdapterReady.has(platform)
         const publisher = useReal ? publishers[platform] : publishers.manual
@@ -234,6 +234,7 @@ Deno.serve(async (req) => {
           cta: draft?.cta ?? null,
           hashtags: draft?.hashtags ?? null,
           imageUrl: draft?.amos_media_assets?.url ?? null,
+          mediaType: (draft?.amos_media_assets?.asset_type as 'image' | 'video' | null) ?? null,
         })
 
         if (result.ok && result.status === 'awaiting_manual_publish') {

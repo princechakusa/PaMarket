@@ -19,6 +19,14 @@ import type { ContentPublisher, DraftForPublish, PublishResult } from './types.t
 const GRAPH_API_VERSION = 'v21.0'
 const CONTAINER_POLL_MAX_ATTEMPTS = 5
 const CONTAINER_POLL_DELAY_MS = 1500
+// Video containers routinely take much longer than images to finish
+// processing on Meta's side. Still bounded well under the edge
+// function's own wall-clock ceiling (this function is one of several
+// drafts a single dispatcher run processes in sequence) — a video that
+// isn't ready in this window fails cleanly with a message telling the
+// admin to retry, rather than hanging the whole publish run.
+const VIDEO_CONTAINER_POLL_MAX_ATTEMPTS = 12
+const VIDEO_CONTAINER_POLL_DELAY_MS = 2500
 
 export class InstagramPublisher implements ContentPublisher {
   readonly platform = 'instagram'
@@ -70,10 +78,15 @@ export class InstagramPublisher implements ContentPublisher {
 
       const caption = draft.hashtags?.length ? `${draft.body}\n\n${draft.hashtags.join(' ')}` : draft.body
 
+      const isVideo = draft.mediaType === 'video'
+      const containerBody = isVideo
+        ? { media_type: 'REELS', video_url: draft.imageUrl, caption, access_token: pageAccessToken }
+        : { image_url: draft.imageUrl, caption, access_token: pageAccessToken }
+
       const containerRes = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${igUserId}/media`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ image_url: draft.imageUrl, caption, access_token: pageAccessToken }),
+        body: JSON.stringify(containerBody),
       })
       const container = await containerRes.json()
       if (!containerRes.ok || container.error || !container.id) {
@@ -84,18 +97,20 @@ export class InstagramPublisher implements ContentPublisher {
       // image before it can be published — poll status_code rather than
       // publishing immediately, which Meta's own docs warn will 400 on a
       // container that isn't FINISHED yet for larger images.
+      const pollMaxAttempts = isVideo ? VIDEO_CONTAINER_POLL_MAX_ATTEMPTS : CONTAINER_POLL_MAX_ATTEMPTS
+      const pollDelayMs = isVideo ? VIDEO_CONTAINER_POLL_DELAY_MS : CONTAINER_POLL_DELAY_MS
       let ready = false
-      for (let attempt = 0; attempt < CONTAINER_POLL_MAX_ATTEMPTS; attempt++) {
+      for (let attempt = 0; attempt < pollMaxAttempts; attempt++) {
         const statusRes = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${container.id}?fields=status_code&access_token=${encodeURIComponent(pageAccessToken)}`)
         const statusBody = await statusRes.json()
         if (statusBody.status_code === 'FINISHED') { ready = true; break }
         if (statusBody.status_code === 'ERROR') {
-          return { ok: false, status: 'failed', error: 'Instagram failed to process the image container.', rawResponse: statusBody }
+          return { ok: false, status: 'failed', error: `Instagram failed to process the ${isVideo ? 'video' : 'image'} container.`, rawResponse: statusBody }
         }
-        await new Promise((resolve) => setTimeout(resolve, CONTAINER_POLL_DELAY_MS))
+        await new Promise((resolve) => setTimeout(resolve, pollDelayMs))
       }
       if (!ready) {
-        return { ok: false, status: 'failed', error: 'Instagram media container did not finish processing in time — try again shortly.' }
+        return { ok: false, status: 'failed', error: `Instagram media container did not finish processing in time${isVideo ? ' — video processing can take longer, use Retry in a minute or two' : ' — try again shortly'}.` }
       }
 
       const publishRes = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${igUserId}/media_publish`, {

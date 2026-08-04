@@ -59,15 +59,21 @@ export class FacebookPublisher implements ContentPublisher {
     }
 
     try {
-      // With an image (Module 10), post to /photos with the image URL and
-      // caption together — Meta attaches the photo and uses `caption` as
-      // the post text in one call, still a single feed post either way.
-      // Without one, fall back to the original text-only /feed post so
+      // With an image, post to /photos with the image URL and caption
+      // together — Meta attaches the photo and uses `caption` as the post
+      // text in one call. With a video (Module 10 manual attach — AI
+      // video generation is not implemented), post to /videos with
+      // file_url + description instead, Meta's dedicated endpoint for
+      // Page video uploads (a video is not accepted by /photos or /feed).
+      // With neither, fall back to the original text-only /feed post so
       // nothing here regresses for drafts generated before media support
       // existed or for channels where image generation was skipped/failed.
-      const usePhoto = !!draft.imageUrl
-      const endpoint = usePhoto ? 'photos' : 'feed'
-      const payload = usePhoto
+      const isVideo = draft.mediaType === 'video' && !!draft.imageUrl
+      const usePhoto = !isVideo && !!draft.imageUrl
+      const endpoint = isVideo ? 'videos' : usePhoto ? 'photos' : 'feed'
+      const payload = isVideo
+        ? { file_url: draft.imageUrl, description: draft.body, access_token: pageAccessToken }
+        : usePhoto
         ? { url: draft.imageUrl, caption: draft.body, access_token: pageAccessToken }
         : { message: draft.body, access_token: pageAccessToken }
 
@@ -84,11 +90,14 @@ export class FacebookPublisher implements ContentPublisher {
       }
 
       // Graph API returns "{pageId}_{postId}" as `id` for a plain /feed post,
-      // but for a /photos post that same combined id comes back as
-      // `post_id` instead — `id` there is just the photo object's own id,
-      // which does not resolve as a post URL.
-      const externalPostId: string = usePhoto ? body.post_id : body.id
-      const externalUrl = externalPostId ? `https://www.facebook.com/${externalPostId}` : undefined
+      // but /photos returns that same combined id as `post_id` instead
+      // (`id` there is just the photo object's own id, which does not
+      // resolve as a post URL). /videos returns only its own video `id`
+      // with no equivalent post_id — video posts don't get a
+      // guaranteed-resolvable facebook.com/{id} URL the same way, so no
+      // externalUrl is fabricated for that case.
+      const externalPostId: string = isVideo ? body.id : usePhoto ? body.post_id : body.id
+      const externalUrl = !isVideo && externalPostId ? `https://www.facebook.com/${externalPostId}` : undefined
 
       return { ok: true, status: 'published', externalPostId, externalUrl, rawResponse: body }
     } catch (error) {

@@ -8382,8 +8382,8 @@ function renderAmosDashboard(){
 async function loadAmosApprovalQueue(){
   if(await amosMissing()) return;
   var res = await Promise.allSettled([
-    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100),
-    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error)').eq('status','approved').order('created_at',{ascending:false}).limit(100),
+    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error,asset_type)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100),
+    sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error,asset_type)').eq('status','approved').order('created_at',{ascending:false}).limit(100),
     sb.from('amos_schedule').select('draft_id')
   ]);
   AMOS.drafts = (res[0].value && res[0].value.data) || [];
@@ -8441,20 +8441,7 @@ function renderAmosApprovalQueue(){
           html += '<div style="font-size:10.5px;color:var(--sub2);margin-top:6px">'+esc(d.ai_provider||'')+(d.ai_model?' · '+esc(d.ai_model):'')+(d.prompt_version?' · prompt '+esc(d.prompt_version):'')+'</div>';
           var IMAGE_CHANNELS = {facebook:1,instagram:1,linkedin:1,x:1,website:1};
           if(IMAGE_CHANNELS[d.channel]){
-            var media = d.amos_media_assets;
-            html += '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)">';
-            if(media && media.status==='ready' && media.url){
-              html += '<img src="'+esc(media.url)+'" style="max-width:280px;width:100%;border-radius:8px;display:block;margin-bottom:8px" alt="Generated image">';
-              html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Regenerate Image</button>';
-            } else if(media && media.status==='generating'){
-              html += '<div style="font-size:11.5px;color:var(--sub)">Generating image…</div>';
-            } else if(media && media.status==='failed'){
-              html += '<div style="font-size:11.5px;color:var(--red)">Image generation failed'+(media.error?': '+esc(media.error):'')+'</div>';
-              html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')" style="margin-top:6px">Retry Image</button>';
-            } else {
-              html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Generate Image</button>';
-            }
-            html += '</div>';
+            html += renderAmosMediaBlock(d);
           }
           html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
           html += '<button class="ab ab-approve" onclick="approveAmosDraft(\''+d.id+'\')">Approve</button>';
@@ -8608,7 +8595,7 @@ var AMOS_SCHED_STATUS_BADGE = {
 };
 async function loadAmosCalendar(){
   if(await amosMissing()) return;
-  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(id,channel,draft_type,body,media_asset_id,amos_content_items(title),amos_media_assets!amos_content_drafts_media_asset_id_fkey(url,status))').order('scheduled_for',{ascending:true}).limit(200);
+  var r = await sb.from('amos_schedule').select('*, amos_content_drafts(id,channel,draft_type,body,media_asset_id,content_item_id,amos_content_items(title),amos_media_assets!amos_content_drafts_media_asset_id_fkey(url,status,asset_type))').order('scheduled_for',{ascending:true}).limit(200);
   AMOS.schedule = (r.data||[]);
 }
 function renderAmosCalendar(){
@@ -8632,9 +8619,9 @@ function renderAmosCalendar(){
       if(IMAGE_CHANNELS_CAL[d.channel] && s.status==='pending'){
         var media = d.amos_media_assets;
         if(media && media.status==='ready' && media.url){
-          html += '<span style="color:var(--green);font-size:11px">Image ✓</span> ';
+          html += '<span style="color:var(--green);font-size:11px">Media ✓</span> <button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Change</button> ';
         } else {
-          html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\').then(function(){loadAmosCalendar().then(renderAmosCalendar);})">Generate Image</button> ';
+          html += '<button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Attach Media</button> ';
         }
       }
       if(s.status==='awaiting_manual_publish'){
@@ -8687,6 +8674,115 @@ async function generateAmosImage(draftId, channel){
     toast('Image generated');
     loadAmosApprovalQueue().then(renderAmosApprovalQueue);
   } catch(e){ toast('Error: '+e.message,'error'); }
+}
+// Renders the inline media block used in the Approval Queue's expanded
+// draft view: shows the current image/video if one exists, plus buttons
+// to generate one with AI, or attach the admin's own via the media modal.
+function renderAmosMediaBlock(d){
+  var media = d.amos_media_assets;
+  var html = '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)">';
+  if(media && media.status==='ready' && media.url){
+    if(media.asset_type==='video'){
+      html += '<video src="'+esc(media.url)+'" controls style="max-width:280px;width:100%;border-radius:8px;display:block;margin-bottom:8px"></video>';
+    } else {
+      html += '<img src="'+esc(media.url)+'" style="max-width:280px;width:100%;border-radius:8px;display:block;margin-bottom:8px" alt="Attached media">';
+    }
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Regenerate with AI</button>';
+    html += '<button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Replace</button>';
+    html += '</div>';
+  } else if(media && media.status==='generating'){
+    html += '<div style="font-size:11.5px;color:var(--sub)">Generating image…</div>';
+  } else {
+    if(media && media.status==='failed'){
+      html += '<div style="font-size:11.5px;color:var(--red);margin-bottom:6px">Image generation failed'+(media.error?': '+esc(media.error):'')+'</div>';
+    }
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Generate Image with AI</button>';
+    html += '<button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Attach My Own</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+// Modal for attaching the admin's own image or video, either by pasting
+// a URL to something already hosted (Canva export, Codex output, etc.)
+// or uploading a file directly (goes to R2 via get-r2-upload-url, same
+// pattern as ad creatives — see amos/manual-media/ prefix in that
+// function's allowlist).
+function openAmosMediaModal(draftId, channel, contentItemId){
+  var html = '<div style="font-size:15px;font-weight:800;margin-bottom:12px">Attach Media</div>';
+  html += '<div style="font-size:11.5px;color:var(--sub);margin-bottom:12px">Paste a URL to an already-hosted image/video, or upload a file directly. This replaces any AI-generated image for this draft.</div>';
+  html += '<input type="url" id="amosMediaUrlInput" class="search-input" style="width:100%;margin-bottom:8px" placeholder="https://... (image or video URL)">';
+  html += '<button class="btn-send" style="width:100%;margin-bottom:14px" onclick="attachAmosMediaUrl(\''+draftId+'\',\''+esc(channel)+'\',\''+(contentItemId||'')+'\')">Use This URL</button>';
+  html += '<div style="text-align:center;font-size:10.5px;color:var(--sub2);margin-bottom:14px">— or —</div>';
+  html += '<input type="file" id="amosMediaFileInput" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" style="width:100%;margin-bottom:10px">';
+  html += '<button class="btn-send" style="width:100%" onclick="attachAmosMediaFile(\''+draftId+'\',\''+esc(channel)+'\',\''+(contentItemId||'')+'\')">Upload &amp; Use This File</button>';
+  html += '<div id="amosMediaModalStatus" style="font-size:11px;color:var(--sub);margin-top:10px"></div>';
+  openModal(html);
+}
+async function _amosSaveMediaAsset(draftId, channel, url, assetType, contentItemId){
+  var r = await sb.from('amos_media_assets').insert({
+    draft_id: draftId, content_item_id: contentItemId||null, asset_type: assetType,
+    placement: channel, prompt: '(manually attached)', provider: 'manual', model: 'manual',
+    status: 'ready', url: url, created_by: (await sb.auth.getUser()).data.user.id
+  }).select('id').single();
+  if(r.error) throw new Error(r.error.message);
+  var upd = await sb.from('amos_content_drafts').update({ media_asset_id: r.data.id }).eq('id', draftId);
+  if(upd.error) throw new Error(upd.error.message);
+  auditLog('attach_amos_manual_media','amos_content_drafts',draftId,null,{asset_type:assetType,url:url},null);
+}
+function _amosGuessAssetType(urlOrName){
+  return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(urlOrName) ? 'video' : 'image';
+}
+async function attachAmosMediaUrl(draftId, channel, contentItemId){
+  if(!requirePerm('*')) return;
+  var input = document.getElementById('amosMediaUrlInput');
+  var url = input ? input.value.trim() : '';
+  if(!url){ toast('Paste a URL first','error'); return; }
+  var statusEl = document.getElementById('amosMediaModalStatus');
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try {
+    await _amosSaveMediaAsset(draftId, channel, url, _amosGuessAssetType(url), contentItemId);
+    toast('Media attached');
+    closeModal();
+    loadAmosApprovalQueue().then(renderAmosApprovalQueue);
+    loadAmosCalendar().then(renderAmosCalendar);
+  } catch(e){
+    if(statusEl) statusEl.textContent = '';
+    toast('Error: '+e.message,'error');
+  }
+}
+async function attachAmosMediaFile(draftId, channel, contentItemId){
+  if(!requirePerm('*')) return;
+  var fileInput = document.getElementById('amosMediaFileInput');
+  var file = fileInput && fileInput.files[0];
+  if(!file){ toast('Choose a file first','error'); return; }
+  var statusEl = document.getElementById('amosMediaModalStatus');
+  if(statusEl) statusEl.textContent = 'Uploading…';
+  try {
+    var sess = (await sb.auth.getSession()).data.session;
+    if(!sess) throw new Error('Session expired — please log in again');
+    var ext = (file.name.split('.').pop()||'bin').toLowerCase();
+    var key = 'amos/manual-media/'+draftId+'/'+(crypto.randomUUID?crypto.randomUUID():Date.now())+'.'+ext;
+    var res = await fetch(SUPABASE_URL + '/functions/v1/get-r2-upload-url', {
+      method:'POST', headers:{'Authorization':'Bearer '+sess.access_token,'Content-Type':'application/json'},
+      body: JSON.stringify({ key:key, contentType:file.type })
+    });
+    var payload = await res.json().catch(function(){ return {}; });
+    if(!res.ok) throw new Error(payload.error||('Upload URL error: '+res.status));
+    var up = await fetch(payload.signedUrl, { method:'PUT', headers:{'Content-Type':file.type}, body:file });
+    if(!up.ok) throw new Error('Upload failed: '+up.status);
+    if(!payload.publicUrl) throw new Error('No public URL returned');
+    await _amosSaveMediaAsset(draftId, channel, payload.publicUrl, file.type.indexOf('video')===0 ? 'video' : 'image', contentItemId);
+    toast('Media uploaded and attached');
+    closeModal();
+    loadAmosApprovalQueue().then(renderAmosApprovalQueue);
+    loadAmosCalendar().then(renderAmosCalendar);
+  } catch(e){
+    if(statusEl) statusEl.textContent = '';
+    toast('Error: '+e.message,'error');
+  }
 }
 function findAmosSchedule(id){ return (AMOS.schedule||[]).find(function(s){ return s.id===id; }); }
 async function markAmosScheduledPublished(id){

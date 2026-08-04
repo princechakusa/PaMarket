@@ -54,7 +54,17 @@ const ALLOWED_CONTENT_TYPES = new Set([
   'application/pdf', // CVs only
 ])
 
+// AMOS marketing media (admin-only, see isAmos below) additionally
+// allows video, since posts can attach a video the admin uploaded
+// themselves rather than one AI-generated.
+const AMOS_ADDITIONAL_CONTENT_TYPES = new Set([
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+])
+
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
+const MAX_AMOS_VIDEO_SIZE_BYTES = 200 * 1024 * 1024 // 200 MB — video files are much larger than the general 10MB cap
 
 Deno.serve(async (req) => {
   const cors = corsHeaders(req)
@@ -79,6 +89,7 @@ Deno.serve(async (req) => {
 
     const isVerification = key.startsWith('verification/')
     const isAd = key.startsWith('ads/')
+    const isAmos = key.startsWith('amos/manual-media/')
     const isGet = verb === 'GET'
 
     if (isGet && isVerification) {
@@ -87,9 +98,10 @@ Deno.serve(async (req) => {
       const isAdmin = profile?.role === 'admin'
       if (!isAdmin && !key.startsWith(`verification/${user.id}/`)) throw new Error('Forbidden')
     } else {
-      // Ad creatives use a shared public namespace, but only administrators
-      // may request upload URLs for that namespace.
-      if (isAd) {
+      // Ad creatives and AMOS marketing media use shared public
+      // namespaces, but only administrators may request upload URLs for
+      // either.
+      if (isAd || isAmos) {
         const { data: profile, error: profileErr } = await sb
           .from('profiles')
           .select('role')
@@ -98,7 +110,8 @@ Deno.serve(async (req) => {
         if (profileErr || profile?.role !== 'admin') throw new Error('Forbidden')
       }
 
-      // Non-ad PUTs remain scoped to the authenticated user's path prefix.
+      // Non-ad, non-amos PUTs remain scoped to the authenticated user's
+      // path prefix.
       const allowed = [
         `listings/${user.id}/`,
         `chat/${user.id}/`,
@@ -107,11 +120,12 @@ Deno.serve(async (req) => {
         `profiles/${user.id}/`,
         `rentals/${user.id}/`,
       ]
-      if (!isAd && !allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
+      if (!isAd && !isAmos && !allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
       if (!contentType) throw new Error('contentType required for upload')
 
-      // Validate content type against allowlist
-      if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+      // Validate content type against allowlist (AMOS additionally allows video)
+      const contentTypeAllowed = ALLOWED_CONTENT_TYPES.has(contentType) || (isAmos && AMOS_ADDITIONAL_CONTENT_TYPES.has(contentType))
+      if (!contentTypeAllowed) {
         throw new Error('Content type not permitted')
       }
 
@@ -122,8 +136,9 @@ Deno.serve(async (req) => {
 
       // Enforce upload size limit via Content-Length header (advisory — R2 enforces too)
       const contentLength = Number(req.headers.get('content-length') ?? 0)
-      if (contentLength > MAX_UPLOAD_SIZE_BYTES) {
-        throw new Error('File exceeds maximum size of 10 MB')
+      const sizeLimit = isAmos && AMOS_ADDITIONAL_CONTENT_TYPES.has(contentType) ? MAX_AMOS_VIDEO_SIZE_BYTES : MAX_UPLOAD_SIZE_BYTES
+      if (contentLength > sizeLimit) {
+        throw new Error(`File exceeds maximum size of ${Math.round(sizeLimit / 1024 / 1024)} MB`)
       }
     }
 
