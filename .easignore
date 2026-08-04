@@ -1,0 +1,56 @@
+# EAS Build project-archive excludes, at the REPO ROOT.
+#
+# EAS archives this monorepo from the root (its temp dir is named
+# "<uuid>-shallow-clone" and contains apps/mobile/...), so an .easignore
+# living in apps/mobile/ is never consulted — it has to be here.
+#
+# When this file exists, EAS uses ONLY these rules and does not merge with
+# .gitignore, so everything that must stay out of the upload has to be
+# listed here, not just the native folders.
+#
+# The specific failure this fixes: the tarball step died with
+#   EBUSY: resource busy or locked, copyfile
+#   '...\apps\mobile\android\.gradle\9.3.1\checksums\checksums.lock'
+# because a local Gradle build was holding that file open. Nothing under
+# android/ or ios/ belongs in the upload anyway — EAS regenerates the
+# native project with prebuild.
+#
+# Patterns are intentionally UNANCHORED (no leading slash) so they match at
+# any depth: "android/" catches both the retired Capacitor project at the
+# repo root and the generated apps/mobile/android.
+
+# Dependencies
+node_modules/
+
+# Generated native projects — recreated by prebuild on the build machine
+android/
+ios/
+
+# Expo / build output
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.tsbuildinfo
+
+# Secrets and local config — must never leave this machine
+.env
+.env*.local
+*.keystore
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+keystore.properties
+
+# Local tooling / scratch
+.claude/
+.vscode/
+supabase/.temp/
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
