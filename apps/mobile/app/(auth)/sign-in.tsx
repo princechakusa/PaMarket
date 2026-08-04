@@ -50,14 +50,32 @@ export default function SignInScreen() {
   // pushed on top of another screen; a direct/deep-linked visit falls back
   // to Home since there's no prior screen in this stack.
   useEffect(() => {
-    if (!sessionLoading && session) {
-      if (router.canGoBack()) router.back();
-      else router.replace("/(tabs)");
-    }
+    if (sessionLoading || !session) return;
+    if (router.canGoBack()) router.back();
+    else router.replace("/(tabs)");
+
+    // Guaranteed escape hatch. This screen renders no form once a session
+    // exists (see below), so if the navigation above doesn't take effect —
+    // which can happen when the auth state changes mid-transition, e.g.
+    // returning from the Google account picker — the user is left on a
+    // blank screen with no way out but force-quitting the app. That was a
+    // real, reported bug on Android. A hard replace() shortly after always
+    // gets them to Home; it's a no-op if the navigation above already
+    // moved us off this screen and unmounted it.
+    const escapeHatch = setTimeout(() => router.replace("/(tabs)"), 700);
+    return () => clearTimeout(escapeHatch);
   }, [sessionLoading, session]);
 
+  // Signed in — the form is gone, but never render nothing: an empty render
+  // is an all-white screen, which is exactly what the blank-screen-after-
+  // sign-in bug looked like. A themed spinner makes the hand-off visible
+  // and, if navigation is briefly delayed, looks intentional.
   if (!sessionLoading && session) {
-    return null;
+    return (
+      <View style={styles.redirecting}>
+        <ActivityIndicator color={tones.brand} />
+      </View>
+    );
   }
 
   // A hard replace() unmounts this screen and mounts a brand-new Home tab
@@ -231,6 +249,12 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: color.surface,
+    },
+    redirecting: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
       backgroundColor: color.surface,
     },
     backButton: {
