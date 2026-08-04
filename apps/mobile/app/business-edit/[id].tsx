@@ -22,11 +22,13 @@ import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
 
 // Owner/staff edit form for identity, media, contact, and location. Mirrors
 // www/js/business-profile.js pages.BusinessEditProfile. Shop-thumbnail
 // featuring (featured_listing_ids) and staff link at the bottom.
 export default function BusinessEditScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -165,7 +167,7 @@ export default function BusinessEditScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.coverWrap}>
           <Pressable style={styles.cover} onPress={() => pickImage("cover")}>

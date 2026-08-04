@@ -22,6 +22,7 @@ import { PhotoGrid } from "../../../components/post/PhotoGrid";
 import { Button, Card, Chip, ErrorState, Skeleton, toast } from "../../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../../../lib/useKeyboardAvoidingReset";
 
 type EditState = {
   category: string | null;
@@ -38,6 +39,7 @@ type EditState = {
 };
 
 export default function EditListingScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
   const router = useRouter();
@@ -210,7 +212,7 @@ export default function EditListingScreen() {
   const categoryName = CATEGORIES.find((c) => c.id === state.category)?.name ?? "Other";
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Card style={styles.card}>
           <View style={styles.categoryBar}>
