@@ -21,8 +21,10 @@ import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { isValidEmail, isValidPhone, isStrongEnoughPassword } from "../../lib/validation";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
 
 export default function SignUpScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const [fullName, setFullName] = useState("");
@@ -117,7 +119,7 @@ export default function SignUpScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.brandBlock}>
           <Text style={styles.brand}>Create account</Text>

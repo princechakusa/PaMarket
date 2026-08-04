@@ -16,8 +16,10 @@ import { supabase } from "../../lib/supabase";
 import { isValidEmail } from "../../lib/validation";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
 
 export default function ForgotPasswordScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const [email, setEmail] = useState("");
@@ -59,7 +61,7 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.formBlock}>
         <Text style={styles.title}>Reset password</Text>
         <Text style={styles.subtitle}>Enter your email and we&apos;ll send a reset link</Text>

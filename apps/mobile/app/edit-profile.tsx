@@ -19,8 +19,10 @@ import { uploadImageUriToR2 } from "../lib/uploadToR2";
 import { sellerInitials } from "../lib/sellers";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 
 export default function EditProfileScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
@@ -114,7 +116,7 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>

@@ -13,10 +13,12 @@ import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useAuth } from "../lib/auth";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 
 // Mirrors www/js/auth.js H.authShow2FA — the login-time TOTP gate shown when
 // a profile has two_factor_enabled.
 export default function TwoFactorVerifyScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const { verifyPendingTwoFactor, cancelPendingTwoFactor } = useAuth();
@@ -37,7 +39,7 @@ export default function TwoFactorVerifyScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.iconWrap}>
         <Svg width={28} height={28} viewBox="0 0 32 32" fill="none">
           <Rect x={6} y={13} width={20} height={16} rx={3} stroke={tones.brand} strokeWidth={1.8} />

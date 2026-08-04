@@ -19,6 +19,7 @@ import { color, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { GlassBackButton } from "../components/ui";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
+import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 
 const HKEY = "pm_bot_h3";
 const WA = "https://wa.me/971589772645";
@@ -68,6 +69,7 @@ async function clearHistory() {
 }
 
 export default function ReportProblemScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -280,7 +282,7 @@ export default function ReportProblemScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView key={kavResetKey}
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}

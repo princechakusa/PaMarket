@@ -24,8 +24,10 @@ import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
 
 export default function SignInScreen() {
+  const kavResetKey = useKeyboardAvoidingReset();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
   const router = useRouter();
@@ -127,7 +129,7 @@ export default function SignInScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <GlassBackButton onPress={handleBack} tone="dark" style={[styles.backButton, { marginTop: insets.top + space.sm }]} flat />
 
       <ScrollView
