@@ -1,3 +1,11 @@
+// Deploy:  supabase functions deploy send-push --no-verify-jwt
+// Required — this function is called by AMOS's push publisher
+// (amos-publishers/push.ts) using only an x-automation-secret header,
+// no Authorization/apikey. Without --no-verify-jwt, Supabase's platform
+// gateway rejects that request before this file's own internalAutomation
+// check below ever runs (confirmed live: 401 UNAUTHORIZED_NO_AUTH_HEADER
+// straight from the gateway, not from this function's code).
+//
 // Tightened from wildcard (*) — this function is cron/secret-gated and never
 // called from a browser page, but a wildcard origin is still inconsistent
 // with every other function in this project and worth closing for
