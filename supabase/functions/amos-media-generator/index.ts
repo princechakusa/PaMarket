@@ -53,7 +53,14 @@ function corsHeaders(req: Request) {
 }
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
-const HF_MODEL = 'black-forest-labs/FLUX.1-schnell'
+// FLUX.1-schnell was tried first but is deprecated on the hf-inference
+// provider (confirmed live: 410 Gone, "model is deprecated and no
+// longer supported"). Stable Diffusion 3 Medium is confirmed live and
+// working on the free tier as of this writing — if this model is later
+// deprecated too, check https://huggingface.co/models?inference_provider=hf-inference&pipeline_tag=text-to-image
+// for a current replacement rather than assuming any specific model ID
+// stays available long-term.
+const HF_MODEL = 'stabilityai/stable-diffusion-3-medium-diffusers'
 
 // Placement -> target pixel dimensions, passed directly as the model's
 // width/height parameters.
@@ -336,7 +343,10 @@ const HF_COLD_START_MAX_RETRIES = 3
 const HF_COLD_START_RETRY_DELAY_MS = 8_000
 
 async function generateImage(token: string, prompt: string, width: number, height: number): Promise<Uint8Array> {
-  const url = `https://api-inference.huggingface.co/models/${HF_MODEL}`
+  // api-inference.huggingface.co (the older direct-inference host) has
+  // been retired — confirmed live via DNS failure — HF now routes all
+  // Inference Providers traffic through router.huggingface.co instead.
+  const url = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`
 
   for (let attempt = 0; attempt <= HF_COLD_START_MAX_RETRIES; attempt++) {
     const controller = new AbortController()
