@@ -51,6 +51,7 @@ function corsHeaders(req: Request) {
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
 const OPENAI_MODEL = 'gpt-image-1'
+const SCENE_MODEL = 'claude-sonnet-4-5-20250929'
 
 // Placement -> pixel dimensions gpt-image-1 actually supports. It only
 // accepts these three exact sizes; anything else 400s.
@@ -233,10 +234,18 @@ Deno.serve(async (req) => {
       return await finish(false)
     }
 
-    // ── 3. Build the prompt from brand kit + draft copy ────────────────
+    // ── 3. Have Claude write ONE coherent scene concept, then build the
+    //    image prompt around it (see writeSceneConcept's doc comment for
+    //    why this step exists — a flat requirements checklist handed
+    //    straight to the image model produced disconnected compositions).
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY') || ''
+    const sceneConcept = anthropicKey
+      ? await writeSceneConcept(anthropicKey, item?.title || 'PaMarket', draft.body || '', style)
+      : (draft.body || '').slice(0, 300)
+
     const prompt = buildImagePrompt({
       title: item?.title || 'PaMarket',
-      draftBody: draft.body || '',
+      sceneConcept,
       style,
       placement: placementKey,
       brandKit,
@@ -296,47 +305,108 @@ Deno.serve(async (req) => {
   }
 })
 
+// Handing the image model a checklist of separate requirements (style,
+// brand colors, representation, "depict X, don't depict Y") produces
+// disconnected compositions — caught live: a saluting soldier in dress
+// uniform standing next to unrelated market shoppers in the same frame,
+// because the model satisfied each clause independently rather than
+// imagining one coherent moment. Claude is asked first for a single,
+// plain-language description of ONE believable scene grounded in the
+// actual post content — compositional/creative reasoning it's much
+// better suited to than an image model parsing a spec sheet — and that
+// description becomes the core of the image prompt instead of a list.
+// Ported from amos-content-generator's identical helper — retries only
+// on transient failures (429/5xx/network), never on a genuine 4xx,
+// capped at 2 retries with a short fixed backoff.
+const ANTHROPIC_MAX_RETRIES = 2
+const ANTHROPIC_RETRY_DELAY_MS = 1000
+
+async function callAnthropicWithRetry(apiKey: string, body: Record<string, unknown>, label: string): Promise<{ content?: { type: string; text?: string }[] }> {
+  let lastError: string = 'unknown error'
+  for (let attempt = 0; attempt <= ANTHROPIC_MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(body),
+      })
+
+      if (res.ok) return await res.json()
+
+      const errBody = await res.text().catch(() => '')
+      lastError = `Anthropic API error ${res.status}: ${errBody.slice(0, 300)}`
+      const transient = res.status === 429 || res.status >= 500
+      if (!transient || attempt === ANTHROPIC_MAX_RETRIES) throw new Error(lastError)
+      console.warn(`[amos-media-generator] ${label}: transient error (${res.status}), retrying in ${ANTHROPIC_RETRY_DELAY_MS}ms (attempt ${attempt + 1}/${ANTHROPIC_MAX_RETRIES})`)
+    } catch (fetchError) {
+      if (fetchError instanceof Error && fetchError.message === lastError) throw fetchError
+      lastError = fetchError instanceof Error ? fetchError.message : String(fetchError)
+      if (attempt === ANTHROPIC_MAX_RETRIES) throw new Error(lastError)
+      console.warn(`[amos-media-generator] ${label}: network error, retrying (attempt ${attempt + 1}/${ANTHROPIC_MAX_RETRIES}):`, lastError)
+    }
+    await new Promise((resolve) => setTimeout(resolve, ANTHROPIC_RETRY_DELAY_MS))
+  }
+  throw new Error(lastError)
+}
+
+async function writeSceneConcept(
+  anthropicKey: string,
+  title: string,
+  draftBody: string,
+  style: string
+): Promise<string> {
+  const styleGuidance: Record<string, string> = {
+    product_showcase: 'a product-focused moment',
+    promotional_banner: 'a promotional moment with a clear focal point',
+    hiring_announcement: 'a workplace or hiring-related moment',
+    marketplace_advertisement: 'an everyday marketplace moment',
+    quote_card: 'a simple, atmospheric backdrop (no scene action needed)',
+    infographic: 'a simple supporting backdrop (no scene action needed)',
+    event_announcement: 'a moment tied to the specific event described',
+    feature_announcement: 'a moment representing the feature in everyday use',
+  }
+
+  const prompt = `A marketing team needs ONE photograph concept for a social media post. Post topic: "${title}". Post copy: "${draftBody.slice(0, 500)}"
+
+Describe, in 2-3 plain sentences, ONE single, believable, coherent real-world scene (${styleGuidance[style] || styleGuidance.marketplace_advertisement}) that a camera could actually capture — not a collage of unrelated elements, not multiple disconnected subjects in one frame. It should feel like a real moment, grounded specifically in what this post is actually about. Do not mention brand names, logos, apps, phones, or any text/signage that would need to be rendered legibly. Respond with ONLY the scene description, nothing else — no preamble, no labels.`
+
+  try {
+    const data = await callAnthropicWithRetry(anthropicKey, {
+      model: SCENE_MODEL, max_tokens: 200, messages: [{ role: 'user', content: prompt }],
+    }, 'scene-concept')
+    const text = (data.content || []).map((b: { type: string; text?: string }) => b.text || '').join('\n').trim()
+    if (text) return text
+  } catch (error) {
+    console.warn('[amos-media-generator] scene concept generation failed, falling back to raw post copy:', error instanceof Error ? error.message : String(error))
+  }
+  // Best-effort enrichment, not load-bearing — a failure here still lets
+  // image generation proceed with the raw post copy as the scene
+  // description, just without Claude's compositional pass.
+  return draftBody.slice(0, 300)
+}
+
 function buildImagePrompt(args: {
   title: string
-  draftBody: string
+  sceneConcept: string
   style: string
   placement: string
   brandKit: Record<string, unknown> | null
 }): string {
-  const { title, draftBody, style, placement, brandKit } = args
+  const { title, sceneConcept, style, placement, brandKit } = args
   const primary = (brandKit?.color_primary as string) || '#1A3A8F'
   const secondary = (brandKit?.color_secondary as string) || '#D4AF37'
   const notes = (brandKit?.design_notes as string) || ''
 
-  const styleDescriptions: Record<string, string> = {
-    product_showcase: 'a clean product showcase composition with generous negative space around the subject',
-    promotional_banner: 'a bold promotional scene with a clear focal point',
-    hiring_announcement: 'a professional hiring/recruitment scene',
-    marketplace_advertisement: 'a vibrant marketplace advertisement scene',
-    quote_card: 'a minimal, atmospheric background composition (this style may include a short quote as text)',
-    infographic: 'a structured, icon-driven visual composition',
-    event_announcement: 'an eye-catching event scene',
-    feature_announcement: 'a modern, clean scene representing the feature',
-  }
-
   return [
-    `Professional marketing photograph/illustration for "${title}", promoting PaMarket, a Zimbabwean marketplace app.`,
-    `Depict the real subject matter described below as an actual photographic or illustrated SCENE — real people, real objects, real settings relevant to the topic. Style: ${styleDescriptions[style] || styleDescriptions.marketplace_advertisement}, sized for ${placement}.`,
-    `Brand colors: navy blue (${primary}) and gold (${secondary}) as accent/background tones, not necessarily literal UI elements.`,
-    `Photorealistic style — shot like a real professional marketing photograph, not a painting, not an illustration, not digital art, not a cartoon. Real-looking people, real lighting and textures, as if captured with a camera.`,
-    `Any people depicted should reflect Zimbabwe's real population mix: predominantly Black African, with white and coloured (mixed-race) Zimbabweans also represented where a group or crowd is shown. Settings, clothing, and details should reflect authentic Zimbabwean/Southern African life.`,
+    `Photorealistic marketing photograph, shot like a real professional camera capture — not a painting, not an illustration, not digital art, not a cartoon.`,
+    `Scene: ${sceneConcept}`,
+    `This is for PaMarket, a Zimbabwean marketplace app, promoting "${title}", sized for ${placement}. Subtly incorporate navy blue (${primary}) and gold (${secondary}) tones where natural (clothing, props, lighting) — do not force them unnaturally into the scene.`,
+    `Any people depicted should reflect Zimbabwe's real population mix: predominantly Black African, with white and coloured (mixed-race) Zimbabweans also represented where a group or crowd is shown. Real-looking people, real lighting and textures.`,
     notes ? `Additional brand guidance: ${notes}.` : '',
-    `What this image should depict, based on the actual post content: ${draftBody.slice(0, 300)}`,
-    `IMPORTANT: Do NOT depict a phone, app screen, user interface, or any mockup with on-screen text — those consistently render as garbled, illegible gibberish and must be avoided entirely. Do not include any readable text, logos, or captions in the image at all, unless this is explicitly a quote-card style. The scene alone should communicate the subject; the caption lives in the post text, not the image.`,
+    `Do NOT depict a phone, app screen, user interface, or any mockup with on-screen text — those consistently render as garbled, illegible gibberish. Do not include any readable text, logos, or captions in the image at all.`,
   ].filter(Boolean).join(' ')
 }
 
-// Serverless HF inference endpoints can return 503 "model is loading"
-// on a cold start rather than the image itself — a real, common
-// condition (not an error case to just fail on), so it's retried with a
-// short wait rather than surfaced as a failure on the first attempt. An
-// explicit per-attempt timeout keeps a hung request from running until
-// the platform kills the whole function with no useful error message.
 async function generateImage(apiKey: string, prompt: string, size: string): Promise<string> {
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
