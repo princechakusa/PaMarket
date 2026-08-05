@@ -157,6 +157,58 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .ab-delete{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
 .ab-ban{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.25);}
 
+/* ── AMOS: shared card/icon/preview system used across all AMOS pages ── */
+.amos-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+.amos-search{flex:1;min-width:200px;padding:9px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;}
+.amos-search:focus{border-color:var(--accent);}
+.amos-filter-chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--sub);transition:all .15s;white-space:nowrap;}
+.amos-filter-chip:hover{border-color:var(--accent);color:var(--accent);}
+.amos-filter-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.amos-icon{width:15px;height:15px;display:inline-block;vertical-align:-3px;flex-shrink:0;}
+.amos-chan{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;background:var(--card2);color:var(--text);}
+.amos-chan svg{width:14px;height:14px;flex-shrink:0;}
+
+.amos-card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 4px 18px rgba(21,33,59,.035);margin-bottom:16px;overflow:hidden;}
+.amos-card-head{padding:18px 20px;border-bottom:1px solid var(--border);}
+.amos-card-title{font-size:15px;font-weight:800;color:var(--text);}
+.amos-card-meta{margin-top:6px;font-size:11.5px;color:var(--sub);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+
+.amos-draft-row{padding:14px 20px;border-bottom:1px solid var(--border);transition:background .15s;}
+.amos-draft-row:last-child{border-bottom:none;}
+.amos-draft-row:hover{background:var(--card2);}
+.amos-draft-head{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;}
+.amos-draft-headline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.amos-expand-hint{font-size:11px;color:var(--sub2);display:flex;align-items:center;gap:4px;}
+.amos-expand-hint svg{width:13px;height:13px;transition:transform .2s;}
+.amos-expand-hint.open svg{transform:rotate(180deg);}
+
+.amos-scores{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;}
+.amos-score{display:flex;align-items:center;gap:6px;}
+.amos-score-ring{width:28px;height:28px;position:relative;flex-shrink:0;}
+.amos-score-ring svg{width:28px;height:28px;transform:rotate(-90deg);}
+.amos-score-ring circle{fill:none;stroke-width:3;}
+.amos-score-label{font-size:10px;color:var(--sub);line-height:1.2;}
+.amos-score-val{font-size:11px;font-weight:800;}
+
+/* ── Platform preview: mock cards showing how the draft looks live ── */
+.amos-preview{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:10px;max-width:420px;}
+.amos-preview-fb{font-family:Helvetica,Arial,sans-serif;}
+.amos-preview-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+.amos-preview-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;}
+.amos-preview-name{font-size:13px;font-weight:700;color:#050505;}
+.amos-preview-sub{font-size:11px;color:#65676B;}
+.amos-preview-body{font-size:13.5px;color:#050505;line-height:1.4;white-space:pre-wrap;word-break:break-word;}
+.amos-preview-media{margin-top:10px;border-radius:8px;overflow:hidden;background:#F0F2F5;}
+.amos-preview-media img,.amos-preview-media video{width:100%;display:block;max-height:280px;object-fit:cover;}
+.amos-preview-ig .amos-preview-avatar{background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF,#515BD4);}
+.amos-preview-actions{display:flex;gap:18px;margin-top:10px;padding-top:10px;border-top:1px solid #EFEFEF;color:#65676B;}
+.amos-preview-actions svg{width:16px;height:16px;}
+.amos-charcount{font-size:10.5px;margin-top:4px;text-align:right;}
+.amos-charcount.over{color:var(--red);font-weight:700;}
+.amos-charcount.warn{color:var(--amber);font-weight:700;}
+.amos-charcount.ok{color:var(--sub2);}
+
 /* ── ENTITY CARDS (Businesses, Listings) — card-style rows instead of a
    dense spreadsheet table: clearer visual hierarchy, grouped actions. ── */
 .ent-list{display:flex;flex-direction:column;gap:10px;}
@@ -8393,26 +8445,124 @@ async function loadAmosApprovalQueue(){
 }
 var AMOS_EXPANDED_DRAFT = null;
 function scoreColor(n){ return n>=70 ? 'var(--green)' : n>=40 ? 'var(--amber)' : 'var(--red)'; }
+
+// ── AMOS shared UI helpers: channel icons, score rings, platform preview ──
+var AMOS_CHAN_META = {
+  facebook:  { label:'Facebook',  color:'#1877F2', icon:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>' },
+  instagram: { label:'Instagram', color:'#DD2A7B', icon:'<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/>' },
+  linkedin:  { label:'LinkedIn',  color:'#0A66C2', icon:'<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V8h4v1.5A6 6 0 0 1 16 8z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>' },
+  x:         { label:'X',         color:'#000000', icon:'<path d="M4 4l16 16M20 4L4 20"/>' },
+  tiktok:    { label:'TikTok',    color:'#000000', icon:'<path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>' },
+  website:   { label:'Blog',      color:'#8B96A9', icon:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>' },
+  push:      { label:'Push',      color:'#6366F1', icon:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>' },
+  email:     { label:'Email',     color:'#F59E0B', icon:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>' },
+};
+function amosChanMeta(ch){ return AMOS_CHAN_META[ch] || { label:(ch||'—'), color:'#8B96A9', icon:'<circle cx="12" cy="12" r="9"/>' }; }
+function amosChanIcon(ch){
+  var m = amosChanMeta(ch);
+  return '<svg class="amos-icon" viewBox="0 0 24 24" fill="none" stroke="'+m.color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+m.icon+'</svg>';
+}
+function amosChanBadge(ch){
+  var m = amosChanMeta(ch);
+  return '<span class="amos-chan">'+amosChanIcon(ch)+esc(m.label)+'</span>';
+}
+function amosScoreRing(label, val){
+  if(val==null) return '';
+  var color = scoreColor(val);
+  var r = 11, c = 2*Math.PI*r, off = c - (val/100)*c;
+  return '<div class="amos-score">'
+    + '<div class="amos-score-ring"><svg viewBox="0 0 28 28">'
+    +   '<circle cx="14" cy="14" r="'+r+'" stroke="var(--card2)"></circle>'
+    +   '<circle cx="14" cy="14" r="'+r+'" stroke="'+color+'" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" stroke-linecap="round"></circle>'
+    + '</svg></div>'
+    + '<div><div class="amos-score-label">'+esc(label)+'</div><div class="amos-score-val" style="color:'+color+'">'+val+'</div></div>'
+    + '</div>';
+}
+// Character limits AMOS's own generator was instructed to write within
+// per PLACEMENTS in amos-content-generator/index.ts — surfaced here so
+// an edit that blows past what the model was told to target is visible
+// before Approve, not discovered as a platform-side rejection later.
+var AMOS_CHAR_LIMITS = { x: 280, instagram: 2200, facebook: 2000, linkedin: 3000 };
+function amosCharCount(channel, text){
+  var limit = AMOS_CHAR_LIMITS[channel];
+  if(!limit) return '';
+  var len = (text||'').length;
+  var cls = len > limit ? 'over' : len > limit*0.9 ? 'warn' : 'ok';
+  return '<div class="amos-charcount '+cls+'">'+len+' / '+limit+' characters'+(len>limit?' — over limit':'')+'</div>';
+}
+function amosInitial(name){ return (name||'P').trim().charAt(0).toUpperCase() || 'P'; }
+// Renders a mock card approximating how the draft will actually look
+// once published — not pixel-perfect to either platform's real UI, just
+// enough visual context (avatar, name, caption, media) to review copy
+// in situ rather than as an isolated block of plain text.
+function amosPlatformPreview(d, mediaUrl, mediaType){
+  var ch = d.channel;
+  if(ch!=='facebook' && ch!=='instagram' && ch!=='linkedin' && ch!=='x') return '';
+  var isIg = ch==='instagram';
+  var pageName = 'PaMarket' + (isIg ? '' : ' App');
+  var handle = isIg ? '@pamarketzim' : 'Sponsored · PaMarket';
+  var html = '<div class="amos-preview amos-preview-fb'+(isIg?' amos-preview-ig':'')+'">';
+  html += '<div class="amos-preview-head"><div class="amos-preview-avatar">'+amosInitial(pageName)+'</div><div><div class="amos-preview-name">'+esc(pageName)+'</div><div class="amos-preview-sub">'+esc(handle)+'</div></div></div>';
+  html += '<div class="amos-preview-body">'+esc(d.body||'')+'</div>';
+  if(mediaUrl){
+    html += '<div class="amos-preview-media">'+(mediaType==='video'
+      ? '<video src="'+esc(mediaUrl)+'" controls></video>'
+      : '<img src="'+esc(mediaUrl)+'" alt="">')+'</div>';
+  }
+  html += '<div class="amos-preview-actions">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>'
+    + '</div></div>';
+  return html;
+}
+var AMOS_QUEUE_SEARCH = '';
+var AMOS_QUEUE_CHAN_FILTER = null;
+function setAmosQueueFilter(ch){ AMOS_QUEUE_CHAN_FILTER = (AMOS_QUEUE_CHAN_FILTER===ch) ? null : ch; renderAmosApprovalQueue(); }
+function setAmosQueueSearch(v){ AMOS_QUEUE_SEARCH = v; renderAmosApprovalQueue(); }
+
 function renderAmosApprovalQueue(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Approval Queue</div></div>' + migrationNotice('The Approval Queue','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(AMOS.drafts===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">Approval Queue</div><button class="btn-refresh" onclick="loadAmosApprovalQueue().then(renderAmosApprovalQueue)">Refresh</button></div>';
+
+  var allChannels = Array.from(new Set(AMOS.drafts.map(function(d){return d.channel;})));
+  var q = AMOS_QUEUE_SEARCH.trim().toLowerCase();
+  var filteredDrafts = AMOS.drafts.filter(function(d){
+    if(AMOS_QUEUE_CHAN_FILTER && d.channel!==AMOS_QUEUE_CHAN_FILTER) return false;
+    if(!q) return true;
+    var item = d.amos_content_items || {};
+    return (d.body||'').toLowerCase().indexOf(q)>=0 || (item.title||'').toLowerCase().indexOf(q)>=0;
+  });
+
+  if(AMOS.drafts.length){
+    html += '<div class="amos-toolbar">';
+    html += '<input class="amos-search" placeholder="Search draft text or topic…" value="'+esc(AMOS_QUEUE_SEARCH)+'" oninput="setAmosQueueSearch(this.value)">';
+    allChannels.forEach(function(ch){
+      var m = amosChanMeta(ch);
+      html += '<div class="amos-filter-chip'+(AMOS_QUEUE_CHAN_FILTER===ch?' on':'')+'" onclick="setAmosQueueFilter(\''+ch+'\')">'+esc(m.label)+'</div>';
+    });
+    html += '</div>';
+  }
+
   if(!AMOS.drafts.length){
     html += '<div class="empty-msg">Nothing waiting on review. Every AI-generated draft — Facebook, Instagram, LinkedIn, X, blog, push, and email — lands here with status \'draft\' and stays here until an admin approves, edits, or rejects it. Nothing publishes automatically.</div>';
+  } else if(!filteredDrafts.length){
+    html += '<div class="empty-msg">No drafts match your search or filter.</div>';
   } else {
     // Group by content item so the 7 placements for one idea review together.
     var byItem = {};
-    AMOS.drafts.forEach(function(d){
+    filteredDrafts.forEach(function(d){
       var key = d.content_item_id;
       (byItem[key] = byItem[key] || []).push(d);
     });
     Object.keys(byItem).forEach(function(itemId){
       var group = byItem[itemId];
       var item = group[0].amos_content_items || {};
-      html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:14px">';
-      html += '<div style="padding:16px 0 10px;border-bottom:1px solid var(--border)">';
-      html += '<div style="font-size:14px;font-weight:800">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">· '+group.length+' placement(s)</span></div>';
-      html += '<div style="margin-top:4px;font-size:11px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap">';
+      html += '<div class="amos-card">';
+      html += '<div class="amos-card-head">';
+      html += '<div class="amos-card-title">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">· '+group.length+' placement(s)</span></div>';
+      html += '<div class="amos-card-meta">';
       if(item.category) html += '<span class="badge badge-pending" style="text-transform:capitalize">'+esc(item.category)+'</span>';
       if(item.campaign_type) html += '<span class="badge badge-pending" style="text-transform:capitalize">'+esc(item.campaign_type)+'</span>';
       if(item.country_code) html += '<span class="badge badge-pending">'+esc(item.country_code)+'</span>';
@@ -8420,22 +8570,23 @@ function renderAmosApprovalQueue(){
       html += '</div></div>';
       group.forEach(function(d){
         var expanded = AMOS_EXPANDED_DRAFT===d.id;
-        html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="toggleAmosDraft(\''+d.id+'\')">';
-        html += '<div><span class="badge badge-pending" style="text-transform:capitalize">'+esc(d.channel)+'</span> <span style="font-size:11.5px;color:var(--sub);margin-left:6px">'+esc(d.draft_type)+(d.status==='edited'?' · edited':'')+' · '+ago(d.created_at)+' ago</span></div>';
-        html += '<div style="font-size:11px;color:var(--sub2)">'+(expanded?'▲ collapse':'▼ expand')+'</div>';
+        html += '<div class="amos-draft-row">';
+        html += '<div class="amos-draft-head" onclick="toggleAmosDraft(\''+d.id+'\')">';
+        html += '<div class="amos-draft-headline">'+amosChanBadge(d.channel)+'<span style="font-size:11.5px;color:var(--sub)">'+esc(d.draft_type)+(d.status==='edited'?' · edited':'')+' · '+ago(d.created_at)+' ago</span></div>';
+        html += '<div class="amos-expand-hint'+(expanded?' open':'')+'">'+(expanded?'Collapse':'Expand')+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>';
         html += '</div>';
         if(d.relevance_score!=null || d.brand_alignment_score!=null || d.engagement_prediction_score!=null){
-          html += '<div style="display:flex;gap:12px;margin-top:6px;font-size:10.5px;color:var(--sub)">';
-          if(d.relevance_score!=null) html += '<span>Relevance <b style="color:'+scoreColor(d.relevance_score)+'">'+d.relevance_score+'</b></span>';
-          if(d.brand_alignment_score!=null) html += '<span>Brand fit <b style="color:'+scoreColor(d.brand_alignment_score)+'">'+d.brand_alignment_score+'</b></span>';
-          if(d.engagement_prediction_score!=null) html += '<span>Engagement <b style="color:'+scoreColor(d.engagement_prediction_score)+'">'+d.engagement_prediction_score+'</b></span>';
-          if(d.seo_value_score!=null && d.seo_value_score>0) html += '<span>SEO <b style="color:'+scoreColor(d.seo_value_score)+'">'+d.seo_value_score+'</b></span>';
+          html += '<div class="amos-scores">';
+          html += amosScoreRing('Relevance', d.relevance_score);
+          html += amosScoreRing('Brand fit', d.brand_alignment_score);
+          html += amosScoreRing('Engagement', d.engagement_prediction_score);
+          if(d.seo_value_score!=null && d.seo_value_score>0) html += amosScoreRing('SEO', d.seo_value_score);
           html += '</div>';
         }
         if(expanded){
-          html += '<div style="margin-top:10px">';
-          html += '<textarea id="amosDraftBody_'+d.id+'" class="search-input" style="width:100%;min-height:140px;resize:vertical;font-family:inherit;white-space:pre-wrap">'+esc(d.body||'')+'</textarea>';
+          html += '<div style="margin-top:12px">';
+          html += '<textarea id="amosDraftBody_'+d.id+'" class="search-input" style="width:100%;min-height:140px;resize:vertical;font-family:inherit;white-space:pre-wrap" oninput="document.getElementById(\'amosCC_'+d.id+'\').outerHTML=amosCharCount(\''+esc(d.channel)+'\',this.value)">'+esc(d.body||'')+'</textarea>';
+          html += '<div id="amosCC_'+d.id+'">'+amosCharCount(d.channel, d.body)+'</div>';
           if(d.performance_rationale) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px"><b>Why this should perform well:</b> '+esc(d.performance_rationale)+'</div>';
           if(d.hashtags && d.hashtags.length) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:4px"><b>Hashtags:</b> '+esc(d.hashtags.join(' '))+'</div>';
           html += '<div style="font-size:10.5px;color:var(--sub2);margin-top:6px">'+esc(d.ai_provider||'')+(d.ai_model?' · '+esc(d.ai_model):'')+(d.prompt_version?' · prompt '+esc(d.prompt_version):'')+'</div>';
@@ -8443,6 +8594,9 @@ function renderAmosApprovalQueue(){
           if(IMAGE_CHANNELS[d.channel]){
             html += renderAmosMediaBlock(d);
           }
+          var media = d.amos_media_assets;
+          var previewHtml = amosPlatformPreview(d, media && media.status==='ready' ? media.url : null, media && media.asset_type);
+          if(previewHtml) html += '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Preview</div>'+previewHtml+'</div>';
           html += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
           html += '<button class="ab ab-approve" onclick="approveAmosDraft(\''+d.id+'\')">Approve</button>';
           html += '<button class="ab ab-view" onclick="saveAmosDraftEdit(\''+d.id+'\')">Save Edit</button>';
@@ -8468,15 +8622,15 @@ function renderAmosApprovalQueue(){
     Object.keys(byItemSched).forEach(function(itemId){
       var group = byItemSched[itemId];
       var item = group[0].amos_content_items || {};
-      html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:14px">';
-      html += '<div style="padding:16px 0 12px;font-size:14px;font-weight:800">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">· '+group.length+' approved placement(s)</span></div>';
+      html += '<div class="amos-card">';
+      html += '<div class="amos-card-head"><div class="amos-card-title">'+esc(item.title||'Untitled')+' <span style="font-weight:400;font-size:11.5px;color:var(--sub)">· '+group.length+' approved placement(s)</span></div></div>';
       group.forEach(function(d){
-        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)">';
-        html += '<span class="badge badge-pending" style="text-transform:capitalize;min-width:80px;text-align:center">'+esc(d.channel)+'</span>';
+        html += '<div class="amos-draft-row" style="display:flex;align-items:center;gap:12px">';
+        html += amosChanBadge(d.channel);
         html += '<input type="datetime-local" id="amosSchedTime_'+d.id+'" class="search-input" style="flex:1;width:auto" value="'+defaultAmosScheduleTime()+'">';
         html += '</div>';
       });
-      html += '<div style="padding:12px 0 4px"><button class="btn-send" onclick="scheduleAmosContentItem(\''+itemId+'\')">Schedule All Approved</button></div>';
+      html += '<div style="padding:14px 20px">'+'<button class="btn-send" onclick="scheduleAmosContentItem(\''+itemId+'\')">Schedule All Approved</button></div>';
       html += '</div>';
     });
   }
