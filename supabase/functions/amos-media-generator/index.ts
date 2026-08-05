@@ -9,15 +9,21 @@ import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 // AMOS Module 10 — AI Media Generation (images).
 //
 // Generates one marketing image for a single amos_content_drafts row via
-// Pollinations.ai's free image API (no key, no billing — both OpenAI's
-// gpt-image-1 and Google's Gemini image models were tried first and
-// both require a funded billing account even for their nominal "free
-// tier", so this is the option that actually works without payment).
-// Pollinations has no uptime SLA and rate-limits anonymous requests, so
-// this is a deliberate cost/reliability tradeoff, not the first choice —
-// swap PROVIDER below to 'openai' or 'gemini' once billing is added on
-// either, the rest of this file (R2 upload, media_assets bookkeeping,
-// publisher integration) does not need to change.
+// Hugging Face's Inference API running FLUX.1-schnell — free (a
+// registered access token, no billing/credit card), and generally more
+// consistent quality than the earlier Pollinations.ai attempt while
+// still being free. OpenAI's gpt-image-1 and Google's Gemini image
+// models were tried first and both require a funded billing account for
+// image generation even at zero usage. Rate-limited (~300 req/hour on
+// the free tier) rather than truly unlimited — swap HF_MODEL below or
+// switch providers entirely if that becomes a real constraint; the rest
+// of this file (R2 upload, media_assets bookkeeping, publisher
+// integration) does not need to change.
+//
+// This is the AI-generation path only — the separate "Attach My Own"
+// flow in the admin UI (paste a URL or upload a file) is unaffected and
+// remains the recommended path when AI quality isn't good enough for a
+// given post.
 //
 // Uploads the result to the R2 public bucket (same bucket/credentials as
 // get-r2-upload-url, direct SDK write since this runs server-side and
@@ -47,11 +53,10 @@ function corsHeaders(req: Request) {
 }
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
-const POLLINATIONS_MODEL = 'flux'
+const HF_MODEL = 'black-forest-labs/FLUX.1-schnell'
 
-// Placement -> target pixel dimensions, passed directly as Pollinations'
-// width/height query params (unlike Gemini, which took aspect ratio as
-// prompt text — Pollinations has a real width/height parameter).
+// Placement -> target pixel dimensions, passed directly as the model's
+// width/height parameters.
 const PLACEMENT_SIZE: Record<string, { width: number; height: number; format: string }> = {
   facebook:        { width: 1536, height: 1024, format: 'landscape' },
   instagram:        { width: 1024, height: 1024, format: 'square' },
@@ -181,9 +186,11 @@ Deno.serve(async (req) => {
     return json({ success: ok, ...summary, duration_ms: finishedAt - startedAt }, ok ? 200 : 502)
   }
 
-  // Pollinations needs no API key — nothing to check here. If billing is
-  // later added to OpenAI/Gemini and this file is switched back to one of
-  // those, reinstate a key-presence check at this point.
+  const hfToken = Deno.env.get('HUGGINGFACE_API_TOKEN') || ''
+  if (!hfToken) {
+    summary.error = 'HUGGINGFACE_API_TOKEN not configured — set it under Supabase → Edge Functions → amos-media-generator → Secrets.'
+    return await finish(false)
+  }
 
   try {
     // ── 1. Load the draft + its content item + brand kit ──────────────
@@ -213,11 +220,11 @@ Deno.serve(async (req) => {
       .eq('country_code', item?.country_code || 'ZW')
       .maybeSingle()
 
-    // Pollinations is free — no per-image spend to record. The budget RPC
-    // call is skipped entirely rather than called with 0 cents, since its
-    // purpose is capping real API spend and there is none here. Reinstate
-    // this check (with a real estimated cost) if this file is switched
-    // back to a billed provider.
+    // Hugging Face's free tier is free — no per-image spend to record.
+    // The budget RPC call is skipped entirely rather than called with 0
+    // cents, since its purpose is capping real API spend and there is
+    // none here. Reinstate this check (with a real estimated cost) if
+    // this file is switched back to a billed provider.
     const ESTIMATED_CENTS_PER_IMAGE = 0
 
     // ── 3. Build the prompt from brand kit + draft copy ────────────────
@@ -240,8 +247,8 @@ Deno.serve(async (req) => {
         placement: placementKey,
         format: sizeConfig.format,
         prompt,
-        provider: 'pollinations',
-        model: POLLINATIONS_MODEL,
+        provider: 'huggingface',
+        model: HF_MODEL,
         status: 'generating',
         created_by: triggeredBy.actorId,
       })
@@ -250,8 +257,8 @@ Deno.serve(async (req) => {
     if (mediaInsertError) throw mediaInsertError
     summary.media_asset_id = mediaRow.id
 
-    // ── 5. Call Pollinations ────────────────────────────────────────
-    const imageBytes = await generateImage(prompt, sizeConfig.width, sizeConfig.height)
+    // ── 5. Call Hugging Face ────────────────────────────────────────
+    const imageBytes = await generateImage(hfToken, prompt, sizeConfig.width, sizeConfig.height)
 
     // ── 6. Upload to R2 ──────────────────────────────────────────────
     const key = `amos/media/${draft.content_item_id}/${mediaRow.id}.jpg`
@@ -318,38 +325,59 @@ function buildImagePrompt(args: {
   ].filter(Boolean).join(' ')
 }
 
-// No SLA on this API — generation can occasionally hang rather than
-// error, so an explicit timeout lets the function fail cleanly (and
-// record a real 'failed' media_assets row) instead of running until the
-// platform kills it with no useful error message.
-const POLLINATIONS_TIMEOUT_MS = 45_000
+// Serverless HF inference endpoints can return 503 "model is loading"
+// on a cold start rather than the image itself — a real, common
+// condition (not an error case to just fail on), so it's retried with a
+// short wait rather than surfaced as a failure on the first attempt. An
+// explicit per-attempt timeout keeps a hung request from running until
+// the platform kills the whole function with no useful error message.
+const HF_REQUEST_TIMEOUT_MS = 45_000
+const HF_COLD_START_MAX_RETRIES = 3
+const HF_COLD_START_RETRY_DELAY_MS = 8_000
 
-async function generateImage(prompt: string, width: number, height: number): Promise<Uint8Array> {
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
-    `?model=${POLLINATIONS_MODEL}&width=${width}&height=${height}&nologo=true&safe=true`
+async function generateImage(token: string, prompt: string, width: number, height: number): Promise<Uint8Array> {
+  const url = `https://api-inference.huggingface.co/models/${HF_MODEL}`
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), POLLINATIONS_TIMEOUT_MS)
-  let res: Response
-  try {
-    res = await fetch(url, { signal: controller.signal })
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Pollinations image generation timed out after ${POLLINATIONS_TIMEOUT_MS / 1000}s`)
+  for (let attempt = 0; attempt <= HF_COLD_START_MAX_RETRIES; attempt++) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), HF_REQUEST_TIMEOUT_MS)
+    let res: Response
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'authorization': `Bearer ${token}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ inputs: prompt, parameters: { width, height } }),
+        signal: controller.signal,
+      })
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Hugging Face image generation timed out after ${HF_REQUEST_TIMEOUT_MS / 1000}s`)
+      }
+      throw error
+    } finally {
+      clearTimeout(timeout)
     }
-    throw error
-  } finally {
-    clearTimeout(timeout)
+
+    if (res.status === 503 && attempt < HF_COLD_START_MAX_RETRIES) {
+      console.warn(`[amos-media-generator] Hugging Face model loading (503), retrying in ${HF_COLD_START_RETRY_DELAY_MS}ms (attempt ${attempt + 1}/${HF_COLD_START_MAX_RETRIES})`)
+      await new Promise((resolve) => setTimeout(resolve, HF_COLD_START_RETRY_DELAY_MS))
+      continue
+    }
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '')
+      throw new Error(`Hugging Face image API error ${res.status}: ${errBody.slice(0, 300)}`)
+    }
+
+    const buf = await res.arrayBuffer()
+    if (!buf.byteLength) throw new Error('Hugging Face returned an empty image response')
+    return new Uint8Array(buf)
   }
 
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '')
-    throw new Error(`Pollinations image API error ${res.status}: ${errBody.slice(0, 300)}`)
-  }
-
-  const buf = await res.arrayBuffer()
-  if (!buf.byteLength) throw new Error('Pollinations returned an empty image response')
-  return new Uint8Array(buf)
+  throw new Error('Hugging Face model did not finish loading after retries — try again shortly.')
 }
 
 async function uploadToR2(imageBytes: Uint8Array, key: string): Promise<string> {
