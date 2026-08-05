@@ -55,6 +55,28 @@ const SEARCH_GAP_MIN_OCCURRENCES = 2
 const CALENDAR_LOOKAHEAD_DAYS = 21
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
 
+// Filters out QA/test noise before it can become a real content-generation
+// topic — caught live: "tester", "tester@pamarket.com", and a random
+// gibberish string ("ibiqzc", almost certainly a QA fuzz-test input) all
+// made it into amos_market_intelligence as legitimate-looking signals,
+// crowding out genuine search-gap topics (real product searches with zero
+// results are exactly what this source is meant to surface). This is a
+// basic sanity filter, not a smart classifier — it only rejects things
+// that are clearly not real product search intent: emails, single
+// generic words too short to carry meaning, and low-vowel strings
+// unlikely to be real language (a cheap proxy for "gibberish"/random
+// test input, e.g. "ibiqzc").
+const TEST_TERM_DENYLIST = new Set(['test', 'tester', 'testing', 'asdf', 'qwerty', 'foo', 'bar'])
+function isPlausibleSearchTerm(term: string): boolean {
+  if (term.length < 3 || term.length > 100) return false
+  if (term.includes('@')) return false // email addresses (test accounts)
+  if (TEST_TERM_DENYLIST.has(term)) return false
+  const vowels = (term.match(/[aeiou]/g) || []).length
+  const letters = (term.match(/[a-z]/g) || []).length
+  if (letters >= 5 && vowels / letters < 0.15) return false // e.g. "ibiqzc" — real words don't look like this
+  return true
+}
+
 Deno.serve(async (req) => {
   const cors = corsHeaders(req)
   const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), {
@@ -149,7 +171,7 @@ Deno.serve(async (req) => {
     const counts = new Map<string, number>()
     for (const r of (rows || [])) {
       const term = (r.term || '').trim().toLowerCase()
-      if (!term) continue
+      if (!term || !isPlausibleSearchTerm(term)) continue
       counts.set(term, (counts.get(term) || 0) + 1)
     }
 
