@@ -324,7 +324,7 @@ function buildImagePrompt(args: {
     `Depict the real subject matter described below as an actual photographic or illustrated SCENE — real people, real objects, real settings relevant to the topic. Style: ${styleDescriptions[style] || styleDescriptions.marketplace_advertisement}, sized for ${placement}.`,
     `Brand colors: navy blue (${primary}) and gold (${secondary}) as accent/background tones, not necessarily literal UI elements.`,
     `High-resolution, polished, photo-realistic or high-quality editorial-illustration style (not cartoonish, not low-effort clipart).`,
-    `Any people depicted MUST be Black African, reflecting Zimbabwe's real population — never white/Caucasian or other ethnicities. Settings, clothing, and details should reflect authentic Zimbabwean/Southern African life.`,
+    `Any people depicted should reflect Zimbabwe's real population mix: predominantly Black African, with white and coloured (mixed-race) Zimbabweans also represented where a group or crowd is shown. Settings, clothing, and details should reflect authentic Zimbabwean/Southern African life.`,
     notes ? `Additional brand guidance: ${notes}.` : '',
     `What this image should depict, based on the actual post content: ${draftBody.slice(0, 300)}`,
     `IMPORTANT: Do NOT depict a phone, app screen, user interface, or any mockup with on-screen text — those consistently render as garbled, illegible gibberish and must be avoided entirely. Do not include any readable text, logos, or captions in the image at all, unless this is explicitly a quote-card style. The scene alone should communicate the subject; the caption lives in the post text, not the image.`,
