@@ -8384,7 +8384,7 @@ async function loadAmosApprovalQueue(){
   var res = await Promise.allSettled([
     sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error,asset_type)').in('status',['draft','edited']).order('created_at',{ascending:false}).limit(100),
     sb.from('amos_content_drafts').select('*, amos_content_items(title,category,target_audience,campaign_type,country_code), amos_media_assets!amos_content_drafts_media_asset_id_fkey(id,url,status,error,asset_type)').eq('status','approved').order('created_at',{ascending:false}).limit(100),
-    sb.from('amos_schedule').select('draft_id')
+    sb.from('amos_schedule').select('draft_id').neq('status','cancelled')
   ]);
   AMOS.drafts = (res[0].value && res[0].value.data) || [];
   var scheduledDraftIds = new Set(((res[2].value && res[2].value.data)||[]).map(function(s){return s.draft_id;}));
