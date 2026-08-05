@@ -8413,7 +8413,7 @@ function renderAmosDashboard(){
   html += '<div class="stats-grid">';
   (AMOS.integrations||[]).forEach(function(i){
     var cls = i.status==='connected' ? 'green' : i.status==='error' ? 'red' : 'amber';
-    html += statCard(i.provider.charAt(0).toUpperCase()+i.provider.slice(1), cls, i.status==='connected'?'Connected':(i.status==='error'?'Error':'Not connected'), i.last_error||'awaiting API credentials','amosHealth');
+    html += statCard(amosChanMeta(i.provider).label, cls, i.status==='connected'?'Connected':(i.status==='error'?'Error':'Not connected'), i.last_error||'awaiting API credentials','amosHealth');
   });
   if(!(AMOS.integrations||[]).length) html += '<div class="empty-msg">No channels configured yet.</div>';
   html += '</div>';
@@ -9000,16 +9000,24 @@ async function loadAmosCampaigns(){
   var r = await sb.from('amos_content_items').select('*').order('created_at',{ascending:false}).limit(100);
   AMOS.items = (r.data||[]);
 }
+var AMOS_ITEM_STATUS_BADGE = {
+  idea:'badge-pending', drafted:'badge-pending', approved:'badge-verified',
+  scheduled:'badge-info', published:'badge-active', archived:'badge-rejected', rejected:'badge-rejected'
+};
 function renderAmosCampaigns(){
   if(AMOS.missing){ document.getElementById('mainContent').innerHTML = '<div class="sec-head"><div class="sec-title">Campaign Manager</div></div>' + migrationNotice('Campaign Manager','AMOS_MODULE_0_FOUNDATION.sql'); return; }
   if(AMOS.items===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var html = '<div class="sec-head"><div class="sec-title">Campaign Manager</div><button class="btn-refresh" onclick="loadAmosCampaigns().then(renderAmosCampaigns)">Refresh</button></div>';
   if(!AMOS.items.length){
-    html += '<div class="empty-msg">No campaigns yet. Content items (the platform-agnostic idea behind every post/article/notification) appear here once the research + generation modules ship.</div>';
+    html += '<div class="empty-msg">No campaigns yet. Content items (the platform-agnostic idea behind every post/article/notification) appear here once a topic has been through Generate Content Now.</div>';
   } else {
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Created</th></tr></thead><tbody>';
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Category</th><th>Campaign Type</th><th>Status</th><th>Created</th></tr></thead><tbody>';
     AMOS.items.forEach(function(it){
-      html += '<tr><td style="font-weight:600">'+esc(it.title)+'</td><td>'+esc(it.category||'—')+'</td><td>'+esc(it.status)+'</td><td style="font-size:12px;color:var(--sub)">'+ago(it.created_at)+' ago</td></tr>';
+      html += '<tr><td style="font-weight:700">'+esc(it.title)+'</td>';
+      html += '<td>'+(it.category?'<span class="badge badge-info" style="text-transform:capitalize">'+esc(it.category)+'</span>':'<span style="color:var(--sub2)">—</span>')+'</td>';
+      html += '<td>'+(it.campaign_type?'<span style="text-transform:capitalize;color:var(--sub);font-size:12px">'+esc(it.campaign_type)+'</span>':'<span style="color:var(--sub2)">—</span>')+'</td>';
+      html += '<td><span class="badge '+(AMOS_ITEM_STATUS_BADGE[it.status]||'badge-pending')+'" style="text-transform:capitalize">'+esc(it.status)+'</span></td>';
+      html += '<td style="font-size:12px;color:var(--sub)">'+ago(it.created_at)+' ago</td></tr>';
     });
     html += '</tbody></table></div>';
   }
@@ -9056,7 +9064,7 @@ function renderAmosIntelligence(){
   } else {
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Type</th><th>Topic</th><th>Score</th><th>Rationale</th><th>Collected</th></tr></thead><tbody>';
     AMOS.intel.forEach(function(s){
-      html += '<tr><td>'+esc(AMOS_SIGNAL_LABELS[s.signal_type]||s.signal_type)+'</td><td style="font-weight:600">'+esc(s.topic)+'</td><td>'+(s.score!=null?s.score:'—')+'</td><td style="font-size:11.5px;color:var(--sub);max-width:280px">'+esc(s.rationale||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(s.collected_at)+' ago</td></tr>';
+      html += '<tr><td><span class="badge badge-info">'+esc(AMOS_SIGNAL_LABELS[s.signal_type]||s.signal_type)+'</span></td><td style="font-weight:700">'+esc(s.topic)+'</td><td>'+(s.score!=null?'<b style="color:'+scoreColor(Math.min(100,s.score))+'">'+s.score+'</b>':'—')+'</td><td style="font-size:11.5px;color:var(--sub);max-width:280px">'+esc(s.rationale||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+ago(s.collected_at)+' ago</td></tr>';
     });
     html += '</tbody></table></div>';
   }
@@ -9069,7 +9077,7 @@ function renderAmosIntelligence(){
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Website</th><th>Notes</th><th>Status</th><th></th></tr></thead><tbody>';
     AMOS.competitors.forEach(function(c){
       var safeCompUrl = c.website_url ? safeUrl(c.website_url) : null;
-      html += '<tr><td style="font-weight:600">'+esc(c.name)+'</td><td style="font-size:12px">'+(safeCompUrl?('<a href="'+esc(safeCompUrl)+'" target="_blank" rel="noopener">'+esc(c.website_url)+'</a>'):(c.website_url?esc(c.website_url):'—'))+'</td><td style="font-size:11.5px;color:var(--sub)">'+esc(c.notes||'—')+'</td><td>'+(c.active?'<span class="badge badge-active">active</span>':'<span class="badge badge-pending">inactive</span>')+'</td>';
+      html += '<tr><td style="font-weight:700">'+esc(c.name)+'</td><td style="font-size:12px">'+(safeCompUrl?('<a href="'+esc(safeCompUrl)+'" target="_blank" rel="noopener">'+esc(c.website_url)+'</a>'):(c.website_url?esc(c.website_url):'—'))+'</td><td style="font-size:11.5px;color:var(--sub)">'+esc(c.notes||'—')+'</td><td>'+(c.active?'<span class="badge badge-active">active</span>':'<span class="badge badge-pending">inactive</span>')+'</td>';
       html += '<td><button class="ab ab-reject" onclick="removeAmosCompetitor(\''+c.id+'\')">Remove</button></td></tr>';
     });
     html += '</tbody></table></div>';
@@ -9168,9 +9176,10 @@ function renderAmosLearning(){
   if(!(AMOS.learning||[]).length){
     html += '<div class="empty-msg">No performance data yet. Every published item will record posting time, platform, topic, category, keywords, media type, CTA, audience, reach, CTR, downloads, conversions, and engagement here — the schema is live now so the learning engine (a later module) never needs a breaking migration against real data. Once enough rows exist, this dashboard will surface optimal posting times, best-performing topics/media styles/keywords, and flag patterns to avoid repeating.</div>';
   } else {
+    var AMOS_OUTCOME_BADGE = { strong:'badge-active', weak:'badge-rejected', average:'badge-pending' };
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Channel</th><th>Topic</th><th>Posted</th><th>Reach</th><th>CTR</th><th>Outcome</th></tr></thead><tbody>';
     AMOS.learning.forEach(function(s){
-      html += '<tr><td>'+esc(s.channel)+'</td><td style="font-weight:600">'+esc(s.topic||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(s.posted_at)+'</td><td>'+fmtCnt(s.reach)+'</td><td>'+(s.ctr!=null?s.ctr+'%':'—')+'</td><td>'+esc(s.outcome_label||'—')+'</td></tr>';
+      html += '<tr><td>'+amosChanBadge(s.channel)+'</td><td style="font-weight:700">'+esc(s.topic||'—')+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(s.posted_at)+'</td><td>'+fmtCnt(s.reach)+'</td><td>'+(s.ctr!=null?s.ctr+'%':'—')+'</td><td>'+(s.outcome_label?'<span class="badge '+(AMOS_OUTCOME_BADGE[s.outcome_label]||'badge-info')+'" style="text-transform:capitalize">'+esc(s.outcome_label)+'</span>':'—')+'</td></tr>';
     });
     html += '</tbody></table></div>';
   }
@@ -9234,12 +9243,12 @@ function renderAmosHealth(){
   html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Provider</th><th>Status</th><th>Consecutive Failures</th><th>Last Success</th><th>Last Error</th><th></th></tr></thead><tbody>';
   (AMOS.integrations||[]).forEach(function(i){
     var badge = i.status==='connected' ? '<span class="badge badge-active">connected</span>' : i.status==='error' ? '<span class="badge badge-rejected">error</span>' : '<span class="badge badge-pending">not connected</span>';
-    html += '<tr><td style="font-weight:600">'+esc(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td>';
+    html += '<tr><td>'+amosChanBadge(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td>';
     html += '<td>'+(i.provider==='facebook' ? (i.status==='connected' ? '<button class="ab ab-reject" onclick="disconnectAmosIntegration(\'facebook\')">Disconnect</button>' : '<button class="ab ab-view" onclick="connectAmosFacebook()">Connect</button>') : '<span style="color:var(--sub2);font-size:11px">no adapter yet</span>')+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Facebook publishes via a Page access token (Meta Graph API), not a full OAuth flow — get one from developers.facebook.com for the Page you manage. The token is stored in Supabase Vault, never in this table or in browser code. Instagram shares that same connection but every post still needs an image/video (no text-only posts on Instagram) — AMOS doesn\'t generate media yet, so Instagram drafts publish manually for now regardless of connection status. LinkedIn/TikTok/X have no real adapter yet.</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:8px 0 16px">Facebook publishes via a Page access token (Meta Graph API), not a full OAuth flow — get one from developers.facebook.com for the Page you manage. The token is stored in Supabase Vault, never in this table or in browser code. Instagram shares that same connection and publishes for real (image/video required — no text-only posts on Instagram — attach one from the Approval Queue or Content Calendar before it\'s due). LinkedIn/TikTok/X have no real adapter yet.</div>';
 
   html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Push &amp; Email</div></div>';
   html += '<div style="font-size:11.5px;color:var(--sub);padding:0 0 14px">These aren\'t OAuth connections — they go live automatically the moment their underlying secret is set, no Connect button needed. <b>Push</b>: reuses the app\'s existing Firebase/FCM setup — already configured, so scheduled push drafts auto-publish to a conservative default audience (verified sellers) right now. <b>Email</b>: needs a RESEND_API_KEY edge function secret (not set yet) — until then, scheduled email drafts fall back to manual publishing. Every marketing email includes a working one-click unsubscribe link (added in Module 5, since none existed in this codebase before).</div>';
@@ -9371,8 +9380,9 @@ function renderAmosSettings(){
   html += '</div>';
 
   html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">AI Providers</div>';
-  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Content &amp; Copy — Anthropic Claude</div><div class="setting-desc">Primary AI brain for all generated text. Additional providers (e.g. OpenAI) can be added later without changing this schema — nothing to configure until then.</div></div><span class="badge badge-active">active</span></div>';
-  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Video Generation — Google Veo</div><div class="setting-desc">Primary video provider. Pika/Runway/Canva remain available as fallback providers in the architecture, not wired yet.</div></div><span class="badge badge-active">active</span></div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Content &amp; Copy — Anthropic Claude</div><div class="setting-desc">Primary AI brain for all generated text (and the scene concept step for image prompts).</div></div><span class="badge badge-active">active</span></div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Image Generation — OpenAI gpt-image-1</div><div class="setting-desc">Generates a marketing image per draft on request from the Approval Queue. Billed per image.</div></div><span class="badge badge-active">active</span></div>';
+  html += '<div class="setting-row"><div class="setting-info"><div class="setting-title">Video Generation</div><div class="setting-desc">No AI video provider is connected — attach your own video via "Attach My Own" in the Approval Queue or Content Calendar instead.</div></div><span class="badge badge-pending">not connected</span></div>';
   html += '</div>';
 
   html += '<div class="tbl-wrap" style="padding:0 18px;margin-bottom:16px"><div style="padding:18px 0 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border)">Brand Voice</div>';
@@ -9438,7 +9448,7 @@ function renderAmosAnalytics(){
     return;
   }
 
-  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Marketplace metrics are real PaMarket data (listings, active users). "AMOS" metrics track the marketing system\'s own funnel. Social-platform insights (reach, engagement) will appear here once a channel is actually connected and publishing live — none are yet.</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Marketplace metrics are real PaMarket data (listings, active users). "AMOS" metrics track the marketing system\'s own funnel. Per-post social-platform insights (reach, engagement from Facebook/Instagram\'s own APIs) are not yet collected here — check Facebook/Instagram Insights directly for those until that\'s wired up.</div>';
 
   html += '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Marketplace — Today</div></div>';
   html += '<div class="stats-grid">';
