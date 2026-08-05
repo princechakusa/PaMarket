@@ -323,7 +323,7 @@ function buildImagePrompt(args: {
     `Professional marketing photograph/illustration for "${title}", promoting PaMarket, a Zimbabwean marketplace app.`,
     `Depict the real subject matter described below as an actual photographic or illustrated SCENE — real people, real objects, real settings relevant to the topic. Style: ${styleDescriptions[style] || styleDescriptions.marketplace_advertisement}, sized for ${placement}.`,
     `Brand colors: navy blue (${primary}) and gold (${secondary}) as accent/background tones, not necessarily literal UI elements.`,
-    `High-resolution, polished, photo-realistic or high-quality editorial-illustration style (not cartoonish, not low-effort clipart).`,
+    `Photorealistic style — shot like a real professional marketing photograph, not a painting, not an illustration, not digital art, not a cartoon. Real-looking people, real lighting and textures, as if captured with a camera.`,
     `Any people depicted should reflect Zimbabwe's real population mix: predominantly Black African, with white and coloured (mixed-race) Zimbabweans also represented where a group or crowd is shown. Settings, clothing, and details should reflect authentic Zimbabwean/Southern African life.`,
     notes ? `Additional brand guidance: ${notes}.` : '',
     `What this image should depict, based on the actual post content: ${draftBody.slice(0, 300)}`,
