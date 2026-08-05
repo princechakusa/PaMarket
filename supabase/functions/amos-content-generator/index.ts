@@ -321,7 +321,13 @@ Deno.serve(async (req) => {
     // claims can only ever reference listings that actually exist; when
     // none are found, the prompt tells the model explicitly to stay
     // general rather than invent categories that sound plausible.
-    let realListingsContext = 'No matching live listings were found for this category — do NOT claim specific products, item types, or availability exist on PaMarket. Write only general brand/marketplace messaging (e.g. "browse listings near you", "connect with local sellers") without naming specific product categories as being in stock.'
+    // PaMarket is a marketplace PLATFORM — it does not sell anything
+    // itself. Every draft must promote the app/website (browse, download,
+    // connect with sellers), never describe PaMarket as if it directly
+    // stocks or prices products the way a single retailer would. Sample
+    // listings below are real examples "available from sellers on
+    // PaMarket", not "PaMarket's" own inventory.
+    let realListingsContext = 'No matching live listings were found for this category — do NOT claim specific products, item types, or availability exist on the platform. Write only general platform-promotion messaging (e.g. "browse listings near you on PaMarket", "connect with local sellers on the app") without naming specific product categories as being in stock.'
     if (classification.category) {
       const { data: sampleListings } = await db
         .from('listings')
@@ -331,14 +337,20 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: false })
         .limit(8)
       if (sampleListings && sampleListings.length) {
-        realListingsContext = `Real, currently-live PaMarket listings in this category (you may reference these as genuine examples of what's available, but do not claim broader availability than what's shown — ${sampleListings.length} example(s), there may or may not be more):\n` +
+        realListingsContext = `Real examples currently listed BY SELLERS on the PaMarket platform in this category (you may reference these as genuine examples of what buyers can find FROM SELLERS on PaMarket, never as PaMarket's own inventory/pricing — do not claim broader availability than what's shown — ${sampleListings.length} example(s), there may or may not be more):\n` +
           sampleListings.map((l) => `- "${l.title}" (${l.currency || ''}${l.price ?? '?'}, ${l.city || 'Zimbabwe'})`).join('\n')
       }
     }
 
     const todayStr = new Date().toISOString().slice(0, 10)
+    // Market intelligence signals from the ZW calendar (amos-research-runner)
+    // carry the real, computed calendar date in raw.event_date — use it
+    // verbatim rather than letting the model recompute "N days from now"
+    // itself, which it has gotten wrong (caught live: said "11 August"
+    // when the researched, correct date was August 10).
+    const exactEventDate = (topic.raw && typeof topic.raw === 'object' && topic.raw.event_date) ? String(topic.raw.event_date) : null
 
-    const systemPrompt = `You are writing marketing content for PaMarket, Zimbabwe's marketplace app for buying, selling, hiring, and getting hired (listings, jobs, vehicles, properties, rentals). Today's date is ${todayStr} — use this for any relative dates, years, or "coming up" language; never assume or guess a different year. Brand tone: ${tone}. Avoid: ${avoid}. Never invent statistics, prices, or claims about PaMarket that aren't given to you. If no real listings are supplied for a category, do not claim that category of product is available — write general marketplace messaging instead.
+    const systemPrompt = `You are writing marketing content for PaMarket, a Zimbabwean marketplace PLATFORM/APP where independent sellers list items for buying, selling, hiring, and getting hired (listings, jobs, vehicles, properties, rentals). PaMarket itself does NOT sell, stock, or price anything — it is the app/website that connects buyers with sellers. Every piece of content must promote the app/website itself (download it, browse it, sellers list on it) — never write as if PaMarket is the seller or "PaMarket offers/has" a product. Today's date is ${todayStr} — use this for any relative dates, years, or "coming up" language; never assume or guess a different year or day-of-month for a calendar event — if an exact event date is provided below, use that exact date and no other. Brand tone: ${tone}. Avoid: ${avoid}. Never invent statistics, prices, or claims about PaMarket that aren't given to you. If no real listings are supplied for a category, do not claim that category of product is available — write general platform-promotion messaging instead.
 
 After writing the content, append these exact tagged lines (each on its own line, in this order, nothing after them):
 WHY THIS WORKS: <one sentence on why this should perform well with a Zimbabwean audience, referencing the specific context you were given>
@@ -347,7 +359,7 @@ BRAND ALIGNMENT SCORE: <0-100, how well this matches the brand tone and avoids t
 ENGAGEMENT PREDICTION SCORE: <0-100, your honest estimate of how likely this specific piece is to get engagement from a Zimbabwean marketplace audience — do not default to high numbers>
 SEO VALUE SCORE: <0-100 if this is a blog/article placement with real search-ranking potential, or 0 if not applicable>`
 
-    const userContext = `Today's date: ${todayStr}\nTopic/signal: "${topic.topic}"\nWhy this is relevant right now: ${topic.rationale || 'no additional context'}\nSignal type: ${topic.signal_type}\nTarget audience: ${classification.targetAudience || 'general PaMarket users in Zimbabwe'}\n\n${realListingsContext}`
+    const userContext = `Today's date: ${todayStr}\nTopic/signal: "${topic.topic}"${exactEventDate ? `\nExact date of this event: ${exactEventDate} — use this exact date if mentioning when the event falls, do not calculate or guess a different date` : ''}\nWhy this is relevant right now: ${topic.rationale || 'no additional context'}\nSignal type: ${topic.signal_type}\nTarget audience: ${classification.targetAudience || 'general PaMarket users in Zimbabwe'}\n\n${realListingsContext}`
 
     // ── 4. Generate each placement, isolated ───────────────────────────
     for (const placement of PLACEMENTS) {
