@@ -8757,14 +8757,14 @@ function renderAmosCalendar(){
   if(AMOS.schedule===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var dueCount = (AMOS.schedule||[]).filter(function(s){ return s.status==='pending' && new Date(s.scheduled_for)<=new Date(); }).length;
   var html = '<div class="sec-head"><div class="sec-title">Content Calendar / Publishing Queue</div><button class="btn-send" id="amosDispatchBtn" onclick="runAmosDispatchNow()">Process Due Now'+(dueCount?' ('+dueCount+')':'')+'</button></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">No platform is connected yet — "publishing" here means handing an approved, scheduled piece to a human to post manually, then confirming it here. Facebook/Instagram/LinkedIn/TikTok/X automation plugs into this same queue in a future module.</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Approved, scheduled posts publish automatically within a few minutes of their scheduled time (Facebook, Instagram, and Push are live). "Process Due Now" triggers an immediate check instead of waiting. LinkedIn, TikTok, and X hand off to a human to post manually until their own integrations are connected.</div>';
   if(!AMOS.schedule.length){
     html += '<div class="empty-msg">Nothing scheduled yet. Approve a draft in the Approval Queue, then use "Schedule All Approved" to add it here.</div>';
   } else {
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Item</th><th>Platform</th><th>Status</th><th>Retry Count</th><th></th></tr></thead><tbody>';
     AMOS.schedule.forEach(function(s){
       var d = s.amos_content_drafts||{}, item = d.amos_content_items||{};
-      html += '<tr><td style="font-size:12px">'+fmtDateTime(s.scheduled_for)+'</td><td style="font-weight:600">'+esc(item.title||'—')+'</td><td style="text-transform:capitalize">'+esc(s.platform||d.channel||'—')+'</td>';
+      html += '<tr><td style="font-size:12px">'+fmtDateTime(s.scheduled_for)+'</td><td style="font-weight:600">'+esc(item.title||'—')+'</td><td>'+amosChanBadge(s.platform||d.channel)+'</td>';
       html += '<td><span class="badge '+(AMOS_SCHED_STATUS_BADGE[s.status]||'badge-pending')+'">'+esc((s.status||'').replace(/_/g,' '))+'</span>'+(s.last_error?'<div style="font-size:10.5px;color:var(--red);margin-top:2px">'+esc(s.last_error)+'</div>':'')+'</td>';
       var atCap = s.status==='failed' && (s.attempts||0)>=(s.max_attempts||5);
       html += '<td style="font-size:12px;color:'+(atCap?'var(--red)':'var(--sub)')+'">'+(s.attempts||0)+' / '+(s.max_attempts||5)+(atCap?' (max reached)':'')+'</td>';
