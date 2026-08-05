@@ -227,11 +227,36 @@ Deno.serve(async (req) => {
       }
     })
 
-    // Same re-computed-snapshot approach as the search-gap source.
-    await db.from('amos_market_intelligence')
-      .delete()
+    // Full-snapshot replace, not scoped to "collected today" — every run
+    // recomputes the complete set of upcoming calendar events, so any
+    // previous run's rows for these signal types are stale by definition,
+    // regardless of which day they were collected on. Scoping the delete
+    // to "today only" (the original approach) meant a topic collected on
+    // Monday and again on Tuesday left BOTH rows alive — since each row
+    // gets its own market_intelligence_id, amos-content-generator's
+    // "already used this topic" check (keyed on that id) never caught
+    // the duplicate, so the same still-upcoming holiday (e.g. Heroes' Day)
+    // kept resurfacing as if it were a fresh, unused topic on every
+    // generation run. Caught live: two separate rows for both "Heroes'
+    // Day" and "Defence Forces Day" from two different research runs.
+    //
+    // Excludes rows already referenced by a real amos_content_items row
+    // (market_intelligence_id has no ON DELETE behavior, so deleting a
+    // referenced row would fail the whole run with a FK violation) —
+    // those are correctly excluded from re-selection anyway by
+    // amos-content-generator's own usedIds check, so leaving them in
+    // place is harmless, not a source of the duplicate-topic bug.
+    const { data: usedMiIds } = await db.from('amos_content_items').select('market_intelligence_id').not('market_intelligence_id', 'is', null)
+    const usedMiIdSet = new Set((usedMiIds || []).map((r) => r.market_intelligence_id))
+
+    const { data: staleCalendarRows } = await db.from('amos_market_intelligence')
+      .select('id')
       .in('signal_type', ['public_holiday', 'school_term', 'salary_period'])
-      .gte('collected_at', `${today}T00:00:00Z`)
+      .gte('expires_at', now.toISOString())
+    const deletableIds = (staleCalendarRows || []).map((r) => r.id).filter((id) => !usedMiIdSet.has(id))
+    if (deletableIds.length) {
+      await db.from('amos_market_intelligence').delete().in('id', deletableIds)
+    }
 
     if (calendarSignalRows.length) {
       const { error: insertError } = await db.from('amos_market_intelligence').insert(calendarSignalRows)
