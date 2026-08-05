@@ -9,16 +9,13 @@ import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 // AMOS Module 10 — AI Media Generation (images).
 //
 // Generates one marketing image for a single amos_content_drafts row via
-// Hugging Face's Inference API running FLUX.1-schnell — free (a
-// registered access token, no billing/credit card), and generally more
-// consistent quality than the earlier Pollinations.ai attempt while
-// still being free. OpenAI's gpt-image-1 and Google's Gemini image
-// models were tried first and both require a funded billing account for
-// image generation even at zero usage. Rate-limited (~300 req/hour on
-// the free tier) rather than truly unlimited — swap HF_MODEL below or
-// switch providers entirely if that becomes a real constraint; the rest
-// of this file (R2 upload, media_assets bookkeeping, publisher
-// integration) does not need to change.
+// OpenAI's gpt-image-1. Two free options were tried first (Pollinations,
+// then Hugging Face's Inference API running Stable Diffusion 3 Medium)
+// but both produced garbled/illegible text and broken UI mockups when
+// the post needed a graphic with text or interface elements in it — a
+// real capability ceiling of free diffusion models, not a prompt-tuning
+// problem. gpt-image-1 is billed (billing added specifically for this)
+// but renders text and structured layouts far more reliably.
 //
 // This is the AI-generation path only — the separate "Attach My Own"
 // flow in the admin UI (paste a URL or upload a file) is unaffected and
@@ -53,28 +50,21 @@ function corsHeaders(req: Request) {
 }
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
-// FLUX.1-schnell was tried first but is deprecated on the hf-inference
-// provider (confirmed live: 410 Gone, "model is deprecated and no
-// longer supported"). Stable Diffusion 3 Medium is confirmed live and
-// working on the free tier as of this writing — if this model is later
-// deprecated too, check https://huggingface.co/models?inference_provider=hf-inference&pipeline_tag=text-to-image
-// for a current replacement rather than assuming any specific model ID
-// stays available long-term.
-const HF_MODEL = 'stabilityai/stable-diffusion-3-medium-diffusers'
+const OPENAI_MODEL = 'gpt-image-1'
 
-// Placement -> target pixel dimensions, passed directly as the model's
-// width/height parameters.
-const PLACEMENT_SIZE: Record<string, { width: number; height: number; format: string }> = {
-  facebook:        { width: 1536, height: 1024, format: 'landscape' },
-  instagram:        { width: 1024, height: 1024, format: 'square' },
-  linkedin:         { width: 1536, height: 1024, format: 'landscape' },
-  x:                { width: 1536, height: 1024, format: 'landscape' },
-  blog_header:      { width: 1536, height: 1024, format: 'landscape' },
-  website_banner:   { width: 1536, height: 1024, format: 'landscape' },
-  story:            { width: 1024, height: 1536, format: 'portrait' },
-  square:           { width: 1024, height: 1024, format: 'square' },
-  landscape:        { width: 1536, height: 1024, format: 'landscape' },
-  portrait:         { width: 1024, height: 1536, format: 'portrait' },
+// Placement -> pixel dimensions gpt-image-1 actually supports. It only
+// accepts these three exact sizes; anything else 400s.
+const PLACEMENT_SIZE: Record<string, { size: string; width: number; height: number; format: string }> = {
+  facebook:        { size: '1536x1024', width: 1536, height: 1024, format: 'landscape' },
+  instagram:        { size: '1024x1024', width: 1024, height: 1024, format: 'square' },
+  linkedin:         { size: '1536x1024', width: 1536, height: 1024, format: 'landscape' },
+  x:                { size: '1536x1024', width: 1536, height: 1024, format: 'landscape' },
+  blog_header:      { size: '1536x1024', width: 1536, height: 1024, format: 'landscape' },
+  website_banner:   { size: '1536x1024', width: 1536, height: 1024, format: 'landscape' },
+  story:            { size: '1024x1536', width: 1024, height: 1536, format: 'portrait' },
+  square:           { size: '1024x1024', width: 1024, height: 1024, format: 'square' },
+  landscape:        { size: '1536x1024', width: 1536, height: 1024, format: 'landscape' },
+  portrait:         { size: '1024x1536', width: 1024, height: 1536, format: 'portrait' },
 }
 
 const VALID_STYLES = new Set([
@@ -193,9 +183,9 @@ Deno.serve(async (req) => {
     return json({ success: ok, ...summary, duration_ms: finishedAt - startedAt }, ok ? 200 : 502)
   }
 
-  const hfToken = Deno.env.get('HUGGINGFACE_API_TOKEN') || ''
-  if (!hfToken) {
-    summary.error = 'HUGGINGFACE_API_TOKEN not configured — set it under Supabase → Edge Functions → amos-media-generator → Secrets.'
+  const openaiKey = Deno.env.get('OPENAI_API_KEY') || ''
+  if (!openaiKey) {
+    summary.error = 'OPENAI_API_KEY not configured — set it under Supabase → Edge Functions → amos-media-generator → Secrets.'
     return await finish(false)
   }
 
@@ -227,12 +217,21 @@ Deno.serve(async (req) => {
       .eq('country_code', item?.country_code || 'ZW')
       .maybeSingle()
 
-    // Hugging Face's free tier is free — no per-image spend to record.
-    // The budget RPC call is skipped entirely rather than called with 0
-    // cents, since its purpose is capping real API spend and there is
-    // none here. Reinstate this check (with a real estimated cost) if
-    // this file is switched back to a billed provider.
-    const ESTIMATED_CENTS_PER_IMAGE = 0
+    // Real spend ceiling — same amos_check_and_record_ai_spend RPC and
+    // pattern amos-content-generator uses for its own Anthropic calls
+    // (Production Readiness Audit, High #4). gpt-image-1's 1536x1024
+    // "high" quality is roughly $0.19/image at the top end; budgeting for
+    // that here so the check can't under-count a real charge.
+    const ESTIMATED_CENTS_PER_IMAGE = 19
+    const { data: budgetOk, error: budgetError } = await db.rpc('amos_check_and_record_ai_spend', {
+      p_country_code: item?.country_code || 'ZW', p_estimated_cents: ESTIMATED_CENTS_PER_IMAGE,
+    })
+    if (budgetError) {
+      console.error('[amos-media-generator] budget check failed, failing open:', budgetError.message)
+    } else if (budgetOk === false) {
+      summary.error = 'Monthly AI budget limit reached — increase it in AI Configuration or wait for next month\'s reset.'
+      return await finish(false)
+    }
 
     // ── 3. Build the prompt from brand kit + draft copy ────────────────
     const prompt = buildImagePrompt({
@@ -254,8 +253,8 @@ Deno.serve(async (req) => {
         placement: placementKey,
         format: sizeConfig.format,
         prompt,
-        provider: 'huggingface',
-        model: HF_MODEL,
+        provider: 'openai',
+        model: OPENAI_MODEL,
         status: 'generating',
         created_by: triggeredBy.actorId,
       })
@@ -264,12 +263,12 @@ Deno.serve(async (req) => {
     if (mediaInsertError) throw mediaInsertError
     summary.media_asset_id = mediaRow.id
 
-    // ── 5. Call Hugging Face ────────────────────────────────────────
-    const imageBytes = await generateImage(hfToken, prompt, sizeConfig.width, sizeConfig.height)
+    // ── 5. Call OpenAI ───────────────────────────────────────────────
+    const imageB64 = await generateImage(openaiKey, prompt, sizeConfig.size)
 
     // ── 6. Upload to R2 ──────────────────────────────────────────────
-    const key = `amos/media/${draft.content_item_id}/${mediaRow.id}.jpg`
-    const publicUrl = await uploadToR2(imageBytes, key)
+    const key = `amos/media/${draft.content_item_id}/${mediaRow.id}.png`
+    const publicUrl = await uploadToR2(imageB64, key)
 
     // ── 7. Mark ready, link to the draft ────────────────────────────
     await db.from('amos_media_assets').update({
@@ -310,25 +309,25 @@ function buildImagePrompt(args: {
   const notes = (brandKit?.design_notes as string) || ''
 
   const styleDescriptions: Record<string, string> = {
-    product_showcase: 'a clean product showcase layout with generous negative space around the subject',
-    promotional_banner: 'a bold promotional banner layout with a clear headline area',
-    hiring_announcement: 'a professional hiring/recruitment announcement layout',
-    marketplace_advertisement: 'a vibrant marketplace advertisement layout',
-    quote_card: 'a minimal quote-card layout with large readable typography space',
-    infographic: 'a structured infographic layout with clear visual hierarchy',
-    event_announcement: 'an eye-catching event announcement layout',
-    feature_announcement: 'a modern app-feature announcement layout',
+    product_showcase: 'a clean product showcase composition with generous negative space around the subject',
+    promotional_banner: 'a bold promotional scene with a clear focal point',
+    hiring_announcement: 'a professional hiring/recruitment scene',
+    marketplace_advertisement: 'a vibrant marketplace advertisement scene',
+    quote_card: 'a minimal, atmospheric background composition (this style may include a short quote as text)',
+    infographic: 'a structured, icon-driven visual composition',
+    event_announcement: 'an eye-catching event scene',
+    feature_announcement: 'a modern, clean scene representing the feature',
   }
 
   return [
-    `Professional marketing graphic for "${title}", a Zimbabwean marketplace app (PaMarket).`,
-    `Layout style: ${styleDescriptions[style] || styleDescriptions.marketplace_advertisement}, designed for ${placement}.`,
-    `Brand colors: navy blue (${primary}) and gold (${secondary}) as the dominant palette.`,
-    `Modern, professional typography style with clean layouts. High-resolution, polished, photo-realistic or high-quality flat-illustration style (not cartoonish, not low-effort clipart).`,
-    `Where people or scenes are shown, reflect Zimbabwean/Southern African context authentically.`,
+    `Professional marketing photograph/illustration for "${title}", promoting PaMarket, a Zimbabwean marketplace app.`,
+    `Depict the real subject matter described below as an actual photographic or illustrated SCENE — real people, real objects, real settings relevant to the topic. Style: ${styleDescriptions[style] || styleDescriptions.marketplace_advertisement}, sized for ${placement}.`,
+    `Brand colors: navy blue (${primary}) and gold (${secondary}) as accent/background tones, not necessarily literal UI elements.`,
+    `High-resolution, polished, photo-realistic or high-quality editorial-illustration style (not cartoonish, not low-effort clipart).`,
+    `Reflect Zimbabwean/Southern African people, places, and context authentically.`,
     notes ? `Additional brand guidance: ${notes}.` : '',
-    `Content context (do not render this text literally on the image unless it reads as a short headline naturally): ${draftBody.slice(0, 300)}`,
-    `No watermarks, no placeholder text, no lorem ipsum, no misspelled text.`,
+    `What this image should depict, based on the actual post content: ${draftBody.slice(0, 300)}`,
+    `IMPORTANT: Do NOT depict a phone, app screen, user interface, or any mockup with on-screen text — those consistently render as garbled, illegible gibberish and must be avoided entirely. Do not include any readable text, logos, or captions in the image at all, unless this is explicitly a quote-card style. The scene alone should communicate the subject; the caption lives in the post text, not the image.`,
   ].filter(Boolean).join(' ')
 }
 
@@ -338,59 +337,33 @@ function buildImagePrompt(args: {
 // short wait rather than surfaced as a failure on the first attempt. An
 // explicit per-attempt timeout keeps a hung request from running until
 // the platform kills the whole function with no useful error message.
-const HF_REQUEST_TIMEOUT_MS = 45_000
-const HF_COLD_START_MAX_RETRIES = 3
-const HF_COLD_START_RETRY_DELAY_MS = 8_000
+async function generateImage(apiKey: string, prompt: string, size: string): Promise<string> {
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      prompt,
+      size,
+      n: 1,
+    }),
+  })
 
-async function generateImage(token: string, prompt: string, width: number, height: number): Promise<Uint8Array> {
-  // api-inference.huggingface.co (the older direct-inference host) has
-  // been retired — confirmed live via DNS failure — HF now routes all
-  // Inference Providers traffic through router.huggingface.co instead.
-  const url = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`
-
-  for (let attempt = 0; attempt <= HF_COLD_START_MAX_RETRIES; attempt++) {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), HF_REQUEST_TIMEOUT_MS)
-    let res: Response
-    try {
-      res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'authorization': `Bearer ${token}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({ inputs: prompt, parameters: { width, height } }),
-        signal: controller.signal,
-      })
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Hugging Face image generation timed out after ${HF_REQUEST_TIMEOUT_MS / 1000}s`)
-      }
-      throw error
-    } finally {
-      clearTimeout(timeout)
-    }
-
-    if (res.status === 503 && attempt < HF_COLD_START_MAX_RETRIES) {
-      console.warn(`[amos-media-generator] Hugging Face model loading (503), retrying in ${HF_COLD_START_RETRY_DELAY_MS}ms (attempt ${attempt + 1}/${HF_COLD_START_MAX_RETRIES})`)
-      await new Promise((resolve) => setTimeout(resolve, HF_COLD_START_RETRY_DELAY_MS))
-      continue
-    }
-
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '')
-      throw new Error(`Hugging Face image API error ${res.status}: ${errBody.slice(0, 300)}`)
-    }
-
-    const buf = await res.arrayBuffer()
-    if (!buf.byteLength) throw new Error('Hugging Face returned an empty image response')
-    return new Uint8Array(buf)
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '')
+    throw new Error(`OpenAI image API error ${res.status}: ${errBody.slice(0, 300)}`)
   }
 
-  throw new Error('Hugging Face model did not finish loading after retries — try again shortly.')
+  const data = await res.json()
+  const b64 = data?.data?.[0]?.b64_json
+  if (!b64) throw new Error('OpenAI response had no image data')
+  return b64
 }
 
-async function uploadToR2(imageBytes: Uint8Array, key: string): Promise<string> {
+async function uploadToR2(base64Data: string, key: string): Promise<string> {
   const s3 = new S3Client({
     region: 'auto',
     endpoint: `https://${Deno.env.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`,
@@ -400,13 +373,14 @@ async function uploadToR2(imageBytes: Uint8Array, key: string): Promise<string> 
     },
   })
 
+  const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))
   const bucket = Deno.env.get('R2_PUBLIC_BUCKET')!
 
   await s3.send(new PutObjectCommand({
     Bucket: bucket,
     Key: key,
-    Body: imageBytes,
-    ContentType: 'image/jpeg',
+    Body: bytes,
+    ContentType: 'image/png',
   }))
 
   return `${Deno.env.get('R2_PUBLIC_URL')}/${key}`
