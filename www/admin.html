@@ -129,7 +129,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;b
 .search-input:focus{border-color:var(--accent);}
 
 /* ── TABLE ── */
-.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden;box-shadow:0 4px 18px rgba(21,33,59,.035);}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:15px;overflow-x:auto;overflow-y:hidden;box-shadow:0 4px 18px rgba(21,33,59,.035);}
 .tbl{width:100%;border-collapse:collapse;}
 .tbl th{padding:10px 14px;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid var(--border);background:rgba(255,255,255,.03);}
 .tbl td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
@@ -8757,7 +8757,7 @@ function renderAmosCalendar(){
   if(AMOS.schedule===null){ document.getElementById('mainContent').innerHTML='<div class="loading-msg">Loading…</div>'; return; }
   var dueCount = (AMOS.schedule||[]).filter(function(s){ return s.status==='pending' && new Date(s.scheduled_for)<=new Date(); }).length;
   var html = '<div class="sec-head"><div class="sec-title">Content Calendar / Publishing Queue</div><button class="btn-send" id="amosDispatchBtn" onclick="runAmosDispatchNow()">Process Due Now'+(dueCount?' ('+dueCount+')':'')+'</button></div>';
-  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Approved, scheduled posts publish automatically within a few minutes of their scheduled time (Facebook, Instagram, and Push are live). "Process Due Now" triggers an immediate check instead of waiting. LinkedIn, TikTok, and X hand off to a human to post manually until their own integrations are connected.</div>';
+  html += '<div style="font-size:11px;color:var(--sub2);padding:0 0 14px">Approved, scheduled posts publish automatically within a few minutes of their scheduled time (Facebook, Instagram, Push, and TikTok are live — TikTok lands in the account\'s inbox for a final manual tap to post). "Process Due Now" triggers an immediate check instead of waiting. LinkedIn and X hand off to a human to post manually until their own integrations are connected.</div>';
   if(!AMOS.schedule.length){
     html += '<div class="empty-msg">Nothing scheduled yet. Approve a draft in the Approval Queue, then use "Schedule All Approved" to add it here.</div>';
   } else {
@@ -8769,7 +8769,7 @@ function renderAmosCalendar(){
       var atCap = s.status==='failed' && (s.attempts||0)>=(s.max_attempts||5);
       html += '<td style="font-size:12px;color:'+(atCap?'var(--red)':'var(--sub)')+'">'+(s.attempts||0)+' / '+(s.max_attempts||5)+(atCap?' (max reached)':'')+'</td>';
       html += '<td style="white-space:nowrap">';
-      var IMAGE_CHANNELS_CAL = {facebook:1,instagram:1,linkedin:1,x:1,website:1};
+      var IMAGE_CHANNELS_CAL = {facebook:1,instagram:1,linkedin:1,x:1,website:1,tiktok:1};
       if(IMAGE_CHANNELS_CAL[d.channel] && s.status==='pending'){
         var media = d.amos_media_assets;
         if(media && media.status==='ready' && media.url){
