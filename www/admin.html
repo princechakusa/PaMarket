@@ -8590,7 +8590,7 @@ function renderAmosApprovalQueue(){
           if(d.performance_rationale) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px"><b>Why this should perform well:</b> '+esc(d.performance_rationale)+'</div>';
           if(d.hashtags && d.hashtags.length) html += '<div style="font-size:11.5px;color:var(--sub);margin-top:4px"><b>Hashtags:</b> '+esc(d.hashtags.join(' '))+'</div>';
           html += '<div style="font-size:10.5px;color:var(--sub2);margin-top:6px">'+esc(d.ai_provider||'')+(d.ai_model?' · '+esc(d.ai_model):'')+(d.prompt_version?' · prompt '+esc(d.prompt_version):'')+'</div>';
-          var IMAGE_CHANNELS = {facebook:1,instagram:1,linkedin:1,x:1,website:1};
+          var IMAGE_CHANNELS = {facebook:1,instagram:1,linkedin:1,x:1,website:1,tiktok:1};
           if(IMAGE_CHANNELS[d.channel]){
             html += renderAmosMediaBlock(d);
           }
@@ -8834,6 +8834,11 @@ async function generateAmosImage(draftId, channel){
 // to generate one with AI, or attach the admin's own via the media modal.
 function renderAmosMediaBlock(d){
   var media = d.amos_media_assets;
+  // TikTok has no AI video generation in AMOS — only a manually attached
+  // video makes sense there, so the "Generate with AI" button (which only
+  // ever produces an image) is hidden for this channel to avoid producing
+  // media the TikTok publisher would reject at dispatch time.
+  var canGenerate = d.channel !== 'tiktok';
   var html = '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)">';
   if(media && media.status==='ready' && media.url){
     if(media.asset_type==='video'){
@@ -8842,7 +8847,7 @@ function renderAmosMediaBlock(d){
       html += '<img src="'+esc(media.url)+'" style="max-width:280px;width:100%;border-radius:8px;display:block;margin-bottom:8px" alt="Attached media">';
     }
     html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
-    html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Regenerate with AI</button>';
+    if(canGenerate) html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Regenerate with AI</button>';
     html += '<button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Replace</button>';
     html += '</div>';
   } else if(media && media.status==='generating'){
@@ -8852,8 +8857,8 @@ function renderAmosMediaBlock(d){
       html += '<div style="font-size:11.5px;color:var(--red);margin-bottom:6px">Image generation failed'+(media.error?': '+esc(media.error):'')+'</div>';
     }
     html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
-    html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Generate Image with AI</button>';
-    html += '<button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Attach My Own</button>';
+    if(canGenerate) html += '<button class="ab ab-view" onclick="generateAmosImage(\''+d.id+'\',\''+esc(d.channel)+'\')">Generate Image with AI</button>';
+    html += '<button class="ab ab-view" onclick="openAmosMediaModal(\''+d.id+'\',\''+esc(d.channel)+'\',\''+(d.content_item_id||'')+'\')">Attach My Own</button>'+(d.channel==='tiktok'?' <span style="font-size:10.5px;color:var(--sub2);align-self:center">Video required</span>':'');
     html += '</div>';
   }
   html += '</div>';
