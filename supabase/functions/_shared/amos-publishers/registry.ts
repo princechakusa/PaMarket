@@ -20,7 +20,7 @@ export function buildPublisherRegistry(db: SupabaseClient): Record<string, Conte
     facebook: new FacebookPublisher(db),
     instagram: new InstagramPublisher(db),
     linkedin: new LinkedInPublisher(db),
-    tiktok: new TikTokPublisher(),
+    tiktok: new TikTokPublisher(db),
     x: new XPublisher(),
     push: new PushPublisher(),
     email: new EmailPublisher(db),

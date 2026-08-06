@@ -9208,6 +9208,19 @@ async function saveAmosFacebookConnection(){
   closeModal();
   loadAmosHealth().then(renderAmosHealth);
 }
+async function connectAmosTikTok(){
+  if(!requirePerm('*')) return;
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if(!session){ toast('Session expired — please log in again','error'); return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-tiktok-oauth?step=start', {
+      headers:{ 'Authorization':'Bearer '+session.access_token }
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if(!res.ok || !body.authorizeUrl){ toast('Error: '+(body.error||('Server responded '+res.status)),'error'); return; }
+    window.location.href = body.authorizeUrl;
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
 function connectAmosLinkedIn(){
   if(!requirePerm('*')) return;
   openModal(
@@ -9266,7 +9279,7 @@ function renderAmosHealth(){
   (AMOS.integrations||[]).forEach(function(i){
     var badge = i.status==='connected' ? '<span class="badge badge-active">connected</span>' : i.status==='error' ? '<span class="badge badge-rejected">error</span>' : '<span class="badge badge-pending">not connected</span>';
     html += '<tr><td>'+amosChanBadge(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td>';
-    var connectFns = { facebook:'connectAmosFacebook', linkedin:'connectAmosLinkedIn' };
+    var connectFns = { facebook:'connectAmosFacebook', linkedin:'connectAmosLinkedIn', tiktok:'connectAmosTikTok' };
     html += '<td>'+(connectFns[i.provider] ? (i.status==='connected' ? '<button class="ab ab-reject" onclick="disconnectAmosIntegration(\''+i.provider+'\')">Disconnect</button>' : '<button class="ab ab-view" onclick="'+connectFns[i.provider]+'()">Connect</button>') : '<span style="color:var(--sub2);font-size:11px">no adapter yet</span>')+'</td>';
     html += '</tr>';
   });
@@ -9613,6 +9626,19 @@ document.addEventListener('keydown', function(e){
 
 // ── Session init ──────────────────────────────────────────
 (async function init(){
+  // Redirect-back from amos-tiktok-oauth's callback leg — the URL is
+  // decorated with ?tiktok_connected=1 or ?tiktok_error=... rather than
+  // the OAuth flow ending in-page, since it's a real cross-site
+  // redirect through TikTok's own login screen. Cleaned from the URL
+  // immediately so a page refresh doesn't re-show the toast.
+  var qp = new URLSearchParams(window.location.search);
+  if(qp.has('tiktok_connected')){
+    toast('TikTok connected — scheduled TikTok posts will now auto-publish');
+    history.replaceState(null,'',window.location.pathname);
+  } else if(qp.has('tiktok_error')){
+    toast('TikTok connection failed: '+qp.get('tiktok_error'),'error');
+    history.replaceState(null,'',window.location.pathname);
+  }
   if(!sb){ document.getElementById('loginWrap').style.display='flex'; return; }
   try {
     var res = await sb.auth.getSession();

@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     //     secret or they don't, so amos_integrations doesn't apply.
     // linkedin/tiktok/x remain stubs — not in either set — until their
     // own modules ship real adapters.
-    const CREDENTIAL_GATED_PLATFORMS = new Set(['facebook', 'instagram', 'linkedin'])
+    const CREDENTIAL_GATED_PLATFORMS = new Set(['facebook', 'instagram', 'linkedin', 'tiktok'])
     const { data: connectedIntegrations } = await db.from('amos_integrations').select('provider, status').eq('status', 'connected')
     const connectedPlatforms = new Set((connectedIntegrations || []).map((i) => i.provider).filter((p) => CREDENTIAL_GATED_PLATFORMS.has(p)))
     // Instagram shares Facebook's connection (see instagram.ts) — if
