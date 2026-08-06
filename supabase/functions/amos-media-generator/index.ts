@@ -418,6 +418,7 @@ async function generateImage(apiKey: string, prompt: string, size: string): Prom
       model: OPENAI_MODEL,
       prompt,
       size,
+      quality: 'high',
       n: 1,
     }),
   })
