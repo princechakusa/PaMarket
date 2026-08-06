@@ -64,7 +64,7 @@ const REAL_CATEGORIES = ['property','vehicles','rooms','electronics','jobs','fur
 const CAMPAIGN_TYPES = ['seasonal','promotional','spotlight','evergreen','urgent'] as const
 
 type Placement = {
-  channel: 'facebook' | 'instagram' | 'linkedin' | 'x' | 'website' | 'push' | 'email'
+  channel: 'facebook' | 'instagram' | 'linkedin' | 'x' | 'tiktok' | 'website' | 'push' | 'email'
   draftType: 'post' | 'article' | 'notification' | 'email'
   label: string
   instructions: string
@@ -78,6 +78,12 @@ const PLACEMENTS: Placement[] = [
   { channel: 'instagram', draftType: 'post', label: 'Instagram caption',
     instructions: 'Write an Instagram caption (punchy, visual language since it pairs with an image, 3-6 relevant hashtags at the end). Include a clear call to action.',
     maxTokens: 500 },
+  { channel: 'tiktok', draftType: 'post', label: 'TikTok caption',
+    // AMOS has no AI video generation yet — this writes only the caption/
+    // hashtags an admin pairs with a manually-attached video (Approval
+    // Queue "Attach My Own"), same as any other tiktok draft's body text.
+    instructions: 'Write a TikTok caption (short, punchy, trend-aware, energetic tone for a Zimbabwean audience, 3-5 relevant hashtags at the end). Include a clear call to action. This will be paired with a short vertical video, so write for that context, not a static image.',
+    maxTokens: 300 },
   { channel: 'linkedin', draftType: 'post', label: 'LinkedIn post',
     instructions: 'Write a LinkedIn post in a more professional/business tone (PaMarket as a growing Zimbabwean marketplace company), no hashtag spam (0-2 max). Include a clear call to action.',
     maxTokens: 500 },
