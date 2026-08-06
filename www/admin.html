@@ -9213,7 +9213,7 @@ async function connectAmosTikTok(){
   try {
     var session = (await sb.auth.getSession()).data.session;
     if(!session){ toast('Session expired — please log in again','error'); return; }
-    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-tiktok-oauth?step=start', {
+    var res = await fetch(SUPABASE_URL + '/functions/v1/amos-tiktok-oauth-start', {
       headers:{ 'Authorization':'Bearer '+session.access_token }
     });
     var body = await res.json().catch(function(){ return {}; });
@@ -9626,7 +9626,7 @@ document.addEventListener('keydown', function(e){
 
 // ── Session init ──────────────────────────────────────────
 (async function init(){
-  // Redirect-back from amos-tiktok-oauth's callback leg — the URL is
+  // Redirect-back from amos-tiktok-oauth-callback — the URL is
   // decorated with ?tiktok_connected=1 or ?tiktok_error=... rather than
   // the OAuth flow ending in-page, since it's a real cross-site
   // redirect through TikTok's own login screen. Cleaned from the URL
