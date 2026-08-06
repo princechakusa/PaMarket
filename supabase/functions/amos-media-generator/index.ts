@@ -368,7 +368,9 @@ async function writeSceneConcept(
 
   const prompt = `A marketing team needs ONE photograph concept for a social media post. Post topic: "${title}". Post copy: "${draftBody.slice(0, 500)}"
 
-Describe, in 2-3 plain sentences, ONE single, believable, coherent real-world scene (${styleGuidance[style] || styleGuidance.marketplace_advertisement}) that a camera could actually capture — not a collage of unrelated elements, not multiple disconnected subjects in one frame. It should feel like a real moment, grounded specifically in what this post is actually about. Do not mention brand names, logos, apps, phones, or any text/signage that would need to be rendered legibly. Respond with ONLY the scene description, nothing else — no preamble, no labels.`
+Describe, in 2-3 plain sentences, ONE single, believable, coherent real-world scene (${styleGuidance[style] || styleGuidance.marketplace_advertisement}) that a camera could actually capture — not a collage of unrelated elements, not multiple disconnected subjects in one frame. It should feel like a real moment, grounded specifically in what this post is actually about. Do not mention brand names, logos, apps, phones, or any text/signage that would need to be rendered legibly.
+
+Keep it simple on purpose: at most 1-2 people, clearly in focus, doing one clear action (not a crowd, not several separate interactions happening at once). Prefer a closer, simpler framing over a wide shot with lots of background detail, extra hands, or small distant objects; the more people and small objects a scene has, the more likely an AI image generator is to render them wrong. Only include as many props/tools/items as are essential to the topic, not a large collection or array of similar items laid out. Respond with ONLY the scene description, nothing else — no preamble, no labels.`
 
   try {
     const data = await callAnthropicWithRetry(anthropicKey, {
@@ -402,6 +404,7 @@ function buildImagePrompt(args: {
     `Scene: ${sceneConcept}`,
     `This is for PaMarket, a Zimbabwean marketplace app, promoting "${title}", sized for ${placement}. Subtly incorporate navy blue (${primary}) and gold (${secondary}) tones where natural (clothing, props, lighting) — do not force them unnaturally into the scene.`,
     `Any people depicted should reflect Zimbabwe's real population mix: predominantly Black African, with white and coloured (mixed-race) Zimbabweans also represented where a group or crowd is shown. Real-looking people, real lighting and textures.`,
+    `Anatomical accuracy is critical: each person must have exactly two eyes that are symmetrical, level, and looking in the same direction, natural-looking hands with five fingers each, and correctly proportioned limbs and faces. Any object or tool shown must be fully formed and structurally correct, not warped, melted, duplicated, or missing parts. If a detail cannot be rendered correctly, keep it out of frame or blurred in the background rather than showing it distorted.`,
     notes ? `Additional brand guidance: ${notes}.` : '',
     `Do NOT depict a phone, app screen, user interface, or any mockup with on-screen text — those consistently render as garbled, illegible gibberish. Do not include any readable text, logos, or captions in the image at all.`,
   ].filter(Boolean).join(' ')
