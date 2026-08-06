@@ -393,7 +393,11 @@ SEO VALUE SCORE: <0-100 if this is a blog/article placement with real search-ran
         console.log(`[amos-content-generator] ${placement.channel} draft written`)
       } catch (placementError) {
         summary.placements_failed.push(placement.channel)
-        const message = placementError instanceof Error ? placementError.message : String(placementError)
+        const message = placementError instanceof Error
+          ? placementError.message
+          : (placementError && typeof placementError === 'object' && 'message' in placementError)
+            ? String((placementError as { message: unknown }).message)
+            : String(placementError)
         summary.errors.push(`${placement.label}: ${message}`)
         console.error(`[amos-content-generator] ${placement.channel} failed:`, message)
       }
