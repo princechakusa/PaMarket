@@ -1,29 +1,33 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import type { ContentPublisher, DraftForPublish, PublishResult } from './types.ts'
 
-// Module 14 — real TikTok Content Posting API integration via
-// PULL_FROM_URL (TikTok fetches the video from a URL we give it — the
-// same R2 public URL pattern used for the video the admin attached to
-// the draft — rather than a separate chunked-upload flow).
+// Module 14 — real TikTok Content Posting API integration via the
+// Upload API (video.upload scope), not Direct Post (video.publish).
+//
+// video.publish requires a separate TikTok approval beyond what's
+// available to add from the app's Scopes list even with Content
+// Posting API added — confirmed live, only video.upload was offered.
+// Upload API shares content to the creator's TikTok inbox as a draft;
+// a human must open the TikTok app notification and tap through
+// TikTok's own posting flow to finish (status 'awaiting_manual_publish'
+// makes this explicit rather than silently claiming 'published'). This
+// is a deliberate interim step, not a workaround — request video.publish
+// from TikTok once this app has a real posting track record, then this
+// class can call /post/publish/video/init/ (Direct Post) instead of
+// /post/publish/inbox/video/init/ for a true one-click auto-publish; no
+// other change needed since the request/response shape is nearly
+// identical.
 //
 // Requires the connected TikTok account's own video domain to be
 // verified in the TikTok Developer Portal (Settings > URL Properties)
 // — R2's pub-*.r2.dev host specifically, since that's where AMOS's
 // attached videos are served from. An unverified domain gets rejected
-// with url_ownership_unverified before TikTok even starts downloading.
+// before TikTok even starts downloading.
 //
 // credentials_ref points to a Vault secret formatted as
 // "<openId>:<accessToken>:<refreshToken>" (set by amos-tiktok-oauth's
 // callback leg). Access tokens expire in 24h; this adapter refreshes
-// proactively on every publish call rather than tracking expiry times,
-// since TikTok posts are infrequent enough that the extra refresh call
-// is cheap and this avoids a whole separate expiry-tracking mechanism.
-//
-// privacy_level is SELF_ONLY (visible only to the connected account)
-// deliberately — until this app has passed TikTok's own review, posts
-// from an unaudited client are restricted to that visibility regardless
-// (TikTok enforces this server-side), so this default doesn't lose
-// anything today and stays a safe, intentional choice once audited too.
+// proactively on every call rather than tracking expiry times.
 const TIKTOK_STATUS_POLL_MAX_ATTEMPTS = 10
 const TIKTOK_STATUS_POLL_DELAY_MS = 3000
 
@@ -43,7 +47,7 @@ export class TikTokPublisher implements ContentPublisher {
       .maybeSingle()
 
     if (intError || !integration || integration.status !== 'connected' || !integration.credentials_ref) {
-      return { ok: false, status: 'failed', error: 'TikTok is not connected — connect it in AMOS System Health → API Manager (needs a TikTok login via OAuth) before scheduling TikTok posts to auto-publish.' }
+      return { ok: false, status: 'failed', error: 'TikTok is not connected — connect it in AMOS System Health → API Manager (needs a TikTok login via OAuth) before scheduling TikTok posts.' }
     }
 
     if (draft.mediaType !== 'video' || !draft.imageUrl) {
@@ -75,24 +79,17 @@ export class TikTokPublisher implements ContentPublisher {
     }
 
     try {
-      const initRes = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
+      const initRes = await fetch('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', {
         method: 'POST',
         headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json; charset=UTF-8' },
         body: JSON.stringify({
-          post_info: {
-            title: (draft.body || '').slice(0, 2200),
-            privacy_level: 'SELF_ONLY',
-            disable_duet: false,
-            disable_stitch: false,
-            disable_comment: false,
-          },
           source_info: { source: 'PULL_FROM_URL', video_url: draft.imageUrl },
         }),
       })
       const initBody = await initRes.json()
       const publishId = initBody?.data?.publish_id
       if (!initRes.ok || initBody?.error?.code !== 'ok' || !publishId) {
-        return { ok: false, status: 'failed', error: initBody?.error?.message || `TikTok publish init failed (${initRes.status})`, rawResponse: initBody }
+        return { ok: false, status: 'failed', error: initBody?.error?.message || `TikTok upload init failed (${initRes.status})`, rawResponse: initBody }
       }
 
       for (let attempt = 0; attempt < TIKTOK_STATUS_POLL_MAX_ATTEMPTS; attempt++) {
@@ -104,15 +101,20 @@ export class TikTokPublisher implements ContentPublisher {
         })
         const statusBody = await statusRes.json()
         const publishStatus = statusBody?.data?.status
-        if (publishStatus === 'PUBLISH_COMPLETE') {
-          return { ok: true, status: 'published', externalPostId: publishId, rawResponse: statusBody }
+        if (publishStatus === 'SEND_TO_USER_INBOX') {
+          // As good as it gets for the Upload API — content reached the
+          // creator's TikTok inbox; a human still has to open the app
+          // and tap through TikTok's own flow to actually publish it.
+          // 'awaiting_manual_publish' reflects that honestly instead of
+          // claiming this auto-published like Direct Post would.
+          return { ok: true, status: 'awaiting_manual_publish', externalPostId: publishId, rawResponse: statusBody }
         }
         if (publishStatus === 'FAILED') {
-          return { ok: false, status: 'failed', error: statusBody?.data?.fail_reason || 'TikTok reported the publish failed.', rawResponse: statusBody }
+          return { ok: false, status: 'failed', error: statusBody?.data?.fail_reason || 'TikTok reported the upload failed.', rawResponse: statusBody }
         }
-        // else PROCESSING_UPLOAD / PROCESSING_DOWNLOAD / SEND_TO_USER_INBOX — keep polling
+        // else PROCESSING_UPLOAD / PROCESSING_DOWNLOAD — keep polling
       }
-      return { ok: false, status: 'failed', error: 'TikTok publish did not finish processing in time — check the TikTok inbox for this account; it may still complete.' }
+      return { ok: false, status: 'failed', error: 'TikTok upload did not finish processing in time — check the TikTok inbox for this account; it may still complete.' }
     } catch (error) {
       return { ok: false, status: 'failed', error: error instanceof Error ? error.message : String(error) }
     }
@@ -143,9 +145,6 @@ export class TikTokPublisher implements ContentPublisher {
       p_provider: 'tiktok', p_secret_name: credentialsRef, p_secret_value: newSecretValue,
     })
     if (setError) {
-      // The refresh itself succeeded — don't fail the whole publish over
-      // a storage hiccup, but log loudly since the NEXT refresh attempt
-      // will fail with this now-stale refresh token if it isn't stored.
       console.error('[TikTokPublisher] refreshed token but failed to persist it:', setError.message)
     }
 
