@@ -9208,6 +9208,28 @@ async function saveAmosFacebookConnection(){
   closeModal();
   loadAmosHealth().then(renderAmosHealth);
 }
+function connectAmosLinkedIn(){
+  if(!requirePerm('*')) return;
+  openModal(
+    '<div style="font-size:15px;font-weight:800;margin-bottom:10px">Connect LinkedIn</div>'+
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">Requires an organization access token with w_organization_social permission (needs LinkedIn\'s Community Management API review — 1-4+ weeks — before it actually publishes). Stored in Supabase Vault — never shown again after saving.</div>'+
+    '<div style="margin-bottom:8px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Organization ID</label><input id="amosLiOrgId" class="search-input" style="width:100%" placeholder="e.g. 12345678 (from your Company Page admin URL)"></div>'+
+    '<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:4px">Access Token</label><input id="amosLiToken" type="password" class="search-input" style="width:100%" placeholder="AQXxxxx..."></div>'+
+    '<div style="display:flex;gap:8px"><button class="btn-send" onclick="saveAmosLinkedInConnection()">Connect</button><button class="ab ab-view" onclick="closeModal()">Cancel</button></div>'
+  );
+}
+async function saveAmosLinkedInConnection(){
+  var orgId = (document.getElementById('amosLiOrgId')||{}).value;
+  var token = (document.getElementById('amosLiToken')||{}).value;
+  if(!orgId || !token){ toast('Both fields are required','error'); return; }
+  var orgUrn = 'urn:li:organization:'+orgId.trim();
+  var r = await sb.rpc('amos_set_integration_credential', { p_provider:'linkedin', p_secret_name:'linkedin_org_token', p_secret_value: orgUrn+':'+token.trim() });
+  if(r.error){ toast('Error: '+r.error.message,'error'); return; }
+  auditLog('connect_amos_integration','amos_integrations','linkedin',null,{status:'connected'},null);
+  toast('LinkedIn connected — scheduled LinkedIn posts will now auto-publish (once LinkedIn\'s own review is approved)');
+  closeModal();
+  loadAmosHealth().then(renderAmosHealth);
+}
 async function disconnectAmosIntegration(provider){
   if(!requirePerm('*')) return;
   var ok = await confirm2('Disconnect '+provider.charAt(0).toUpperCase()+provider.slice(1)+'?','Scheduled posts for this platform will fall back to manual publishing until reconnected.','Disconnect','red',false);
@@ -9244,7 +9266,8 @@ function renderAmosHealth(){
   (AMOS.integrations||[]).forEach(function(i){
     var badge = i.status==='connected' ? '<span class="badge badge-active">connected</span>' : i.status==='error' ? '<span class="badge badge-rejected">error</span>' : '<span class="badge badge-pending">not connected</span>';
     html += '<tr><td>'+amosChanBadge(i.provider)+'</td><td>'+badge+(i.auto_disabled?' <span class="badge badge-rejected" style="font-size:9px">auto-disabled</span>':'')+'</td><td>'+i.consecutive_failures+'</td><td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.last_success_at)+'</td><td style="font-size:12px;color:var(--sub)">'+esc(i.last_error||'—')+'</td>';
-    html += '<td>'+(i.provider==='facebook' ? (i.status==='connected' ? '<button class="ab ab-reject" onclick="disconnectAmosIntegration(\'facebook\')">Disconnect</button>' : '<button class="ab ab-view" onclick="connectAmosFacebook()">Connect</button>') : '<span style="color:var(--sub2);font-size:11px">no adapter yet</span>')+'</td>';
+    var connectFns = { facebook:'connectAmosFacebook', linkedin:'connectAmosLinkedIn' };
+    html += '<td>'+(connectFns[i.provider] ? (i.status==='connected' ? '<button class="ab ab-reject" onclick="disconnectAmosIntegration(\''+i.provider+'\')">Disconnect</button>' : '<button class="ab ab-view" onclick="'+connectFns[i.provider]+'()">Connect</button>') : '<span style="color:var(--sub2);font-size:11px">no adapter yet</span>')+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
