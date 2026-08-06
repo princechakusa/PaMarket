@@ -76,7 +76,11 @@ Deno.serve(async (req) => {
     }
 
     const secretValue = `${tokenBody.open_id}:${tokenBody.access_token}:${tokenBody.refresh_token}`
-    const { error: setError } = await db.rpc('amos_set_integration_credential', {
+    // Uses the _service variant (Module 15), not amos_set_integration_credential —
+    // that one requires is_admin_team(), which always fails here since this
+    // callback runs with no user session (TikTok's redirect carries none by
+    // design). The single-use `state` check above already authenticated this flow.
+    const { error: setError } = await db.rpc('amos_set_integration_credential_service', {
       p_provider: 'tiktok', p_secret_name: 'tiktok_oauth_tokens', p_secret_value: secretValue,
     })
     if (setError) {

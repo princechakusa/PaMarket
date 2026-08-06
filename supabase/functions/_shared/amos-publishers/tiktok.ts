@@ -141,7 +141,10 @@ export class TikTokPublisher implements ContentPublisher {
     }
 
     const newSecretValue = `${body.open_id}:${body.access_token}:${body.refresh_token}`
-    const { error: setError } = await this.db.rpc('amos_set_integration_credential', {
+    // _service variant (Module 15) — this runs from the dispatcher, which is
+    // called by cron with no user session; amos_set_integration_credential's
+    // is_admin_team() check would always fail here.
+    const { error: setError } = await this.db.rpc('amos_set_integration_credential_service', {
       p_provider: 'tiktok', p_secret_name: credentialsRef, p_secret_value: newSecretValue,
     })
     if (setError) {
