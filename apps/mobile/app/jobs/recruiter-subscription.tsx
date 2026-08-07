@@ -11,8 +11,10 @@ import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
-import { purchaseProduct, restoreAllPurchases } from "../../lib/iap";
+import { purchaseProduct, restoreAllPurchases, fetchSubscriptionDisplayPrices } from "../../lib/iap";
 import { RECRUITER_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
+import { LegalDocSheet } from "../../components/LegalDocSheet";
+import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 
 const PLAN_ORDER = ["free", "recruiter"];
 
@@ -41,8 +43,18 @@ export default function RecruiterSubscriptionScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [displayPrices, setDisplayPrices] = useState<Record<string, string>>({});
+  const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Recruiter Plan" });
+
+  // Guideline 3.1.2(c): the price must be visible on the paywall itself
+  // before purchase — pulled live from the store so it's real and
+  // localized rather than a hardcoded USD estimate that could drift out
+  // of sync with what's actually charged.
+  useEffect(() => {
+    fetchSubscriptionDisplayPrices(Object.keys(RECRUITER_SUBSCRIPTION_PRODUCTS)).then(setDisplayPrices);
+  }, []);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -134,7 +146,9 @@ export default function RecruiterSubscriptionScreen() {
                     </View>
                   ) : null}
                 </View>
-                <Text style={styles.planPrice}>{plan.price === 0 ? "Free" : `$${plan.price}/mo`}</Text>
+                <Text style={styles.planPrice}>
+                  {plan.price === 0 ? "Free" : `${displayPrices[PRODUCT_ID_BY_PLAN[id]] ?? `$${plan.price}`} / month`}
+                </Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.featuresBlock}>
@@ -178,7 +192,24 @@ export default function RecruiterSubscriptionScreen() {
         >
           {isRestoring ? <ActivityIndicator color={color.brand} /> : <Text style={styles.restoreButtonText}>Restore Purchases</Text>}
         </Pressable>
+
+        {/* Guideline 3.1.2(c): functional Terms of Use / Privacy Policy
+            links must be present on the subscription screen itself. */}
+        <Text style={styles.legalNote}>
+          Subscriptions renew monthly until cancelled, billed through the App Store or Google Play. Manage or cancel
+          any time from your device's subscription settings. By subscribing you agree to our{" "}
+          <Text style={styles.legalLink} onPress={() => setLegalDoc(TERMS)}>
+            Terms of Use
+          </Text>{" "}
+          and{" "}
+          <Text style={styles.legalLink} onPress={() => setLegalDoc(PRIVACY)}>
+            Privacy Policy
+          </Text>
+          .
+        </Text>
       </ScrollView>
+
+      <LegalDocSheet doc={legalDoc} visible={legalDoc != null} onClose={() => setLegalDoc(null)} />
     </View>
   );
 }
@@ -228,5 +259,7 @@ function buildStyles(color: ColorPalette) {
   upgradeButtonText: { color: color.textOnBrand, fontSize: 13.5, fontWeight: "700" },
   restoreButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 4 },
   restoreButtonText: { fontSize: 13, fontWeight: "700", color: color.brand },
+  legalNote: { fontSize: 11.5, color: color.textMuted, lineHeight: 17, marginTop: 20, paddingHorizontal: 4 },
+  legalLink: { color: color.brand, fontWeight: "700" },
   });
 }

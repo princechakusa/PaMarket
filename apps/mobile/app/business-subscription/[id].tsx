@@ -9,9 +9,11 @@ import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { purchaseProduct, restoreAllPurchases } from "../../lib/iap";
+import { purchaseProduct, restoreAllPurchases, fetchSubscriptionDisplayPrices } from "../../lib/iap";
 import { SHOP_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
 import { deepLinkToSubscriptions } from "expo-iap";
+import { LegalDocSheet } from "../../components/LegalDocSheet";
+import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 
 const PLAN_ORDER = ["free", "starter", "pro", "premium"];
 
@@ -39,6 +41,14 @@ export default function BusinessSubscriptionScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [displayPrices, setDisplayPrices] = useState<Record<string, string>>({});
+  const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
+
+  // Guideline 3.1.2(c): the price (real, localized — not a hardcoded USD
+  // estimate) must be visible on the paywall itself before purchase.
+  useEffect(() => {
+    fetchSubscriptionDisplayPrices(Object.keys(SHOP_SUBSCRIPTION_PRODUCTS)).then(setDisplayPrices);
+  }, []);
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
@@ -167,6 +177,11 @@ export default function BusinessSubscriptionScreen() {
                 </View>
               ) : null}
             </View>
+            {planId !== "free" ? (
+              <Text style={styles.planPrice}>
+                {displayPrices[PRODUCT_ID_BY_PLAN[planId]] ?? "…"} / month
+              </Text>
+            ) : null}
             <View style={styles.featuresBlock}>
               <Text style={styles.featureText}>{plan.listingLimit < 0 ? "Unlimited" : plan.listingLimit} listings</Text>
               <Text style={styles.featureText}>{plan.staffLimit === Infinity ? "Unlimited" : plan.staffLimit} staff seats</Text>
@@ -222,6 +237,25 @@ export default function BusinessSubscriptionScreen() {
           {isRestoring ? <ActivityIndicator color={tones.brand} /> : <Text style={styles.restoreButtonText}>Restore Purchases</Text>}
         </Pressable>
       ) : null}
+
+      {/* Guideline 3.1.2(c): functional Terms of Use / Privacy Policy links
+          must be present on the subscription screen itself, not just
+          reachable elsewhere in the app. Subscriptions renew monthly and
+          bill through the App Store / Google Play until cancelled. */}
+      <Text style={styles.legalNote}>
+        Subscriptions renew monthly until cancelled, billed through the App Store or Google Play. Manage or cancel any
+        time via "Manage subscription" above. By subscribing you agree to our{" "}
+        <Text style={styles.legalLink} onPress={() => setLegalDoc(TERMS)}>
+          Terms of Use
+        </Text>{" "}
+        and{" "}
+        <Text style={styles.legalLink} onPress={() => setLegalDoc(PRIVACY)}>
+          Privacy Policy
+        </Text>
+        .
+      </Text>
+
+      <LegalDocSheet doc={legalDoc} visible={legalDoc != null} onClose={() => setLegalDoc(null)} />
     </ScrollView>
   );
 }
@@ -261,5 +295,8 @@ function buildStyles(color: ColorPalette) {
     downgradeButtonText: { fontSize: 12.5, fontWeight: "700", color: color.text },
     restoreButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center", marginTop: 8 },
     restoreButtonText: { fontSize: 13, fontWeight: "700", color: color.brand },
+    planPrice: { fontSize: 15, fontWeight: "800", color: color.text, marginBottom: 8 },
+    legalNote: { fontSize: 11.5, color: color.textMuted, lineHeight: 17, marginTop: 20, paddingHorizontal: 4 },
+    legalLink: { color: color.brand, fontWeight: "700" },
   });
 }

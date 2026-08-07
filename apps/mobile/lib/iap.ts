@@ -206,6 +206,21 @@ export async function teardownIAP() {
   }
 }
 
+// Apple Guideline 3.1.2(c) requires the price to be shown on the paywall
+// itself before purchase, not just left to the system purchase-confirmation
+// sheet — this pulls the real, already-localized price/currency from the
+// store (StoreKit/Play Billing) rather than a hardcoded USD estimate, so it
+// respects the buyer's actual region and currency automatically.
+export async function fetchSubscriptionDisplayPrices(productIds: string[]): Promise<Record<string, string>> {
+  try {
+    const products = (await fetchProducts({ skus: productIds, type: "subs" })) as ProductSubscription[];
+    return Object.fromEntries(products.map((p) => [p.id, p.displayPrice]));
+  } catch (e) {
+    console.warn("iap: fetchSubscriptionDisplayPrices failed", e);
+    return {};
+  }
+}
+
 async function ensureProductsLoaded(productId: string) {
   const wantsSubscription = isSubscriptionProduct(productId);
   if (wantsSubscription && !fetchedSubscriptions) {
