@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2601167334065110"
-     crossorigin="anonymous"></script>
 <meta charset="UTF-8">
 <base href="https://pamarketzw.com/">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -421,6 +419,12 @@ window.doSearch = window.doSearch || function(){
      it into every page between the FOOTER:START/END markers.
      Styling lives in css/site.css.
      ============================================================ -->
+<!-- ============================================================
+     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
+     Edit here only; run `node tools/build-includes.js` to stamp
+     it into every page between the FOOTER:START/END markers.
+     Styling lives in css/site.css.
+     ============================================================ -->
 <footer>
   <div class="foot-main">
     <div>
@@ -469,6 +473,8 @@ window.doSearch = window.doSearch || function(){
       <h5>Legal</h5>
       <a href="terms">Terms of Service</a>
       <a href="privacy">Privacy Policy</a>
+      <a href="cookie-policy">Cookie Policy</a>
+      <a href="#" data-cookie-settings>Cookie Settings</a>
       <a href="post-ad">Post a Free Ad</a>
       <a href="auth">Sign In</a>
       <a href="auth?mode=signup">Create Account</a>
@@ -479,11 +485,14 @@ window.doSearch = window.doSearch || function(){
     <div class="foot-bottom-links">
       <a href="terms">Terms</a>
       <a href="privacy">Privacy</a>
+      <a href="cookie-policy">Cookies</a>
+      <a href="#" data-cookie-settings>Cookie Settings</a>
       <a href="community-guidelines">Guidelines</a>
       <a href="contact">Contact</a>
     </div>
   </div>
 </footer>
+<script src="js/cookie-consent.js" defer></script>
 
 <script>window.__LISTING_ID="b929873a-071c-44a0-9d7b-b6adcb1c55ec";</script>
 <script>(function(){

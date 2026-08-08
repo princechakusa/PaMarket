@@ -155,7 +155,6 @@ function shell(o) {
     '  }).catch(function(){}); } }catch(e){}\n' +
     '})();</script>\n') : '';
   return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
-    '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2601167334065110"\n     crossorigin="anonymous"></script>\n' +
     '<meta charset="UTF-8">\n<base href="' + SITE + '/">\n' +
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
     '<title>' + esc(o.pageTitle) + '</title>\n' +
