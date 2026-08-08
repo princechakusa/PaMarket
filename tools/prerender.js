@@ -6,6 +6,13 @@
 //          r/<slug>-<id>.html  (rental vehicles — Vehicle)
 //          b/<slug>-<id>.html  (business shops — Store + ProfilePage)
 //
+// These are physical filenames only (GitHub Pages needs a real file on
+// disk). The preferred/canonical public URL is the extensionless form —
+// l/<slug>-<id>, r/<slug>-<id>, b/<slug>-<id> — which GitHub Pages serves
+// from the very same file automatically. PMSchema.listing/rental/business
+// -Url() (js/listing-schema.js) is the one place that builds the canonical
+// URL; -FilePath() below is the one place that builds the on-disk name.
+//
 // Runs in CI (sitemap.yml) where it fetches active rows via secrets and the
 // pages are committed, so the branch-based Pages deploy serves them.
 //
@@ -186,12 +193,14 @@ function renderListing(l, chrome) {
   // This static page IS the canonical — it's the one with real content
   // (detail.html is a client-rendered shell that's empty until Supabase
   // data loads, which makes Google's indexer do extra, unreliable work for
-  // no benefit). sitemap.xml already lists this l/*.html path, so this now
-  // matches: canonical, sitemap and JSON-LD url all agree on one URL.
-  // detail.html's own canonical now points HERE (PMSchema.listingUrl(l))
-  // so the two pages still agree — avoiding the "Duplicate, Google chose
-  // different canonical than user" alert (2026-07-28) the old self-vs-live
-  // split caused, just with the agreement flipped to the content-rich page.
+  // no benefit). PMSchema.listingUrl(l) is the extensionless public URL;
+  // sitemap.xml, detail.html's own canonical and this page's own canonical
+  // all agree on it (GitHub Pages serves this same file at both the
+  // extensionless URL and its on-disk l/*.html name — see PMSchema.
+  // listingFilePath). detail.html's own canonical points HERE too, so the
+  // two pages still agree — avoiding the "Duplicate, Google chose different
+  // canonical than user" alert (2026-07-28) the old self-vs-live split
+  // caused, just with the agreement flipped to the content-rich page.
   const url = PMSchema.listingUrl(l);
   const catLabel = PMSchema.catLabelOf(l);
   const loc = PMSchema.locOf(l);
@@ -438,9 +447,9 @@ async function main() {
     reviewsBySeller = await fetchReviewsBySeller(cfg);
   }
   for (const l of listings) l._reviews = (l.seller_id && reviewsBySeller[l.seller_id]) || [];
-  writeAll('l', listings, renderListing, chrome, function (l) { return PMSchema.listingPath(l); });
-  writeAll('r', rentals, renderRental, chrome, function (v) { return PMSchema.rentalPath(v); });
-  writeAll('b', businesses, renderBusiness, chrome, function (b) { return PMSchema.businessPath(b); });
+  writeAll('l', listings, renderListing, chrome, function (l) { return PMSchema.listingFilePath(l); });
+  writeAll('r', rentals, renderRental, chrome, function (v) { return PMSchema.rentalFilePath(v); });
+  writeAll('b', businesses, renderBusiness, chrome, function (b) { return PMSchema.businessFilePath(b); });
 }
 
 main().catch(function (e) { console.error('prerender failed:', e); process.exit(1); });

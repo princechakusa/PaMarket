@@ -37,12 +37,22 @@
       .replace(/-+$/g, '') || 'listing';
   }
 
-  // Canonical static path for a listing: l/<slug>-<id>.html
+  // Preferred public/canonical path for a listing: l/<slug>-<id> (no
+  // extension — matches every other indexable PaMarket URL, e.g. /terms,
+  // /browse). GitHub Pages serves the physical l/<slug>-<id>.html file
+  // (see listingFilePath) transparently at this extensionless path too, so
+  // this is a real, working URL — not a virtual one.
   function listingPath(l) {
-    return 'l/' + slugify(l.title) + '-' + l.id + '.html';
+    return 'l/' + slugify(l.title) + '-' + l.id;
   }
   function listingUrl(l) {
     return SITE + '/' + listingPath(l);
+  }
+  // Physical filename tools/prerender.js writes to disk. Must keep .html —
+  // GitHub Pages is a static host and needs a real file at this path; it
+  // then serves that same file at the extensionless listingPath() above.
+  function listingFilePath(l) {
+    return listingPath(l) + '.html';
   }
 
   function catLabelOf(l) { return CAT_LABELS[l.category] || l.category || 'Listing'; }
@@ -198,8 +208,10 @@
     var brand = (v.rental_brands && v.rental_brands.label) || '';
     return (((brand + ' ' + (v.model || '')).trim()) + (v.year ? ' ' + v.year : '')).trim() || 'Rental Vehicle';
   }
-  function rentalPath(v) { return 'r/' + slugify(rentalTitle(v)) + '-' + v.id + '.html'; }
+  function rentalPath(v) { return 'r/' + slugify(rentalTitle(v)) + '-' + v.id; }
   function rentalUrl(v) { return SITE + '/' + rentalPath(v); }
+  // Physical filename on disk — see listingFilePath's comment above.
+  function rentalFilePath(v) { return rentalPath(v) + '.html'; }
 
   function buildRentalSchema(v, canonicalUrl) {
     canonicalUrl = canonicalUrl || rentalUrl(v);
@@ -241,8 +253,10 @@
   }
 
   // ── Businesses / shops (businesses) ───────────────────────────────────────
-  function businessPath(b) { return 'b/' + slugify(b.name) + '-' + b.id + '.html'; }
+  function businessPath(b) { return 'b/' + slugify(b.name) + '-' + b.id; }
   function businessUrl(b) { return SITE + '/' + businessPath(b); }
+  // Physical filename on disk — see listingFilePath's comment above.
+  function businessFilePath(b) { return businessPath(b) + '.html'; }
 
   // Returns an ARRAY of schema objects: [ProfilePage, Store, BreadcrumbList].
   function buildBusinessSchema(b, url, reviews, products) {
@@ -312,11 +326,11 @@
 
   return {
     SITE: SITE, CAT_LABELS: CAT_LABELS,
-    slugify: slugify, listingPath: listingPath, listingUrl: listingUrl,
+    slugify: slugify, listingPath: listingPath, listingUrl: listingUrl, listingFilePath: listingFilePath,
     catLabelOf: catLabelOf, locOf: locOf,
     buildListingSchema: buildListingSchema, buildBreadcrumb: buildBreadcrumb,
-    rentalTitle: rentalTitle, rentalPath: rentalPath, rentalUrl: rentalUrl,
+    rentalTitle: rentalTitle, rentalPath: rentalPath, rentalUrl: rentalUrl, rentalFilePath: rentalFilePath,
     buildRentalSchema: buildRentalSchema, buildRentalBreadcrumb: buildRentalBreadcrumb,
-    businessPath: businessPath, businessUrl: businessUrl, buildBusinessSchema: buildBusinessSchema
+    businessPath: businessPath, businessUrl: businessUrl, businessFilePath: businessFilePath, buildBusinessSchema: buildBusinessSchema
   };
 });
