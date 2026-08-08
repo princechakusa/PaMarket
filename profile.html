@@ -592,6 +592,17 @@ async function init(){
 function showNotFound(){
   document.getElementById('loadingState').classList.add('hidden');
   document.getElementById('notFoundState').classList.remove('hidden');
+  // A missing/deleted/private profile still gets HTTP 200 from GitHub Pages
+  // (profile.html is a static file served for every ?id=, valid or not —
+  // this static host can't return a real 404 for a query-string route). To
+  // stop Google treating this as a Soft 404 (thin "not found" content on a
+  // 200 page), tell it not to index this URL — same technique already used
+  // by tools/prerender.js's hydrateListingId script for delisted listings.
+  document.title='Profile Not Found — PaMarket Zimbabwe';
+  const m=document.querySelector('meta[name=robots]');
+  if(m)m.setAttribute('content','noindex, nofollow');
+  const d=document.getElementById('metaDesc');
+  if(d)d.setAttribute('content','This profile could not be found on PaMarket.');
 }
 
 // Seller reviews — rating summary in the profile card + full review list.
