@@ -1,7 +1,21 @@
-import { STORE_NAME, BILLING_NAME, MANAGE_SUBSCRIPTION_PATH, REFUND_PATH, REFUND_POLICY_OWNER, ACCOUNT_NAME } from "./store-info";
+import {
+  STORE_NAME,
+  BILLING_NAME,
+  MANAGE_SUBSCRIPTION_PATH,
+  REFUND_PATH,
+  REFUND_POLICY_OWNER,
+  ACCOUNT_NAME,
+} from "./store-info";
+
+export const TERMS_URL = "https://pamarketzw.com/terms";
+export const PRIVACY_URL = "https://pamarketzw.com/privacy";
 
 export type LegalSection = { heading: string; body: string };
-export type LegalDoc = { title: string; updated: string; sections: LegalSection[] };
+export type LegalDoc = {
+  title: string;
+  updated: string;
+  sections: LegalSection[];
+};
 export type LegalDocKey =
   | "terms_of_use"
   | "privacy_policy"
@@ -246,7 +260,7 @@ export const COMMUNITY_GUIDELINES: LegalDoc = {
     },
     {
       heading: "9. Fraud and Scam Awareness",
-      body: "PaMarket is a free platform and we cannot screen every user. Protect yourself: advance fee fraud — if a buyer asks you to send an item before receiving payment, or offers to overpay by cheque and asks you to refund the difference, this is a scam — decline and report; fake rental deposits — never pay a deposit for a property before physically viewing it and verifying the landlord owns or manages it; too-good-to-be-true prices — a brand new iPhone for USD 50 is not a bargain, it is stolen or non-existent — walk away; urgency pressure — scammers create false urgency (\"I leave the country today, pay now\") — take your time, legitimate sellers will wait; impersonation — if someone claims to be a PaMarket employee or admin asking for your password or payment, this is a scam — PaMarket will never contact you through chat asking for payment or credentials.",
+      body: 'PaMarket is a free platform and we cannot screen every user. Protect yourself: advance fee fraud — if a buyer asks you to send an item before receiving payment, or offers to overpay by cheque and asks you to refund the difference, this is a scam — decline and report; fake rental deposits — never pay a deposit for a property before physically viewing it and verifying the landlord owns or manages it; too-good-to-be-true prices — a brand new iPhone for USD 50 is not a bargain, it is stolen or non-existent — walk away; urgency pressure — scammers create false urgency ("I leave the country today, pay now") — take your time, legitimate sellers will wait; impersonation — if someone claims to be a PaMarket employee or admin asking for your password or payment, this is a scam — PaMarket will never contact you through chat asking for payment or credentials.',
     },
     {
       heading: "10. Safe Transactions",
@@ -429,7 +443,7 @@ export const JOB_PLATFORM_TERMS: LegalDoc = {
     },
     {
       heading: "2. Employer Obligations",
-      body: "As a verified employer you agree to: post only genuine vacancies that exist within your organisation; never charge job seekers any fee to apply, register, attend an interview, complete a test, purchase equipment, or be placed — this is unlawful recruitment under the Labour Act [Chapter 28:01] and grounds for immediate permanent ban and police referral; provide an honest job title, accurate salary range or \"competitive\", correct location, and clear role description; not post the same vacancy more than once in the same 30-day period; respond to applicants within a reasonable timeframe; remove or mark any vacancy as \"Filled\" within 3 days of hiring; comply with all applicable Zimbabwean employment, health and safety, and anti-discrimination law.",
+      body: 'As a verified employer you agree to: post only genuine vacancies that exist within your organisation; never charge job seekers any fee to apply, register, attend an interview, complete a test, purchase equipment, or be placed — this is unlawful recruitment under the Labour Act [Chapter 28:01] and grounds for immediate permanent ban and police referral; provide an honest job title, accurate salary range or "competitive", correct location, and clear role description; not post the same vacancy more than once in the same 30-day period; respond to applicants within a reasonable timeframe; remove or mark any vacancy as "Filled" within 3 days of hiring; comply with all applicable Zimbabwean employment, health and safety, and anti-discrimination law.',
     },
     {
       heading: "3. Job Seeker Obligations",
@@ -491,7 +505,7 @@ export const FRAUD_PREVENTION_POLICY: LegalDoc = {
     },
     {
       heading: "1. Common Scams on Classified Platforms",
-      body: "Be alert to: non-delivery fraud — seller takes payment and disappears without delivering goods; advance fee fraud — buyer or seller asks you to pay a fee upfront to \"release\" payment or goods; overpayment scam — buyer sends more than the asking price and asks for change back; fake job scams — employer requests fees from job seekers disguised as training, uniforms, or background checks; rental deposit theft — fake landlords collect deposits for properties they do not own; vehicle scams — low prices for cars that do not exist or are heavily encumbered.",
+      body: 'Be alert to: non-delivery fraud — seller takes payment and disappears without delivering goods; advance fee fraud — buyer or seller asks you to pay a fee upfront to "release" payment or goods; overpayment scam — buyer sends more than the asking price and asks for change back; fake job scams — employer requests fees from job seekers disguised as training, uniforms, or background checks; rental deposit theft — fake landlords collect deposits for properties they do not own; vehicle scams — low prices for cars that do not exist or are heavily encumbered.',
     },
     {
       heading: "2. Warning Signs",
@@ -803,12 +817,23 @@ export const LEGAL_SECTIONS: LegalHubSection[] = [
   {
     id: "legal_terms",
     title: "Legal Terms",
-    docs: ["terms_of_use", "privacy_policy", "acceptable_use_policy", "cookie_data_policy", "community_guidelines"],
+    docs: [
+      "terms_of_use",
+      "privacy_policy",
+      "acceptable_use_policy",
+      "cookie_data_policy",
+      "community_guidelines",
+    ],
   },
   {
     id: "marketplace_rules",
     title: "Marketplace Rules",
-    docs: ["buying_selling_terms", "refund_dispute_policy", "job_platform_terms", "service_platform_terms"],
+    docs: [
+      "buying_selling_terms",
+      "refund_dispute_policy",
+      "job_platform_terms",
+      "service_platform_terms",
+    ],
   },
   {
     id: "trust_safety",
@@ -824,6 +849,11 @@ export const LEGAL_SECTIONS: LegalHubSection[] = [
   {
     id: "platform_extensions",
     title: "Platform Extensions",
-    docs: ["vehicle_listing_terms", "property_listing_terms", "verified_business_rules", "boosted_listing_rules"],
+    docs: [
+      "vehicle_listing_terms",
+      "property_listing_terms",
+      "verified_business_rules",
+      "boosted_listing_rules",
+    ],
   },
 ];

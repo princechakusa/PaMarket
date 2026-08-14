@@ -90,6 +90,7 @@ Deno.serve(async (req) => {
     const isVerification = key.startsWith('verification/')
     const isAd = key.startsWith('ads/')
     const isAmos = key.startsWith('amos/manual-media/')
+    const isBusiness = key.startsWith('businesses/')
     const isGet = verb === 'GET'
 
     if (isGet && isVerification) {
@@ -110,8 +111,23 @@ Deno.serve(async (req) => {
         if (profileErr || profile?.role !== 'admin') throw new Error('Forbidden')
       }
 
-      // Non-ad, non-amos PUTs remain scoped to the authenticated user's
-      // path prefix.
+      // Business logo/cover uploads are keyed by business ID, not user ID
+      // (businesses/{businessId}/...), since the RN app's business-edit
+      // screen has no per-user namespace to scope against. Verify the
+      // authenticated user actually owns that business instead.
+      if (isBusiness) {
+        const businessId = key.split('/')[1]
+        if (!businessId) throw new Error('Forbidden path')
+        const { data: business, error: bizErr } = await sb
+          .from('businesses')
+          .select('owner_user_id')
+          .eq('id', businessId)
+          .single()
+        if (bizErr || business?.owner_user_id !== user.id) throw new Error('Forbidden')
+      }
+
+      // Non-ad, non-amos, non-business PUTs remain scoped to the
+      // authenticated user's path prefix.
       const allowed = [
         `listings/${user.id}/`,
         `chat/${user.id}/`,
@@ -120,7 +136,7 @@ Deno.serve(async (req) => {
         `profiles/${user.id}/`,
         `rentals/${user.id}/`,
       ]
-      if (!isAd && !isAmos && !allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
+      if (!isAd && !isAmos && !isBusiness && !allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
       if (!contentType) throw new Error('contentType required for upload')
 
       // Validate content type against allowlist (AMOS additionally allows video)

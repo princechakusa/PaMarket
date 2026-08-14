@@ -180,7 +180,9 @@ begin
     return jsonb_build_object('ok', false, 'msg', 'Purchase is not in a verified state: ' || v_sub.status);
   end if;
 
-  if v_sub.subscription_state not in ('active', 'in_grace_period') then
+  if v_sub.subscription_state not in ('active', 'in_grace_period')
+     or v_sub.expiry_time is null
+     or v_sub.expiry_time <= now() then
     return jsonb_build_object('ok', true, 'granted', false, 'subscription_state', v_sub.subscription_state);
   end if;
 

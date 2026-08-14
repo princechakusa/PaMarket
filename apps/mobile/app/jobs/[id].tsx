@@ -1,12 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
+import {
+  color,
+  font,
+  radius,
+  shadow,
+  space,
+  type ColorPalette,
+} from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { businessInitials } from "../../lib/businesses";
@@ -14,9 +29,17 @@ import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
 import { isFeatured } from "../../lib/listings";
 import { JOB_BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
+import { useStoreProducts } from "../../lib/use-store-products";
+import { StoreProductOption } from "../../components/StoreProductOption";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { toast } from "../../components/ui/Toast";
-import { Badge, Button, Card, EmptyState, GlassBackButton } from "../../components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  GlassBackButton,
+} from "../../components/ui";
 
 type JobListing = {
   id: string;
@@ -31,11 +54,21 @@ type JobListing = {
   featured_until: string | null;
 };
 
-const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at,featured_until";
+const JOB_BOOST_PRODUCT_IDS = Object.keys(JOB_BOOST_PRODUCTS);
+
+const JOB_COLUMNS =
+  "id,seller_id,seller_name,title,description,city,province,photos,created_at,featured_until";
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
-    <Svg width={19} height={19} viewBox="0 0 24 24" fill={filled ? color.gold : "none"} stroke={color.textOnBrand} strokeWidth={2}>
+    <Svg
+      width={19}
+      height={19}
+      viewBox="0 0 24 24"
+      fill={filled ? color.gold : "none"}
+      stroke={color.textOnBrand}
+      strokeWidth={2}
+    >
       <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </Svg>
   );
@@ -51,7 +84,15 @@ function StarIcon({ c }: { c: string }) {
 
 type Styles = ReturnType<typeof buildStyles>;
 
-function MetaChip({ label, value, styles }: { label: string; value: string; styles: Styles }) {
+function MetaChip({
+  label,
+  value,
+  styles,
+}: {
+  label: string;
+  value: string;
+  styles: Styles;
+}) {
   if (!value) return null;
   return (
     <View style={styles.metaChip}>
@@ -63,7 +104,15 @@ function MetaChip({ label, value, styles }: { label: string; value: string; styl
   );
 }
 
-function DetailSection({ title, body, styles }: { title: string; body: string; styles: Styles }) {
+function DetailSection({
+  title,
+  body,
+  styles,
+}: {
+  title: string;
+  body: string;
+  styles: Styles;
+}) {
   if (!body.trim()) return null;
   return (
     <View style={styles.section}>
@@ -85,6 +134,13 @@ export default function JobDetailScreen() {
   const [savingBusy, setSavingBusy] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
+  const {
+    prices: boostPrices,
+    availableProductIds: availableBoostIds,
+    isLoading: isLoadingBoosts,
+    error: boostProductError,
+    retry: retryBoostProducts,
+  } = useStoreProducts(JOB_BOOST_PRODUCT_IDS, "consumable");
 
   useIOSNativeHeader({
     backgroundColor: color.brand,
@@ -102,7 +158,11 @@ export default function JobDetailScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    const { data } = await supabase.from("listings").select(JOB_COLUMNS).eq("id", id).maybeSingle();
+    const { data } = await supabase
+      .from("listings")
+      .select(JOB_COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
     setJob((data as JobListing) ?? null);
   }, [id]);
 
@@ -160,7 +220,10 @@ export default function JobDetailScreen() {
           </View>
         ) : null}
         <View style={styles.centered}>
-          <EmptyState title="Job not found" subtitle="This posting may have been closed or removed." />
+          <EmptyState
+            title="Job not found"
+            subtitle="This posting may have been closed or removed."
+          />
         </View>
       </View>
     );
@@ -168,26 +231,41 @@ export default function JobDetailScreen() {
 
   const company = jobCompany(job.description, job.seller_name);
   const isOwner = session?.user?.id === job.seller_id;
-  const location = [job.city, job.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+  const location = [job.city, job.province]
+    .filter(Boolean)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join(", ");
   const type = jobType(job.description);
   const expLabel = parseJobField(job.description, "EXPERIENCE");
   const industry = parseJobField(job.description, "INDUSTRY");
-  const about = parseJobField(job.description, "DESCRIPTION") || job.description || "";
+  const about =
+    parseJobField(job.description, "DESCRIPTION") || job.description || "";
   const responsibilities = parseJobField(job.description, "RESPONSIBILITIES");
   const requirements = parseJobField(job.description, "REQUIREMENTS");
   const howToApply = parseJobField(job.description, "HOW TO APPLY");
 
   async function buyBoost(productId: string) {
     if (!job) return;
+    if (!availableBoostIds.includes(productId)) {
+      toast(
+        "This job boost is unavailable from the store. Retry loading prices."
+      );
+      return;
+    }
     setPurchasingBoost(productId);
-    const result = await purchaseProduct(productId, { listingId: job.id });
-    setPurchasingBoost(null);
-    if (result.ok) {
-      setBoostPickerOpen(false);
-      toast("Job boosted!");
-      load();
-    } else if (result.error) {
-      toast(result.error);
+    try {
+      const result = await purchaseProduct(productId, { listingId: job.id });
+      if (result.ok) {
+        setBoostPickerOpen(false);
+        toast("Job boosted!");
+        load();
+      } else if (result.code === "user-cancelled") {
+        toast("Purchase cancelled");
+      } else {
+        toast(result.error);
+      }
+    } finally {
+      setPurchasingBoost(null);
     }
   }
 
@@ -217,41 +295,81 @@ export default function JobDetailScreen() {
         </View>
       ) : null}
 
-      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: 110 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: space.lg, paddingBottom: 110 }}
+      >
         <Card style={styles.headCard}>
           <View style={styles.headRow}>
             <View style={styles.logoWrap}>
               {job.photos?.[0] ? (
-                <Image source={{ uri: job.photos[0] }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+                <Image
+                  source={{ uri: job.photos[0] }}
+                  style={styles.logo}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
               ) : (
-                <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
+                <Text style={styles.logoInitial}>
+                  {businessInitials(company)}
+                </Text>
               )}
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.jobTitle}>{job.title}</Text>
               <Pressable
-                onPress={() => router.push({ pathname: "/business/[id]", params: { id: job.seller_id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/business/[id]",
+                    params: { id: job.seller_id },
+                  })
+                }
                 hitSlop={6}
               >
                 <Text style={styles.company}>{company}</Text>
               </Pressable>
-              {location ? <Text style={styles.location}>{location}</Text> : null}
+              {location ? (
+                <Text style={styles.location}>{location}</Text>
+              ) : null}
             </View>
           </View>
 
           <View style={styles.metaChips}>
-            <MetaChip label="Type" value={type || "Not specified"} styles={styles} />
-            <MetaChip label="Salary" value={jobSalary(job.description)} styles={styles} />
-            {expLabel ? <MetaChip label="Experience" value={expLabel} styles={styles} /> : null}
-            {industry ? <MetaChip label="Industry" value={industry} styles={styles} /> : null}
+            <MetaChip
+              label="Type"
+              value={type || "Not specified"}
+              styles={styles}
+            />
+            <MetaChip
+              label="Salary"
+              value={jobSalary(job.description)}
+              styles={styles}
+            />
+            {expLabel ? (
+              <MetaChip label="Experience" value={expLabel} styles={styles} />
+            ) : null}
+            {industry ? (
+              <MetaChip label="Industry" value={industry} styles={styles} />
+            ) : null}
           </View>
         </Card>
 
         <Card style={styles.detailsCard}>
           <DetailSection title="About the role" body={about} styles={styles} />
-          <DetailSection title="Responsibilities" body={responsibilities} styles={styles} />
-          <DetailSection title="Requirements" body={requirements} styles={styles} />
-          <DetailSection title="How to apply" body={howToApply} styles={styles} />
+          <DetailSection
+            title="Responsibilities"
+            body={responsibilities}
+            styles={styles}
+          />
+          <DetailSection
+            title="Requirements"
+            body={requirements}
+            styles={styles}
+          />
+          <DetailSection
+            title="How to apply"
+            body={howToApply}
+            styles={styles}
+          />
           {!about.trim() && !responsibilities && !requirements ? (
             <Text style={styles.sectionBody}>No description provided.</Text>
           ) : null}
@@ -262,45 +380,48 @@ export default function JobDetailScreen() {
             <View style={styles.boostActiveRow}>
               <StarIcon c={color.gold} />
               <Text style={styles.boostActiveText}>
-                Boosted until {new Date(job.featured_until as string).toLocaleDateString()}
+                Boosted until{" "}
+                {new Date(job.featured_until as string).toLocaleDateString()}
               </Text>
             </View>
           ) : (
             <>
-              <Pressable style={styles.boostBanner} onPress={() => setBoostPickerOpen((v) => !v)}>
+              <Pressable
+                style={styles.boostBanner}
+                onPress={() => setBoostPickerOpen((v) => !v)}
+              >
                 <View style={styles.boostBannerIcon}>
                   <StarIcon c={color.textOnBrand} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.boostBannerTitle}>Boost this job</Text>
-                  <Text style={styles.boostBannerSub}>Get more applicants with a featured listing</Text>
+                  <Text style={styles.boostBannerSub}>
+                    Get more applicants with a featured listing
+                  </Text>
                 </View>
                 <View style={styles.boostBannerBtn}>
-                  <Text style={styles.boostBannerBtnText}>Boost</Text>
+                  <Text style={styles.boostBannerBtnText}>View options</Text>
                 </View>
               </Pressable>
 
               {boostPickerOpen ? (
                 <View style={styles.boostOptions}>
                   {Object.entries(JOB_BOOST_PRODUCTS).map(([productId, p]) => (
-                    <Pressable
+                    <StoreProductOption
                       key={productId}
-                      style={[styles.boostOpt, p.days === 30 && styles.boostOptReco]}
-                      onPress={() => buyBoost(productId)}
-                      disabled={!!purchasingBoost}
-                    >
-                      {p.days === 30 ? (
-                        <View style={styles.boostOptTag}>
-                          <Text style={styles.boostOptTagText}>BEST VALUE</Text>
-                        </View>
-                      ) : null}
-                      <Text style={styles.boostOptDays}>{p.days} days</Text>
-                      {purchasingBoost === productId ? (
-                        <ActivityIndicator color={color.brand} />
-                      ) : (
-                        <Text style={styles.boostOptCta}>Boost</Text>
-                      )}
-                    </Pressable>
+                      title={`${p.days}-Day Job Boost`}
+                      price={boostPrices[productId]}
+                      description={`Promotes this job listing for ${p.days} days.`}
+                      buttonLabel="Boost Job"
+                      isLoading={isLoadingBoosts}
+                      isAvailable={availableBoostIds.includes(productId)}
+                      isPurchasing={purchasingBoost === productId}
+                      purchaseBlocked={!!purchasingBoost}
+                      error={boostProductError}
+                      recommended={p.days === 30}
+                      onPurchase={() => buyBoost(productId)}
+                      onRetry={retryBoostProducts}
+                    />
                   ))}
                 </View>
               ) : null}
@@ -309,25 +430,42 @@ export default function JobDetailScreen() {
         ) : null}
       </ScrollView>
 
-      <View style={[styles.ctaBar, { paddingBottom: insets.bottom + space.md }]}>
+      <View
+        style={[styles.ctaBar, { paddingBottom: insets.bottom + space.md }]}
+      >
         {isOwner ? (
           <View style={styles.ownerRow}>
             <View style={{ flex: 1 }}>
               <Button
                 label="Edit"
                 variant="secondary"
-                onPress={() => router.push({ pathname: "/jobs/edit/[id]", params: { id: job.id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/jobs/edit/[id]",
+                    params: { id: job.id },
+                  })
+                }
               />
             </View>
             <View style={{ flex: 1 }}>
               <Button
                 label="View applicants"
-                onPress={() => router.push({ pathname: "/jobs/applicants/[jobId]", params: { jobId: job.id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/jobs/applicants/[jobId]",
+                    params: { jobId: job.id },
+                  })
+                }
               />
             </View>
           </View>
         ) : (
-          <Button label="Apply now" variant="gold" size="lg" onPress={applyNow} />
+          <Button
+            label="Apply now"
+            variant="gold"
+            size="lg"
+            onPress={applyNow}
+          />
         )}
       </View>
     </View>
@@ -336,123 +474,146 @@ export default function JobDetailScreen() {
 
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: color.bg },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: color.bg },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: space.md,
-    backgroundColor: color.brand,
-    paddingHorizontal: space.lg,
-    paddingBottom: space.md,
-  },
-  headerTitle: { flex: 1, ...font.title, color: color.textOnBrand, textAlign: "center" },
-  headCard: { gap: space.lg },
-  headRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
-  logoWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.md,
-    backgroundColor: color.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    flexShrink: 0,
-  },
-  logo: { width: "100%", height: "100%" },
-  logoInitial: { ...font.h3, color: color.brand },
-  jobTitle: { ...font.h3, color: color.text },
-  company: { ...font.bodyStrong, color: color.brand, marginTop: space.xxs },
-  location: { ...font.sub, color: color.textMuted, marginTop: space.xxs },
-  metaChips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
-  metaChip: {
-    backgroundColor: color.surfaceAlt,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: color.border,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    minWidth: 96,
-  },
-  metaChipLabel: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
-  metaChipValue: { ...font.bodyStrong, color: color.text, marginTop: 2 },
-  detailsCard: { marginTop: space.lg, gap: 0 },
-  section: { marginBottom: space.xl },
-  sectionTitle: { ...font.title, color: color.text, marginBottom: space.sm },
-  sectionBody: { ...font.body, color: color.textSub, lineHeight: 22 },
-  ctaBar: {
-    padding: space.lg,
-    paddingBottom: space.md,
-    borderTopWidth: 1,
-    borderTopColor: color.border,
-    backgroundColor: color.surface,
-    ...shadow.md,
-  },
-  ownerRow: { flexDirection: "row", gap: space.md },
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: color.bg,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: space.md,
+      backgroundColor: color.brand,
+      paddingHorizontal: space.lg,
+      paddingBottom: space.md,
+    },
+    headerTitle: {
+      flex: 1,
+      ...font.title,
+      color: color.textOnBrand,
+      textAlign: "center",
+    },
+    headCard: { gap: space.lg },
+    headRow: { flexDirection: "row", gap: space.md, alignItems: "flex-start" },
+    logoWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: radius.md,
+      backgroundColor: color.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      flexShrink: 0,
+    },
+    logo: { width: "100%", height: "100%" },
+    logoInitial: { ...font.h3, color: color.brand },
+    jobTitle: { ...font.h3, color: color.text },
+    company: { ...font.bodyStrong, color: color.brand, marginTop: space.xxs },
+    location: { ...font.sub, color: color.textMuted, marginTop: space.xxs },
+    metaChips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+    metaChip: {
+      backgroundColor: color.surfaceAlt,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: color.border,
+      paddingHorizontal: space.md,
+      paddingVertical: space.sm,
+      minWidth: 96,
+    },
+    metaChipLabel: {
+      ...font.micro,
+      color: color.textMuted,
+      textTransform: "uppercase",
+    },
+    metaChipValue: { ...font.bodyStrong, color: color.text, marginTop: 2 },
+    detailsCard: { marginTop: space.lg, gap: 0 },
+    section: { marginBottom: space.xl },
+    sectionTitle: { ...font.title, color: color.text, marginBottom: space.sm },
+    sectionBody: { ...font.body, color: color.textSub, lineHeight: 22 },
+    ctaBar: {
+      padding: space.lg,
+      paddingBottom: space.md,
+      borderTopWidth: 1,
+      borderTopColor: color.border,
+      backgroundColor: color.surface,
+      ...shadow.md,
+    },
+    ownerRow: { flexDirection: "row", gap: space.md },
 
-  boostActiveRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.sm,
-    backgroundColor: color.goldTint,
-    borderRadius: radius.md,
-    padding: space.md,
-    marginTop: space.lg,
-  },
-  boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
+    boostActiveRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.sm,
+      backgroundColor: color.goldTint,
+      borderRadius: radius.md,
+      padding: space.md,
+      marginTop: space.lg,
+    },
+    boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
 
-  boostBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.md,
-    backgroundColor: color.brand,
-    borderRadius: radius.lg,
-    padding: space.md,
-    marginTop: space.lg,
-  },
-  boostBannerIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  boostBannerTitle: { ...font.title, color: "#fff" },
-  boostBannerSub: { ...font.caption, color: "rgba(255,255,255,0.75)", marginTop: 2 },
-  boostBannerBtn: {
-    backgroundColor: color.gold,
-    borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  boostBannerBtnText: { ...font.caption, color: "#fff", fontWeight: "800" },
+    boostBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      backgroundColor: color.brand,
+      borderRadius: radius.lg,
+      padding: space.md,
+      marginTop: space.lg,
+    },
+    boostBannerIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: "rgba(255,255,255,0.16)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    boostBannerTitle: { ...font.title, color: "#fff" },
+    boostBannerSub: {
+      ...font.caption,
+      color: "rgba(255,255,255,0.75)",
+      marginTop: 2,
+    },
+    boostBannerBtn: {
+      backgroundColor: color.gold,
+      borderRadius: radius.pill,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    boostBannerBtnText: { ...font.caption, color: "#fff", fontWeight: "800" },
 
-  boostOptions: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
-  boostOpt: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: color.surfaceAlt,
-    borderRadius: radius.md,
-    paddingVertical: space.md,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-    position: "relative",
-  },
-  boostOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
-  boostOptTag: {
-    position: "absolute",
-    top: -9,
-    alignSelf: "center",
-    backgroundColor: color.gold,
-    borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  boostOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
-  boostOptDays: { ...font.sub, color: color.text, fontWeight: "700" },
-  boostOptCta: { ...font.caption, color: color.brand, fontWeight: "800" },
+    boostOptions: { gap: space.sm, marginTop: space.sm },
+    boostOpt: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: color.surfaceAlt,
+      borderRadius: radius.md,
+      paddingVertical: space.md,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      position: "relative",
+    },
+    boostOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+    boostOptTag: {
+      position: "absolute",
+      top: -9,
+      alignSelf: "center",
+      backgroundColor: color.gold,
+      borderRadius: radius.pill,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    boostOptTagText: {
+      fontSize: 9,
+      fontWeight: "800",
+      color: "#fff",
+      letterSpacing: 0.3,
+    },
+    boostOptDays: { ...font.sub, color: color.text, fontWeight: "700" },
+    boostOptCta: { ...font.caption, color: color.brand, fontWeight: "800" },
   });
 }

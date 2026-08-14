@@ -1,24 +1,11 @@
-// Shared in-app purchase orchestration — Android (Google Play) and iOS (App
-// Store) through the one `expo-iap` API, mirroring the behavioral pattern of
-// the legacy Capacitor app's www/js/billing.js: init once at app boot,
-// purchases resolve asynchronously through a listener (never through
-// requestPurchase()'s own return value), a durable "pending context" survives
-// the app being killed mid-purchase, and every purchase is verified server-
-// side before any entitlement is granted — this module never grants
-// anything itself, it only calls the right Edge Function and reports what
-// came back.
-//
-// Backend contract (see supabase/functions/verify-play-purchase,
-// verify-play-subscription, verify-apple-purchase, verify-apple-subscription):
-// the four Edge Functions all accept POST { businessId?, listingId?,
-// productId, purchaseToken, orderId? } with the caller's bearer token, and
-// return { ok: true, ... } on success or { error } / { notImplemented } on
-// failure. Which function to call is decided here by platform + product
-// family (lib/billing-products.ts), never hardcoded per screen.
+// Shared StoreKit/Play Billing orchestration. Transactions are only finished
+// after the matching Supabase Edge Function verifies them and activates the
+// server-side entitlement; this module never grants paid access locally.
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import {
   endConnection,
+  ErrorCode,
   finishTransaction,
   fetchProducts,
   getAvailablePurchases,
@@ -27,6 +14,7 @@ import {
   purchaseUpdatedListener,
   requestPurchase,
   restorePurchases as restorePurchasesNative,
+  type ExpoPurchaseError,
   type Product,
   type ProductSubscription,
   type Purchase,
@@ -42,7 +30,9 @@ import {
 } from "./billing-products";
 
 const PENDING_CONTEXT_KEY = "pamarket.iap-pending-context";
-const PENDING_CONTEXT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days — mirrors billing.js
+const PENDING_CONTEXT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const PURCHASE_RESULT_TIMEOUT_MS = 120_000;
+const NATIVE_STORE_NAME = Platform.OS === "ios" ? "App Store" : "Google Play";
 
 type PendingContext = {
   productId: string;
@@ -52,16 +42,24 @@ type PendingContext = {
 };
 
 async function savePendingContext(ctx: Omit<PendingContext, "savedAt">) {
-  await SecureStore.setItemAsync(PENDING_CONTEXT_KEY, JSON.stringify({ ...ctx, savedAt: Date.now() }));
+  await SecureStore.setItemAsync(
+    PENDING_CONTEXT_KEY,
+    JSON.stringify({ ...ctx, savedAt: Date.now() })
+  );
 }
 
-async function loadPendingContext(productId: string): Promise<PendingContext | null> {
+async function loadPendingContext(
+  productId: string
+): Promise<PendingContext | null> {
   const raw = await SecureStore.getItemAsync(PENDING_CONTEXT_KEY);
   if (!raw) return null;
   try {
     const ctx = JSON.parse(raw) as PendingContext;
-    if (Date.now() - ctx.savedAt > PENDING_CONTEXT_TTL_MS) return null;
-    if (ctx.productId !== productId) return null;
+    if (
+      Date.now() - ctx.savedAt > PENDING_CONTEXT_TTL_MS ||
+      ctx.productId !== productId
+    )
+      return null;
     return ctx;
   } catch {
     return null;
@@ -72,16 +70,27 @@ async function clearPendingContext() {
   await SecureStore.deleteItemAsync(PENDING_CONTEXT_KEY).catch(() => {});
 }
 
-// Edge Function per (platform, family-kind) combination.
-function verifyEndpointFor(platform: "ios" | "android", family: ProductFamilyKey): string {
-  const kind = family === "shopSubscriptions" || family === "recruiterSubscriptions" ? "subscription" : "purchase";
+function verifyEndpointFor(
+  platform: "ios" | "android",
+  family: ProductFamilyKey
+): string {
+  const kind =
+    family === "shopSubscriptions" || family === "recruiterSubscriptions"
+      ? "subscription"
+      : "purchase";
   return platform === "ios" ? `verify-apple-${kind}` : `verify-play-${kind}`;
 }
 
 async function callVerifyEndpoint(
   fn: string,
-  payload: { businessId?: string; listingId?: string; productId: string; purchaseToken: string; orderId?: string }
-): Promise<{ ok: boolean; error?: string; notImplemented?: boolean; [key: string]: unknown }> {
+  payload: {
+    businessId?: string;
+    listingId?: string;
+    productId: string;
+    purchaseToken: string;
+    orderId?: string;
+  }
+): Promise<{ ok: boolean; error?: string; [key: string]: unknown }> {
   const { data: sessionData } = await supabase.auth.getSession();
   let token = sessionData.session?.access_token;
   if (!token) {
@@ -90,109 +99,249 @@ async function callVerifyEndpoint(
   }
   if (!token) return { ok: false, error: "Not signed in" };
 
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-  const res = await fetch(`${supabaseUrl}/functions/v1/${fn}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { ok: false, error: body?.error || `Server error (${res.status})`, notImplemented: res.status === 501 };
-  return { ok: true, ...body };
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return { ok: false, error: "Missing Supabase URL" };
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/${fn}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok)
+      return {
+        ok: false,
+        error: body?.error || `Server error (${res.status})`,
+      };
+    return { ok: true, ...body };
+  } catch (error) {
+    return {
+      ok: false,
+      error: (error as Error).message || "Verification network error",
+    };
+  }
 }
 
-// A screen calling purchaseProduct() awaits a real resolved/rejected result,
-// even though expo-iap itself only ever delivers the outcome through the
-// module-level purchaseUpdatedListener/purchaseErrorListener below — this
-// map bridges the two, keyed by productId (one in-flight purchase per
-// product at a time is the only case that matters in practice).
-const pendingCalls = new Map<string, { resolve: (v: { ok: boolean; error?: string }) => void }>();
+export type PurchaseFailureCode =
+  | "user-cancelled"
+  | "product-unavailable"
+  | "store-unavailable"
+  | "purchase-failed"
+  | "verification-failed"
+  | "purchase-timeout";
+export type PurchaseResult =
+  | { ok: true }
+  | { ok: false; code: PurchaseFailureCode; error: string };
 
+const pendingCalls = new Map<
+  string,
+  {
+    resolve: (result: PurchaseResult) => void;
+    timeout: ReturnType<typeof setTimeout>;
+  }
+>();
 let connected = false;
+let connectionPromise: Promise<boolean> | null = null;
 let removeUpdateListener: { remove: () => void } | null = null;
 let removeErrorListener: { remove: () => void } | null = null;
-let fetchedConsumables = false;
-let fetchedSubscriptions = false;
+const loadedProductIds = new Set<string>();
+const processedTransactions = new Set<string>();
+const processingTransactions = new Set<string>();
+
+function safeIapError(error: unknown) {
+  const e = error as Partial<ExpoPurchaseError>;
+  return {
+    code: e?.code || ErrorCode.Unknown,
+    message: e?.message || String(error),
+    productId: e?.productId || undefined,
+    responseCode: e?.responseCode || undefined,
+  };
+}
+
+function purchaseFailure(
+  error: unknown
+): Exclude<PurchaseResult, { ok: true }> {
+  const code = (error as Partial<ExpoPurchaseError>)?.code;
+  switch (code) {
+    case ErrorCode.UserCancelled:
+      return {
+        ok: false,
+        code: "user-cancelled",
+        error: "Purchase cancelled.",
+      };
+    case ErrorCode.ItemUnavailable:
+    case ErrorCode.SkuNotFound:
+    case ErrorCode.EmptySkuList:
+      return {
+        ok: false,
+        code: "product-unavailable",
+        error: `This product is unavailable in the ${NATIVE_STORE_NAME}.`,
+      };
+    case ErrorCode.BillingUnavailable:
+    case ErrorCode.IapNotAvailable:
+    case ErrorCode.InitConnection:
+    case ErrorCode.ConnectionClosed:
+    case ErrorCode.ServiceDisconnected:
+      return {
+        ok: false,
+        code: "store-unavailable",
+        error: `The ${NATIVE_STORE_NAME} is unavailable. Please try again later.`,
+      };
+    default:
+      return {
+        ok: false,
+        code: "purchase-failed",
+        error: "The purchase couldn't be completed. Please try again.",
+      };
+  }
+}
+
+function resolvePending(productId: string, result: PurchaseResult) {
+  const waiter = pendingCalls.get(productId);
+  if (!waiter) return;
+  clearTimeout(waiter.timeout);
+  pendingCalls.delete(productId);
+  waiter.resolve(result);
+}
 
 async function handlePurchase(purchase: Purchase) {
   const productId = purchase.productId;
   const family = familyOf(productId);
   const purchaseToken = purchase.purchaseToken;
+  const transactionKey = `${purchase.store}:${
+    purchase.transactionId || purchase.id
+  }`;
+  if (
+    processedTransactions.has(transactionKey) ||
+    processingTransactions.has(transactionKey)
+  )
+    return;
+  processingTransactions.add(transactionKey);
+
   if (!family || !purchaseToken) {
-    console.warn("iap: purchase update for unrecognized product or missing token", productId);
+    console.warn("iap: purchase update missing a recognized product/token", {
+      productId,
+      hasToken: Boolean(purchaseToken),
+    });
+    resolvePending(productId, {
+      ok: false,
+      code: "verification-failed",
+      error:
+        "The store returned an incomplete transaction. Please use Restore Purchases.",
+    });
+    processingTransactions.delete(transactionKey);
     return;
   }
 
-  const ctx = await loadPendingContext(productId);
+  let ctx: PendingContext | null;
+  try {
+    ctx = await loadPendingContext(productId);
+  } catch (error) {
+    console.warn("iap: could not read purchase context", safeIapError(error));
+    resolvePending(productId, {
+      ok: false,
+      code: "verification-failed",
+      error:
+        "The purchase couldn't be prepared for verification. Please contact support.",
+    });
+    processingTransactions.delete(transactionKey);
+    return;
+  }
   const platform = Platform.OS === "ios" ? "ios" : "android";
   const fn = verifyEndpointFor(platform, family);
-
-  // For iOS subscriptions, originalTransactionIdentifierIOS is the STABLE id
-  // across renewals — that's what the backend needs to look this
-  // subscription up again later (renewal/cancel notifications reference it,
-  // not the per-renewal transactionId). For everything else the unified
-  // purchaseToken (Android token / iOS per-transaction JWS) is the right key.
-  const isIosSubscription = platform === "ios" && isSubscriptionProduct(productId);
   const tokenForServer =
-    isIosSubscription && "originalTransactionIdentifierIOS" in purchase && purchase.originalTransactionIdentifierIOS
+    platform === "ios" &&
+    isSubscriptionProduct(productId) &&
+    "originalTransactionIdentifierIOS" in purchase &&
+    purchase.originalTransactionIdentifierIOS
       ? purchase.originalTransactionIdentifierIOS
       : purchaseToken;
-
   const result = await callVerifyEndpoint(fn, {
     productId,
     purchaseToken: tokenForServer,
     listingId: ctx?.listingId,
     businessId: ctx?.businessId,
-    orderId: "transactionId" in purchase ? (purchase.transactionId as string | undefined) : undefined,
+    orderId:
+      "transactionId" in purchase
+        ? purchase.transactionId || undefined
+        : undefined,
   });
 
-  if (result.ok) {
-    // Only finish (and for consumables, consume) the transaction once the
-    // server confirms it granted the entitlement — an unfinished iOS
-    // transaction simply replays on next launch, which is the safe default
-    // if verification failed transiently.
-    await finishTransaction({ purchase, isConsumable: family !== "shopSubscriptions" && family !== "recruiterSubscriptions" }).catch(
-      (e) => console.warn("iap: finishTransaction failed", e)
-    );
-    await clearPendingContext();
-  }
-
-  const waiter = pendingCalls.get(productId);
-  if (waiter) {
-    waiter.resolve(result.ok ? { ok: true } : { ok: false, error: result.error });
-    pendingCalls.delete(productId);
-  }
-}
-
-// Call once, near the app root (app/_layout.tsx), after a session exists.
-// Safe to call multiple times — no-ops if already connected.
-export async function initIAP() {
-  if (connected) return;
-  try {
-    await initConnection();
-    connected = true;
-  } catch (e) {
-    console.warn("iap: initConnection failed", e);
+  const entitlementGranted =
+    result.ok &&
+    (!isSubscriptionProduct(productId) || result.granted !== false);
+  if (entitlementGranted) {
+    let finished = false;
+    try {
+      await finishTransaction({
+        purchase,
+        isConsumable:
+          family !== "shopSubscriptions" && family !== "recruiterSubscriptions",
+      });
+      await clearPendingContext();
+      finished = true;
+    } catch (error) {
+      // Keep context so StoreKit can replay this verified but unfinished transaction.
+      console.warn(
+        "iap: finishTransaction failed after server verification",
+        safeIapError(error)
+      );
+    }
+    if (finished) processedTransactions.add(transactionKey);
+    processingTransactions.delete(transactionKey);
+    resolvePending(productId, { ok: true });
     return;
   }
 
-  removeUpdateListener = purchaseUpdatedListener((purchase) => {
-    handlePurchase(purchase).catch((e) => console.warn("iap: handlePurchase threw", e));
+  console.warn("iap: server verification failed", {
+    endpoint: fn,
+    productId,
+    error: result.error,
   });
-  removeErrorListener = purchaseErrorListener((error) => {
-    console.warn("iap: purchase error", error);
-    // error.productId isn't always populated by every store, so this can't
-    // always resolve a specific pendingCalls entry — screens also have their
-    // own timeout/cancel handling for that case.
-    const id = (error as { productId?: string }).productId;
-    if (id) {
-      const waiter = pendingCalls.get(id);
-      if (waiter) {
-        waiter.resolve({ ok: false, error: error.message });
-        pendingCalls.delete(id);
-      }
+  resolvePending(productId, {
+    ok: false,
+    code: "verification-failed",
+    error: `${NATIVE_STORE_NAME} confirmed the purchase, but PaMarket couldn't verify it. Please contact support before trying again.`,
+  });
+  processingTransactions.delete(transactionKey);
+}
+
+export async function initIAP(): Promise<boolean> {
+  if (connected) return true;
+  if (connectionPromise) return connectionPromise;
+  connectionPromise = (async () => {
+    try {
+      await initConnection();
+      connected = true;
+    } catch (error) {
+      console.warn("iap: initConnection failed", safeIapError(error));
+      return false;
     }
+    removeUpdateListener = purchaseUpdatedListener((purchase) => {
+      handlePurchase(purchase).catch((error) =>
+        console.warn("iap: handlePurchase threw", safeIapError(error))
+      );
+    });
+    removeErrorListener = purchaseErrorListener((error) => {
+      console.warn("iap: purchase error", safeIapError(error));
+      const id =
+        error.productId ||
+        (pendingCalls.size === 1
+          ? pendingCalls.keys().next().value
+          : undefined);
+      if (id) {
+        resolvePending(id, purchaseFailure(error));
+        clearPendingContext().catch(() => {});
+      }
+    });
+    return true;
+  })().finally(() => {
+    connectionPromise = null;
   });
+  return connectionPromise;
 }
 
 export async function teardownIAP() {
@@ -200,64 +349,226 @@ export async function teardownIAP() {
   removeErrorListener?.remove();
   removeUpdateListener = null;
   removeErrorListener = null;
-  if (connected) {
-    await endConnection().catch(() => {});
-    connected = false;
-  }
+  if (connected) await endConnection().catch(() => {});
+  connected = false;
+  loadedProductIds.clear();
+  processedTransactions.clear();
+  processingTransactions.clear();
 }
 
-// Apple Guideline 3.1.2(c) requires the price to be shown on the paywall
-// itself before purchase, not just left to the system purchase-confirmation
-// sheet — this pulls the real, already-localized price/currency from the
-// store (StoreKit/Play Billing) rather than a hardcoded USD estimate, so it
-// respects the buyer's actual region and currency automatically.
-export async function fetchSubscriptionDisplayPrices(productIds: string[]): Promise<Record<string, string>> {
+export type SubscriptionProductsResult = {
+  prices: Record<string, string>;
+  availableProductIds: string[];
+  missingProductIds: string[];
+  error?: string;
+};
+
+export async function fetchSubscriptionProducts(
+  productIds: string[]
+): Promise<SubscriptionProductsResult> {
+  if (!(await initIAP())) {
+    return {
+      prices: {},
+      availableProductIds: [],
+      missingProductIds: productIds,
+      error: `The ${NATIVE_STORE_NAME} is unavailable. Check your connection and try again.`,
+    };
+  }
   try {
-    const products = (await fetchProducts({ skus: productIds, type: "subs" })) as ProductSubscription[];
-    return Object.fromEntries(products.map((p) => [p.id, p.displayPrice]));
-  } catch (e) {
-    console.warn("iap: fetchSubscriptionDisplayPrices failed", e);
-    return {};
+    const products = ((await fetchProducts({
+      skus: productIds,
+      type: "subs",
+    })) || []) as ProductSubscription[];
+    const availableProductIds = products.map((product) => product.id);
+    availableProductIds.forEach((id) => loadedProductIds.add(id));
+    const missingProductIds = productIds.filter(
+      (id) => !availableProductIds.includes(id)
+    );
+
+    if (Platform.OS === "ios") {
+      const groupIds = new Set(
+        products
+          .map((product) =>
+            product.platform === "ios" ? product.subscriptionGroupIdIOS : null
+          )
+          .filter((id): id is string => Boolean(id))
+      );
+      if (groupIds.size > 1) {
+        console.warn("iap: subscriptions are in multiple App Store groups", {
+          productIds: availableProductIds,
+          groupCount: groupIds.size,
+        });
+        return {
+          prices: {},
+          availableProductIds: [],
+          missingProductIds: productIds,
+          error:
+            "Subscriptions are temporarily unavailable because the App Store configuration is inconsistent.",
+        };
+      }
+    }
+    return {
+      prices: Object.fromEntries(
+        products.map((product) => [product.id, product.displayPrice])
+      ),
+      availableProductIds,
+      missingProductIds,
+      error: missingProductIds.length
+        ? `Some subscription plans aren't available from the ${NATIVE_STORE_NAME}.`
+        : undefined,
+    };
+  } catch (error) {
+    console.warn("iap: fetchSubscriptionProducts failed", safeIapError(error));
+    return {
+      prices: {},
+      availableProductIds: [],
+      missingProductIds: productIds,
+      error: `Could not load ${NATIVE_STORE_NAME} pricing. Check your connection and try again.`,
+    };
   }
 }
 
-async function ensureProductsLoaded(productId: string) {
-  const wantsSubscription = isSubscriptionProduct(productId);
-  if (wantsSubscription && !fetchedSubscriptions) {
-    await fetchProducts({ skus: activeSubscriptionSkus(), type: "subs" }).catch((e) => console.warn("iap: fetchProducts(subs) failed", e));
-    fetchedSubscriptions = true;
-  } else if (!wantsSubscription && !fetchedConsumables) {
-    await fetchProducts({ skus: activeConsumableSkus(), type: "in-app" }).catch((e) => console.warn("iap: fetchProducts(in-app) failed", e));
-    fetchedConsumables = true;
+export async function fetchSubscriptionDisplayPrices(
+  productIds: string[]
+): Promise<Record<string, string>> {
+  return (await fetchSubscriptionProducts(productIds)).prices;
+}
+
+export async function fetchConsumableProducts(
+  productIds: string[]
+): Promise<SubscriptionProductsResult> {
+  if (!(await initIAP())) {
+    return {
+      prices: {},
+      availableProductIds: [],
+      missingProductIds: productIds,
+      error: `The ${NATIVE_STORE_NAME} is unavailable. Check your connection and try again.`,
+    };
   }
+  try {
+    const products = ((await fetchProducts({
+      skus: productIds,
+      type: "in-app",
+    })) || []) as Product[];
+    const availableProductIds = products.map((product) => product.id);
+    availableProductIds.forEach((id) => loadedProductIds.add(id));
+    const missingProductIds = productIds.filter(
+      (id) => !availableProductIds.includes(id)
+    );
+    return {
+      prices: Object.fromEntries(
+        products.map((product) => [product.id, product.displayPrice])
+      ),
+      availableProductIds,
+      missingProductIds,
+      error: missingProductIds.length
+        ? `Some products aren't available from the ${NATIVE_STORE_NAME}.`
+        : undefined,
+    };
+  } catch (error) {
+    console.warn("iap: fetchConsumableProducts failed", safeIapError(error));
+    return {
+      prices: {},
+      availableProductIds: [],
+      missingProductIds: productIds,
+      error: `Could not load ${NATIVE_STORE_NAME} pricing. Check your connection and try again.`,
+    };
+  }
+}
+
+async function ensureProductsLoaded(productId: string): Promise<boolean> {
+  if (loadedProductIds.has(productId)) return true;
+  const wantsSubscription = isSubscriptionProduct(productId);
+  try {
+    const products = await fetchProducts({
+      skus: wantsSubscription
+        ? activeSubscriptionSkus()
+        : activeConsumableSkus(),
+      type: wantsSubscription ? "subs" : "in-app",
+    });
+    (products || []).forEach((product) => loadedProductIds.add(product.id));
+  } catch (error) {
+    console.warn(
+      `iap: fetchProducts(${wantsSubscription ? "subs" : "in-app"}) failed`,
+      safeIapError(error)
+    );
+  }
+  return loadedProductIds.has(productId);
 }
 
 export type PurchaseContext = { listingId?: string; businessId?: string };
 
-// The single entry point every "Upgrade"/"Buy" button should call. Resolves
-// once the server has verified the purchase AND activated the entitlement
-// (or rejects with a reason) — never grants anything on the client side.
-export async function purchaseProduct(productId: string, ctx: PurchaseContext = {}): Promise<{ ok: boolean; error?: string }> {
-  if (!isActiveProductId(productId)) {
-    return { ok: false, error: "This product isn't available for purchase yet." };
-  }
-  if (!connected) {
-    return { ok: false, error: "Store connection isn't ready yet. Please try again in a moment." };
+export async function purchaseProduct(
+  productId: string,
+  ctx: PurchaseContext = {}
+): Promise<PurchaseResult> {
+  if (!isActiveProductId(productId))
+    return {
+      ok: false,
+      code: "product-unavailable",
+      error: "This product isn't available for purchase yet.",
+    };
+  if (pendingCalls.size > 0)
+    return {
+      ok: false,
+      code: "purchase-failed",
+      error: "Another purchase is already in progress.",
+    };
+  if (!(await initIAP()))
+    return {
+      ok: false,
+      code: "store-unavailable",
+      error: `The ${NATIVE_STORE_NAME} is unavailable. Please try again later.`,
+    };
+  if (!(await ensureProductsLoaded(productId))) {
+    console.warn(
+      "iap: refusing purchase because the store did not return the requested product",
+      { productId }
+    );
+    return {
+      ok: false,
+      code: "product-unavailable",
+      error: `This product isn't available in the ${NATIVE_STORE_NAME} for your account or region.`,
+    };
   }
 
-  await savePendingContext({ productId, listingId: ctx.listingId, businessId: ctx.businessId });
-  await ensureProductsLoaded(productId);
-
-  const resultPromise = new Promise<{ ok: boolean; error?: string }>((resolve) => {
-    pendingCalls.set(productId, { resolve });
+  try {
+    await savePendingContext({
+      productId,
+      listingId: ctx.listingId,
+      businessId: ctx.businessId,
+    });
+  } catch (error) {
+    console.warn(
+      "iap: could not persist purchase context",
+      safeIapError(error)
+    );
+    return {
+      ok: false,
+      code: "purchase-failed",
+      error: "The purchase couldn't be prepared. Please try again.",
+    };
+  }
+  const resultPromise = new Promise<PurchaseResult>((resolve) => {
+    const timeout = setTimeout(() => {
+      resolvePending(productId, {
+        ok: false,
+        code: "purchase-timeout",
+        error:
+          "The store didn't return a result. Check your purchase history before trying again.",
+      });
+    }, PURCHASE_RESULT_TIMEOUT_MS);
+    pendingCalls.set(productId, { resolve, timeout });
   });
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const appAccountToken = sessionData.session?.user.id;
     if (isSubscriptionProduct(productId)) {
       await requestPurchase({
         type: "subs",
         request: {
-          apple: { sku: productId },
+          apple: { sku: productId, appAccountToken },
           google: { skus: [productId] },
         },
       });
@@ -265,17 +576,18 @@ export async function purchaseProduct(productId: string, ctx: PurchaseContext = 
       await requestPurchase({
         type: "in-app",
         request: {
-          apple: { sku: productId },
+          apple: { sku: productId, appAccountToken },
           google: { skus: [productId] },
         },
       });
     }
-  } catch (e) {
-    pendingCalls.delete(productId);
+  } catch (error) {
+    console.warn("iap: requestPurchase failed", safeIapError(error));
+    const result = purchaseFailure(error);
+    resolvePending(productId, result);
     await clearPendingContext();
-    return { ok: false, error: (e as Error).message || "Purchase could not be started." };
+    return result;
   }
-
   return resultPromise;
 }
 
@@ -286,69 +598,93 @@ export type RestoreResult = {
   errors: string[];
 };
 
-// Required by Apple Guideline 3.1.1 for any app selling subscriptions: lets
-// a user recover entitlements after a reinstall / new device / re-login
-// without paying again. Only subscription products are restorable here —
-// this app's consumables (boosts, job credits, slot packs) are genuinely
-// consumed on purchase, so the platform has nothing left to restore for
-// them; StoreKit/Play would simply return nothing for those SKUs.
-//
-// The client never grants anything itself: every purchase returned by the
-// platform is re-submitted to the same server-side verify endpoint used for
-// a fresh purchase (Apple's real receipt/JWS validation, Apple's servers as
-// the source of truth for subscription status), and only finished once the
-// server confirms the entitlement is active.
-export async function restoreAllPurchases(): Promise<RestoreResult> {
-  if (!connected) {
-    return { ok: false, restoredCount: 0, failedCount: 0, errors: ["Store connection isn't ready yet. Please try again in a moment."] };
-  }
-
+export async function restoreAllPurchases(
+  options: { businessId?: string; family?: ProductFamilyKey } = {}
+): Promise<RestoreResult> {
+  if (!(await initIAP()))
+    return {
+      ok: false,
+      restoredCount: 0,
+      failedCount: 0,
+      errors: [
+        `The ${NATIVE_STORE_NAME} is unavailable. Please try again later.`,
+      ],
+    };
   try {
     await restorePurchasesNative();
-  } catch (e) {
-    console.warn("iap: restorePurchases (native sync) failed, continuing with getAvailablePurchases anyway", e);
+  } catch (error) {
+    console.warn("iap: native restore sync failed", safeIapError(error));
   }
 
-  let purchases: Purchase[] = [];
+  let purchases: Purchase[];
   try {
-    purchases = (await getAvailablePurchases()) as Purchase[];
-  } catch (e) {
-    return { ok: false, restoredCount: 0, failedCount: 0, errors: [(e as Error).message || "Could not reach the store."] };
+    purchases = ((await getAvailablePurchases({
+      onlyIncludeActiveItemsIOS: true,
+    })) || []) as Purchase[];
+  } catch (error) {
+    console.warn("iap: getAvailablePurchases failed", safeIapError(error));
+    return {
+      ok: false,
+      restoredCount: 0,
+      failedCount: 0,
+      errors: [`Could not reach the ${NATIVE_STORE_NAME}.`],
+    };
   }
-
-  const subscriptionPurchases = purchases.filter((p) => isSubscriptionProduct(p.productId));
-  if (subscriptionPurchases.length === 0) {
+  const subscriptionPurchases = purchases.filter(
+    (purchase) =>
+      isSubscriptionProduct(purchase.productId) &&
+      (!options.family || familyOf(purchase.productId) === options.family)
+  );
+  if (subscriptionPurchases.length === 0)
     return { ok: true, restoredCount: 0, failedCount: 0, errors: [] };
-  }
 
   const platform = Platform.OS === "ios" ? "ios" : "android";
   let restoredCount = 0;
   const errors: string[] = [];
-
   for (const purchase of subscriptionPurchases) {
-    const productId = purchase.productId;
-    const family = familyOf(productId);
-    const purchaseToken = purchase.purchaseToken;
-    if (!family || !purchaseToken) continue;
-
-    const isIosSubscription = platform === "ios";
+    const family = familyOf(purchase.productId);
+    if (!family || !purchase.purchaseToken) continue;
     const tokenForServer =
-      isIosSubscription && "originalTransactionIdentifierIOS" in purchase && purchase.originalTransactionIdentifierIOS
+      platform === "ios" &&
+      "originalTransactionIdentifierIOS" in purchase &&
+      purchase.originalTransactionIdentifierIOS
         ? purchase.originalTransactionIdentifierIOS
-        : purchaseToken;
-
-    const fn = verifyEndpointFor(platform, family);
-    const result = await callVerifyEndpoint(fn, { productId, purchaseToken: tokenForServer });
-
-    if (result.ok) {
+        : purchase.purchaseToken;
+    const result = await callVerifyEndpoint(
+      verifyEndpointFor(platform, family),
+      {
+        productId: purchase.productId,
+        purchaseToken: tokenForServer,
+        businessId:
+          family === "shopSubscriptions" ? options.businessId : undefined,
+      }
+    );
+    if (result.ok && result.granted !== false) {
       restoredCount += 1;
-      await finishTransaction({ purchase, isConsumable: false }).catch((e) => console.warn("iap: restore finishTransaction failed", e));
+      try {
+        await finishTransaction({ purchase, isConsumable: false });
+      } catch (error) {
+        console.warn(
+          "iap: restore finishTransaction failed",
+          safeIapError(error)
+        );
+      }
+    } else if (result.ok) {
+      errors.push(`${purchase.productId} is not currently active.`);
     } else {
-      errors.push(result.error || `Could not restore ${productId}`);
+      console.warn("iap: restore verification failed", {
+        productId: purchase.productId,
+        error: result.error,
+      });
+      errors.push(`Could not verify ${purchase.productId}.`);
     }
   }
-
-  return { ok: true, restoredCount, failedCount: errors.length, errors };
+  return {
+    ok: errors.length === 0,
+    restoredCount,
+    failedCount: errors.length,
+    errors,
+  };
 }
 
 export type { Product, ProductSubscription };

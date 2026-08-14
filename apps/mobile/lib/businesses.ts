@@ -14,6 +14,7 @@ export type Business = {
   city?: string | null;
   suburb?: string | null;
   status: string;
+  plan_id?: string | null;
   verification_level?: number | null;
   featured_listing_ids?: string[] | null;
   created_at?: string;

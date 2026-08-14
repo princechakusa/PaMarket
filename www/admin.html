@@ -2127,14 +2127,40 @@ function bizSetVerify(id) {
   }).join('');
   openModal('<div class="modal-title">Verification Level: '+esc(b.name||'Business')+'<button class="modal-close" onclick="closeModal()">×</button></div>'+rows);
 }
+var BIZ_VERIFY_LEVEL_LABELS = {0:'Unverified',1:'Basic',2:'Documents',3:'Full'};
 async function doBizVerify(id, level) {
   closeModal();
   try {
     var b = DATA.businesses.find(function(x){return x.id===id;});
     var prev = b ? (b.verification_level||0) : null;
-    await updRow('businesses', id, {verification_level:level});
-    if(b) b.verification_level = level;
+    await updRow('businesses', id, {verification_level:level, verification_pending:false});
+    if(b) { b.verification_level = level; b.verification_pending = false; }
     auditLog('set_business_verification','businesses',id,{level:prev},{level:level},null);
+    // Notify the owner — in-app AND phone push — on a genuine approval/
+    // upgrade (level increased), not on a downgrade or reset to Unverified.
+    // Routed through the send-push edge function rather than a direct
+    // notifications insert: send-push both writes the in-app row (with
+    // push_sent:true) and sends the actual FCM/APNs push in one call, so
+    // calling both would double up the in-app notification.
+    if (b && b.owner_user_id && level > (prev||0) && level >= 1) {
+      try {
+        var sess = await sb.auth.getSession();
+        var jwt = sess && sess.data && sess.data.session && sess.data.session.access_token;
+        if (jwt) {
+          await fetch(SUPABASE_URL + '/functions/v1/send-push', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
+            body: JSON.stringify({
+              target: b.owner_user_id,
+              title: 'Business Verified',
+              body: (b.name||'Your business')+' is now verified at '+(BIZ_VERIFY_LEVEL_LABELS[level]||('L'+level))+' level.',
+              type: 'verify',
+              deepLink: 'business:'+id,
+            }),
+          });
+        }
+      } catch(e){}
+    }
     renderBusinesses(); toast('Verification level set to L'+level);
   } catch(e){ toast('Error: '+e.message,'error'); }
 }

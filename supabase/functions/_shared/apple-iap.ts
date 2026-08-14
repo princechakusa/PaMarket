@@ -25,17 +25,17 @@ import {
   SignedDataVerifier,
   type JWSTransactionDecodedPayload,
   type StatusResponse,
-} from 'https://esm.sh/@apple/app-store-server-library@3.1.0';
+} from "https://esm.sh/@apple/app-store-server-library@3.1.0";
 
 // Apple Root CA - G3 (DER, base64). Public trust-anchor data, not a secret —
 // safe to hardcode. Downloaded from https://www.apple.com/certificateauthority/
 // (AppleRootCA-G3.cer). If Apple ever rotates their root, add the new root's
 // base64 alongside this one; SignedDataVerifier accepts a list.
 const APPLE_ROOT_CA_G3_B64 =
-  'MIICQzCCAcmgAwIBAgIILcX8iNLFS5UwCgYIKoZIzj0EAwMwZzEbMBkGA1UEAwwSQXBwbGUgUm9vdCBDQSAtIEczMSYwJAYDVQQLDB1BcHBsZSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTETMBEGA1UECgwKQXBwbGUgSW5jLjELMAkGA1UEBhMCVVMwHhcNMTQwNDMwMTgxOTA2WhcNMzkwNDMwMTgxOTA2WjBnMRswGQYDVQQDDBJBcHBsZSBSb290IENBIC0gRzMxJjAkBgNVBAsMHUFwcGxlIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MRMwEQYDVQQKDApBcHBsZSBJbmMuMQswCQYDVQQGEwJVUzB2MBAGByqGSM49AgEGBSuBBAAiA2IABJjpLz1AcqTtkyJygRMc3RCV8cWjTnHcFBbZDuWmBSp3ZHtfTjjTuxxEtX/1H7YyYl3J6YRbTzBPEVoA/VhYDKX1DyxNB0cTddqXl5dvMVztK517IDvYuVTZXpmkOlEKMaNCMEAwHQYDVR0OBBYEFLuw3qFYM4iapIqZ3r6966/ayySrMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMDA2gAMGUCMQCD6cHEFl4aXTQY2e3v9GwOAEZLuN+yRhHFD/3meoyhpmvOwgPUnPWTxnS4at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM6BgD56KyKA==';
+  "MIICQzCCAcmgAwIBAgIILcX8iNLFS5UwCgYIKoZIzj0EAwMwZzEbMBkGA1UEAwwSQXBwbGUgUm9vdCBDQSAtIEczMSYwJAYDVQQLDB1BcHBsZSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTETMBEGA1UECgwKQXBwbGUgSW5jLjELMAkGA1UEBhMCVVMwHhcNMTQwNDMwMTgxOTA2WhcNMzkwNDMwMTgxOTA2WjBnMRswGQYDVQQDDBJBcHBsZSBSb290IENBIC0gRzMxJjAkBgNVBAsMHUFwcGxlIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MRMwEQYDVQQKDApBcHBsZSBJbmMuMQswCQYDVQQGEwJVUzB2MBAGByqGSM49AgEGBSuBBAAiA2IABJjpLz1AcqTtkyJygRMc3RCV8cWjTnHcFBbZDuWmBSp3ZHtfTjjTuxxEtX/1H7YyYl3J6YRbTzBPEVoA/VhYDKX1DyxNB0cTddqXl5dvMVztK517IDvYuVTZXpmkOlEKMaNCMEAwHQYDVR0OBBYEFLuw3qFYM4iapIqZ3r6966/ayySrMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMDA2gAMGUCMQCD6cHEFl4aXTQY2e3v9GwOAEZLuN+yRhHFD/3meoyhpmvOwgPUnPWTxnS4at+qIxUCMG1mihDK1A3UT82NQz60imOlM27jbdoXt2QfyFMm+YhidDkLF1vLUagM6BgD56KyKA==";
 
 function base64ToBuffer(b64: string): Buffer {
-  return Buffer.from(b64, 'base64');
+  return Buffer.from(b64, "base64");
 }
 
 function requireEnv(name: string): string {
@@ -46,24 +46,46 @@ function requireEnv(name: string): string {
 
 export function getAppleConfig() {
   return {
-    issuerId: requireEnv('APPLE_ISSUER_ID'),
-    keyId: requireEnv('APPLE_KEY_ID'),
-    privateKey: requireEnv('APPLE_PRIVATE_KEY'),
-    bundleId: requireEnv('APPLE_BUNDLE_ID'),
+    issuerId: requireEnv("APPLE_ISSUER_ID"),
+    keyId: requireEnv("APPLE_KEY_ID"),
+    privateKey: requireEnv("APPLE_PRIVATE_KEY"),
+    bundleId: requireEnv("APPLE_BUNDLE_ID"),
     // Optional: sandbox-only testing can omit this; production cannot.
-    appAppleId: Deno.env.get('APPLE_APP_APPLE_ID') ? Number(Deno.env.get('APPLE_APP_APPLE_ID')) : undefined,
+    appAppleId: Deno.env.get("APPLE_APP_APPLE_ID")
+      ? Number(Deno.env.get("APPLE_APP_APPLE_ID"))
+      : undefined,
   };
 }
 
-let _verifiers: { production: SignedDataVerifier; sandbox: SignedDataVerifier } | null = null;
+let _verifiers: {
+  production: SignedDataVerifier | null;
+  sandbox: SignedDataVerifier;
+} | null = null;
 
 function getVerifiers() {
   if (_verifiers) return _verifiers;
   const { bundleId, appAppleId } = getAppleConfig();
   const roots = [base64ToBuffer(APPLE_ROOT_CA_G3_B64)];
   _verifiers = {
-    production: new SignedDataVerifier(roots, true, Environment.PRODUCTION, bundleId, appAppleId),
-    sandbox: new SignedDataVerifier(roots, true, Environment.SANDBOX, bundleId, appAppleId),
+    // Apple's official SDK requires appAppleId for a production verifier.
+    // Do not let an intentionally sandbox-only setup prevent the sandbox
+    // verifier from being constructed.
+    production: appAppleId
+      ? new SignedDataVerifier(
+          roots,
+          true,
+          Environment.PRODUCTION,
+          bundleId,
+          appAppleId
+        )
+      : null,
+    sandbox: new SignedDataVerifier(
+      roots,
+      true,
+      Environment.SANDBOX,
+      bundleId,
+      appAppleId
+    ),
   };
   return _verifiers;
 }
@@ -73,40 +95,79 @@ function getVerifiers() {
 // live Apple API call needed). Tries production first, falls back to
 // sandbox, since the same signing chain covers both and we don't otherwise
 // know in advance whether this is a TestFlight/sandbox purchase.
-export async function verifyTransactionJWS(signedTransactionInfo: string): Promise<JWSTransactionDecodedPayload> {
+export async function verifyTransactionJWS(
+  signedTransactionInfo: string
+): Promise<JWSTransactionDecodedPayload> {
   const { production, sandbox } = getVerifiers();
-  try {
-    return await production.verifyAndDecodeTransaction(signedTransactionInfo);
-  } catch (prodErr) {
+  if (production) {
     try {
-      return await sandbox.verifyAndDecodeTransaction(signedTransactionInfo);
-    } catch {
-      throw prodErr;
+      return await production.verifyAndDecodeTransaction(signedTransactionInfo);
+    } catch (prodErr) {
+      try {
+        return await sandbox.verifyAndDecodeTransaction(signedTransactionInfo);
+      } catch {
+        throw prodErr;
+      }
     }
   }
+  return await sandbox.verifyAndDecodeTransaction(signedTransactionInfo);
+}
+
+export async function verifyRenewalInfoJWS(signedRenewalInfo: string) {
+  const { production, sandbox } = getVerifiers();
+  if (production) {
+    try {
+      return await production.verifyAndDecodeRenewalInfo(signedRenewalInfo);
+    } catch (prodErr) {
+      try {
+        return await sandbox.verifyAndDecodeRenewalInfo(signedRenewalInfo);
+      } catch {
+        throw prodErr;
+      }
+    }
+  }
+  return await sandbox.verifyAndDecodeRenewalInfo(signedRenewalInfo);
 }
 
 export async function verifyNotificationPayload(signedPayload: string) {
   const { production, sandbox } = getVerifiers();
-  try {
-    return await production.verifyAndDecodeNotification(signedPayload);
-  } catch (prodErr) {
+  if (production) {
     try {
-      return await sandbox.verifyAndDecodeNotification(signedPayload);
-    } catch {
-      throw prodErr;
+      return await production.verifyAndDecodeNotification(signedPayload);
+    } catch (prodErr) {
+      try {
+        return await sandbox.verifyAndDecodeNotification(signedPayload);
+      } catch {
+        throw prodErr;
+      }
     }
   }
+  return await sandbox.verifyAndDecodeNotification(signedPayload);
 }
 
-let _apiClients: { production: AppStoreServerAPIClient; sandbox: AppStoreServerAPIClient } | null = null;
+let _apiClients: {
+  production: AppStoreServerAPIClient;
+  sandbox: AppStoreServerAPIClient;
+} | null = null;
 
 function getApiClients() {
   if (_apiClients) return _apiClients;
   const { issuerId, keyId, privateKey, bundleId } = getAppleConfig();
   _apiClients = {
-    production: new AppStoreServerAPIClient(privateKey, keyId, issuerId, bundleId, Environment.PRODUCTION),
-    sandbox: new AppStoreServerAPIClient(privateKey, keyId, issuerId, bundleId, Environment.SANDBOX),
+    production: new AppStoreServerAPIClient(
+      privateKey,
+      keyId,
+      issuerId,
+      bundleId,
+      Environment.PRODUCTION
+    ),
+    sandbox: new AppStoreServerAPIClient(
+      privateKey,
+      keyId,
+      issuerId,
+      bundleId,
+      Environment.SANDBOX
+    ),
   };
   return _apiClients;
 }
@@ -118,65 +179,124 @@ function getApiClients() {
 // no changes to work with Apple-sourced rows.
 function mapAppleStatus(status: number): string {
   const m: Record<number, string> = {
-    1: 'active',
-    2: 'expired',
-    3: 'on_hold', // billing retry — closest existing analog to Play's on_hold
-    4: 'in_grace_period',
-    5: 'canceled', // revoked
+    1: "active",
+    2: "expired",
+    3: "on_hold", // billing retry — closest existing analog to Play's on_hold
+    4: "in_grace_period",
+    5: "canceled", // revoked
   };
-  return m[status] || 'expired';
+  return m[status] || "expired";
 }
 
-export type AppleSubscriptionStatus = {
-  ok: true;
-  subscriptionState: string;
-  productId?: string;
-  expiryTime?: string;
-  autoRenewing: boolean;
-  originalTransactionId?: string;
-  transactionId?: string;
-} | { ok: false; reason: string };
+export type AppleSubscriptionStatus =
+  | {
+      ok: true;
+      subscriptionState: string;
+      productId?: string;
+      expiryTime?: string;
+      autoRenewing: boolean;
+      originalTransactionId?: string;
+      transactionId?: string;
+      appAccountToken?: string;
+    }
+  | { ok: false; reason: string };
 
 // Looks up the AUTHORITATIVE current state of a subscription by its stable
 // originalTransactionId — used for both the initial purchase/upgrade moment
 // and (via apple-notifications-webhook) every later lifecycle event, mirroring
 // how verify-play-subscription/play-rtdn-webhook both always re-fetch truth
 // from subscriptionsv2 rather than trusting the triggering event alone.
-export async function fetchAppleSubscriptionStatus(originalTransactionId: string): Promise<AppleSubscriptionStatus> {
+export async function fetchAppleSubscriptionStatus(
+  originalTransactionId: string
+): Promise<AppleSubscriptionStatus> {
   const { production, sandbox } = getApiClients();
   let statusResponse: StatusResponse;
   try {
-    statusResponse = await production.getAllSubscriptionStatuses(originalTransactionId);
+    statusResponse = await production.getAllSubscriptionStatuses(
+      originalTransactionId
+    );
   } catch (prodErr) {
     try {
-      statusResponse = await sandbox.getAllSubscriptionStatuses(originalTransactionId);
+      statusResponse = await sandbox.getAllSubscriptionStatuses(
+        originalTransactionId
+      );
     } catch {
-      return { ok: false, reason: (prodErr as Error).message || 'Apple API error' };
+      return {
+        ok: false,
+        reason: (prodErr as Error).message || "Apple API error",
+      };
     }
   }
 
-  const group = statusResponse.data?.[0];
-  const lastTx = group?.lastTransactions?.[0];
-  if (!group || !lastTx) {
-    return { ok: false, reason: 'No subscription data returned for this transaction' };
+  const candidates = (statusResponse.data || []).flatMap(
+    (group) => group.lastTransactions || []
+  );
+  if (candidates.length === 0) {
+    return {
+      ok: false,
+      reason: "No subscription data returned for this transaction",
+    };
   }
 
-  let decoded: JWSTransactionDecodedPayload | null = null;
-  if (lastTx.signedTransactionInfo) {
+  let selected: {
+    item: (typeof candidates)[number];
+    decoded: JWSTransactionDecodedPayload;
+  } | null = null;
+  for (const item of candidates) {
+    if (!item.signedTransactionInfo) continue;
     try {
-      decoded = await verifyTransactionJWS(lastTx.signedTransactionInfo);
+      const decoded = await verifyTransactionJWS(item.signedTransactionInfo);
+      if (decoded.originalTransactionId === originalTransactionId) {
+        selected = { item, decoded };
+        break;
+      }
+      if (!selected) selected = { item, decoded };
     } catch (e) {
-      return { ok: false, reason: 'Could not verify transaction signature: ' + (e as Error).message };
+      return {
+        ok: false,
+        reason:
+          "Could not verify transaction signature: " + (e as Error).message,
+      };
+    }
+  }
+  if (!selected)
+    return {
+      ok: false,
+      reason: "No signed transaction data returned for this subscription",
+    };
+
+  let autoRenewing = selected.item.status === 1 || selected.item.status === 4;
+  let gracePeriodExpiresDate: number | undefined;
+  if (selected.item.signedRenewalInfo) {
+    try {
+      const renewal = await verifyRenewalInfoJWS(
+        selected.item.signedRenewalInfo
+      );
+      autoRenewing = renewal.autoRenewStatus === 1;
+      gracePeriodExpiresDate = renewal.gracePeriodExpiresDate;
+    } catch (e) {
+      return {
+        ok: false,
+        reason: "Could not verify renewal signature: " + (e as Error).message,
+      };
     }
   }
 
   return {
     ok: true,
-    subscriptionState: mapAppleStatus(lastTx.status as unknown as number),
-    productId: decoded?.productId,
-    expiryTime: decoded?.expiresDate ? new Date(decoded.expiresDate).toISOString() : undefined,
-    autoRenewing: lastTx.status === 1 || lastTx.status === 4, // Apple doesn't expose a separate autoRenew flag on the status entry itself; renewalInfo would, but state alone is enough to drive activate_play_subscription's own "active/in_grace_period" gate
-    originalTransactionId: decoded?.originalTransactionId,
-    transactionId: decoded?.transactionId,
+    subscriptionState: mapAppleStatus(
+      selected.item.status as unknown as number
+    ),
+    productId: selected.decoded.productId,
+    expiryTime:
+      selected.item.status === 4 && gracePeriodExpiresDate
+        ? new Date(gracePeriodExpiresDate).toISOString()
+        : selected.decoded.expiresDate
+        ? new Date(selected.decoded.expiresDate).toISOString()
+        : undefined,
+    autoRenewing,
+    originalTransactionId: selected.decoded.originalTransactionId,
+    transactionId: selected.decoded.transactionId,
+    appAccountToken: selected.decoded.appAccountToken,
   };
 }

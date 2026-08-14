@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Rect, Path } from "react-native-svg";
@@ -8,14 +17,19 @@ import type { RentalFleetVehicle } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
 import { RENTAL_FEATURED_SLOT_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
+import { useStoreProducts } from "../../lib/use-store-products";
+import { StoreProductOption } from "../../components/StoreProductOption";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 type Tab = "all" | "active" | "paused" | "draft";
+const RENTAL_FEATURED_PRODUCT_IDS = Object.keys(RENTAL_FEATURED_SLOT_PRODUCTS);
 
-function buildStatusStyles(color: ColorPalette): Record<string, { fg: string; bg: string; label: string }> {
+function buildStatusStyles(
+  color: ColorPalette
+): Record<string, { fg: string; bg: string; label: string }> {
   return {
     active: { fg: color.success, bg: color.successTint, label: "Active" },
     paused: { fg: color.warning, bg: color.warningTint, label: "Paused" },
@@ -43,7 +57,14 @@ function StatusPill({
 
 function CarPlaceholderIcon({ stroke }: { stroke: string }) {
   return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={1.5}>
+    <Svg
+      width={22}
+      height={22}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={stroke}
+      strokeWidth={1.5}
+    >
       <Rect x="1" y="3" width="22" height="13" rx="2" />
       <Path d="M8 21h8M12 17v4" />
     </Svg>
@@ -66,7 +87,16 @@ export default function RentalManageFleetScreen() {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [featurePickerFor, setFeaturePickerFor] = useState<string | null>(null);
-  const [purchasingFeature, setPurchasingFeature] = useState<string | null>(null);
+  const [purchasingFeature, setPurchasingFeature] = useState<string | null>(
+    null
+  );
+  const {
+    prices: featurePrices,
+    availableProductIds: availableFeatureIds,
+    isLoading: isLoadingFeatures,
+    error: featureProductError,
+    retry: retryFeatureProducts,
+  } = useStoreProducts(RENTAL_FEATURED_PRODUCT_IDS, "consumable");
 
   const load = useCallback(async () => {
     if (!bizId) return;
@@ -92,10 +122,15 @@ export default function RentalManageFleetScreen() {
       .limit(50);
 
     const rows = (fleetRows as any[]) ?? [];
-    const brandIds = Array.from(new Set(rows.map((v) => v.brand_id).filter(Boolean)));
+    const brandIds = Array.from(
+      new Set(rows.map((v) => v.brand_id).filter(Boolean))
+    );
     let brandMap: Record<string, { slug: string; label: string }> = {};
     if (brandIds.length) {
-      const { data: brandRows } = await supabase.from("rental_brands").select("id,slug,label").in("id", brandIds);
+      const { data: brandRows } = await supabase
+        .from("rental_brands")
+        .select("id,slug,label")
+        .in("id", brandIds);
       (brandRows ?? []).forEach((b: any) => {
         brandMap[b.id] = { slug: b.slug, label: b.label };
       });
@@ -119,7 +154,10 @@ export default function RentalManageFleetScreen() {
       const { data: featuredRows } = await supabase
         .from("rental_featured_listings")
         .select("listing_id,ends_at")
-        .in("listing_id", rows.map((v) => v.id))
+        .in(
+          "listing_id",
+          rows.map((v) => v.id)
+        )
         .eq("is_active", true)
         .gt("ends_at", new Date().toISOString());
       (featuredRows ?? []).forEach((f: any) => {
@@ -138,15 +176,26 @@ export default function RentalManageFleetScreen() {
   }, [bizId]);
 
   async function buyFeature(vehicleId: string, productId: string) {
+    if (!availableFeatureIds.includes(productId)) {
+      toast(
+        "This featured placement is unavailable from the store. Retry loading prices."
+      );
+      return;
+    }
     setPurchasingFeature(productId);
-    const result = await purchaseProduct(productId, { listingId: vehicleId });
-    setPurchasingFeature(null);
-    if (result.ok) {
-      setFeaturePickerFor(null);
-      toast("Vehicle featured!");
-      load();
-    } else if (result.error) {
-      toast(result.error);
+    try {
+      const result = await purchaseProduct(productId, { listingId: vehicleId });
+      if (result.ok) {
+        setFeaturePickerFor(null);
+        toast("Vehicle featured!");
+        load();
+      } else if (result.code === "user-cancelled") {
+        toast("Purchase cancelled");
+      } else {
+        toast(result.error);
+      }
+    } finally {
+      setPurchasingFeature(null);
     }
   }
 
@@ -184,7 +233,11 @@ export default function RentalManageFleetScreen() {
       toast("Access denied. Your company account is not active.", 4000, true);
       return;
     }
-    setFleet((prev) => prev.map((v) => (v.id === vehicleId ? { ...v, status: newStatus as any } : v)));
+    setFleet((prev) =>
+      prev.map((v) =>
+        v.id === vehicleId ? { ...v, status: newStatus as any } : v
+      )
+    );
     toast(newStatus === "active" ? "Vehicle activated." : "Vehicle paused.");
   }
 
@@ -200,11 +253,18 @@ export default function RentalManageFleetScreen() {
           onPress: async () => {
             const { data, error } = await supabase
               .from("rental_vehicle_listings")
-              .update({ status: "archived", deleted_at: new Date().toISOString() })
+              .update({
+                status: "archived",
+                deleted_at: new Date().toISOString(),
+              })
               .eq("id", vehicleId)
               .select("id");
             if (error || !data?.length) {
-              toast("Access denied. Your company account is not active.", 4000, true);
+              toast(
+                "Access denied. Your company account is not active.",
+                4000,
+                true
+              );
               return;
             }
             setFleet((prev) => prev.filter((v) => v.id !== vehicleId));
@@ -217,14 +277,29 @@ export default function RentalManageFleetScreen() {
 
   function showActions(v: RentalFleetVehicle) {
     Alert.alert(fleetVehicleLabel(v), undefined, [
-      { text: "View Public Listing", onPress: () => router.push(`/rentals/${v.id}`) },
-      { text: "Edit Vehicle", onPress: () => router.push(`/rental-fleet/edit-vehicle?id=${v.id}&bizId=${bizId}`) },
+      {
+        text: "View Public Listing",
+        onPress: () => router.push(`/rentals/${v.id}`),
+      },
+      {
+        text: "Edit Vehicle",
+        onPress: () =>
+          router.push(`/rental-fleet/edit-vehicle?id=${v.id}&bizId=${bizId}`),
+      },
       {
         text: v.status === "active" ? "Pause Listing" : "Activate Listing",
-        onPress: () => toggleStatus(v.id, v.status === "active" ? "paused" : "active"),
+        onPress: () =>
+          toggleStatus(v.id, v.status === "active" ? "paused" : "active"),
       },
-      { text: "Manage Availability", onPress: () => router.push(`/rental-fleet/availability?id=${v.id}`) },
-      { text: "Remove Vehicle", style: "destructive", onPress: () => confirmRemove(v.id) },
+      {
+        text: "Manage Availability",
+        onPress: () => router.push(`/rental-fleet/availability?id=${v.id}`),
+      },
+      {
+        text: "Remove Vehicle",
+        style: "destructive",
+        onPress: () => confirmRemove(v.id),
+      },
       { text: "Cancel", style: "cancel" },
     ]);
   }
@@ -242,7 +317,9 @@ export default function RentalManageFleetScreen() {
       {!canWrite ? (
         <View style={styles.blockedBox}>
           <Text style={styles.blockedTitle}>Vehicle management locked</Text>
-          <Text style={styles.blockedBody}>Your company must be approved before you can add or edit vehicles.</Text>
+          <Text style={styles.blockedBody}>
+            Your company must be approved before you can add or edit vehicles.
+          </Text>
         </View>
       ) : null}
 
@@ -270,27 +347,49 @@ export default function RentalManageFleetScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
         {filtered.length ? (
           filtered.map((v) => {
-            const isFeatured = !!v.featured_until && new Date(v.featured_until).getTime() > Date.now();
+            const isFeatured =
+              !!v.featured_until &&
+              new Date(v.featured_until).getTime() > Date.now();
             return (
               <View key={v.id}>
-                <Pressable style={styles.vehicleRow} onPress={() => (canWrite ? showActions(v) : undefined)}>
+                <Pressable
+                  style={styles.vehicleRow}
+                  onPress={() => (canWrite ? showActions(v) : undefined)}
+                >
                   <View style={styles.thumbWrap}>
                     {v.cover_url ? (
-                      <Image source={{ uri: v.cover_url }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+                      <Image
+                        source={{ uri: v.cover_url }}
+                        style={styles.thumb}
+                        contentFit="cover"
+                        transition={150}
+                        cachePolicy="memory-disk"
+                      />
                     ) : (
                       <CarPlaceholderIcon stroke={tones.textMuted} />
                     )}
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.vehicleTitle} numberOfLines={1}>
-                      {fleetVehicleLabel(v)} {v.year ? <Text style={styles.vehicleYear}>{v.year}</Text> : null}
+                      {fleetVehicleLabel(v)}{" "}
+                      {v.year ? (
+                        <Text style={styles.vehicleYear}>{v.year}</Text>
+                      ) : null}
                     </Text>
                     <View style={styles.vehicleMetaRow}>
-                      <Text style={styles.vehiclePrice}>${(v.daily_rate ?? 0).toLocaleString()}/day</Text>
-                      <StatusPill status={v.status} styles={styles} statusStyles={statusStyles} />
+                      <Text style={styles.vehiclePrice}>
+                        ${(v.daily_rate ?? 0).toLocaleString()}/day
+                      </Text>
+                      <StatusPill
+                        status={v.status}
+                        styles={styles}
+                        statusStyles={statusStyles}
+                      />
                     </View>
                     <Text style={styles.vehicleStats}>
-                      {(v.inquiry_count ?? 0).toLocaleString()} inquiries · {(v.view_count ?? 0).toLocaleString()} views · {(v.save_count ?? 0).toLocaleString()} saves
+                      {(v.inquiry_count ?? 0).toLocaleString()} inquiries ·{" "}
+                      {(v.view_count ?? 0).toLocaleString()} views ·{" "}
+                      {(v.save_count ?? 0).toLocaleString()} saves
                     </Text>
                   </View>
                   {isFeatured ? (
@@ -300,35 +399,38 @@ export default function RentalManageFleetScreen() {
                   ) : (
                     <Pressable
                       style={styles.featureButton}
-                      onPress={() => setFeaturePickerFor(featurePickerFor === v.id ? null : v.id)}
+                      onPress={() =>
+                        setFeaturePickerFor(
+                          featurePickerFor === v.id ? null : v.id
+                        )
+                      }
                     >
-                      <Text style={styles.featureButtonText}>Feature</Text>
+                      <Text style={styles.featureButtonText}>Options</Text>
                     </Pressable>
                   )}
                 </Pressable>
 
                 {featurePickerFor === v.id ? (
                   <View style={styles.featureOptions}>
-                    {Object.entries(RENTAL_FEATURED_SLOT_PRODUCTS).map(([productId, p]) => (
-                      <Pressable
-                        key={productId}
-                        style={[styles.featureOpt, p.days === 30 && styles.featureOptReco]}
-                        onPress={() => buyFeature(v.id, productId)}
-                        disabled={!!purchasingFeature}
-                      >
-                        {p.days === 30 ? (
-                          <View style={styles.featureOptTag}>
-                            <Text style={styles.featureOptTagText}>BEST VALUE</Text>
-                          </View>
-                        ) : null}
-                        <Text style={styles.featureOptLabel}>{p.days} days</Text>
-                        {purchasingFeature === productId ? (
-                          <ActivityIndicator color={tones.brand} />
-                        ) : (
-                          <Text style={styles.featureOptCta}>Feature</Text>
-                        )}
-                      </Pressable>
-                    ))}
+                    {Object.entries(RENTAL_FEATURED_SLOT_PRODUCTS).map(
+                      ([productId, p]) => (
+                        <StoreProductOption
+                          key={productId}
+                          title={`${p.days}-Day Rental Featured Placement`}
+                          price={featurePrices[productId]}
+                          description={`Features this rental listing for ${p.days} days.`}
+                          buttonLabel="Feature Listing"
+                          isLoading={isLoadingFeatures}
+                          isAvailable={availableFeatureIds.includes(productId)}
+                          isPurchasing={purchasingFeature === productId}
+                          purchaseBlocked={!!purchasingFeature}
+                          error={featureProductError}
+                          recommended={p.days === 30}
+                          onPurchase={() => buyFeature(v.id, productId)}
+                          onRetry={retryFeatureProducts}
+                        />
+                      )
+                    )}
                   </View>
                 ) : null}
               </View>
@@ -339,14 +441,24 @@ export default function RentalManageFleetScreen() {
             <EmptyState
               title="No vehicles in this category"
               buttonLabel={canWrite ? "Add Vehicle" : undefined}
-              onPressButton={canWrite ? () => router.push(`/rental-fleet/add-vehicle?bizId=${bizId}`) : undefined}
+              onPressButton={
+                canWrite
+                  ? () =>
+                      router.push(`/rental-fleet/add-vehicle?bizId=${bizId}`)
+                  : undefined
+              }
             />
           </View>
         )}
       </ScrollView>
 
       {canWrite ? (
-        <Pressable style={styles.fab} onPress={() => router.push(`/rental-fleet/add-vehicle?bizId=${bizId}`)}>
+        <Pressable
+          style={styles.fab}
+          onPress={() =>
+            router.push(`/rental-fleet/add-vehicle?bizId=${bizId}`)
+          }
+        >
           <Text style={styles.fabText}>+ Add</Text>
         </Pressable>
       ) : null}
@@ -371,14 +483,41 @@ function buildStyles(color: ColorPalette) {
       padding: 16,
       alignItems: "center",
     },
-    blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 4 },
-    blockedBody: { fontSize: 12, color: color.textMuted, textAlign: "center", lineHeight: 17 },
-    tabRow: { flexDirection: "row", backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    blockedTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: color.textSub,
+      marginBottom: 4,
+    },
+    blockedBody: {
+      fontSize: 12,
+      color: color.textMuted,
+      textAlign: "center",
+      lineHeight: 17,
+    },
+    tabRow: {
+      flexDirection: "row",
+      backgroundColor: color.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+    },
     tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
     tabText: { fontSize: 12.5, fontWeight: "600", color: color.textMuted },
     tabTextActive: { fontWeight: "800", color: color.brand },
-    tabUnderline: { height: 2.5, backgroundColor: color.brand, width: "60%", borderRadius: 2, marginTop: 6 },
-    searchWrap: { padding: 10, paddingHorizontal: 16, backgroundColor: color.surface, borderBottomWidth: 1, borderBottomColor: color.border },
+    tabUnderline: {
+      height: 2.5,
+      backgroundColor: color.brand,
+      width: "60%",
+      borderRadius: 2,
+      marginTop: 6,
+    },
+    searchWrap: {
+      padding: 10,
+      paddingHorizontal: 16,
+      backgroundColor: color.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+    },
     searchInput: {
       height: 38,
       borderWidth: 1.5,
@@ -410,12 +549,28 @@ function buildStyles(color: ColorPalette) {
     thumb: { width: "100%", height: "100%" },
     vehicleTitle: { fontSize: 14, fontWeight: "700", color: color.text },
     vehicleYear: { fontWeight: "500", color: color.textMuted },
-    vehicleMetaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+    vehicleMetaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 4,
+    },
     vehiclePrice: { fontSize: 14, fontWeight: "800", color: color.brand },
-    vehicleStats: { fontSize: 11.5, fontWeight: "600", color: color.textMuted, marginTop: 4 },
+    vehicleStats: {
+      fontSize: 11.5,
+      fontWeight: "600",
+      color: color.textMuted,
+      marginTop: 4,
+    },
     pill: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
     pillText: { fontSize: 11, fontWeight: "700" },
-    featuredBadge: { backgroundColor: color.goldTint, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, flexShrink: 0 },
+    featuredBadge: {
+      backgroundColor: color.goldTint,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      flexShrink: 0,
+    },
     featuredBadgeText: { fontSize: 11, fontWeight: "800", color: "#B9720A" },
     featureButton: {
       backgroundColor: color.brand,
@@ -424,8 +579,17 @@ function buildStyles(color: ColorPalette) {
       paddingVertical: 6,
       flexShrink: 0,
     },
-    featureButtonText: { fontSize: 11.5, fontWeight: "800", color: color.textOnBrand },
-    featureOptions: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: color.surface },
+    featureButtonText: {
+      fontSize: 11.5,
+      fontWeight: "800",
+      color: color.textOnBrand,
+    },
+    featureOptions: {
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      backgroundColor: color.surface,
+    },
     featureOpt: {
       flex: 1,
       alignItems: "center",
@@ -437,7 +601,10 @@ function buildStyles(color: ColorPalette) {
       borderColor: "transparent",
       position: "relative",
     },
-    featureOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+    featureOptReco: {
+      borderColor: color.gold,
+      backgroundColor: color.goldTint,
+    },
     featureOptTag: {
       position: "absolute",
       top: -9,
@@ -447,7 +614,12 @@ function buildStyles(color: ColorPalette) {
       paddingHorizontal: 8,
       paddingVertical: 2,
     },
-    featureOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
+    featureOptTagText: {
+      fontSize: 9,
+      fontWeight: "800",
+      color: "#fff",
+      letterSpacing: 0.3,
+    },
     featureOptLabel: { fontSize: 13, fontWeight: "700", color: color.text },
     featureOptCta: { fontSize: 12, fontWeight: "800", color: color.brand },
     fab: {

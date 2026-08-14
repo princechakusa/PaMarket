@@ -35,8 +35,8 @@
 //   ANDROID_PACKAGE_NAME                     (e.g. com.pamarket.app)
 
 const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
+  "https://pamarketzw.com",
+  "https://www.pamarketzw.com",
   // capacitor.config.json sets androidScheme:"https" with no custom hostname,
   // so the Android app's WebView actually serves the app from
   // https://localhost (iOS: capacitor://localhost) — this function is called
@@ -44,19 +44,22 @@ const ALLOWED_ORIGINS = new Set([
   // these origins listed here every purchase verification request was
   // rejected by CORS before this function's logic ever ran, surfacing only
   // as a generic network failure in-app.
-  'https://localhost',
-  'capacitor://localhost',
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
+  "https://localhost",
+  "capacitor://localhost",
+  "http://127.0.0.1:5500",
+  "http://localhost:5500",
 ]);
 
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? '';
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com';
+  const origin = req.headers.get("origin") ?? "";
+  const allowed = ALLOWED_ORIGINS.has(origin)
+    ? origin
+    : "https://pamarketzw.com";
   return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Vary': 'Origin',
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    Vary: "Origin",
   };
 }
 
@@ -67,7 +70,14 @@ function corsHeaders(req: Request) {
 // catalogue is rejected here with an explicit 501 before touching any
 // ledger, even though this function's own product lookups below only ever
 // contain 'active' entries.
-import { BOOST_PRODUCTS, SLOT_PACK_PRODUCTS, JOB_CREDIT_PRODUCTS, JOB_BOOST_PRODUCTS, RENTAL_FEATURED_SLOT_PRODUCTS, getProductStatus } from '../_shared/billing-products.ts';
+import {
+  BOOST_PRODUCTS,
+  SLOT_PACK_PRODUCTS,
+  JOB_CREDIT_PRODUCTS,
+  JOB_BOOST_PRODUCTS,
+  RENTAL_FEATURED_SLOT_PRODUCTS,
+  getProductStatus,
+} from "../_shared/billing-products.ts";
 
 // ── Google OAuth (service account → Android Publisher API) ──────────────
 let _tokenCache: { value: string; exp: number } | null = null;
@@ -76,96 +86,170 @@ async function getGoogleAccessToken(sa: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   if (_tokenCache && _tokenCache.exp - 120 > now) return _tokenCache.value;
 
-  const b64url = (o: object) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  const header = { alg: 'RS256', typ: 'JWT' };
+  const b64url = (o: object) =>
+    btoa(JSON.stringify(o))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
+  const header = { alg: "RS256", typ: "JWT" };
   const payload = {
-    iss: sa['client_email'],
-    scope: 'https://www.googleapis.com/auth/androidpublisher',
-    aud: 'https://oauth2.googleapis.com/token',
+    iss: sa["client_email"],
+    scope: "https://www.googleapis.com/auth/androidpublisher",
+    aud: "https://oauth2.googleapis.com/token",
     iat: now,
     exp: now + 3600,
   };
-  const sigInput = b64url(header) + '.' + b64url(payload);
-  const pem = sa['private_key'].replace(/-----BEGIN PRIVATE KEY-----/g, '').replace(/-----END PRIVATE KEY-----/g, '').replace(/\n/g, '');
+  const sigInput = b64url(header) + "." + b64url(payload);
+  const pem = sa["private_key"]
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/\n/g, "");
   const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8', Uint8Array.from(atob(pem), c => c.charCodeAt(0)),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']
+    "pkcs8",
+    Uint8Array.from(atob(pem), (c) => c.charCodeAt(0)),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
   );
-  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(sigInput));
-  const jwt = sigInput + '.' + btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  const sig = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    cryptoKey,
+    new TextEncoder().encode(sigInput)
+  );
+  const jwt =
+    sigInput +
+    "." +
+    btoa(String.fromCharCode(...new Uint8Array(sig)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt,
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body:
+      "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=" +
+      jwt,
   });
   const tokenData = await res.json();
-  if (!res.ok || !tokenData['access_token']) {
-    throw new Error('Google auth failed (' + res.status + '): ' + JSON.stringify(tokenData));
+  if (!res.ok || !tokenData["access_token"]) {
+    throw new Error(
+      "Google auth failed (" + res.status + "): " + JSON.stringify(tokenData)
+    );
   }
-  const ttl = Number(tokenData['expires_in']) || 3600;
-  _tokenCache = { value: tokenData['access_token'], exp: now + ttl };
+  const ttl = Number(tokenData["expires_in"]) || 3600;
+  _tokenCache = { value: tokenData["access_token"], exp: now + ttl };
   return _tokenCache.value;
 }
 
 // Verifies a consumable product purchase via the Android Publisher API.
 // Returns the parsed purchase state so the caller can decide pass/fail.
 async function verifyProductPurchase(
-  packageName: string, productId: string, purchaseToken: string, accessToken: string
-): Promise<{ ok: boolean; reason?: string; purchaseTimeMillis?: string; orderId?: string; purchaseState?: number; consumptionState?: number }> {
-  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(packageName)}/purchases/products/${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}`;
-  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  packageName: string,
+  productId: string,
+  purchaseToken: string,
+  accessToken: string
+): Promise<{
+  ok: boolean;
+  reason?: string;
+  purchaseTimeMillis?: string;
+  orderId?: string;
+  purchaseState?: number;
+  consumptionState?: number;
+}> {
+  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(
+    packageName
+  )}/purchases/products/${encodeURIComponent(
+    productId
+  )}/tokens/${encodeURIComponent(purchaseToken)}`;
+  const res = await fetch(url, {
+    headers: { Authorization: "Bearer " + accessToken },
+  });
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    return { ok: false, reason: 'Google API error ' + res.status + ': ' + (body?.error?.message || JSON.stringify(body)) };
+    return {
+      ok: false,
+      reason:
+        "Google API error " +
+        res.status +
+        ": " +
+        (body?.error?.message || JSON.stringify(body)),
+    };
   }
 
   // purchaseState: 0 = purchased, 1 = canceled, 2 = pending
-  const purchaseState = body['purchaseState'];
+  const purchaseState = body["purchaseState"];
   if (purchaseState !== 0) {
-    return { ok: false, reason: 'Purchase not in a completed state (purchaseState=' + purchaseState + ')', purchaseState };
+    return {
+      ok: false,
+      reason:
+        "Purchase not in a completed state (purchaseState=" +
+        purchaseState +
+        ")",
+      purchaseState,
+    };
   }
 
   return {
     ok: true,
-    purchaseTimeMillis: body['purchaseTimeMillis'],
-    orderId: body['orderId'],
+    purchaseTimeMillis: body["purchaseTimeMillis"],
+    orderId: body["orderId"],
     purchaseState,
-    consumptionState: body['consumptionState'],
+    consumptionState: body["consumptionState"],
   };
 }
 
 // Marks the purchase as consumed on Google's side so it can't be replayed
 // as a "new" purchase and re-verified indefinitely.
 async function consumeProductPurchase(
-  packageName: string, productId: string, purchaseToken: string, accessToken: string
+  packageName: string,
+  productId: string,
+  purchaseToken: string,
+  accessToken: string
 ): Promise<boolean> {
-  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(packageName)}/purchases/products/${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}:consume`;
-  const res = await fetch(url, { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken } });
+  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(
+    packageName
+  )}/purchases/products/${encodeURIComponent(
+    productId
+  )}/tokens/${encodeURIComponent(purchaseToken)}:consume`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: "Bearer " + accessToken },
+  });
   return res.ok;
 }
 
 Deno.serve(async (req) => {
   const cors = corsHeaders(req);
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const json = (d: unknown, s?: number) =>
-    new Response(JSON.stringify(d), { status: s || 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+    new Response(JSON.stringify(d), {
+      status: s || 200,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
 
   try {
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const { createClient } = await import(
+      "https://esm.sh/@supabase/supabase-js@2"
+    );
 
-    const authHeader = req.headers.get('Authorization') || '';
-    const userJwt = authHeader.replace('Bearer ', '').trim();
-    if (!userJwt) return json({ error: 'Missing authorization' }, 401);
+    const authHeader = req.headers.get("Authorization") || "";
+    const userJwt = authHeader.replace("Bearer ", "").trim();
+    if (!userJwt) return json({ error: "Missing authorization" }, 401);
 
     // Anon-key client to authenticate the caller as themselves first —
     // never trust a client-supplied user_id in the request body.
-    const authClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: { headers: { Authorization: authHeader } },
+      }
+    );
     const authResult = await authClient.auth.getUser(userJwt);
-    if (authResult.error || !authResult.data?.user) return json({ error: 'Invalid token' }, 401);
+    if (authResult.error || !authResult.data?.user)
+      return json({ error: "Invalid token" }, 401);
     const userId = authResult.data.user.id;
 
     const body = await req.json();
@@ -176,65 +260,132 @@ Deno.serve(async (req) => {
     const orderIdFromClient = body?.orderId || null;
 
     if (!productId || !purchaseToken) {
-      return json({ error: 'productId and purchaseToken are required' }, 400);
+      return json({ error: "productId and purchaseToken are required" }, 400);
     }
     const productStatus = getProductStatus(productId);
-    if (productStatus === 'planned') {
+    if (productStatus === "planned") {
       // Recognized product (e.g. a job_boost_* id) whose backend doesn't
       // exist yet — a clean, explicit "not implemented" response rather than
       // a generic error. Never throws, never touches any ledger table, and
       // does not affect the live boost/slot-pack paths below at all.
-      return json({ ok: false, notImplemented: true, error: 'This product is not available for purchase yet.' }, 501);
+      return json(
+        {
+          ok: false,
+          notImplemented: true,
+          error: "This product is not available for purchase yet.",
+        },
+        501
+      );
     }
-    if (productStatus === 'unknown') {
-      return json({ error: 'Unknown productId: ' + productId }, 400);
+    if (productStatus === "unknown") {
+      return json({ error: "Unknown productId: " + productId }, 400);
     }
 
     // Service-role client for everything past this point — neither ledger
     // table has a client INSERT/UPDATE policy at all, and neither activation
     // RPC is granted to `authenticated`, so this Edge Function's own
     // elevated credential is the only way any of these writes can happen.
-    const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const db = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     // job_boost_* shares the exact same table/RPC as boost_* — a job post
     // is just a listings row (cat='jobs'), so activate_play_boost's
     // featured_until/boost mutation works identically either way.
-    const isBoost = productId in BOOST_PRODUCTS || productId in JOB_BOOST_PRODUCTS;
+    const isBoost =
+      productId in BOOST_PRODUCTS || productId in JOB_BOOST_PRODUCTS;
     const slotCount = SLOT_PACK_PRODUCTS[productId]?.extraSlots;
     const creditCount = JOB_CREDIT_PRODUCTS[productId]?.credits;
     const rentalDays = RENTAL_FEATURED_SLOT_PRODUCTS[productId]?.days;
-    if (!isBoost && !slotCount && !creditCount && !rentalDays) return json({ error: 'Unknown productId: ' + productId }, 400);
+    if (!isBoost && !slotCount && !creditCount && !rentalDays)
+      return json({ error: "Unknown productId: " + productId }, 400);
 
-    const table = isBoost ? 'play_purchases' : slotCount ? 'featured_slot_packs' : rentalDays ? 'rental_featured_slot_packs' : 'job_credit_packs';
-    const activateFn = isBoost ? 'activate_play_boost' : slotCount ? 'activate_featured_slot_pack' : rentalDays ? 'activate_rental_featured_slot_pack' : 'activate_job_credit_pack';
-    const activateParam = isBoost ? 'p_purchase_id' : 'p_pack_id';
+    const table = isBoost
+      ? "play_purchases"
+      : slotCount
+      ? "featured_slot_packs"
+      : rentalDays
+      ? "rental_featured_slot_packs"
+      : "job_credit_packs";
+    const activateFn = isBoost
+      ? "activate_play_boost"
+      : slotCount
+      ? "activate_featured_slot_pack"
+      : rentalDays
+      ? "activate_rental_featured_slot_pack"
+      : "activate_job_credit_pack";
+    const activateParam = isBoost ? "p_purchase_id" : "p_pack_id";
 
     let rentalCompanyId: string | null = null;
     if (isBoost) {
-      if (!listingId) return json({ error: 'listingId is required for a boost purchase' }, 400);
-      const listingRes = await db.from('listings').select('id, seller_id, category').eq('id', listingId).maybeSingle();
-      if (listingRes.error || !listingRes.data) return json({ error: 'Listing not found' }, 404);
-      if (listingRes.data.seller_id !== userId) return json({ error: 'You do not own this listing' }, 403);
+      if (!listingId)
+        return json(
+          { error: "listingId is required for a boost purchase" },
+          400
+        );
+      const listingRes = await db
+        .from("listings")
+        .select("id, seller_id, category")
+        .eq("id", listingId)
+        .maybeSingle();
+      if (listingRes.error || !listingRes.data)
+        return json({ error: "Listing not found" }, 404);
+      if (listingRes.data.seller_id !== userId)
+        return json({ error: "You do not own this listing" }, 403);
       // Product/category pairing is enforced server-side because the two
       // boost families are priced differently — without this a client could
       // apply the cheaper job_boost_* products to a regular marketplace
       // listing (or vice versa) since activate_play_boost itself treats all
       // listings rows identically.
-      const isJobListing = listingRes.data.category === 'jobs';
+      const isJobListing = listingRes.data.category === "jobs";
       const isJobBoostProduct = productId in JOB_BOOST_PRODUCTS;
-      if (isJobBoostProduct && !isJobListing) return json({ error: 'Job boost products can only be applied to job listings' }, 400);
-      if (!isJobBoostProduct && isJobListing) return json({ error: 'Use a job boost product to boost a job listing' }, 400);
+      if (isJobBoostProduct && !isJobListing)
+        return json(
+          { error: "Job boost products can only be applied to job listings" },
+          400
+        );
+      if (!isJobBoostProduct && isJobListing)
+        return json(
+          { error: "Use a job boost product to boost a job listing" },
+          400
+        );
     } else if (slotCount) {
-      if (!businessId) return json({ error: 'businessId is required for a featured-slot-pack purchase' }, 400);
-      const bizRes = await db.from('businesses').select('id, owner_user_id').eq('id', businessId).maybeSingle();
-      if (bizRes.error || !bizRes.data) return json({ error: 'Business not found' }, 404);
-      if (bizRes.data.owner_user_id !== userId) return json({ error: 'You do not own this business' }, 403);
+      if (!businessId)
+        return json(
+          { error: "businessId is required for a featured-slot-pack purchase" },
+          400
+        );
+      const bizRes = await db
+        .from("businesses")
+        .select("id, owner_user_id")
+        .eq("id", businessId)
+        .maybeSingle();
+      if (bizRes.error || !bizRes.data)
+        return json({ error: "Business not found" }, 404);
+      if (bizRes.data.owner_user_id !== userId)
+        return json({ error: "You do not own this business" }, 403);
     } else if (rentalDays) {
-      if (!listingId) return json({ error: 'listingId is required for a rental featured-slot purchase' }, 400);
-      const rlRes = await db.from('rental_vehicle_listings').select('id, company_id, rental_companies!inner(id, business_id, businesses!inner(owner_user_id))').eq('id', listingId).maybeSingle();
-      if (rlRes.error || !rlRes.data) return json({ error: 'Rental listing not found' }, 404);
-      const ownerUserId = (rlRes.data as any).rental_companies?.businesses?.owner_user_id;
-      if (ownerUserId !== userId) return json({ error: 'You do not own this rental listing' }, 403);
+      if (!listingId)
+        return json(
+          {
+            error: "listingId is required for a rental featured-slot purchase",
+          },
+          400
+        );
+      const rlRes = await db
+        .from("rental_vehicle_listings")
+        .select(
+          "id, company_id, rental_companies!inner(id, business_id, businesses!inner(owner_user_id))"
+        )
+        .eq("id", listingId)
+        .maybeSingle();
+      if (rlRes.error || !rlRes.data)
+        return json({ error: "Rental listing not found" }, 404);
+      const ownerUserId = (rlRes.data as any).rental_companies?.businesses
+        ?.owner_user_id;
+      if (ownerUserId !== userId)
+        return json({ error: "You do not own this rental listing" }, 403);
       rentalCompanyId = (rlRes.data as any).company_id;
     }
     // Job credit packs need no listingId/businessId ownership check — the
@@ -243,28 +394,59 @@ Deno.serve(async (req) => {
 
     // Anti-replay / idempotency: if this exact token was already processed,
     // never verify or activate again — just report the existing outcome.
-    const existing = await db.from(table).select('id, status, expiry_time, user_id').eq('purchase_token', purchaseToken).maybeSingle();
+    const existing = await db
+      .from(table)
+      .select("id, status, expiry_time, user_id")
+      .eq("purchase_token", purchaseToken)
+      .maybeSingle();
     if (existing.error) {
-      console.error('verify-play-purchase: existing-token lookup failed:', existing.error.message);
-      return json({ error: 'Could not check purchase history: ' + existing.error.message }, 500);
+      console.error(
+        "verify-play-purchase: existing-token lookup failed:",
+        existing.error.message
+      );
+      return json(
+        {
+          error: "Could not check purchase history: " + existing.error.message,
+        },
+        500
+      );
     }
     if (existing.data && existing.data.user_id !== userId) {
       // A token already recorded for a DIFFERENT account must never be
       // retried/activated (or even have its status/expiry disclosed) by
       // this caller.
-      return json({ error: 'This purchase belongs to a different account' }, 403);
+      return json(
+        { error: "This purchase belongs to a different account" },
+        403
+      );
     }
     if (existing.data) {
-      if (existing.data.status === 'consumed') {
-        return json({ ok: true, already_processed: true, until: existing.data.expiry_time || null });
+      if (existing.data.status === "consumed") {
+        return json({
+          ok: true,
+          already_processed: true,
+          until: existing.data.expiry_time || null,
+        });
       }
-      if (existing.data.status === 'verified') {
+      if (existing.data.status === "verified") {
         // Verified but not yet consumed (e.g. activation failed transiently
         // last time) — retry activation without re-verifying.
-        const activateRes = await db.rpc(activateFn, { [activateParam]: existing.data.id });
+        const activateRes = await db.rpc(activateFn, {
+          [activateParam]: existing.data.id,
+        });
         if (activateRes.error || !activateRes.data?.ok) {
-          console.error('verify-play-purchase: activation failed (retry branch):', activateRes.error?.message || activateRes.data?.msg);
-          return json({ error: 'Could not activate: ' + (activateRes.error?.message || activateRes.data?.msg) }, 500);
+          console.error(
+            "verify-play-purchase: activation failed (retry branch):",
+            activateRes.error?.message || activateRes.data?.msg
+          );
+          return json(
+            {
+              error:
+                "Could not activate: " +
+                (activateRes.error?.message || activateRes.data?.msg),
+            },
+            500
+          );
         }
         return json({ ok: true, ...activateRes.data });
       }
@@ -285,73 +467,189 @@ Deno.serve(async (req) => {
         product_id: productId,
         purchase_token: purchaseToken,
         order_id: orderIdFromClient,
-        status: 'pending',
+        status: "pending",
       };
       if (isBoost) insertPayload.listing_id = listingId;
-      else if (slotCount) { insertPayload.business_id = businessId; insertPayload.extra_slots = slotCount; }
-      else if (rentalDays) { insertPayload.listing_id = listingId; insertPayload.company_id = rentalCompanyId; insertPayload.duration_days = rentalDays; }
-      else insertPayload.credits = creditCount;
+      else if (slotCount) {
+        insertPayload.business_id = businessId;
+        insertPayload.extra_slots = slotCount;
+      } else if (rentalDays) {
+        insertPayload.listing_id = listingId;
+        insertPayload.company_id = rentalCompanyId;
+        insertPayload.duration_days = rentalDays;
+      } else insertPayload.credits = creditCount;
 
-      const insertRes = await db.from(table).insert(insertPayload).select('id').single();
+      const insertRes = await db
+        .from(table)
+        .insert(insertPayload)
+        .select("id")
+        .single();
       if (insertRes.error || !insertRes.data) {
         // Unique-violation on purchase_token means a concurrent request beat
         // us to it — treat as already-processed rather than erroring.
-        if (String(insertRes.error?.message || '').includes('unique')) {
-          return json({ ok: true, already_processed: true });
+        if (String(insertRes.error?.message || "").includes("unique")) {
+          const raced = await db
+            .from(table)
+            .select("id,status,user_id,expiry_time")
+            .eq("purchase_token", purchaseToken)
+            .maybeSingle();
+          if (raced.error || !raced.data) {
+            return json(
+              { error: "Could not resolve the concurrent purchase record" },
+              409
+            );
+          }
+          if (raced.data.user_id !== userId) {
+            return json(
+              { error: "This purchase belongs to a different account" },
+              403
+            );
+          }
+          if (raced.data.status === "consumed") {
+            return json({
+              ok: true,
+              already_processed: true,
+              until: raced.data.expiry_time || null,
+            });
+          }
+          if (raced.data.status === "verified") {
+            const racedActivation = await db.rpc(activateFn, {
+              [activateParam]: raced.data.id,
+            });
+            if (racedActivation.error || !racedActivation.data?.ok) {
+              return json(
+                { error: "Could not activate the verified purchase" },
+                500
+              );
+            }
+            return json({ ok: true, ...racedActivation.data });
+          }
+          return json(
+            {
+              error: "This purchase is still being verified. Please try again.",
+            },
+            409
+          );
         }
-        return json({ error: 'Could not record purchase: ' + insertRes.error?.message }, 500);
+        return json(
+          { error: "Could not record purchase: " + insertRes.error?.message },
+          500
+        );
       }
       purchaseRowId = insertRes.data.id;
     }
 
-    const saEnv = Deno.env.get('GOOGLE_PLAY_SERVICE_ACCOUNT');
-    const packageName = Deno.env.get('ANDROID_PACKAGE_NAME');
+    const saEnv = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT");
+    const packageName = Deno.env.get("ANDROID_PACKAGE_NAME");
     if (!saEnv || !packageName) {
-      const failRes = await db.from(table).update({ status: 'failed', verification_error: 'Server misconfigured (missing service account or package name)' }).eq('id', purchaseRowId);
-      if (failRes.error) console.error('verify-play-purchase: failed to record "Server misconfigured" status:', failRes.error.message);
-      return json({ error: 'Server misconfigured' }, 500);
+      const failRes = await db
+        .from(table)
+        .update({
+          status: "failed",
+          verification_error:
+            "Server misconfigured (missing service account or package name)",
+        })
+        .eq("id", purchaseRowId);
+      if (failRes.error)
+        console.error(
+          'verify-play-purchase: failed to record "Server misconfigured" status:',
+          failRes.error.message
+        );
+      return json({ error: "Server misconfigured" }, 500);
     }
 
     let accessToken: string;
     try {
       accessToken = await getGoogleAccessToken(JSON.parse(saEnv));
     } catch (e) {
-      const failRes = await db.from(table).update({ status: 'failed', verification_error: 'Google auth failed: ' + (e as Error).message }).eq('id', purchaseRowId);
-      if (failRes.error) console.error('verify-play-purchase: failed to record "Google auth failed" status:', failRes.error.message);
-      return json({ error: 'Verification unavailable' }, 500);
+      const failRes = await db
+        .from(table)
+        .update({
+          status: "failed",
+          verification_error: "Google auth failed: " + (e as Error).message,
+        })
+        .eq("id", purchaseRowId);
+      if (failRes.error)
+        console.error(
+          'verify-play-purchase: failed to record "Google auth failed" status:',
+          failRes.error.message
+        );
+      return json({ error: "Verification unavailable" }, 500);
     }
 
-    const verifyResult = await verifyProductPurchase(packageName, productId, purchaseToken, accessToken);
+    const verifyResult = await verifyProductPurchase(
+      packageName,
+      productId,
+      purchaseToken,
+      accessToken
+    );
     if (!verifyResult.ok) {
-      const failRes = await db.from(table).update({ status: 'failed', verification_error: verifyResult.reason }).eq('id', purchaseRowId);
-      if (failRes.error) console.error('verify-play-purchase: failed to record verification-failure status:', failRes.error.message);
-      return json({ error: 'Purchase verification failed: ' + verifyResult.reason }, 402);
+      const failRes = await db
+        .from(table)
+        .update({ status: "failed", verification_error: verifyResult.reason })
+        .eq("id", purchaseRowId);
+      if (failRes.error)
+        console.error(
+          "verify-play-purchase: failed to record verification-failure status:",
+          failRes.error.message
+        );
+      return json(
+        { error: "Purchase verification failed: " + verifyResult.reason },
+        402
+      );
     }
 
     // Verified — mark it before activating, so even if activation fails we
     // have a durable "this token IS genuine" record to retry activation from
     // (see the existing.data.status === 'verified' branch above).
-    const verifiedRes = await db.from(table).update({
-      status: 'verified',
-      order_id: verifyResult.orderId || orderIdFromClient,
-      purchase_time: verifyResult.purchaseTimeMillis ? new Date(Number(verifyResult.purchaseTimeMillis)).toISOString() : null,
-      verified_at: new Date().toISOString(),
-    }).eq('id', purchaseRowId);
+    const verifiedRes = await db
+      .from(table)
+      .update({
+        status: "verified",
+        order_id: verifyResult.orderId || orderIdFromClient,
+        purchase_time: verifyResult.purchaseTimeMillis
+          ? new Date(Number(verifyResult.purchaseTimeMillis)).toISOString()
+          : null,
+        verified_at: new Date().toISOString(),
+      })
+      .eq("id", purchaseRowId);
     if (verifiedRes.error) {
       // This is the row the idempotent retry branch above depends on (it
       // checks status==='verified') — if it never lands, a retry re-runs
       // verification instead of fast-pathing to activation, which is safe
       // but must not happen silently.
-      console.error('verify-play-purchase: failed to record verified status:', verifiedRes.error.message);
-      return json({ error: 'Purchase verified with Google but could not be recorded: ' + verifiedRes.error.message }, 500);
+      console.error(
+        "verify-play-purchase: failed to record verified status:",
+        verifiedRes.error.message
+      );
+      return json(
+        {
+          error:
+            "Purchase verified with Google but could not be recorded: " +
+            verifiedRes.error.message,
+        },
+        500
+      );
     }
 
-    const activateRes = await db.rpc(activateFn, { [activateParam]: purchaseRowId });
+    const activateRes = await db.rpc(activateFn, {
+      [activateParam]: purchaseRowId,
+    });
     if (activateRes.error || !activateRes.data?.ok) {
       // Verified but not yet consumed — the client can retry and the branch
       // above will pick this back up without re-billing or re-verifying.
-      console.error('[BILLING_ALERT] verify-play-purchase: verified-but-activation-failed:', activateRes.error?.message || activateRes.data?.msg);
-      return json({ error: 'Purchase verified but activation failed: ' + (activateRes.error?.message || activateRes.data?.msg) }, 500);
+      console.error(
+        "[BILLING_ALERT] verify-play-purchase: verified-but-activation-failed:",
+        activateRes.error?.message || activateRes.data?.msg
+      );
+      return json(
+        {
+          error:
+            "Purchase verified but activation failed: " +
+            (activateRes.error?.message || activateRes.data?.msg),
+        },
+        500
+      );
     }
 
     // Tell Google Play the consumable has been delivered/used, so the user
@@ -361,10 +659,25 @@ Deno.serve(async (req) => {
     // the purchase auto-refunded even though we already granted the
     // entitlement. (If it still fails, play-rtdn-webhook's voided-purchase
     // handler revokes the entitlement when the refund lands.)
-    let consumed = await consumeProductPurchase(packageName, productId, purchaseToken, accessToken).catch(() => false);
+    let consumed = await consumeProductPurchase(
+      packageName,
+      productId,
+      purchaseToken,
+      accessToken
+    ).catch(() => false);
     if (!consumed) {
-      consumed = await consumeProductPurchase(packageName, productId, purchaseToken, accessToken).catch(() => false);
-      if (!consumed) console.error('verify-play-purchase: consume failed twice for', productId, '— Google may auto-refund this purchase.');
+      consumed = await consumeProductPurchase(
+        packageName,
+        productId,
+        purchaseToken,
+        accessToken
+      ).catch(() => false);
+      if (!consumed)
+        console.error(
+          "verify-play-purchase: consume failed twice for",
+          productId,
+          "— Google may auto-refund this purchase."
+        );
     }
 
     return json({ ok: true, ...activateRes.data });

@@ -27,13 +27,13 @@ interface ProductFamily<T> {
   products: Record<string, T>;
 }
 
-const BOOSTS: ProductFamily<{ days: number; estimatedPriceUsd: number }> = {
+const BOOSTS: ProductFamily<{ days: number }> = {
   status: "active",
   kind: "consumable",
   products: {
-    boost_1day: { days: 1, estimatedPriceUsd: 2 },
-    boost_7day: { days: 7, estimatedPriceUsd: 10 },
-    boost_30day: { days: 30, estimatedPriceUsd: 30 },
+    boost_1day: { days: 1 },
+    boost_7day: { days: 7 },
+    boost_30day: { days: 30 },
   },
 };
 
@@ -51,18 +51,21 @@ const SHOP_SUBSCRIPTIONS: ProductFamily<{ planId: string; cycle: string }> = {
   },
 };
 
-const SLOT_PACKS: ProductFamily<{ extraSlots: number; estimatedPriceUsd: number }> = {
+const SLOT_PACKS: ProductFamily<{ extraSlots: number }> = {
   status: "active",
   kind: "consumable",
   products: {
-    featured_slot_pack_1: { extraSlots: 1, estimatedPriceUsd: 2 },
-    featured_slot_pack_3: { extraSlots: 3, estimatedPriceUsd: 5 },
+    featured_slot_pack_1: { extraSlots: 1 },
+    featured_slot_pack_3: { extraSlots: 3 },
   },
 };
 
 // Single tier only — recruiter_pro / yearly variants are documented
 // elsewhere but do not exist as real store products yet.
-const RECRUITER_SUBSCRIPTIONS: ProductFamily<{ planId: string; cycle: string }> = {
+const RECRUITER_SUBSCRIPTIONS: ProductFamily<{
+  planId: string;
+  cycle: string;
+}> = {
   status: "active",
   kind: "subscription",
   products: {
@@ -111,7 +114,9 @@ export type ProductFamilyKey = keyof typeof PRODUCT_FAMILIES;
 
 export function isActiveProductId(productId: string): boolean {
   return (Object.keys(PRODUCT_FAMILIES) as ProductFamilyKey[]).some(
-    (key) => PRODUCT_FAMILIES[key].status === "active" && productId in PRODUCT_FAMILIES[key].products
+    (key) =>
+      PRODUCT_FAMILIES[key].status === "active" &&
+      productId in PRODUCT_FAMILIES[key].products
   );
 }
 
@@ -133,13 +138,21 @@ export function isSubscriptionProduct(productId: string): boolean {
 // subscription SKUs separately.
 export function activeConsumableSkus(): string[] {
   return (Object.keys(PRODUCT_FAMILIES) as ProductFamilyKey[])
-    .filter((key) => PRODUCT_FAMILIES[key].status === "active" && PRODUCT_FAMILIES[key].kind === "consumable")
+    .filter(
+      (key) =>
+        PRODUCT_FAMILIES[key].status === "active" &&
+        PRODUCT_FAMILIES[key].kind === "consumable"
+    )
     .flatMap((key) => Object.keys(PRODUCT_FAMILIES[key].products));
 }
 
 export function activeSubscriptionSkus(): string[] {
   return (Object.keys(PRODUCT_FAMILIES) as ProductFamilyKey[])
-    .filter((key) => PRODUCT_FAMILIES[key].status === "active" && PRODUCT_FAMILIES[key].kind === "subscription")
+    .filter(
+      (key) =>
+        PRODUCT_FAMILIES[key].status === "active" &&
+        PRODUCT_FAMILIES[key].kind === "subscription"
+    )
     .flatMap((key) => Object.keys(PRODUCT_FAMILIES[key].products));
 }
 

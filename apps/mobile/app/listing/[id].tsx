@@ -25,9 +25,19 @@ import { CATEGORIES } from "../../lib/constants";
 import { formatPrice, isFeatured, type Listing } from "../../lib/listings";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
+import { useStoreProducts } from "../../lib/use-store-products";
+import { StoreProductOption } from "../../components/StoreProductOption";
 import { recordLead, type LeadType } from "../../lib/business-leads";
-import { fetchSellerRatingSummary, sellerInitials, type PublicProfile } from "../../lib/sellers";
-import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
+import {
+  fetchSellerRatingSummary,
+  sellerInitials,
+  type PublicProfile,
+} from "../../lib/sellers";
+import {
+  conversationIdFor,
+  isPersonalConversationFor,
+  type ConversationRow,
+} from "../../lib/messages";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { REPORT_REASONS, friendlyError } from "../../lib/safety";
@@ -45,7 +55,16 @@ import {
   VerifiedBadge,
   toast,
 } from "../../components/ui";
-import { DARK_COLORS, LIGHT_COLORS, font, hitSlop, radius, shadow, space, type ColorPalette } from "../../lib/theme";
+import {
+  DARK_COLORS,
+  LIGHT_COLORS,
+  font,
+  hitSlop,
+  radius,
+  shadow,
+  space,
+  type ColorPalette,
+} from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
@@ -60,9 +79,12 @@ const CONDITION_LABELS: Record<string, string> = {
 };
 
 const SIMILAR_CARD_WIDTH = 170;
+const BOOST_PRODUCT_IDS = Object.keys(BOOST_PRODUCTS);
 
 function timeAgo(dateString: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+  const seconds = Math.floor(
+    (Date.now() - new Date(dateString).getTime()) / 1000
+  );
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
@@ -86,7 +108,14 @@ function memberSince(dateString: string | null | undefined): string {
 // ── Icons ────────────────────────────────────────────────────────────────────
 function LocationIcon({ c }: { c: string }) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2}>
+    <Svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={c}
+      strokeWidth={2}
+    >
       <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <Circle cx={12} cy={10} r={3} />
     </Svg>
@@ -94,7 +123,14 @@ function LocationIcon({ c }: { c: string }) {
 }
 function EyeIcon({ c }: { c: string }) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2}>
+    <Svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={c}
+      strokeWidth={2}
+    >
       <Path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <Circle cx={12} cy={12} r={3} />
     </Svg>
@@ -102,7 +138,14 @@ function EyeIcon({ c }: { c: string }) {
 }
 function ClockIcon({ c }: { c: string }) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2}>
+    <Svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={c}
+      strokeWidth={2}
+    >
       <Circle cx={12} cy={12} r={9} />
       <Polyline points="12 7 12 12 15 14" />
     </Svg>
@@ -117,7 +160,14 @@ function StarIcon({ c }: { c: string }) {
 }
 function ShareIcon() {
   return (
-    <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2}>
+    <Svg
+      width={19}
+      height={19}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#ffffff"
+      strokeWidth={2}
+    >
       <Circle cx={18} cy={5} r={3} />
       <Circle cx={6} cy={12} r={3} />
       <Circle cx={18} cy={19} r={3} />
@@ -126,16 +176,36 @@ function ShareIcon() {
     </Svg>
   );
 }
-function HeartIcon({ filled, dangerColor }: { filled: boolean; dangerColor: string }) {
+function HeartIcon({
+  filled,
+  dangerColor,
+}: {
+  filled: boolean;
+  dangerColor: string;
+}) {
   return (
-    <Svg width={19} height={19} viewBox="0 0 24 24" fill={filled ? dangerColor : "none"} stroke="#ffffff" strokeWidth={2}>
+    <Svg
+      width={19}
+      height={19}
+      viewBox="0 0 24 24"
+      fill={filled ? dangerColor : "none"}
+      stroke="#ffffff"
+      strokeWidth={2}
+    >
       <Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </Svg>
   );
 }
 function FlagIcon() {
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2}>
+    <Svg
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#ffffff"
+      strokeWidth={2}
+    >
       <Path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
       <Path d="M4 22v-7" />
     </Svg>
@@ -143,14 +213,28 @@ function FlagIcon() {
 }
 function PhoneIcon({ c }: { c: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2}>
+    <Svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={c}
+      strokeWidth={2}
+    >
       <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 2.1.74 3.26a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.16.38 2.3.61 3.26.74a2 2 0 0 1 1.72 2.03z" />
     </Svg>
   );
 }
 function MessageIcon() {
   return (
-    <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth={2}>
+    <Svg
+      width={19}
+      height={19}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#ffffff"
+      strokeWidth={2}
+    >
       <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </Svg>
   );
@@ -198,29 +282,26 @@ export default function ListingDetailScreen() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
+  const {
+    prices: boostPrices,
+    availableProductIds: availableBoostIds,
+    isLoading: isLoadingBoosts,
+    error: boostProductError,
+    retry: retryBoostProducts,
+  } = useStoreProducts(BOOST_PRODUCT_IDS, "consumable");
   const galleryRef = useRef<FlatList<string>>(null);
 
+  // headerRight deliberately omitted: a transparent native-stack header
+  // combined with tappable headerRight buttons does not reliably hit-test
+  // on iOS (confirmed — Android, which never used a native headerRight
+  // here, worked fine while iOS's share/save/report buttons in the native
+  // header silently ate every tap). Share/save/report are rendered as a
+  // floating RN overlay on both platforms instead (below) — only the
+  // transparent back button stays on the real native header.
   useIOSNativeHeader({
     transparent: true,
     backgroundColor: "transparent",
     tintColor: "#FFFFFF",
-    headerRight: () => (
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Pressable style={styles.iconButton} onPress={shareListing} hitSlop={hitSlop}>
-          <ShareIcon />
-        </Pressable>
-        {session?.user?.id !== listing?.seller_id ? (
-          <Pressable style={styles.iconButton} onPress={handleToggleSave} hitSlop={hitSlop}>
-            <HeartIcon filled={isSaved} dangerColor={color.danger} />
-          </Pressable>
-        ) : null}
-        {session?.user?.id !== listing?.seller_id ? (
-          <Pressable style={styles.iconButton} onPress={() => setReportOpen(true)} hitSlop={hitSlop}>
-            <FlagIcon />
-          </Pressable>
-        ) : null}
-      </View>
-    ),
   });
 
   const load = useCallback(async () => {
@@ -244,7 +325,11 @@ export default function ListingDetailScreen() {
 
     const sellerId = found.seller_id;
     const [profileRes, ratingSummaryRes, similarRes] = await Promise.all([
-      supabase.from("profiles_public").select("id,name,avatar,verified,created_at").eq("id", sellerId).maybeSingle(),
+      supabase
+        .from("profiles_public")
+        .select("id,name,avatar,verified,created_at")
+        .eq("id", sellerId)
+        .maybeSingle(),
       fetchSellerRatingSummary(sellerId),
       found.category
         ? supabase
@@ -259,12 +344,15 @@ export default function ListingDetailScreen() {
     ]);
 
     if (!profileRes.error && profileRes.data) {
-      const prof = profileRes.data as PublicProfile & { created_at?: string | null };
+      const prof = profileRes.data as PublicProfile & {
+        created_at?: string | null;
+      };
       setSeller(prof);
       setSellerCreatedAt(prof.created_at ?? null);
     }
     setRatingSummary(ratingSummaryRes);
-    if (!similarRes.error && similarRes.data) setSimilar(similarRes.data as Listing[]);
+    if (!similarRes.error && similarRes.data)
+      setSimilar(similarRes.data as Listing[]);
 
     supabase.rpc("increment_listing_view", { listing_id: found.id }).then(
       () => {},
@@ -293,10 +381,16 @@ export default function ListingDetailScreen() {
   const isOwner = session?.user?.id === listing?.seller_id;
   const avgRating = ratingSummary.average;
   const categoryName = useMemo(
-    () => CATEGORIES.find((c) => c.id === listing?.category)?.name ?? listing?.category ?? "Listing",
+    () =>
+      CATEGORIES.find((c) => c.id === listing?.category)?.name ??
+      listing?.category ??
+      "Listing",
     [listing]
   );
-  const location = [listing?.suburb, listing?.city].filter(Boolean).join(", ") || listing?.province || "";
+  const location =
+    [listing?.suburb, listing?.city].filter(Boolean).join(", ") ||
+    listing?.province ||
+    "";
   const conditionRaw = (listing?.attributes?.condition as string) ?? "";
   const conditionLabel = CONDITION_LABELS[conditionRaw] ?? "";
 
@@ -305,7 +399,11 @@ export default function ListingDetailScreen() {
   // into their own checklist instead of one comma-joined details row.
   const { attrRows, featureItems, featureSectionLabel } = useMemo(() => {
     if (!listing?.attributes || !listing.category) {
-      return { attrRows: [] as { label: string; value: string }[], featureItems: [] as string[], featureSectionLabel: "Features" };
+      return {
+        attrRows: [] as { label: string; value: string }[],
+        featureItems: [] as string[],
+        featureSectionLabel: "Features",
+      };
     }
     const schema = attrSchema(listing.category);
     const attrs = listing.attributes;
@@ -322,9 +420,16 @@ export default function ListingDetailScreen() {
         continue;
       }
       const value = Array.isArray(raw) ? raw.join(", ") : String(raw);
-      rows.push({ label: field.label, value: field.suffix ? `${value} ${field.suffix}` : value });
+      rows.push({
+        label: field.label,
+        value: field.suffix ? `${value} ${field.suffix}` : value,
+      });
     }
-    return { attrRows: rows, featureItems: features, featureSectionLabel: featureLabel };
+    return {
+      attrRows: rows,
+      featureItems: features,
+      featureSectionLabel: featureLabel,
+    };
   }, [listing]);
 
   async function handleToggleSave() {
@@ -359,15 +464,26 @@ export default function ListingDetailScreen() {
 
   async function buyBoost(productId: string) {
     if (!listing) return;
+    if (!availableBoostIds.includes(productId)) {
+      toast("This boost is unavailable from the store. Retry loading prices.");
+      return;
+    }
     setPurchasingBoost(productId);
-    const result = await purchaseProduct(productId, { listingId: listing.id });
-    setPurchasingBoost(null);
-    if (result.ok) {
-      setBoostPickerOpen(false);
-      toast("Listing boosted!");
-      load();
-    } else if (result.error) {
-      toast(result.error);
+    try {
+      const result = await purchaseProduct(productId, {
+        listingId: listing.id,
+      });
+      if (result.ok) {
+        setBoostPickerOpen(false);
+        toast("Listing boosted!");
+        load();
+      } else if (result.code === "user-cancelled") {
+        toast("Purchase cancelled");
+      } else {
+        toast(result.error);
+      }
+    } finally {
+      setPurchasingBoost(null);
     }
   }
 
@@ -387,7 +503,13 @@ export default function ListingDetailScreen() {
     if (reportError && !/duplicate|unique/i.test(reportError.message)) {
       console.warn("[report] listing report failed:", reportError.message);
       const friendly = friendlyError(reportError);
-      toast(friendly.blocked ? friendly.message : "Couldn't submit report. Please try again.", 3500, true);
+      toast(
+        friendly.blocked
+          ? friendly.message
+          : "Couldn't submit report. Please try again.",
+        3500,
+        true
+      );
       return;
     }
     toast("Thanks — this listing has been reported.");
@@ -434,8 +556,9 @@ export default function ListingDetailScreen() {
       .select("id,members,listing_id,business_id,created_at,updated_at")
       .contains("members", [myId])
       .limit(100);
-    const candidates = ((conversations as ConversationRow[]) ?? []).filter((conversation) =>
-      isPersonalConversationFor(conversation, myId, listing.seller_id)
+    const candidates = ((conversations as ConversationRow[]) ?? []).filter(
+      (conversation) =>
+        isPersonalConversationFor(conversation, myId, listing.seller_id)
     );
     const latestByConversation = new Map<string, string>();
 
@@ -450,7 +573,10 @@ export default function ListingDetailScreen() {
         .order("created_at", { ascending: false })
         .limit(Math.max(candidates.length * 3, 20));
 
-      ((latestMessages as { conversation_id: string; created_at: string }[]) ?? []).forEach((message) => {
+      (
+        (latestMessages as { conversation_id: string; created_at: string }[]) ??
+        []
+      ).forEach((message) => {
         if (!latestByConversation.has(message.conversation_id)) {
           latestByConversation.set(message.conversation_id, message.created_at);
         }
@@ -458,15 +584,23 @@ export default function ListingDetailScreen() {
     }
 
     candidates.sort((a, b) => {
-      const aTime = new Date(latestByConversation.get(a.id) || a.updated_at || a.created_at || 0).getTime();
-      const bTime = new Date(latestByConversation.get(b.id) || b.updated_at || b.created_at || 0).getTime();
+      const aTime = new Date(
+        latestByConversation.get(a.id) || a.updated_at || a.created_at || 0
+      ).getTime();
+      const bTime = new Date(
+        latestByConversation.get(b.id) || b.updated_at || b.created_at || 0
+      ).getTime();
       return bTime - aTime;
     });
 
     const existing = candidates[0];
     if (existing) {
       const members = Array.isArray(existing.members) ? existing.members : [];
-      const patch: { members?: string[]; listing_id?: string; business_id?: string } = {};
+      const patch: {
+        members?: string[];
+        listing_id?: string;
+        business_id?: string;
+      } = {};
       if (!members.includes(myId) || !members.includes(listing.seller_id)) {
         patch.members = [myId, listing.seller_id];
       }
@@ -481,11 +615,18 @@ export default function ListingDetailScreen() {
         patch.business_id = listing.business_id;
       }
       if (Object.keys(patch).length) {
-        await supabase.from("conversations").update(patch).eq("id", existing.id);
+        await supabase
+          .from("conversations")
+          .update(patch)
+          .eq("id", existing.id);
       }
       router.push({
         pathname: "/chat/[id]",
-        params: { id: existing.id, name: seller?.name || listing.seller_name || "", avatar: seller?.avatar ?? "" },
+        params: {
+          id: existing.id,
+          name: seller?.name || listing.seller_name || "",
+          avatar: seller?.avatar ?? "",
+        },
       });
       return;
     }
@@ -500,7 +641,11 @@ export default function ListingDetailScreen() {
     }
     router.push({
       pathname: "/chat/[id]",
-      params: { id: convId, name: seller?.name || listing.seller_name || "", avatar: seller?.avatar ?? "" },
+      params: {
+        id: convId,
+        name: seller?.name || listing.seller_name || "",
+        avatar: seller?.avatar ?? "",
+      },
     });
   }
 
@@ -523,7 +668,12 @@ export default function ListingDetailScreen() {
           <Skeleton width={140} height={30} style={{ marginTop: space.md }} />
           <Skeleton width="80%" height={22} style={{ marginTop: space.sm }} />
           <Skeleton width="55%" height={16} style={{ marginTop: space.sm }} />
-          <Skeleton width="100%" height={90} radius={radius.md} style={{ marginTop: space.xl }} />
+          <Skeleton
+            width="100%"
+            height={90}
+            radius={radius.md}
+            style={{ marginTop: space.xl }}
+          />
           <ListSkeleton count={2} />
         </View>
       </View>
@@ -587,13 +737,26 @@ export default function ListingDetailScreen() {
               scrollEventThrottle={16}
               renderItem={({ item }) => (
                 <Pressable onPress={() => setViewerOpen(true)}>
-                  <Image source={{ uri: item }} style={[styles.photo, { width }]} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+                  <Image
+                    source={{ uri: item }}
+                    style={[styles.photo, { width }]}
+                    contentFit="cover"
+                    transition={150}
+                    cachePolicy="memory-disk"
+                  />
                 </Pressable>
               )}
             />
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder, { width }]}>
-              <Svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke={color.textMuted} strokeWidth={1.5}>
+              <Svg
+                width={48}
+                height={48}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={color.textMuted}
+                strokeWidth={1.5}
+              >
                 <Path d="M21 15V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10" />
                 <Circle cx={8.5} cy={8.5} r={1.5} />
                 <Polyline points="21 15 16 10 5 21" />
@@ -602,25 +765,37 @@ export default function ListingDetailScreen() {
             </View>
           )}
 
-          {Platform.OS !== "ios" ? (
           <View style={[styles.topBar, { top: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" />
+            {Platform.OS !== "ios" ? (
+              <GlassBackButton onPress={() => router.back()} tone="light" />
+            ) : null}
             <View style={{ flex: 1 }} />
-            <Pressable style={styles.iconButton} onPress={shareListing} hitSlop={hitSlop}>
+            <Pressable
+              style={styles.iconButton}
+              onPress={shareListing}
+              hitSlop={hitSlop}
+            >
               <ShareIcon />
             </Pressable>
             {!isOwner ? (
-              <Pressable style={styles.iconButton} onPress={handleToggleSave} hitSlop={hitSlop}>
+              <Pressable
+                style={styles.iconButton}
+                onPress={handleToggleSave}
+                hitSlop={hitSlop}
+              >
                 <HeartIcon filled={isSaved} dangerColor={color.danger} />
               </Pressable>
             ) : null}
             {!isOwner ? (
-              <Pressable style={styles.iconButton} onPress={() => setReportOpen(true)} hitSlop={hitSlop}>
+              <Pressable
+                style={styles.iconButton}
+                onPress={() => setReportOpen(true)}
+                hitSlop={hitSlop}
+              >
                 <FlagIcon />
               </Pressable>
             ) : null}
           </View>
-          ) : null}
 
           {photos.length > 1 ? (
             <View style={styles.photoCounter}>
@@ -633,7 +808,10 @@ export default function ListingDetailScreen() {
           {photos.length > 1 ? (
             <View style={styles.dotsRow}>
               {photos.map((_, i) => (
-                <View key={i} style={[styles.dot, i === photoIndex && styles.dotActive]} />
+                <View
+                  key={i}
+                  style={[styles.dot, i === photoIndex && styles.dotActive]}
+                />
               ))}
             </View>
           ) : null}
@@ -674,14 +852,18 @@ export default function ListingDetailScreen() {
             </View>
             <View style={styles.metaItem}>
               <EyeIcon c={color.textSub} />
-              <Text style={styles.metaText}>{(listing.views ?? 0).toLocaleString()} views</Text>
+              <Text style={styles.metaText}>
+                {(listing.views ?? 0).toLocaleString()} views
+              </Text>
             </View>
           </View>
 
           {/* Description */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>{listing.description || "No description provided."}</Text>
+            <Text style={styles.description}>
+              {listing.description || "No description provided."}
+            </Text>
           </View>
 
           {/* Category attributes — Details + Features side by side; when a
@@ -693,8 +875,13 @@ export default function ListingDetailScreen() {
                 <View style={styles.colCard}>
                   <Text style={styles.colTitle}>Details</Text>
                   {attrRows.map((row, i) => (
-                    <View key={row.label} style={[styles.colRow, i > 0 && styles.colRowBorder]}>
-                      <Text style={styles.colRowLabel} numberOfLines={1}>{row.label}</Text>
+                    <View
+                      key={row.label}
+                      style={[styles.colRow, i > 0 && styles.colRowBorder]}
+                    >
+                      <Text style={styles.colRowLabel} numberOfLines={1}>
+                        {row.label}
+                      </Text>
                       <Text style={styles.colRowValue}>{row.value}</Text>
                     </View>
                   ))}
@@ -704,13 +891,27 @@ export default function ListingDetailScreen() {
                 <View style={styles.colCard}>
                   <Text style={styles.colTitle}>{featureSectionLabel}</Text>
                   {featureItems.map((f, i) => (
-                    <View key={f} style={[styles.featureRow, i > 0 && styles.colRowBorder]}>
+                    <View
+                      key={f}
+                      style={[styles.featureRow, i > 0 && styles.colRowBorder]}
+                    >
                       <View style={styles.featureRowLabel}>
                         <FeatureIcon name={f} color={color.brand} size={13} />
-                        <Text style={styles.featureRowText} numberOfLines={1}>{f}</Text>
+                        <Text style={styles.featureRowText} numberOfLines={1}>
+                          {f}
+                        </Text>
                       </View>
                       <View style={styles.featureCheck}>
-                        <Svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke={color.success} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round">
+                        <Svg
+                          width={8}
+                          height={8}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={color.success}
+                          strokeWidth={4}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <Polyline points="20 6 9 17 4 12" />
                         </Svg>
                       </View>
@@ -727,15 +928,31 @@ export default function ListingDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Seller</Text>
             <Pressable
-              style={({ pressed }) => [styles.sellerCard, shadow.sm, pressed && styles.pressed]}
-              onPress={() => router.push({ pathname: "/profile/[id]", params: { id: listing.seller_id } })}
+              style={({ pressed }) => [
+                styles.sellerCard,
+                shadow.sm,
+                pressed && styles.pressed,
+              ]}
+              onPress={() =>
+                router.push({
+                  pathname: "/profile/[id]",
+                  params: { id: listing.seller_id },
+                })
+              }
             >
               <View style={styles.sellerLeft}>
                 <View style={styles.sellerAvatar}>
                   {seller?.avatar ? (
-                    <Image source={{ uri: seller.avatar }} style={styles.sellerAvatarImage} contentFit="cover" cachePolicy="memory-disk" />
+                    <Image
+                      source={{ uri: seller.avatar }}
+                      style={styles.sellerAvatarImage}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
                   ) : (
-                    <Text style={styles.sellerAvatarInitial}>{sellerInitials(seller?.name || listing.seller_name)}</Text>
+                    <Text style={styles.sellerAvatarInitial}>
+                      {sellerInitials(seller?.name || listing.seller_name)}
+                    </Text>
                   )}
                 </View>
                 <View style={styles.sellerNameRow}>
@@ -745,19 +962,27 @@ export default function ListingDetailScreen() {
                   {seller?.verified ? <VerifiedBadge compact /> : null}
                 </View>
                 {memberSince(sellerCreatedAt) ? (
-                  <Text style={styles.sellerMeta}>Member since {memberSince(sellerCreatedAt)}</Text>
+                  <Text style={styles.sellerMeta}>
+                    Member since {memberSince(sellerCreatedAt)}
+                  </Text>
                 ) : null}
               </View>
               <View style={styles.sellerRight}>
                 <View style={styles.sellerRightRow}>
                   <StarRow rating={avgRating} />
                   <Text style={styles.sellerRatingText}>
-                    {ratingSummary.count ? `${avgRating.toFixed(1)} (${ratingSummary.count})` : "No reviews yet"}
+                    {ratingSummary.count
+                      ? `${avgRating.toFixed(1)} (${ratingSummary.count})`
+                      : "No reviews yet"}
                   </Text>
                 </View>
                 {seller?.verified ? (
-                  <View style={[styles.sellerRightRow, styles.sellerRightRowBorder]}>
-                    <Text style={styles.sellerVerifiedText}>Verified Seller</Text>
+                  <View
+                    style={[styles.sellerRightRow, styles.sellerRightRowBorder]}
+                  >
+                    <Text style={styles.sellerVerifiedText}>
+                      Verified Seller
+                    </Text>
                   </View>
                 ) : null}
               </View>
@@ -769,7 +994,8 @@ export default function ListingDetailScreen() {
             <View style={styles.safetyTip}>
               <Text style={styles.safetyTipTitle}>Trade safely</Text>
               <Text style={styles.safetyTipText}>
-                Meet in a public place, inspect before paying, and remember: PaMarket never handles payments.
+                Meet in a public place, inspect before paying, and remember:
+                PaMarket never handles payments.
               </Text>
             </View>
           ) : null}
@@ -780,12 +1006,16 @@ export default function ListingDetailScreen() {
               <Text style={styles.sectionTitle}>Performance</Text>
               <Card style={styles.perfCard}>
                 <View style={styles.perfItem}>
-                  <Text style={styles.perfValue}>{(listing.views ?? 0).toLocaleString()}</Text>
+                  <Text style={styles.perfValue}>
+                    {(listing.views ?? 0).toLocaleString()}
+                  </Text>
                   <Text style={styles.perfLabel}>Views</Text>
                 </View>
                 <View style={styles.perfDivider} />
                 <View style={styles.perfItem}>
-                  <Text style={styles.perfValue}>{timeAgo(listing.created_at)}</Text>
+                  <Text style={styles.perfValue}>
+                    {timeAgo(listing.created_at)}
+                  </Text>
                   <Text style={styles.perfLabel}>Posted</Text>
                 </View>
               </Card>
@@ -794,45 +1024,54 @@ export default function ListingDetailScreen() {
                 <View style={styles.boostActiveRow}>
                   <StarIcon c={color.gold} />
                   <Text style={styles.boostActiveText}>
-                    Boosted until {new Date(listing.featured_until as string).toLocaleDateString()}
+                    Boosted until{" "}
+                    {new Date(
+                      listing.featured_until as string
+                    ).toLocaleDateString()}
                   </Text>
                 </View>
               ) : (
                 <>
-                  <Pressable style={styles.boostBanner} onPress={() => setBoostPickerOpen((v) => !v)}>
+                  <Pressable
+                    style={styles.boostBanner}
+                    onPress={() => setBoostPickerOpen((v) => !v)}
+                  >
                     <View style={styles.boostBannerIcon}>
                       <StarIcon c={color.textOnBrand} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.boostBannerTitle}>Boost this ad</Text>
-                      <Text style={styles.boostBannerSub}>Get more views, starting at $2</Text>
+                      <Text style={styles.boostBannerSub}>
+                        Choose a one-time boost to get more views
+                      </Text>
                     </View>
                     <View style={styles.boostBannerBtn}>
-                      <Text style={styles.boostBannerBtnText}>Boost</Text>
+                      <Text style={styles.boostBannerBtnText}>
+                        View options
+                      </Text>
                     </View>
                   </Pressable>
 
                   {boostPickerOpen ? (
                     <View style={styles.boostOptions}>
                       {Object.entries(BOOST_PRODUCTS).map(([productId, p]) => (
-                        <Pressable
+                        <StoreProductOption
                           key={productId}
-                          style={[styles.boostOpt, p.days === 7 && styles.boostOptReco]}
-                          onPress={() => buyBoost(productId)}
-                          disabled={!!purchasingBoost}
-                        >
-                          {p.days === 7 ? (
-                            <View style={styles.boostOptTag}>
-                              <Text style={styles.boostOptTagText}>BEST VALUE</Text>
-                            </View>
-                          ) : null}
-                          <Text style={styles.boostOptDays}>{p.days} day{p.days === 1 ? "" : "s"}</Text>
-                          {purchasingBoost === productId ? (
-                            <ActivityIndicator color={color.brand} />
-                          ) : (
-                            <Text style={styles.boostOptPrice}>${p.estimatedPriceUsd}</Text>
-                          )}
-                        </Pressable>
+                          title={`${p.days}-Day Listing Boost`}
+                          price={boostPrices[productId]}
+                          description={`Promotes this listing for ${
+                            p.days
+                          } day${p.days === 1 ? "" : "s"}.`}
+                          buttonLabel="Boost Listing"
+                          isLoading={isLoadingBoosts}
+                          isAvailable={availableBoostIds.includes(productId)}
+                          isPurchasing={purchasingBoost === productId}
+                          purchaseBlocked={!!purchasingBoost}
+                          error={boostProductError}
+                          recommended={p.days === 7}
+                          onPurchase={() => buyBoost(productId)}
+                          onRetry={retryBoostProducts}
+                        />
                       ))}
                     </View>
                   ) : null}
@@ -845,7 +1084,10 @@ export default function ListingDetailScreen() {
         {/* Similar listings */}
         {similar.length ? (
           <View style={styles.similarSection}>
-            <SectionHeader title="Similar listings" subtitle={`More in ${categoryName}`} />
+            <SectionHeader
+              title="Similar listings"
+              subtitle={`More in ${categoryName}`}
+            />
             <FlatList
               data={similar}
               horizontal
@@ -856,7 +1098,12 @@ export default function ListingDetailScreen() {
                 <ListingCard
                   listing={item}
                   width={SIMILAR_CARD_WIDTH}
-                  onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/listing/[id]",
+                      params: { id: item.id },
+                    })
+                  }
                 />
               )}
             />
@@ -865,9 +1112,18 @@ export default function ListingDetailScreen() {
       </ScrollView>
 
       {/* ── Sticky action bar ── */}
-      <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View
+        style={[
+          styles.actionBar,
+          { paddingBottom: Math.max(insets.bottom, 12) },
+        ]}
+      >
         {isOwner ? (
-          <Button label="Edit listing" variant="primary" onPress={() => router.push("/my-listings")} />
+          <Button
+            label="Edit listing"
+            variant="primary"
+            onPress={() => router.push("/my-listings")}
+          />
         ) : (
           <View style={styles.actionRow}>
             {listing.seller_phone ? (
@@ -876,7 +1132,10 @@ export default function ListingDetailScreen() {
               </Pressable>
             ) : null}
             {listing.seller_phone ? (
-              <Pressable style={[styles.actionIconBtn, styles.actionWhatsapp]} onPress={whatsappSeller}>
+              <Pressable
+                style={[styles.actionIconBtn, styles.actionWhatsapp]}
+                onPress={whatsappSeller}
+              >
                 <WhatsAppIcon />
               </Pressable>
             ) : null}
@@ -889,16 +1148,43 @@ export default function ListingDetailScreen() {
       </View>
 
       {/* ── Report action sheet ── */}
-      <Modal visible={reportOpen} transparent animationType="fade" onRequestClose={() => setReportOpen(false)}>
-        <Pressable style={styles.sheetBackdrop} onPress={() => setReportOpen(false)}>
-          <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]} onPress={() => {}}>
+      <Modal
+        visible={reportOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReportOpen(false)}
+      >
+        <Pressable
+          style={styles.sheetBackdrop}
+          onPress={() => setReportOpen(false)}
+        >
+          <Pressable
+            style={[
+              styles.sheet,
+              { paddingBottom: Math.max(insets.bottom, 16) },
+            ]}
+            onPress={() => {}}
+          >
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Report this listing</Text>
-            <Text style={styles.sheetSub}>Tell us what's wrong. Our team will review it.</Text>
+            <Text style={styles.sheetSub}>
+              Tell us what's wrong. Our team will review it.
+            </Text>
             {REPORT_REASONS.listing.map((reason) => (
-              <Pressable key={reason} style={styles.reasonRow} onPress={() => submitReport(reason)}>
+              <Pressable
+                key={reason}
+                style={styles.reasonRow}
+                onPress={() => submitReport(reason)}
+              >
                 <Text style={styles.reasonText}>{reason}</Text>
-                <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color.textMuted} strokeWidth={2}>
+                <Svg
+                  width={18}
+                  height={18}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={color.textMuted}
+                  strokeWidth={2}
+                >
                   <Polyline points="9 18 15 12 9 6" />
                 </Svg>
               </Pressable>
@@ -908,7 +1194,12 @@ export default function ListingDetailScreen() {
       </Modal>
 
       {/* ── Fullscreen image viewer ── */}
-      <Modal visible={viewerOpen} transparent animationType="fade" onRequestClose={() => setViewerOpen(false)}>
+      <Modal
+        visible={viewerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewerOpen(false)}
+      >
         <View style={styles.viewerBackdrop}>
           <FlatList
             data={photos}
@@ -917,10 +1208,19 @@ export default function ListingDetailScreen() {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(_, i) => String(i)}
             initialScrollIndex={photoIndex}
-            getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+            getItemLayout={(_, index) => ({
+              length: width,
+              offset: width * index,
+              index,
+            })}
             renderItem={({ item }) => (
               <View style={{ width, justifyContent: "center" }}>
-                <Image source={{ uri: item }} style={{ width, height: "100%" }} contentFit="contain" cachePolicy="memory-disk" />
+                <Image
+                  source={{ uri: item }}
+                  style={{ width, height: "100%" }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
               </View>
             )}
           />
@@ -929,7 +1229,14 @@ export default function ListingDetailScreen() {
             onPress={() => setViewerOpen(false)}
             hitSlop={hitSlop}
           >
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.4}>
+            <Svg
+              width={24}
+              height={24}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#fff"
+              strokeWidth={2.4}
+            >
               <Path d="M18 6L6 18M6 6l12 12" />
             </Svg>
           </Pressable>
@@ -941,289 +1248,434 @@ export default function ListingDetailScreen() {
 
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: color.bg },
-  centered: { justifyContent: "center" },
+    container: { flex: 1, backgroundColor: color.bg },
+    centered: { justifyContent: "center" },
 
-  photoWrap: { height: 330, backgroundColor: "#0F1729", position: "relative" },
-  photo: { height: 330 },
-  photoPlaceholder: {
-    backgroundColor: color.surfaceAlt,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: space.sm,
-  },
-  photoPlaceholderText: { ...font.caption, color: color.textMuted },
+    photoWrap: {
+      height: 330,
+      backgroundColor: "#0F1729",
+      position: "relative",
+    },
+    photo: { height: 330 },
+    photoPlaceholder: {
+      backgroundColor: color.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: space.sm,
+    },
+    photoPlaceholderText: { ...font.caption, color: color.textMuted },
 
-  topBar: {
-    position: "absolute",
-    left: space.md,
-    right: space.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.sm,
-  },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(16,24,40,0.42)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  photoCounter: {
-    position: "absolute",
-    bottom: space.md,
-    right: space.md,
-    backgroundColor: "rgba(16,24,40,0.55)",
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  photoCounterText: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  dotsRow: { position: "absolute", bottom: space.md, left: space.md, flexDirection: "row", gap: 5 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.5)" },
-  dotActive: { backgroundColor: "#fff", width: 16 },
+    topBar: {
+      position: "absolute",
+      left: space.md,
+      right: space.md,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.sm,
+    },
+    iconButton: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: "rgba(16,24,40,0.42)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    photoCounter: {
+      position: "absolute",
+      bottom: space.md,
+      right: space.md,
+      backgroundColor: "rgba(16,24,40,0.55)",
+      borderRadius: radius.pill,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    photoCounterText: { color: "#fff", fontSize: 11, fontWeight: "700" },
+    dotsRow: {
+      position: "absolute",
+      bottom: space.md,
+      left: space.md,
+      flexDirection: "row",
+      gap: 5,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: "rgba(255,255,255,0.5)",
+    },
+    dotActive: { backgroundColor: "#fff", width: 16 },
 
-  content: {
-    padding: space.lg,
-    backgroundColor: color.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    marginTop: -16,
-  },
+    content: {
+      padding: space.lg,
+      backgroundColor: color.surface,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      marginTop: -16,
+    },
 
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginBottom: space.md },
-  categoryChip: { backgroundColor: color.brandTint, borderRadius: radius.sm, paddingHorizontal: 10, paddingVertical: 4 },
-  categoryChipText: { ...font.micro, color: color.brand },
-  conditionChip: { backgroundColor: color.successTint, borderRadius: radius.sm, paddingHorizontal: 10, paddingVertical: 4 },
-  conditionChipText: { ...font.micro, color: color.success },
-  featuredChip: { backgroundColor: color.gold, borderRadius: radius.sm, paddingHorizontal: 10, paddingVertical: 4 },
-  featuredChipText: { ...font.micro, color: "#fff" },
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: space.sm,
+      marginBottom: space.md,
+    },
+    categoryChip: {
+      backgroundColor: color.brandTint,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    categoryChipText: { ...font.micro, color: color.brand },
+    conditionChip: {
+      backgroundColor: color.successTint,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    conditionChipText: { ...font.micro, color: color.success },
+    featuredChip: {
+      backgroundColor: color.gold,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    featuredChipText: { ...font.micro, color: "#fff" },
 
-  price: { ...font.h1, color: color.brand },
-  title: { ...font.h3, color: color.text, marginTop: space.xs },
+    price: { ...font.h1, color: color.brand },
+    title: { ...font.h3, color: color.text, marginTop: space.xs },
 
-  metaRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: space.md, marginTop: space.md },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 5 },
-  metaText: { ...font.sub, color: color.textSub },
+    metaRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: space.md,
+      marginTop: space.md,
+    },
+    metaItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+    metaText: { ...font.sub, color: color.textSub },
 
-  section: { marginTop: space.xl },
-  sectionTitle: {
-    ...font.micro,
-    color: color.textMuted,
-    textTransform: "uppercase",
-    marginBottom: space.sm,
-  },
-  description: { ...font.body, color: color.textSub, lineHeight: 23 },
+    section: { marginTop: space.xl },
+    sectionTitle: {
+      ...font.micro,
+      color: color.textMuted,
+      textTransform: "uppercase",
+      marginBottom: space.sm,
+    },
+    description: { ...font.body, color: color.textSub, lineHeight: 23 },
 
-  twoCol: { flexDirection: "row", gap: space.sm, marginTop: space.xl, alignItems: "stretch" },
-  colCard: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: color.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: color.border,
-    padding: space.md,
-  },
-  colTitle: { ...font.micro, color: color.textMuted, textTransform: "uppercase", marginBottom: space.sm },
-  colRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: space.xs + 2, gap: space.sm },
-  colRowBorder: { borderTopWidth: 1, borderTopColor: color.divider },
-  colRowLabel: { ...font.caption, color: color.textSub, fontWeight: "600", flexShrink: 1 },
-  colRowValue: { ...font.caption, color: color.text, fontWeight: "800", flexShrink: 0, textAlign: "right" },
-  featureRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: space.xs + 2, gap: space.sm },
-  featureRowLabel: { flexDirection: "row", alignItems: "center", gap: space.xs + 2, flexShrink: 1, minWidth: 0 },
-  featureRowText: { ...font.caption, color: color.textSub, fontWeight: "600", flexShrink: 1 },
-  featureCheck: {
-    width: 15,
-    height: 15,
-    borderRadius: 8,
-    backgroundColor: color.successTint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    twoCol: {
+      flexDirection: "row",
+      gap: space.sm,
+      marginTop: space.xl,
+      alignItems: "stretch",
+    },
+    colCard: {
+      flex: 1,
+      minWidth: 0,
+      backgroundColor: color.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: color.border,
+      padding: space.md,
+    },
+    colTitle: {
+      ...font.micro,
+      color: color.textMuted,
+      textTransform: "uppercase",
+      marginBottom: space.sm,
+    },
+    colRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: space.xs + 2,
+      gap: space.sm,
+    },
+    colRowBorder: { borderTopWidth: 1, borderTopColor: color.divider },
+    colRowLabel: {
+      ...font.caption,
+      color: color.textSub,
+      fontWeight: "600",
+      flexShrink: 1,
+    },
+    colRowValue: {
+      ...font.caption,
+      color: color.text,
+      fontWeight: "800",
+      flexShrink: 0,
+      textAlign: "right",
+    },
+    featureRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: space.xs + 2,
+      gap: space.sm,
+    },
+    featureRowLabel: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.xs + 2,
+      flexShrink: 1,
+      minWidth: 0,
+    },
+    featureRowText: {
+      ...font.caption,
+      color: color.textSub,
+      fontWeight: "600",
+      flexShrink: 1,
+    },
+    featureCheck: {
+      width: 15,
+      height: 15,
+      borderRadius: 8,
+      backgroundColor: color.successTint,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
-  sellerCard: {
-    flexDirection: "row",
-    gap: space.sm,
-    backgroundColor: color.surface,
-    borderRadius: radius.lg,
-    padding: space.md,
-  },
-  pressed: { opacity: 0.9 },
-  sellerLeft: { flex: 1.3, minWidth: 0 },
-  sellerAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: color.brandTint,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  sellerAvatarImage: { width: "100%", height: "100%" },
-  sellerAvatarInitial: { ...font.h3, color: color.brand },
-  sellerNameRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.sm },
-  sellerName: { ...font.title, color: color.text, flexShrink: 1 },
-  sellerRatingText: { ...font.caption, color: color.textMuted },
-  sellerMeta: { ...font.caption, color: color.textMuted, marginTop: 2 },
-  sellerRight: {
-    flex: 1,
-    backgroundColor: color.surfaceAlt,
-    borderRadius: radius.md,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    justifyContent: "center",
-    gap: space.xs,
-  },
-  sellerRightRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 3 },
-  sellerRightRowBorder: { borderTopWidth: 1, borderTopColor: color.divider, paddingTop: space.xs + 2 },
-  sellerVerifiedText: { ...font.caption, color: color.goldDark, fontWeight: "800" },
+    sellerCard: {
+      flexDirection: "row",
+      gap: space.sm,
+      backgroundColor: color.surface,
+      borderRadius: radius.lg,
+      padding: space.md,
+    },
+    pressed: { opacity: 0.9 },
+    sellerLeft: { flex: 1.3, minWidth: 0 },
+    sellerAvatar: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: color.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    sellerAvatarImage: { width: "100%", height: "100%" },
+    sellerAvatarInitial: { ...font.h3, color: color.brand },
+    sellerNameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.sm,
+      marginTop: space.sm,
+    },
+    sellerName: { ...font.title, color: color.text, flexShrink: 1 },
+    sellerRatingText: { ...font.caption, color: color.textMuted },
+    sellerMeta: { ...font.caption, color: color.textMuted, marginTop: 2 },
+    sellerRight: {
+      flex: 1,
+      backgroundColor: color.surfaceAlt,
+      borderRadius: radius.md,
+      paddingHorizontal: space.md,
+      paddingVertical: space.sm,
+      justifyContent: "center",
+      gap: space.xs,
+    },
+    sellerRightRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingVertical: 3,
+    },
+    sellerRightRowBorder: {
+      borderTopWidth: 1,
+      borderTopColor: color.divider,
+      paddingTop: space.xs + 2,
+    },
+    sellerVerifiedText: {
+      ...font.caption,
+      color: color.goldDark,
+      fontWeight: "800",
+    },
 
-  safetyTip: { backgroundColor: color.goldTint, borderRadius: radius.md, padding: space.md, marginTop: space.xl },
-  safetyTipTitle: { ...font.caption, color: color.text, marginBottom: 2 },
-  safetyTipText: { ...font.sub, color: color.textSub, lineHeight: 18 },
+    safetyTip: {
+      backgroundColor: color.goldTint,
+      borderRadius: radius.md,
+      padding: space.md,
+      marginTop: space.xl,
+    },
+    safetyTipTitle: { ...font.caption, color: color.text, marginBottom: 2 },
+    safetyTipText: { ...font.sub, color: color.textSub, lineHeight: 18 },
 
-  perfCard: { flexDirection: "row", alignItems: "center" },
-  perfItem: { flex: 1, alignItems: "center", gap: 2 },
-  perfDivider: { width: 1, alignSelf: "stretch", backgroundColor: color.divider },
-  perfValue: { ...font.h3, color: color.text },
-  perfLabel: { ...font.caption, color: color.textMuted },
+    perfCard: { flexDirection: "row", alignItems: "center" },
+    perfItem: { flex: 1, alignItems: "center", gap: 2 },
+    perfDivider: {
+      width: 1,
+      alignSelf: "stretch",
+      backgroundColor: color.divider,
+    },
+    perfValue: { ...font.h3, color: color.text },
+    perfLabel: { ...font.caption, color: color.textMuted },
 
-  boostActiveRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.sm,
-    backgroundColor: color.goldTint,
-    borderRadius: radius.md,
-    padding: space.md,
-    marginTop: space.md,
-  },
-  boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
+    boostActiveRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.sm,
+      backgroundColor: color.goldTint,
+      borderRadius: radius.md,
+      padding: space.md,
+      marginTop: space.md,
+    },
+    boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
 
-  boostBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.md,
-    backgroundColor: color.brand,
-    borderRadius: radius.lg,
-    padding: space.md,
-    marginTop: space.md,
-  },
-  boostBannerIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.16)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  boostBannerTitle: { ...font.title, color: "#fff" },
-  boostBannerSub: { ...font.caption, color: "rgba(255,255,255,0.75)", marginTop: 2 },
-  boostBannerBtn: {
-    backgroundColor: color.gold,
-    borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  boostBannerBtnText: { ...font.caption, color: "#fff", fontWeight: "800" },
+    boostBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      backgroundColor: color.brand,
+      borderRadius: radius.lg,
+      padding: space.md,
+      marginTop: space.md,
+    },
+    boostBannerIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: "rgba(255,255,255,0.16)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    boostBannerTitle: { ...font.title, color: "#fff" },
+    boostBannerSub: {
+      ...font.caption,
+      color: "rgba(255,255,255,0.75)",
+      marginTop: 2,
+    },
+    boostBannerBtn: {
+      backgroundColor: color.gold,
+      borderRadius: radius.pill,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    boostBannerBtnText: { ...font.caption, color: "#fff", fontWeight: "800" },
 
-  boostOptions: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
-  boostOpt: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: color.surfaceAlt,
-    borderRadius: radius.md,
-    paddingVertical: space.md,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-    position: "relative",
-  },
-  boostOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
-  boostOptTag: {
-    position: "absolute",
-    top: -9,
-    alignSelf: "center",
-    backgroundColor: color.gold,
-    borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  boostOptTagText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.3 },
-  boostOptDays: { ...font.sub, color: color.text, fontWeight: "700" },
-  boostOptPrice: { ...font.h3, color: color.brand },
+    boostOptions: { gap: space.sm, marginTop: space.sm },
+    boostOpt: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: color.surfaceAlt,
+      borderRadius: radius.md,
+      paddingVertical: space.md,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      position: "relative",
+    },
+    boostOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
+    boostOptTag: {
+      position: "absolute",
+      top: -9,
+      alignSelf: "center",
+      backgroundColor: color.gold,
+      borderRadius: radius.pill,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    boostOptTagText: {
+      fontSize: 9,
+      fontWeight: "800",
+      color: "#fff",
+      letterSpacing: 0.3,
+    },
+    boostOptDays: { ...font.sub, color: color.text, fontWeight: "700" },
+    boostOptPrice: { ...font.h3, color: color.brand },
 
-  similarSection: { marginTop: space.xxl, paddingTop: space.lg, backgroundColor: color.surface },
-  similarRail: { paddingHorizontal: space.lg, gap: space.md, paddingBottom: space.lg },
+    similarSection: {
+      marginTop: space.xxl,
+      paddingTop: space.lg,
+      backgroundColor: color.surface,
+    },
+    similarRail: {
+      paddingHorizontal: space.lg,
+      gap: space.md,
+      paddingBottom: space.lg,
+    },
 
-  actionBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: space.lg,
-    paddingTop: space.md,
-    backgroundColor: color.surface,
-    borderTopWidth: 1,
-    borderTopColor: color.border,
-    ...shadow.lg,
-  },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
-  actionIconBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: radius.md,
-    backgroundColor: color.brandTint,
-    borderWidth: 1,
-    borderColor: color.brandTintStrong,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionWhatsapp: { backgroundColor: "#25D366", borderColor: "#25D366" },
-  actionChat: {
-    flex: 1,
-    height: 50,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: space.sm,
-    backgroundColor: color.brand,
-    borderRadius: radius.md,
-  },
-  actionChatText: { ...font.bodyStrong, color: "#fff" },
+    actionBar: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingHorizontal: space.lg,
+      paddingTop: space.md,
+      backgroundColor: color.surface,
+      borderTopWidth: 1,
+      borderTopColor: color.border,
+      ...shadow.lg,
+    },
+    actionRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+    actionIconBtn: {
+      width: 50,
+      height: 50,
+      borderRadius: radius.md,
+      backgroundColor: color.brandTint,
+      borderWidth: 1,
+      borderColor: color.brandTintStrong,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    actionWhatsapp: { backgroundColor: "#25D366", borderColor: "#25D366" },
+    actionChat: {
+      flex: 1,
+      height: 50,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: space.sm,
+      backgroundColor: color.brand,
+      borderRadius: radius.md,
+    },
+    actionChatText: { ...font.bodyStrong, color: "#fff" },
 
-  sheetBackdrop: { flex: 1, backgroundColor: color.overlay, justifyContent: "flex-end" },
-  sheet: {
-    backgroundColor: color.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: space.lg,
-    paddingTop: space.md,
-  },
-  sheetHandle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, marginBottom: space.md },
-  sheetTitle: { ...font.h3, color: color.text },
-  sheetSub: { ...font.sub, color: color.textMuted, marginTop: 2, marginBottom: space.sm },
-  reasonRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: space.md,
-    borderTopWidth: 1,
-    borderTopColor: color.divider,
-  },
-  reasonText: { ...font.body, color: color.text },
+    sheetBackdrop: {
+      flex: 1,
+      backgroundColor: color.overlay,
+      justifyContent: "flex-end",
+    },
+    sheet: {
+      backgroundColor: color.surface,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      paddingHorizontal: space.lg,
+      paddingTop: space.md,
+    },
+    sheetHandle: {
+      alignSelf: "center",
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: color.borderStrong,
+      marginBottom: space.md,
+    },
+    sheetTitle: { ...font.h3, color: color.text },
+    sheetSub: {
+      ...font.sub,
+      color: color.textMuted,
+      marginTop: 2,
+      marginBottom: space.sm,
+    },
+    reasonRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: space.md,
+      borderTopWidth: 1,
+      borderTopColor: color.divider,
+    },
+    reasonText: { ...font.body, color: color.text },
 
-  viewerBackdrop: { flex: 1, backgroundColor: "#000" },
-  viewerClose: {
-    position: "absolute",
-    right: space.lg,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    viewerBackdrop: { flex: 1, backgroundColor: "#000" },
+    viewerClose: {
+      position: "absolute",
+      right: space.lg,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(255,255,255,0.15)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
   });
 }
