@@ -532,6 +532,21 @@ export async function purchaseProduct(
     };
   }
 
+  // A stale/expired session at the exact moment of purchase would otherwise
+  // silently send an undefined appAccountToken into StoreKit — masking "you
+  // were signed out" as a generic native purchase failure. Fail loudly here,
+  // before StoreKit is ever invoked, while still reading the session the
+  // normal way at request time below (this check does not change how
+  // appAccountToken itself is sourced, only guards against it being absent).
+  const { data: sessionCheck } = await supabase.auth.getSession();
+  if (!sessionCheck.session?.user.id) {
+    return {
+      ok: false,
+      code: "purchase-failed",
+      error: "Please sign in again before purchasing.",
+    };
+  }
+
   try {
     await savePendingContext({
       productId,
