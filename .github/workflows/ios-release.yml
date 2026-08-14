@@ -33,7 +33,10 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-14
+    # React Native 0.86 requires Xcode >= 16.1. macos-14 runners ship
+    # Xcode 15.4 (confirmed by a real failed run: "React Native requires
+    # XCode >= 16.1. Found 15.4"). macos-15 ships Xcode 16.x by default.
+    runs-on: macos-15
     timeout-minutes: 60
     defaults:
       run:
@@ -41,6 +44,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.app || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
 
       - name: Set up Node
         uses: actions/setup-node@v4
