@@ -1,0 +1,189 @@
+name: Build & Upload iOS Release (TestFlight)
+
+# Builds apps/mobile (the Expo/React Native app) into a signed .ipa on a
+# GitHub-hosted macOS runner and uploads it to App Store Connect/TestFlight.
+# Exists as a fallback to EAS Build for months where the EAS Free plan's
+# iOS build quota is exhausted — EAS remains the normal/preferred path.
+#
+# Signing credentials come ONLY from GitHub repository secrets — nothing
+# sensitive lives in the repo. See docs/SIGNING.md for one-time setup.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   IOS_DIST_CERTIFICATE_BASE64   base64 of the .p12 distribution certificate
+#   IOS_DIST_CERTIFICATE_PASSWORD password for that .p12
+#   IOS_PROVISIONING_PROFILE_BASE64  base64 of the .mobileprovision file
+#   ASC_API_KEY_BASE64            base64 of the App Store Connect API .p8 key
+#   ASC_API_KEY_ID                the Key ID (e.g. from the AuthKey_<ID>.p8 filename)
+#   ASC_API_ISSUER_ID             the Issuer ID (same for every key on the account)
+#   EXPO_PUBLIC_SUPABASE_URL
+#   EXPO_PUBLIC_SUPABASE_ANON_KEY
+#   EXPO_PUBLIC_SENTRY_DSN         optional — Sentry crash reporting
+#   SENTRY_AUTH_TOKEN              optional — needed only to upload source maps
+
+on:
+  workflow_dispatch: # run manually from the Actions tab
+    inputs:
+      build_number:
+        description: 'iOS build number (must be higher than any previously uploaded build for this version)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set iOS build number for this run
+        env:
+          BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = 'app.config.ts';
+            let src = fs.readFileSync(path, 'utf8');
+            const next = process.env.BUILD_NUMBER;
+            src = src.replace(/buildNumber:\s*\"\d+\"/, \`buildNumber: \"\${next}\"\`);
+            fs.writeFileSync(path, src);
+            console.log('Set buildNumber to', next);
+          "
+
+      - name: Generate native iOS project (expo prebuild)
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+        run: npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Install CocoaPods
+        working-directory: apps/mobile/ios
+        run: pod install --repo-update
+
+      - name: Import signing credentials into a temporary keychain
+        env:
+          IOS_DIST_CERTIFICATE_BASE64: ${{ secrets.IOS_DIST_CERTIFICATE_BASE64 }}
+          IOS_DIST_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DIST_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+
+          CERT_PATH="$RUNNER_TEMP/dist_certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/ios-build.keychain-db"
+
+          echo -n "$IOS_DIST_CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
+          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+
+          # A fresh, ephemeral keychain scoped to this one runner/job — never
+          # touches the runner's default login keychain.
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" -P "$IOS_DIST_CERTIFICATE_PASSWORD" -A \
+            -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          # The install location must be named by the profile's own UUID —
+          # Xcode looks it up that way, not by the arbitrary download filename.
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | plutil -extract UUID xml1 -o - - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Archive with Xcode
+        working-directory: apps/mobile/ios
+        run: |
+          set -euo pipefail
+          xcodebuild -workspace PaMarket.xcworkspace \
+            -scheme PaMarket \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$RUNNER_TEMP/PaMarket.xcarchive" \
+            -allowProvisioningUpdates \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
+            archive
+
+      - name: Write exportOptions.plist
+        run: |
+          cat > "$RUNNER_TEMP/exportOptions.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>N5DSK22C62</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.pamarket.app</key>
+              <string>PaMarket CI Distribution</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export .ipa
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/PaMarket.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
+            -allowProvisioningUpdates
+
+      - name: Upload to App Store Connect (TestFlight)
+        env:
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/private_keys
+          echo -n "$ASC_API_KEY_BASE64" | base64 --decode -o ~/private_keys/AuthKey_"$ASC_API_KEY_ID".p8
+
+          IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" | head -n1)
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_API_KEY_ID" \
+            --apiIssuer "$ASC_API_ISSUER_ID"
+
+      - name: Clean up keychain and credentials
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+          rm -rf ~/private_keys "$RUNNER_TEMP/dist_certificate.p12" "$RUNNER_TEMP/profile.mobileprovision"
+
+      - name: Upload build artifact (debug reference)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pamarket-ios-ipa
+          path: apps/mobile/ios/build/**/*.ipa
+          if-no-files-found: warn
+          retention-days: 14
