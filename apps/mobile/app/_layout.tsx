@@ -16,6 +16,7 @@ import { initTelemetry } from "../lib/telemetry";
 import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications } from "../lib/push";
 import { resolveNotifRoute } from "../lib/notifications";
+import { diagStart, diagOk, diagFail, STARTUP_FLAGS } from "../lib/startup-diag";
 import TwoFactorVerifyScreen from "./two-factor-verify";
 
 // Nothing was ever calling SplashScreen.hideAsync() — the native splash's
@@ -51,10 +52,22 @@ function usePushNotifications() {
     const userId = session?.user?.id;
     if (!userId || registeredForRef.current === userId) return;
     registeredForRef.current = userId;
-    registerForPushNotifications(userId);
+    if (!STARTUP_FLAGS.pushRegistrationEnabled) {
+      console.log("SKIP push-registration (diagnostic flag)");
+      return;
+    }
+    diagStart("push-registration");
+    registerForPushNotifications(userId)
+      .then(() => diagOk("push-registration"))
+      .catch((error) => diagFail("push-registration", error));
   }, [session?.user?.id]);
 
   useEffect(() => {
+    if (!STARTUP_FLAGS.expoNotificationsEnabled) {
+      console.log("SKIP expo-notifications-listeners (diagnostic flag)");
+      return;
+    }
+    diagStart("expo-notifications-listeners");
     // Cold start: app opened by tapping a push notification. The root
     // navigator may not have finished mounting yet at this point — calling
     // router.push() synchronously here is a known source of "navigate
@@ -63,13 +76,14 @@ function usePushNotifications() {
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification.request.content.data;
       if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
-    }).catch(() => {});
+    }).catch((error) => diagFail("expo-notifications-listeners:getLastNotificationResponseAsync", error));
 
     // Warm/background: app already running, user taps a push notification.
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
       if (data) navigateFromNotificationData(router, data);
     });
+    diagOk("expo-notifications-listeners");
 
     // iOS-only: @react-native-firebase/messaging and expo-notifications both
     // try to become UNUserNotificationCenterDelegate on iOS, and only one
@@ -80,17 +94,25 @@ function usePushNotifications() {
     // path on iOS. Android's intent-based handling isn't affected by this
     // conflict, so the listener above already covers it there.
     let unsubscribeOnOpen: (() => void) | undefined;
-    if (Platform.OS === "ios") {
-      messaging()
-        .getInitialNotification()
-        .then((remoteMessage) => {
-          const data = remoteMessage?.data;
-          if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
-        })
-        .catch(() => {});
-      unsubscribeOnOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
-        if (remoteMessage?.data) navigateFromNotificationData(router, remoteMessage.data);
-      });
+    if (Platform.OS === "ios" && STARTUP_FLAGS.firebaseMessagingEnabled) {
+      diagStart("firebase-messaging-listeners");
+      try {
+        messaging()
+          .getInitialNotification()
+          .then((remoteMessage) => {
+            const data = remoteMessage?.data;
+            if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
+          })
+          .catch((error) => diagFail("firebase-messaging-listeners:getInitialNotification", error));
+        unsubscribeOnOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
+          if (remoteMessage?.data) navigateFromNotificationData(router, remoteMessage.data);
+        });
+        diagOk("firebase-messaging-listeners");
+      } catch (error) {
+        diagFail("firebase-messaging-listeners", error);
+      }
+    } else if (Platform.OS === "ios") {
+      console.log("SKIP firebase-messaging-listeners (diagnostic flag)");
     }
 
     return () => {
@@ -237,9 +259,24 @@ function ThemedStatusBar() {
 }
 
 function RootLayout() {
-  useEffect(() => initTelemetry(), []);
   useEffect(() => {
-    initIAP();
+    diagStart("telemetry");
+    try {
+      initTelemetry();
+      diagOk("telemetry");
+    } catch (error) {
+      diagFail("telemetry", error);
+    }
+  }, []);
+  useEffect(() => {
+    if (!STARTUP_FLAGS.iapEnabled) {
+      console.log("SKIP initIAP (diagnostic flag)");
+      return;
+    }
+    diagStart("initIAP");
+    initIAP()
+      .then(() => diagOk("initIAP"))
+      .catch((error) => diagFail("initIAP", error));
     return () => {
       teardownIAP();
     };

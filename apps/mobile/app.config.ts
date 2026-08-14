@@ -23,10 +23,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // so this has to be bumped by hand before each store-distribution build.
     // 7 was built but never submitted. 8 was submitted and rejected under
     // 2.1.1 (Information Needed) — confirmed already uploaded to App Store
-    // Connect, so it can never be reused. This build (9) carries the IAP
-    // session-guard fix plus the apple-notifications-webhook verify_jwt fix
-    // and is the new submission candidate.
-    buildNumber: "9",
+    // Connect, so it can never be reused. 9 uploaded successfully but
+    // crashes on cold launch (TurboModule void-method exception ->
+    // RCTFatal, seen in two real TestFlight crash reports) — NOT a review
+    // candidate. This build (10) is a diagnostic isolation build only
+    // (see lib/startup-diag.ts): initIAP() disabled via
+    // EXPO_PUBLIC_DIAG_DISABLE_IAP to test whether it's the crash trigger.
+    buildNumber: "10",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -131,8 +134,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "@sentry/react-native/expo",
       {
-        organization: "pamarket",
-        project: "react-native",
+        organization: "pamarket-2r",
+        project: "apple-ios",
         // Auth token is deliberately NOT here — never commit it. It comes
         // from the SENTRY_AUTH_TOKEN EAS environment variable at build time
         // (same pattern as EXPO_PUBLIC_SUPABASE_URL etc.), which is what

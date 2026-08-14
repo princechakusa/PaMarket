@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session } from "@supabase/supabase-js";
 import { AUTH_STORAGE_KEY, SecureStoreAdapter, supabase } from "./supabase";
 import { verifyTotpCode } from "./totp";
+import { diagStart, diagOk, diagFail } from "./startup-diag";
 
 // supabase-js returns NO session from getSession() when the stored access
 // token has expired and it can't reach the auth server to refresh it —
@@ -97,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     const timeout = setTimeout(finishLoading, 6000);
 
+    diagStart("secure-store-session-bootstrap");
     supabase.auth.getSession().then(async ({ data }) => {
       clearTimeout(timeout);
       // Empty session + a session still in storage means the refresh
@@ -106,9 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(resolved);
       finishLoading();
       checkTwoFactor(resolved);
+      diagOk("secure-store-session-bootstrap");
     }).catch(async (e) => {
       clearTimeout(timeout);
       console.warn("[auth] getSession failed (offline?):", e);
+      diagFail("secure-store-session-bootstrap", e);
       setSession(await readCachedSession());
       finishLoading();
     });
