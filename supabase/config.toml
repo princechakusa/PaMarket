@@ -16,3 +16,14 @@ verify_jwt = true
 [functions.automation-runner]
 verify_jwt = true
 
+# Apple's App Store Server Notifications call this URL directly with no
+# Supabase Authorization header — only a signed JWS payload in the body.
+# JWT verification must be off at the platform-gateway level so the request
+# reaches the function at all; the function itself still authenticates every
+# notification via Apple's own signed-payload verification
+# (verifyNotificationPayload in _shared/apple-iap.ts), so this does not
+# weaken authentication, it only moves where it happens. Matches
+# play-rtdn-webhook's equivalent (Google) configuration.
+[functions.apple-notifications-webhook]
+verify_jwt = false
+
