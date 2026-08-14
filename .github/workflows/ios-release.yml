@@ -89,35 +89,46 @@ jobs:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
         run: npx expo prebuild --platform ios --clean --non-interactive
 
-      - name: Disable code signing on Pods sub-targets
-        # CocoaPods library targets (Firebase, Expo modules, Sentry, etc.)
-        # are static libraries, not signable app products — only the main
-        # PaMarket app target should carry our distribution profile. Forcing
-        # manual signing at the xcodebuild command line (next step) applies
-        # to every target in the workspace, including these, so each Pod
-        # errors with "does not support provisioning profiles" (confirmed by
-        # a real failed run listing ~30 Pods targets failing this way).
-        # Appending a post_install hook to the freshly generated Podfile
-        # turns code signing off for every Pods target specifically, leaving
-        # the app target's signing (set via xcodebuild flags) untouched.
-        working-directory: apps/mobile/ios
-        run: |
-          cat >> Podfile <<'EOF'
-
-          post_install do |installer|
-            installer.pods_project.targets.each do |target|
-              target.build_configurations.each do |config|
-                config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-                config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-                config.build_settings['CODE_SIGN_IDENTITY'] = ''
-              end
-            end
-          end
-          EOF
-
       - name: Install CocoaPods
         working-directory: apps/mobile/ios
         run: pod install --repo-update
+
+      - name: Print generated Podfile (diagnostic)
+        working-directory: apps/mobile/ios
+        run: cat Podfile
+
+      - name: Disable code signing on Pods sub-targets, then re-run pod install
+        # CocoaPods library targets (Firebase, Expo modules, Sentry, etc.)
+        # are static libraries, not signable app products — only the main
+        # PaMarket app target should carry our distribution profile. Forcing
+        # manual signing at the xcodebuild command line (archive step)
+        # applies to every target in the workspace, including these, so
+        # each Pod errors with "does not support provisioning profiles"
+        # (confirmed by a real failed run listing ~30 Pods targets failing
+        # this way). CocoaPods only allows ONE post_install hook per Podfile
+        # (confirmed by a real failed run: "Specifying multiple post_install
+        # hooks is unsupported") and Expo's generated Podfile already
+        # defines one — appending a second block is invalid. Instead, patch
+        # the Xcode project CocoaPods already generated directly, after the
+        # fact, using the same approach `xcodeproj`/`fastlane` scripts use:
+        # iterate every target in Pods.xcodeproj except the app's own and
+        # disable signing on them via the `xcodeproj` Ruby gem (bundled with
+        # CocoaPods, no extra install needed).
+        working-directory: apps/mobile/ios
+        run: |
+          ruby -e '
+            require "xcodeproj"
+            project = Xcodeproj::Project.open("Pods/Pods.xcodeproj")
+            project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"
+                config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"
+                config.build_settings["CODE_SIGN_IDENTITY"] = ""
+              end
+            end
+            project.save
+            puts "Disabled code signing on #{project.targets.length} Pods targets"
+          '
 
       - name: Import signing credentials into a temporary keychain
         env:
