@@ -2,15 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EGS078J4Q2"></script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2601167334065110"
-     crossorigin="anonymous"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-EGS078J4Q2');
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta id="metaDesc" name="description" content="View a seller profile on PaMarket — Zimbabwe's free marketplace.">
 <title id="pageTitle">Seller Profile — PaMarket Zimbabwe</title>
@@ -440,6 +431,8 @@ window.doSearch = window.doSearch || function(){
       <h5>Legal</h5>
       <a href="terms">Terms of Service</a>
       <a href="privacy">Privacy Policy</a>
+      <a href="cookie-policy">Cookie Policy</a>
+      <a href="#" data-cookie-settings>Cookie Settings</a>
       <a href="post-ad">Post a Free Ad</a>
       <a href="auth">Sign In</a>
       <a href="auth?mode=signup">Create Account</a>
@@ -450,11 +443,14 @@ window.doSearch = window.doSearch || function(){
     <div class="foot-bottom-links">
       <a href="terms">Terms</a>
       <a href="privacy">Privacy</a>
+      <a href="cookie-policy">Cookies</a>
+      <a href="#" data-cookie-settings>Cookie Settings</a>
       <a href="community-guidelines">Guidelines</a>
       <a href="contact">Contact</a>
     </div>
   </div>
 </footer>
+<script src="js/cookie-consent.js" defer></script>
 <!-- FOOTER:END -->
 
 <!-- BOOST PICKER MODAL (owner only; Paynow checkout) -->
@@ -596,6 +592,17 @@ async function init(){
 function showNotFound(){
   document.getElementById('loadingState').classList.add('hidden');
   document.getElementById('notFoundState').classList.remove('hidden');
+  // A missing/deleted/private profile still gets HTTP 200 from GitHub Pages
+  // (profile.html is a static file served for every ?id=, valid or not —
+  // this static host can't return a real 404 for a query-string route). To
+  // stop Google treating this as a Soft 404 (thin "not found" content on a
+  // 200 page), tell it not to index this URL — same technique already used
+  // by tools/prerender.js's hydrateListingId script for delisted listings.
+  document.title='Profile Not Found — PaMarket Zimbabwe';
+  const m=document.querySelector('meta[name=robots]');
+  if(m)m.setAttribute('content','noindex, nofollow');
+  const d=document.getElementById('metaDesc');
+  if(d)d.setAttribute('content','This profile could not be found on PaMarket.');
 }
 
 // Seller reviews — rating summary in the profile card + full review list.
