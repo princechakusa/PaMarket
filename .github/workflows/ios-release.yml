@@ -132,12 +132,22 @@ jobs:
         working-directory: apps/mobile/ios
         run: |
           set -euo pipefail
+          # A fresh `expo prebuild` project defaults to Automatic signing with
+          # no team set, which fails immediately in a non-interactive CI
+          # context ("Signing for PaMarket requires a development team" —
+          # confirmed by a real failed run). Force manual signing explicitly
+          # tied to the imported certificate/profile instead of relying on
+          # Xcode to resolve it interactively.
           xcodebuild -workspace PaMarket.xcworkspace \
             -scheme PaMarket \
             -configuration Release \
             -sdk iphoneos \
             -archivePath "$RUNNER_TEMP/PaMarket.xcarchive" \
             -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=N5DSK22C62 \
+            PROVISIONING_PROFILE_SPECIFIER="PaMarket CI Distribution" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
             archive
 
