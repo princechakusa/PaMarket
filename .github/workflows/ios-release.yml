@@ -45,18 +45,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode >= 16.1
-        # macos-15 runners ship several Xcode versions side-by-side under
-        # /Applications/Xcode_<version>.app, with the *default* `xcode-select`
-        # target sometimes being an older one (confirmed: default resolved to
-        # 16.0, but React Native 0.86 requires >= 16.1). List every installed
-        # version and select the highest one with `sort -V` rather than
-        # guessing a single hardcoded path that may not exist on this image.
+      - name: Select Xcode 16.4
+        # macos-15 runners ship many Xcode versions side-by-side under
+        # /Applications/Xcode_<version>.app, from 16.0 up through 26.x (Apple's
+        # newer year-based numbering). React Native 0.86 requires >= 16.1, so
+        # an earlier version of this workflow picked the highest version
+        # found via `sort -V` — which selected 26.3 and broke: a real run
+        # failed compiling node_modules/expo-modules-jsi with a Swift
+        # compiler error ("type of expression is ambiguous without a type
+        # annotation" in JavaScriptCodable+Date.swift) that does not occur
+        # under the 16.x toolchain. Pin to the newest *16.x* release instead
+        # — satisfies the >= 16.1 floor without using an unproven bleeding-
+        # edge compiler this dependency tree wasn't built against.
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null
-          CHOSEN=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
-          echo "Selecting: ${CHOSEN:-/Applications/Xcode.app (default, none found matching Xcode_*.app)}"
+          CHOSEN="/Applications/Xcode_16.4.app"
+          if [ ! -d "$CHOSEN" ]; then
+            echo "Xcode_16.4.app not found on this runner image, falling back to highest 16.x available"
+            CHOSEN=$(ls -d /Applications/Xcode_16.*.app 2>/dev/null | sort -V | tail -1)
+          fi
+          echo "Selecting: ${CHOSEN:-/Applications/Xcode.app (default, no 16.x found)}"
           sudo xcode-select -s "${CHOSEN:-/Applications/Xcode.app}"
           xcodebuild -version
 
