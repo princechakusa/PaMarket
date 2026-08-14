@@ -21,11 +21,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // eas.json's production build profile can't use autoIncrement — that
     // only works with a static app.json, not this dynamic app.config.ts —
     // so this has to be bumped by hand before each store-distribution build.
-    // 7 was built but never submitted — it predated the fix for the white
-    // screen after signing in. This build carries that fix plus the
-    // blank-screen-after-backgrounding fix, and is the submission
-    // candidate.
-    buildNumber: "8",
+    // 7 was built but never submitted. 8 was submitted and rejected under
+    // 2.1.1 (Information Needed) — confirmed already uploaded to App Store
+    // Connect, so it can never be reused. This build (9) carries the IAP
+    // session-guard fix plus the apple-notifications-webhook verify_jwt fix
+    // and is the new submission candidate.
+    buildNumber: "9",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
