@@ -202,6 +202,17 @@ jobs:
 
       - name: Archive with Xcode
         working-directory: apps/mobile/ios
+        env:
+          # The Sentry Xcode build phase (added by @sentry/react-native/expo)
+          # runs `sentry-cli ... upload-source-maps` unconditionally and
+          # fails the whole archive with "Auth token is required for this
+          # request" when SENTRY_AUTH_TOKEN isn't set (confirmed by a real
+          # failed run). Pass the token through if the secret exists so real
+          # source maps still upload; SENTRY_ALLOW_FAILURE is the documented
+          # sentry-cli escape hatch so a missing/invalid token degrades to a
+          # warning instead of failing the whole archive either way.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ALLOW_FAILURE: "true"
         run: |
           set -euo pipefail
           # A fresh `expo prebuild` project defaults to Automatic signing with
