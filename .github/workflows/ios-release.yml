@@ -48,20 +48,16 @@ jobs:
       - name: Select Xcode 26.2
         # macos-15 runners ship many Xcode versions side-by-side under
         # /Applications/Xcode_<version>.app, from 16.0 up through 26.x (Apple's
-        # newer year-based numbering). Two real, DIFFERENT, mutually
-        # exclusive failures were confirmed by actually running each:
+        # newer year-based numbering).
         #   - Xcode 16.4: "package 'apple' is using Swift tools version 6.2.0
         #     but the installed version is 6.1.0" — node_modules/expo-modules-jsi's
         #     Swift package manifest requires Swift tools >= 6.2, which no
         #     16.x Xcode ships (Swift 6.2 first shipped with Xcode 26).
-        #   - Xcode 26.3 (the highest available, picked by an earlier
-        #     `sort -V` version of this step): a genuine Swift compiler
-        #     regression compiling JavaScriptCodable+Date.swift in that same
-        #     package ("type of expression is ambiguous without a type
-        #     annotation") that does not occur on other 26.x builds.
-        # 26.2 is the newest 26.x release *before* the broken 26.3, and is
-        # new enough to ship Swift tools >= 6.2 — satisfies both constraints
-        # confirmed by the two failed runs above.
+        # 26.2 ships Swift tools >= 6.2, satisfying that floor. (The
+        # ambiguous-type-annotation compile error seen on both 26.2 and 26.3
+        # was NOT an Xcode-version issue — it's a real source-level ambiguity
+        # in expo-modules-jsi, fixed by the source patch step above, not by
+        # picking a different Xcode version.)
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null
@@ -85,6 +81,27 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Patch expo-modules-jsi ambiguous-type-annotation bug
+        # node_modules/expo-modules-jsi's JavaScriptCodable+Date.swift fails
+        # to compile under Xcode 26.2 AND 26.3 (confirmed by two real failed
+        # runs with the identical error on both) with "type of expression is
+        # ambiguous without a type annotation" on:
+        #   guard milliseconds.isFinite, abs(milliseconds) <= maxJavaScriptDateMilliseconds else {
+        # Swift's overload resolution can't disambiguate `abs` (Swift.abs vs.
+        # a Foundation/Darwin overload) inside this compound guard condition.
+        # expo-modules-jsi 57.0.4 (the current latest in the installed SDK 57
+        # line) does not fix this upstream. Fully qualifying `abs` as
+        # `Swift.abs` removes the ambiguity. Patched here (not committed into
+        # node_modules, which is gitignored) so it survives every fresh
+        # `npm install` in CI. Remove this step once expo-modules-jsi ships
+        # an upstream fix.
+        run: |
+          set -euo pipefail
+          FILE="node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Coding/JavaScriptCodable+Date.swift"
+          grep -n "abs(milliseconds)" "$FILE"
+          sed -i '' 's/abs(milliseconds)/Swift.abs(milliseconds)/' "$FILE"
+          grep -n "Swift.abs(milliseconds)" "$FILE"
 
       - name: Set iOS build number for this run
         env:
