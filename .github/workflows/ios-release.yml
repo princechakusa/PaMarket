@@ -45,9 +45,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
+      - name: Select Xcode >= 16.1
+        # macos-15 runners ship several Xcode versions side-by-side under
+        # /Applications/Xcode_<version>.app, with the *default* `xcode-select`
+        # target sometimes being an older one (confirmed: default resolved to
+        # 16.0, but React Native 0.86 requires >= 16.1). List every installed
+        # version and select the highest one with `sort -V` rather than
+        # guessing a single hardcoded path that may not exist on this image.
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.app || sudo xcode-select -s /Applications/Xcode.app
+          echo "Installed Xcode versions:"
+          ls -d /Applications/Xcode*.app 2>/dev/null
+          CHOSEN=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          echo "Selecting: ${CHOSEN:-/Applications/Xcode.app (default, none found matching Xcode_*.app)}"
+          sudo xcode-select -s "${CHOSEN:-/Applications/Xcode.app}"
           xcodebuild -version
 
       - name: Set up Node
