@@ -54,6 +54,16 @@ jobs:
           node -e 'const fs=require("fs"); const source=fs.readFileSync("app.config.ts","utf8"); if (!/buildNumber:\s*"14"/.test(source)) throw new Error("Expected iOS build number 14"); if (!/organization:\s*"pamrk"/.test(source) || !/project:\s*"react-native"/.test(source)) throw new Error("Expected pamrk/react-native Sentry project")'
           npx expo config --type public >/dev/null
 
+      - name: Validate Sentry upload credentials
+        env:
+          SENTRY_ORG: pamrk
+          SENTRY_PROJECT: react-native
+        run: |
+          set -euo pipefail
+          npx sentry-cli info
+          npx sentry-cli projects list --org "$SENTRY_ORG" > "$RUNNER_TEMP/sentry-projects.txt"
+          grep -Fq "$SENTRY_PROJECT" "$RUNNER_TEMP/sentry-projects.txt"
+
       - name: Generate native iOS project
         run: npx expo prebuild --platform ios --clean --non-interactive
 
