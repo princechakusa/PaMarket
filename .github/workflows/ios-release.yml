@@ -1,193 +1,76 @@
 name: Build & Upload iOS Release (TestFlight)
 
-# Builds apps/mobile (the Expo/React Native app) into a signed .ipa on a
-# GitHub-hosted macOS runner and uploads it to App Store Connect/TestFlight.
-# Exists as a fallback to EAS Build for months where the EAS Free plan's
-# iOS build quota is exhausted — EAS remains the normal/preferred path.
-#
-# Signing credentials come ONLY from GitHub repository secrets — nothing
-# sensitive lives in the repo. See docs/SIGNING.md for one-time setup.
-#
-# Required repository secrets (Settings -> Secrets and variables -> Actions):
-#   IOS_DIST_CERTIFICATE_BASE64   base64 of the .p12 distribution certificate
-#   IOS_DIST_CERTIFICATE_PASSWORD password for that .p12
-#   IOS_PROVISIONING_PROFILE_BASE64  base64 of the .mobileprovision file
-#   ASC_API_KEY_BASE64            base64 of the App Store Connect API .p8 key
-#   ASC_API_KEY_ID                the Key ID (e.g. from the AuthKey_<ID>.p8 filename)
-#   ASC_API_ISSUER_ID             the Issuer ID (same for every key on the account)
-#   EXPO_PUBLIC_SUPABASE_URL
-#   EXPO_PUBLIC_SUPABASE_ANON_KEY
-#   EXPO_PUBLIC_SENTRY_DSN         optional — Sentry crash reporting
-#   SENTRY_AUTH_TOKEN              optional — needed only to upload source maps
-
 on:
-  workflow_dispatch: # run manually from the Actions tab
-    inputs:
-      build_number:
-        description: 'iOS build number (must be higher than any previously uploaded build for this version)'
-        required: true
-        type: string
-      diag_disable_iap:
-        description: 'Diagnostic: disable initIAP() at startup (build-9 crash isolation)'
-        required: false
-        type: boolean
-        default: false
-      diag_disable_firebase_messaging:
-        description: 'Diagnostic: disable Firebase Messaging listeners at startup'
-        required: false
-        type: boolean
-        default: false
-      diag_disable_expo_notifications:
-        description: 'Diagnostic: disable Expo Notifications listeners at startup'
-        required: false
-        type: boolean
-        default: false
-      diag_disable_push_registration:
-        description: 'Diagnostic: disable push token registration at startup'
-        required: false
-        type: boolean
-        default: false
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ios-production-release
+  cancel-in-progress: false
+
 jobs:
   build:
-    # React Native 0.86 requires Xcode >= 16.1. macos-14 runners ship
-    # Xcode 15.4 (confirmed by a real failed run: "React Native requires
-    # XCode >= 16.1. Found 15.4"). macos-15 ships Xcode 16.x by default.
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     defaults:
       run:
         working-directory: apps/mobile
+    env:
+      NODE_ENV: production
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ALLOW_FAILURE: "true"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 26.2
-        # macos-15 runners ship many Xcode versions side-by-side under
-        # /Applications/Xcode_<version>.app, from 16.0 up through 26.x (Apple's
-        # newer year-based numbering).
-        #   - Xcode 16.4: "package 'apple' is using Swift tools version 6.2.0
-        #     but the installed version is 6.1.0" — node_modules/expo-modules-jsi's
-        #     Swift package manifest requires Swift tools >= 6.2, which no
-        #     16.x Xcode ships (Swift 6.2 first shipped with Xcode 26).
-        # 26.2 ships Swift tools >= 6.2, satisfying that floor. (The
-        # ambiguous-type-annotation compile error seen on both 26.2 and 26.3
-        # was NOT an Xcode-version issue — it's a real source-level ambiguity
-        # in expo-modules-jsi, fixed by the source patch step above, not by
-        # picking a different Xcode version.)
+      - name: Select Build 8 Xcode toolchain
         run: |
-          echo "Installed Xcode versions:"
-          ls -d /Applications/Xcode*.app 2>/dev/null
-          CHOSEN="/Applications/Xcode_26.2.app"
-          if [ ! -d "$CHOSEN" ]; then
-            echo "Xcode_26.2.app not found on this runner image, falling back to highest 26.x below 26.3"
-            CHOSEN=$(ls -d /Applications/Xcode_26.0*.app /Applications/Xcode_26.1*.app /Applications/Xcode_26.2*.app 2>/dev/null | sort -V | tail -1)
-          fi
-          if [ -z "$CHOSEN" ] || [ ! -d "$CHOSEN" ]; then
-            echo "No 26.0-26.2 Xcode found either, falling back to highest 16.x (may hit the Swift 6.2 tools-version error)"
-            CHOSEN=$(ls -d /Applications/Xcode_16.*.app 2>/dev/null | sort -V | tail -1)
-          fi
-          echo "Selecting: ${CHOSEN:-/Applications/Xcode.app (default)}"
-          sudo xcode-select -s "${CHOSEN:-/Applications/Xcode.app}"
+          set -euo pipefail
+          test -d /Applications/Xcode_26.6.app
+          sudo xcode-select -s /Applications/Xcode_26.6.app
           xcodebuild -version
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22.23.1"
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install locked dependencies
+        run: npm ci
 
-      - name: Patch expo-modules-jsi ambiguous-type-annotation bug
-        # node_modules/expo-modules-jsi's JavaScriptCodable+Date.swift fails
-        # to compile under Xcode 26.2 AND 26.3 (confirmed by two real failed
-        # runs with the identical error on both) with "type of expression is
-        # ambiguous without a type annotation" on:
-        #   guard milliseconds.isFinite, abs(milliseconds) <= maxJavaScriptDateMilliseconds else {
-        # Swift's overload resolution can't disambiguate `abs` (Swift.abs vs.
-        # a Foundation/Darwin overload) inside this compound guard condition.
-        # expo-modules-jsi 57.0.4 (the current latest in the installed SDK 57
-        # line) does not fix this upstream. Fully qualifying `abs` as
-        # `Swift.abs` removes the ambiguity. Patched here (not committed into
-        # node_modules, which is gitignored) so it survives every fresh
-        # `npm install` in CI. Remove this step once expo-modules-jsi ships
-        # an upstream fix.
+      - name: Validate production configuration
+        run: |
+          set -euo pipefail
+          test -n "$EXPO_PUBLIC_SUPABASE_URL"
+          test -n "$EXPO_PUBLIC_SUPABASE_ANON_KEY"
+          test -n "$EXPO_PUBLIC_SENTRY_DSN"
+          node -e 'const fs=require("fs"); const source=fs.readFileSync("app.config.ts","utf8"); if (!/buildNumber:\s*"13"/.test(source)) throw new Error("Expected iOS build number 13")'
+          npx expo config --type public >/dev/null
+
+      - name: Patch ExpoModulesJSI Swift 6.2 ambiguity
         run: |
           set -euo pipefail
           FILE="node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Coding/JavaScriptCodable+Date.swift"
-          grep -n "abs(milliseconds)" "$FILE"
+          grep -q "abs(milliseconds)" "$FILE"
           sed -i '' 's/abs(milliseconds)/Swift.abs(milliseconds)/' "$FILE"
-          grep -n "Swift.abs(milliseconds)" "$FILE"
+          grep -q "Swift.abs(milliseconds)" "$FILE"
 
-      - name: Set iOS build number for this run
-        env:
-          BUILD_NUMBER: ${{ inputs.build_number }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            const path = 'app.config.ts';
-            let src = fs.readFileSync(path, 'utf8');
-            const next = process.env.BUILD_NUMBER;
-            src = src.replace(/buildNumber:\s*\"\d+\"/, \`buildNumber: \"\${next}\"\`);
-            fs.writeFileSync(path, src);
-            console.log('Set buildNumber to', next);
-          "
-
-      - name: Generate native iOS project (expo prebuild)
-        env:
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
-          # Startup-crash isolation flags (see apps/mobile/lib/startup-diag.ts) —
-          # workflow_dispatch booleans arrive as the strings "true"/"false", so
-          # compare against "true" to get "1"/unset for the app's own
-          # `!== "1"` checks.
-          EXPO_PUBLIC_DIAG_DISABLE_IAP: ${{ inputs.diag_disable_iap && '1' || '' }}
-          EXPO_PUBLIC_DIAG_DISABLE_FIREBASE_MESSAGING: ${{ inputs.diag_disable_firebase_messaging && '1' || '' }}
-          EXPO_PUBLIC_DIAG_DISABLE_EXPO_NOTIFICATIONS: ${{ inputs.diag_disable_expo_notifications && '1' || '' }}
-          EXPO_PUBLIC_DIAG_DISABLE_PUSH_REGISTRATION: ${{ inputs.diag_disable_push_registration && '1' || '' }}
+      - name: Generate native iOS project
         run: npx expo prebuild --platform ios --clean --non-interactive
-
-      - name: Print patched AppDelegate.swift (diagnostic)
-        # Confirms plugins/withSentryNativeInit.js actually inserted
-        # SentrySDK.start() before archiving — a silent regex-match failure
-        # here would otherwise look identical to a successful build.
-        working-directory: apps/mobile/ios
-        run: |
-          FILE=$(find . -iname "AppDelegate.swift" | head -1)
-          echo "AppDelegate.swift path: $FILE"
-          cat "$FILE"
-          grep -q "SentrySDK.start" "$FILE" && echo "CONFIRMED: SentrySDK.start() present" || (echo "FAILED: SentrySDK.start() NOT found in AppDelegate.swift" && exit 1)
 
       - name: Install CocoaPods
         working-directory: apps/mobile/ios
         run: pod install --repo-update
 
-      - name: Print generated Podfile (diagnostic)
-        working-directory: apps/mobile/ios
-        run: cat Podfile
-
-      - name: Disable code signing on Pods sub-targets, then re-run pod install
-        # CocoaPods library targets (Firebase, Expo modules, Sentry, etc.)
-        # are static libraries, not signable app products — only the main
-        # PaMarket app target should carry our distribution profile. Forcing
-        # manual signing at the xcodebuild command line (archive step)
-        # applies to every target in the workspace, including these, so
-        # each Pod errors with "does not support provisioning profiles"
-        # (confirmed by a real failed run listing ~30 Pods targets failing
-        # this way). CocoaPods only allows ONE post_install hook per Podfile
-        # (confirmed by a real failed run: "Specifying multiple post_install
-        # hooks is unsupported") and Expo's generated Podfile already
-        # defines one — appending a second block is invalid. Instead, patch
-        # the Xcode project CocoaPods already generated directly, after the
-        # fact, using the same approach `xcodeproj`/`fastlane` scripts use:
-        # iterate every target in Pods.xcodeproj except the app's own and
-        # disable signing on them via the `xcodeproj` Ruby gem (bundled with
-        # CocoaPods, no extra install needed).
+      - name: Disable signing on Pods targets
         working-directory: apps/mobile/ios
         run: |
           ruby -e '
@@ -201,10 +84,9 @@ jobs:
               end
             end
             project.save
-            puts "Disabled code signing on #{project.targets.length} Pods targets"
           '
 
-      - name: Import signing credentials into a temporary keychain
+      - name: Import signing credentials
         env:
           IOS_DIST_CERTIFICATE_BASE64: ${{ secrets.IOS_DIST_CERTIFICATE_BASE64 }}
           IOS_DIST_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DIST_CERTIFICATE_PASSWORD }}
@@ -212,7 +94,6 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
-
           CERT_PATH="$RUNNER_TEMP/dist_certificate.p12"
           PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
           KEYCHAIN_PATH="$RUNNER_TEMP/ios-build.keychain-db"
@@ -220,46 +101,23 @@ jobs:
           echo -n "$IOS_DIST_CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
           echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
 
-          # A fresh, ephemeral keychain scoped to this one runner/job — never
-          # touches the runner's default login keychain.
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          security import "$CERT_PATH" -P "$IOS_DIST_CERTIFICATE_PASSWORD" -A \
-            -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$IOS_DIST_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
 
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # The install location must be named by the profile's own UUID —
-          # Xcode looks it up that way, not by the arbitrary download filename.
           PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | plutil -extract UUID xml1 -o - - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          test -n "$PROFILE_UUID"
           cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
-
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
       - name: Archive with Xcode
         working-directory: apps/mobile/ios
-        env:
-          # The Sentry Xcode build phase (added by @sentry/react-native/expo)
-          # runs `sentry-cli ... upload-source-maps` unconditionally and
-          # fails the whole archive with "Auth token is required for this
-          # request" when SENTRY_AUTH_TOKEN isn't set (confirmed by a real
-          # failed run). Pass the token through if the secret exists so real
-          # source maps still upload; SENTRY_ALLOW_FAILURE is the documented
-          # sentry-cli escape hatch so a missing/invalid token degrades to a
-          # warning instead of failing the whole archive either way.
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ALLOW_FAILURE: "true"
         run: |
           set -euo pipefail
-          # A fresh `expo prebuild` project defaults to Automatic signing with
-          # no team set, which fails immediately in a non-interactive CI
-          # context ("Signing for PaMarket requires a development team" —
-          # confirmed by a real failed run). Force manual signing explicitly
-          # tied to the imported certificate/profile instead of relying on
-          # Xcode to resolve it interactively.
           xcodebuild -workspace PaMarket.xcworkspace \
             -scheme PaMarket \
             -configuration Release \
@@ -273,11 +131,21 @@ jobs:
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
             archive
 
-      - name: Write exportOptions.plist
+      - name: Verify compiled production bundle
+        run: |
+          set -euo pipefail
+          BUNDLE="$RUNNER_TEMP/PaMarket.xcarchive/Products/Applications/PaMarket.app/main.jsbundle"
+          test -s "$BUNDLE"
+          grep -aFq "$EXPO_PUBLIC_SUPABASE_URL" "$BUNDLE"
+          grep -aFq "$EXPO_PUBLIC_SUPABASE_ANON_KEY" "$BUNDLE"
+          grep -aFq "$EXPO_PUBLIC_SENTRY_DSN" "$BUNDLE"
+          echo "Confirmed required production configuration in compiled bundle"
+
+      - name: Write export options
         run: |
           cat > "$RUNNER_TEMP/exportOptions.plist" <<'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
@@ -297,7 +165,7 @@ jobs:
           </plist>
           EOF
 
-      - name: Export .ipa
+      - name: Export IPA
         run: |
           set -euo pipefail
           xcodebuild -exportArchive \
@@ -306,7 +174,7 @@ jobs:
             -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
             -allowProvisioningUpdates
 
-      - name: Upload to App Store Connect (TestFlight)
+      - name: Upload to App Store Connect
         env:
           ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
@@ -315,25 +183,21 @@ jobs:
           set -euo pipefail
           mkdir -p ~/private_keys
           echo -n "$ASC_API_KEY_BASE64" | base64 --decode -o ~/private_keys/AuthKey_"$ASC_API_KEY_ID".p8
+          IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" -type f | head -n1)
+          test -n "$IPA_PATH"
+          xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER_ID"
 
-          IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" | head -n1)
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA_PATH" \
-            --apiKey "$ASC_API_KEY_ID" \
-            --apiIssuer "$ASC_API_ISSUER_ID"
+      - name: Upload IPA artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pamarket-ios-build-13
+          path: ${{ runner.temp }}/export/*.ipa
+          if-no-files-found: error
+          retention-days: 14
 
-      - name: Clean up keychain and credentials
+      - name: Clean up credentials
         if: always()
         run: |
           security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
           rm -rf ~/private_keys "$RUNNER_TEMP/dist_certificate.p12" "$RUNNER_TEMP/profile.mobileprovision"
-
-      - name: Upload build artifact (debug reference)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pamarket-ios-ipa
-          path: apps/mobile/ios/build/**/*.ipa
-          if-no-files-found: warn
-          retention-days: 14
