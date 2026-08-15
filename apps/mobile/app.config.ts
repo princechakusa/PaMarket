@@ -25,7 +25,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // screen after signing in. This build carries that fix plus the
     // blank-screen-after-backgrounding fix, and is the submission
     // candidate.
-    buildNumber: "8",
+    //
+    // DIAGNOSTIC ONLY (build 15): this worktree is build 8's exact
+    // application source (commit 51ed59fc) rebuilt through the current
+    // GitHub Actions pipeline, as an A/B test isolating whether the
+    // post-EAS startup crash comes from application changes made after
+    // build 8 or from the GitHub build environment itself. Build 8 (EAS)
+    // launches correctly on device; builds 9-12 (GitHub) crash on cold
+    // start. Only the build number, Sentry org slug, and workflow were
+    // changed here — no application logic. Not for merge to master.
+    buildNumber: "15",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -130,7 +139,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "@sentry/react-native/expo",
       {
-        organization: "pamarket",
+        // Verified live against the Sentry API before changing: org slug
+        // "pamrk" holds the "react-native" project (the similarly named
+        // "pamrk-6n" org is empty). Build 8's original "pamarket" org is no
+        // longer the active one.
+        organization: "pamrk",
         project: "react-native",
         // Auth token is deliberately NOT here — never commit it. It comes
         // from the SENTRY_AUTH_TOKEN EAS environment variable at build time

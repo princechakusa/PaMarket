@@ -1,0 +1,257 @@
+name: Build & Upload iOS Release (TestFlight)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-production-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/mobile
+    env:
+      NODE_ENV: production
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Build 8 Xcode toolchain
+        run: |
+          set -euo pipefail
+          test -d /Applications/Xcode_26.6.app
+          sudo xcode-select -s /Applications/Xcode_26.6.app
+          xcodebuild -version
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.1"
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate production configuration
+        run: |
+          set -euo pipefail
+          test -n "$EXPO_PUBLIC_SUPABASE_URL"
+          test -n "$EXPO_PUBLIC_SUPABASE_ANON_KEY"
+          test -n "$EXPO_PUBLIC_SENTRY_DSN"
+          node -e 'const fs=require("fs"); const source=fs.readFileSync("app.config.ts","utf8"); if (!/buildNumber:\s*"15"/.test(source)) throw new Error("Expected iOS build number 15"); if (!/organization:\s*"pamrk"/.test(source) || !/project:\s*"react-native"/.test(source)) throw new Error("Expected pamrk/react-native Sentry project")'
+          npx expo config --type public >/dev/null
+
+      # Reports Sentry credential/project health without ever aborting the
+      # run. Sentry is instrumentation for this A/B test, not the subject of
+      # it — a missing or wrong SENTRY_AUTH_TOKEN must never be what stops
+      # build 15 from producing an installable IPA. Prints status only, never
+      # secret values.
+      - name: Report Sentry upload credential status (non-blocking)
+        continue-on-error: true
+        env:
+          SENTRY_ORG: pamrk
+          SENTRY_PROJECT: react-native
+        run: |
+          set +e
+          if [ -z "${SENTRY_AUTH_TOKEN:-}" ]; then
+            echo "WARN: SENTRY_AUTH_TOKEN is empty — source maps and dSYMs will NOT upload."
+            exit 0
+          fi
+          npx sentry-cli info >/dev/null 2>&1 \
+            && echo "OK: sentry-cli authenticated" \
+            || echo "WARN: sentry-cli could not authenticate — uploads will be skipped."
+          npx sentry-cli projects list --org "$SENTRY_ORG" 2>/dev/null | grep -Fq "$SENTRY_PROJECT" \
+            && echo "OK: project $SENTRY_ORG/$SENTRY_PROJECT reachable" \
+            || echo "WARN: project $SENTRY_ORG/$SENTRY_PROJECT not reachable with this token."
+
+      - name: Generate native iOS project
+        run: npx expo prebuild --platform ios --clean --non-interactive
+
+      - name: Install CocoaPods
+        working-directory: apps/mobile/ios
+        run: pod install --repo-update
+
+      - name: Disable signing on Pods targets
+        working-directory: apps/mobile/ios
+        run: |
+          ruby -e '
+            require "xcodeproj"
+            project = Xcodeproj::Project.open("Pods/Pods.xcodeproj")
+            project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"
+                config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"
+                config.build_settings["CODE_SIGN_IDENTITY"] = ""
+              end
+            end
+            project.save
+          '
+
+      - name: Import signing credentials
+        env:
+          IOS_DIST_CERTIFICATE_BASE64: ${{ secrets.IOS_DIST_CERTIFICATE_BASE64 }}
+          IOS_DIST_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DIST_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/dist_certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/ios-build.keychain-db"
+
+          echo -n "$IOS_DIST_CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
+          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$IOS_DIST_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | plutil -extract UUID xml1 -o - - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
+          test -n "$PROFILE_UUID"
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Archive with Xcode
+        working-directory: apps/mobile/ios
+        run: |
+          set -euo pipefail
+          xcodebuild -workspace PaMarket.xcworkspace \
+            -scheme PaMarket \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$RUNNER_TEMP/PaMarket.xcarchive" \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=N5DSK22C62 \
+            PROVISIONING_PROFILE_SPECIFIER="PaMarket CI Distribution" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
+            archive
+
+      # This is the single most important diagnostic signal in the run: it
+      # proves whether Metro actually inlined the EXPO_PUBLIC_* values during
+      # the Xcode archive phase. Builds 9-12 are suspected to have shipped a
+      # bundle with these undefined, which makes lib/supabase.ts throw at
+      # module-import time and abort the process on cold start.
+      #
+      # A missing/empty bundle is fatal (the archive is meaningless without
+      # it). The value greps only WARN: this app bundles with Hermes, so
+      # main.jsbundle is bytecode and a grep miss can be a false negative
+      # from bytecode encoding rather than a genuinely absent value. Failing
+      # the archive on that would destroy a ~40-minute diagnostic run for a
+      # reason unrelated to what is being tested. Values are GitHub secrets
+      # and stay masked in logs.
+      - name: Verify compiled production bundle
+        run: |
+          set -uo pipefail
+          BUNDLE="$RUNNER_TEMP/PaMarket.xcarchive/Products/Applications/PaMarket.app/main.jsbundle"
+          if [ ! -s "$BUNDLE" ]; then
+            echo "FATAL: main.jsbundle missing or empty at $BUNDLE"
+            exit 1
+          fi
+          echo "Bundle size: $(wc -c < "$BUNDLE") bytes"
+          MISSING=0
+          for NAME in EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY EXPO_PUBLIC_SENTRY_DSN; do
+            eval "VALUE=\${$NAME}"
+            if [ -z "$VALUE" ]; then
+              echo "WARN: $NAME is empty in the build environment"
+              MISSING=1
+            elif grep -aFq "$VALUE" "$BUNDLE"; then
+              echo "OK: $NAME found inlined in compiled bundle"
+            else
+              echo "WARN: $NAME NOT found in compiled bundle (may be Hermes bytecode encoding, or genuinely not inlined)"
+              MISSING=1
+            fi
+          done
+          if [ "$MISSING" -eq 0 ]; then
+            echo "RESULT: all required production configuration confirmed in compiled bundle"
+          else
+            echo "RESULT: one or more values unconfirmed — see warnings above (not failing the diagnostic)"
+          fi
+
+      - name: Write export options
+        run: |
+          cat > "$RUNNER_TEMP/exportOptions.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>N5DSK22C62</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.pamarket.app</key>
+              <string>PaMarket CI Distribution</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/PaMarket.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
+            -allowProvisioningUpdates
+
+      - name: Upload to App Store Connect
+        env:
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/private_keys
+          echo -n "$ASC_API_KEY_BASE64" | base64 --decode -o ~/private_keys/AuthKey_"$ASC_API_KEY_ID".p8
+          IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" -type f | head -n1)
+          test -n "$IPA_PATH"
+          xcrun altool --upload-app --type ios --file "$IPA_PATH" --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER_ID"
+
+      - name: Upload IPA artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pamarket-ios-build-15
+          path: ${{ runner.temp }}/export/*.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload iOS symbols artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pamarket-ios-build-15-dsyms
+          path: ${{ runner.temp }}/PaMarket.xcarchive/dSYMs
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Clean up credentials
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+          rm -rf ~/private_keys "$RUNNER_TEMP/dist_certificate.p12" "$RUNNER_TEMP/profile.mobileprovision"
