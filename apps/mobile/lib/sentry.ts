@@ -6,21 +6,12 @@ import * as Sentry from "@sentry/react-native";
 // isn't configured (e.g. local dev without EXPO_PUBLIC_SENTRY_DSN set).
 const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
 
-console.log(`START sentry-init (dsn ${dsn ? "present" : "MISSING"})`);
 if (dsn) {
-  try {
-    Sentry.init({
-      dsn,
-      tracesSampleRate: 0.2,
-      environment: __DEV__ ? "development" : "production",
-    });
-    console.log("OK sentry-init");
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.log(`FAIL sentry-init: ${message}`);
-  }
-} else {
-  console.log("SKIP sentry-init (no DSN)");
+  Sentry.init({
+    dsn,
+    tracesSampleRate: 0.2,
+    environment: __DEV__ ? "development" : "production",
+  });
 }
 
 export { Sentry };
