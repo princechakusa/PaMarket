@@ -23,13 +23,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // so this has to be bumped by hand before each store-distribution build.
     // 7 was built but never submitted. 8 was submitted and rejected under
     // 2.1.1 (Information Needed) — confirmed already uploaded to App Store
-    // Connect, so it can never be reused. 9, 10, and 11 were built by the
-    // retired manual GitHub/Xcode pipeline and crashed on cold launch because
-    // EXPO_PUBLIC_* values were scoped to prebuild instead of the later Metro
-    // archive phase. 12 failed during archive and was never uploaded. 13 was
-    // the final patched-JSI GitHub build; 14 removes that native divergence and
-    // targets the clean pamrk/react-native Sentry project.
-    buildNumber: "14",
+    // Connect, so it can never be reused. 9-14 were built by the retired
+    // manual GitHub/Xcode pipeline; every one that reached a device crashed
+    // on cold launch. 15 was an A/B diagnostic that rebuilt build 8's exact
+    // application source through that same GitHub pipeline — it crashed too,
+    // which isolated the GitHub build environment (not application code) as
+    // the cause and is why production builds are back on EAS. 15 was still
+    // uploaded to App Store Connect, so the next usable number is 16.
+    //
+    // 16 is the first EAS production build since 8 (the last known-good
+    // launch) and carries the current production work: the iOS subscription
+    // readiness pass, live StoreKit/Play pricing, account deletion,
+    // reporting/blocking, and the Apple 2.1.1 review fixes.
+    buildNumber: "16",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
