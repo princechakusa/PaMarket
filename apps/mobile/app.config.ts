@@ -23,13 +23,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // so this has to be bumped by hand before each store-distribution build.
     // 7 was built but never submitted. 8 was submitted and rejected under
     // 2.1.1 (Information Needed) — confirmed already uploaded to App Store
-    // Connect, so it can never be reused. 9 uploaded successfully but
-    // crashes on cold launch (TurboModule void-method exception ->
-    // RCTFatal, seen in two real TestFlight crash reports) — NOT a review
-    // candidate. This build (10) is a diagnostic isolation build only
-    // (see lib/startup-diag.ts): initIAP() disabled via
-    // EXPO_PUBLIC_DIAG_DISABLE_IAP to test whether it's the crash trigger.
-    buildNumber: "10",
+    // Connect, so it can never be reused. 9 and 10 both crash on cold launch
+    // (TurboModule void-method exception -> RCTFatal, seen in real TestFlight
+    // crash reports) — NOT review candidates. 10 was a diagnostic isolation
+    // build with initIAP() disabled (see lib/startup-diag.ts) — the crash
+    // reproduced anyway, ruling out IAP as the cause. This build (11) moves
+    // Sentry.init() to the very first line executed in the app (see
+    // app/_layout.tsx's import order) so its native crash handler has the
+    // best chance of installing before this very-early crash fires — still
+    // a diagnostic build, not a submission candidate, until the actual
+    // exception is captured and fixed.
+    buildNumber: "11",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {

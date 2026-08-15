@@ -1,3 +1,14 @@
+// Sentry.init() (in lib/sentry.ts) must run before any other import that has
+// its own module-level side effects — ES module imports execute top-to-bottom
+// in file order, so this is the earliest point in the whole app where JS
+// runs at all. Build 9/10's cold-launch crash (an uncaught native TurboModule
+// exception, SIGABRT within ~1s of process launch) went unreported to Sentry
+// even after the upload pipeline was fixed, because Sentry's native crash
+// handler only installs when JS calls Sentry.init() (it's itself a native
+// module method) — every millisecond this import sat below other modules'
+// side effects was a chance for the crash to fire before Sentry could catch
+// it.
+import { Sentry } from "../lib/sentry";
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import { Stack, useRouter } from "expo-router";
@@ -5,7 +16,6 @@ import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import messaging from "@react-native-firebase/messaging";
 import * as SplashScreen from "expo-splash-screen";
-import { Sentry } from "../lib/sentry";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme-provider";
