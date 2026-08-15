@@ -152,6 +152,17 @@ jobs:
           EXPO_PUBLIC_DIAG_DISABLE_PUSH_REGISTRATION: ${{ inputs.diag_disable_push_registration && '1' || '' }}
         run: npx expo prebuild --platform ios --clean --non-interactive
 
+      - name: Print patched AppDelegate.swift (diagnostic)
+        # Confirms plugins/withSentryNativeInit.js actually inserted
+        # SentrySDK.start() before archiving — a silent regex-match failure
+        # here would otherwise look identical to a successful build.
+        working-directory: apps/mobile/ios
+        run: |
+          FILE=$(find . -iname "AppDelegate.swift" | head -1)
+          echo "AppDelegate.swift path: $FILE"
+          cat "$FILE"
+          grep -q "SentrySDK.start" "$FILE" && echo "CONFIRMED: SentrySDK.start() present" || (echo "FAILED: SentrySDK.start() NOT found in AppDelegate.swift" && exit 1)
+
       - name: Install CocoaPods
         working-directory: apps/mobile/ios
         run: pod install --repo-update

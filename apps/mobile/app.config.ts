@@ -23,17 +23,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // so this has to be bumped by hand before each store-distribution build.
     // 7 was built but never submitted. 8 was submitted and rejected under
     // 2.1.1 (Information Needed) — confirmed already uploaded to App Store
-    // Connect, so it can never be reused. 9 and 10 both crash on cold launch
-    // (TurboModule void-method exception -> RCTFatal, seen in real TestFlight
-    // crash reports) — NOT review candidates. 10 was a diagnostic isolation
-    // build with initIAP() disabled (see lib/startup-diag.ts) — the crash
-    // reproduced anyway, ruling out IAP as the cause. This build (11) moves
-    // Sentry.init() to the very first line executed in the app (see
-    // app/_layout.tsx's import order) so its native crash handler has the
-    // best chance of installing before this very-early crash fires — still
-    // a diagnostic build, not a submission candidate, until the actual
-    // exception is captured and fixed.
-    buildNumber: "11",
+    // Connect, so it can never be reused. 9, 10, and 11 all crash on cold
+    // launch (TurboModule void-method exception -> RCTFatal, seen in real
+    // TestFlight crash reports) — NOT review candidates. 10 was a diagnostic
+    // isolation build with initIAP() disabled — the crash reproduced anyway,
+    // ruling out IAP. 11 moved the JS-side Sentry.init() to the earliest
+    // possible import — Sentry still captured nothing, proving the crash
+    // fires before JS itself gets a chance to run. This build (12) adds
+    // native-level Sentry init (plugins/withSentryNativeInit.js patches
+    // AppDelegate.swift to call SentrySDK.start() as the literal first line
+    // of didFinishLaunchingWithOptions, before React Native/JS starts at
+    // all) — still a diagnostic build until the actual exception is
+    // captured and fixed.
+    buildNumber: "12",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -148,6 +150,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // of unreadable minified JS.
       },
     ],
+    // @sentry/react-native/expo above only wires up build-time integration
+    // (upload build phases) — it never calls SentrySDK.start() natively.
+    // Build 9/10/11 all crash within ~1s of cold launch with an uncaught
+    // native TurboModule exception, and Sentry captured none of them even
+    // after moving the JS-side Sentry.init() to the earliest possible import
+    // (build 11) — proving the crash can fire before JS runs at all. This
+    // plugin patches the generated AppDelegate.swift to call
+    // SentrySDK.start() as the first line of didFinishLaunchingWithOptions,
+    // before React Native/JS initializes — see plugins/withSentryNativeInit.js.
+    "./plugins/withSentryNativeInit",
   ],
   extra: {
     router: {},
