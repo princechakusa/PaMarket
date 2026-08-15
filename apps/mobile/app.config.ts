@@ -26,10 +26,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Connect, so it can never be reused. 9, 10, and 11 were built by the
     // retired manual GitHub/Xcode pipeline and crashed on cold launch because
     // EXPO_PUBLIC_* values were scoped to prebuild instead of the later Metro
-    // archive phase. 12 failed during archive and was never uploaded. 13
-    // returns production builds to EAS, which keeps the production environment
-    // available through native generation and JavaScript bundling.
-    buildNumber: "13",
+    // archive phase. 12 failed during archive and was never uploaded. 13 was
+    // the final patched-JSI GitHub build; 14 removes that native divergence and
+    // targets the clean pamrk/react-native Sentry project.
+    buildNumber: "14",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -134,8 +134,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "@sentry/react-native/expo",
       {
-        organization: "pamarket-2r",
-        project: "apple-ios",
+        organization: "pamrk",
+        project: "react-native",
         // Auth token is deliberately NOT here — never commit it. It comes
         // from the SENTRY_AUTH_TOKEN CI environment variable at build time,
         // which is what

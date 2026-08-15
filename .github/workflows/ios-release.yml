@@ -23,7 +23,6 @@ jobs:
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
       EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_ALLOW_FAILURE: "true"
 
     steps:
       - name: Checkout
@@ -52,16 +51,8 @@ jobs:
           test -n "$EXPO_PUBLIC_SUPABASE_URL"
           test -n "$EXPO_PUBLIC_SUPABASE_ANON_KEY"
           test -n "$EXPO_PUBLIC_SENTRY_DSN"
-          node -e 'const fs=require("fs"); const source=fs.readFileSync("app.config.ts","utf8"); if (!/buildNumber:\s*"13"/.test(source)) throw new Error("Expected iOS build number 13")'
+          node -e 'const fs=require("fs"); const source=fs.readFileSync("app.config.ts","utf8"); if (!/buildNumber:\s*"14"/.test(source)) throw new Error("Expected iOS build number 14"); if (!/organization:\s*"pamrk"/.test(source) || !/project:\s*"react-native"/.test(source)) throw new Error("Expected pamrk/react-native Sentry project")'
           npx expo config --type public >/dev/null
-
-      - name: Patch ExpoModulesJSI Swift 6.2 ambiguity
-        run: |
-          set -euo pipefail
-          FILE="node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Coding/JavaScriptCodable+Date.swift"
-          grep -q "abs(milliseconds)" "$FILE"
-          sed -i '' 's/abs(milliseconds)/Swift.abs(milliseconds)/' "$FILE"
-          grep -q "Swift.abs(milliseconds)" "$FILE"
 
       - name: Generate native iOS project
         run: npx expo prebuild --platform ios --clean --non-interactive
@@ -191,9 +182,18 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: pamarket-ios-build-13
+          name: pamarket-ios-build-14
           path: ${{ runner.temp }}/export/*.ipa
           if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload iOS symbols artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pamarket-ios-build-14-dsyms
+          path: ${{ runner.temp }}/PaMarket.xcarchive/dSYMs
+          if-no-files-found: warn
           retention-days: 14
 
       - name: Clean up credentials
