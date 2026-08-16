@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -24,16 +24,26 @@ import { useThemedStyles } from "../../lib/theme-provider";
 
 const DAY = 86400000;
 const SLOT_PACK_PRODUCT_IDS = Object.keys(SLOT_PACK_PRODUCTS);
-const DURATIONS: [number, string][] = [
-  [7, "7 days"],
-  [14, "14 days"],
-  [30, "30 days"],
-];
 
-// Mirrors www/js/business-featured.js pages.BusinessFeatured — time-based
-// boosts drawn from the plan's free featured-slot allowance plus any extra
-// slots purchased as a Play Billing consumable (featured_slot_packs, summed
-// with the plan baseline exactly like H.featuredSlots in business-featured.js).
+// How long a listing stays featured once a slot is applied. The server caps
+// this at 31 days (FEATURE_DURATION_LIMIT in enforce_listing_feature_
+// entitlement), so 30 is the longest safe value.
+//
+// This screen used to offer 7/14/30-day buttons, which was misleading: a slot
+// is a *concurrency* limit, not a duration currency. The server counts how
+// many listings currently have featured_until > now() and compares that to
+// the plan allowance plus purchased packs — duration never enters the check,
+// so every duration cost exactly the same (nothing) and a rational user would
+// always pick 30. The choice was strictly worse value for no price
+// difference, so it's gone; a slot now always runs the full term and is
+// released the moment it expires or the owner frees it.
+const FEATURE_DAYS = 30;
+
+// Featured slots = the plan's allowance (biz_plan_featured_slots: pro 1,
+// premium 3, else 0) plus any extra slots bought as a consumable
+// (featured_slot_packs rows with status='consumed'). Both halves are summed
+// the same way by the server trigger, so this render-time sum mirrors what
+// the database will actually allow.
 export default function BusinessFeaturedScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
@@ -45,6 +55,8 @@ export default function BusinessFeaturedScreen() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slotPickerOpen, setSlotPickerOpen] = useState(false);
+  const [busyListingId, setBusyListingId] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const [purchasingSlotPack, setPurchasingSlotPack] = useState<string | null>(
     null
   );
@@ -122,6 +134,25 @@ export default function BusinessFeaturedScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
+  // "BEST VALUE" is derived from the real StoreKit prices rather than
+  // hardcoded to the 3-pack, so the badge always reflects the price the store
+  // actually charges and can never claim a saving that doesn't exist. If the
+  // two packs are ever priced identically per slot, no badge is shown at all.
+  const bestValueProductId = useMemo(() => {
+    const perSlot = Object.entries(SLOT_PACK_PRODUCTS)
+      .map(([productId, p]) => {
+        const amount = parseStorePrice(slotPackPrices[productId]);
+        return amount === null
+          ? null
+          : { productId, unit: amount / p.extraSlots };
+      })
+      .filter((x): x is { productId: string; unit: number } => x !== null);
+    if (perSlot.length < 2) return null;
+    const sorted = [...perSlot].sort((a, b) => a.unit - b.unit);
+    // Require a real margin — equal prices must not earn the badge.
+    return sorted[0].unit < sorted[1].unit ? sorted[0].productId : null;
+  }, [slotPackPrices]);
+
   const used = useMemo(
     () => listings.filter((l) => isFeatured(l as any)).length,
     [listings]
@@ -129,40 +160,80 @@ export default function BusinessFeaturedScreen() {
   const slotLabel = slots === Infinity ? "∞" : String(slots);
   const noSlots = slots === 0;
   const atCapacity = slots !== Infinity && used >= slots;
+  const available =
+    slots === Infinity ? "∞" : String(Math.max(0, slots - used));
 
-  async function boost(listingId: string, days: number) {
-    if (atCapacity) {
-      toast("No featured slots left — upgrade your plan for more", 3000, true);
-      return;
-    }
-    const until = new Date(Date.now() + days * DAY).toISOString();
-    await supabase
-      .from("listings")
-      .update({ boost: true, featured_until: until })
-      .eq("id", listingId);
-    setListings((prev) =>
-      prev.map((l) =>
-        l.id === listingId
-          ? ({ ...l, boost: true, featured_until: until } as any)
-          : l
-      )
-    );
-    toast(`Boosted for ${days} days`);
+  // The purchase options live in the hero at the top, so opening them from a
+  // listing card further down would leave the user staring at an unchanged
+  // screen. Scroll back up so the packs are actually visible.
+  function openSlotPurchase() {
+    setSlotPickerOpen(true);
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
   }
 
-  async function unboost(listingId: string) {
-    await supabase
-      .from("listings")
-      .update({ boost: false, featured_until: null })
-      .eq("id", listingId);
-    setListings((prev) =>
-      prev.map((l) =>
-        l.id === listingId
-          ? ({ ...l, boost: false, featured_until: null } as any)
-          : l
-      )
-    );
-    toast("Boost removed");
+  async function featureListing(listingId: string) {
+    if (atCapacity) {
+      toast(
+        slots === 0
+          ? "You have no featured slots. Buy a slot pack or upgrade your plan."
+          : `All ${slots} of your featured slots are in use. Free one up or buy more.`,
+        3500,
+        true
+      );
+      return;
+    }
+    const until = new Date(Date.now() + FEATURE_DAYS * DAY).toISOString();
+    setBusyListingId(listingId);
+    try {
+      // The server re-checks the slot allowance in a trigger, so this can
+      // legitimately fail (NO_FEATURED_SLOTS) even when the local count looks
+      // fine — e.g. a slot was taken on another device. Surface it instead of
+      // silently leaving the row unchanged, which is what this screen used to
+      // do by ignoring the error entirely.
+      const { error } = await supabase
+        .from("listings")
+        .update({ boost: true, featured_until: until })
+        .eq("id", listingId);
+      if (error) {
+        toast(featureErrorMessage(error.message), 3500, true);
+        load();
+        return;
+      }
+      setListings((prev) =>
+        prev.map((l) =>
+          l.id === listingId
+            ? ({ ...l, boost: true, featured_until: until } as any)
+            : l
+        )
+      );
+      toast(`Featured for ${FEATURE_DAYS} days`);
+    } finally {
+      setBusyListingId(null);
+    }
+  }
+
+  async function unfeatureListing(listingId: string) {
+    setBusyListingId(listingId);
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .update({ boost: false, featured_until: null })
+        .eq("id", listingId);
+      if (error) {
+        toast("Could not free that slot. Try again.", 3000, true);
+        return;
+      }
+      setListings((prev) =>
+        prev.map((l) =>
+          l.id === listingId
+            ? ({ ...l, boost: false, featured_until: null } as any)
+            : l
+        )
+      );
+      toast("Slot freed — you can feature another listing");
+    } finally {
+      setBusyListingId(null);
+    }
   }
 
   if (isLoading || isOwner === null) {
@@ -178,7 +249,7 @@ export default function BusinessFeaturedScreen() {
       <View style={styles.centered}>
         <EmptyState
           title="Owner only"
-          subtitle="Only the owner can boost listings."
+          subtitle="Only the business owner can feature listings."
         />
       </View>
     );
@@ -186,25 +257,41 @@ export default function BusinessFeaturedScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
     >
-      <View style={styles.hero}>
-        <Text style={styles.heroLabel}>FEATURED SLOTS</Text>
-        <Text style={styles.heroCount}>
-          {used} <Text style={styles.heroCountSub}>/ {slotLabel} used</Text>
+      <View style={styles.intro}>
+        <Text style={styles.introTitle}>Featured listings</Text>
+        <Text style={styles.introBody}>
+          A featured listing appears in the Featured row on the PaMarket home
+          screen and carries a Featured badge wherever it&rsquo;s shown.
         </Text>
-        {noSlots ? (
-          <Text style={styles.heroSub}>
-            Your plan has no featured slots. Upgrade to Pro or Premium, or buy a
-            slot pack below.
+      </View>
+
+      <View style={styles.hero}>
+        <Text style={styles.heroLabel}>AVAILABLE FEATURED SLOTS</Text>
+        <Text style={styles.heroCount}>
+          {available}{" "}
+          <Text style={styles.heroCountSub}>
+            {available === "1" ? "slot" : "slots"} available
           </Text>
-        ) : null}
+        </Text>
+        <Text style={styles.heroMeta}>
+          {used} of {slotLabel} in use
+        </Text>
+        <Text style={styles.heroSub}>
+          {noSlots
+            ? "Your plan includes no featured slots. Buy a slot pack below, or upgrade to Pro or Premium."
+            : "Each slot keeps one listing featured for 30 days. When it expires the slot comes back and you can use it on another listing."}
+        </Text>
         <Pressable
           style={styles.buySlotsButton}
           onPress={() => setSlotPickerOpen((v) => !v)}
         >
-          <Text style={styles.buySlotsButtonText}>View purchase options</Text>
+          <Text style={styles.buySlotsButtonText}>
+            {slotPickerOpen ? "Hide purchase options" : "Buy featured slots"}
+          </Text>
         </Pressable>
         {slotPickerOpen ? (
           <View style={styles.slotOptions}>
@@ -215,9 +302,9 @@ export default function BusinessFeaturedScreen() {
                   p.extraSlots === 1 ? "" : "s"
                 }`}
                 price={slotPackPrices[productId]}
-                description={`Adds ${p.extraSlots} extra featured slot${
+                description={`Keeps ${p.extraSlots} more listing${
                   p.extraSlots === 1 ? "" : "s"
-                } to this business.`}
+                } featured at a time. One-time purchase. Purchased slots do not expire and do not renew.`}
                 buttonLabel={`Buy ${p.extraSlots} Slot${
                   p.extraSlots === 1 ? "" : "s"
                 }`}
@@ -226,13 +313,28 @@ export default function BusinessFeaturedScreen() {
                 isPurchasing={purchasingSlotPack === productId}
                 purchaseBlocked={!!purchasingSlotPack}
                 error={slotPackError}
-                recommended={p.extraSlots === 3}
+                recommended={bestValueProductId === productId}
                 onPurchase={() => buySlotPack(productId)}
                 onRetry={retrySlotPacks}
               />
             ))}
           </View>
         ) : null}
+      </View>
+
+      <View style={styles.howBox}>
+        <Text style={styles.howTitle}>HOW IT WORKS</Text>
+        {[
+          "Buy featured slots, or get them with a Pro or Premium plan.",
+          `Pick a listing below and feature it for ${FEATURE_DAYS} days.`,
+          "It shows in the Featured row on the home screen with a Featured badge.",
+          "When it expires the slot returns, ready for another listing.",
+        ].map((line, i) => (
+          <View key={line} style={styles.howRow}>
+            <Text style={styles.howNum}>{i + 1}</Text>
+            <Text style={styles.howText}>{line}</Text>
+          </View>
+        ))}
       </View>
 
       {listings.length ? (
@@ -277,33 +379,68 @@ export default function BusinessFeaturedScreen() {
                         feat ? styles.featuredText : styles.notFeaturedText
                       }
                     >
-                      {feat ? `Featured · ${daysLeft}d left` : "Not featured"}
+                      {feat
+                        ? `Featured · ${daysLeft} day${
+                            daysLeft === 1 ? "" : "s"
+                          } left`
+                        : "Not featured"}
                     </Text>
+                    {feat && featuredUntil ? (
+                      <Text style={styles.untilText}>
+                        Featured until{" "}
+                        {new Date(featuredUntil).toLocaleDateString()}
+                      </Text>
+                    ) : null}
                   </View>
                 </View>
                 {feat ? (
                   <Pressable
-                    style={styles.removeButton}
-                    onPress={() => unboost(l.id)}
+                    style={[
+                      styles.removeButton,
+                      busyListingId === l.id && styles.buttonDisabled,
+                    ]}
+                    onPress={() => unfeatureListing(l.id)}
+                    disabled={busyListingId === l.id}
                   >
-                    <Text style={styles.removeButtonText}>Remove boost</Text>
+                    <Text style={styles.removeButtonText}>
+                      Remove from featured
+                    </Text>
                   </Pressable>
                 ) : (
-                  <View style={styles.durationRow}>
-                    {DURATIONS.map(([days, label]) => (
-                      <Pressable
-                        key={days}
-                        style={[
-                          styles.durationButton,
-                          atCapacity && styles.buttonDisabled,
-                        ]}
-                        onPress={() => boost(l.id, days)}
-                        disabled={atCapacity}
-                      >
-                        <Text style={styles.durationButtonText}>{label}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
+                  <>
+                    <Pressable
+                      style={[
+                        styles.featureButton,
+                        (atCapacity || busyListingId === l.id) &&
+                          styles.buttonDisabled,
+                      ]}
+                      onPress={() => featureListing(l.id)}
+                      disabled={atCapacity || busyListingId === l.id}
+                    >
+                      <Text style={styles.featureButtonText}>
+                        {busyListingId === l.id
+                          ? "Featuring…"
+                          : `Feature for ${FEATURE_DAYS} days · 1 slot`}
+                      </Text>
+                    </Pressable>
+                    {atCapacity ? (
+                      <View style={styles.capacityBlock}>
+                        <Text style={styles.capacityNote}>
+                          {slots === 0
+                            ? "You have no featured slots yet."
+                            : `All ${slotLabel} of your slots are in use. Remove one below, or buy more.`}
+                        </Text>
+                        <Pressable
+                          style={styles.capacityCta}
+                          onPress={openSlotPurchase}
+                        >
+                          <Text style={styles.capacityCtaText}>
+                            Buy featured slots
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
+                  </>
                 )}
               </View>
             );
@@ -316,6 +453,45 @@ export default function BusinessFeaturedScreen() {
       )}
     </ScrollView>
   );
+}
+
+// Pulls a comparable number out of a StoreKit localized price string ("$4.99",
+// "US$11,99", "￥800"). Used only to decide which pack is cheaper per slot —
+// never to display a price, which always stays the store's own localized
+// string. Returns null when no digits are present so the caller can skip the
+// comparison rather than guess.
+function parseStorePrice(price?: string): number | null {
+  if (!price) return null;
+  const digits = price.replace(/[^0-9.,]/g, "");
+  if (!digits) return null;
+  // Whichever separator comes last is the decimal one (1.234,56 vs 1,234.56).
+  const lastDot = digits.lastIndexOf(".");
+  const lastComma = digits.lastIndexOf(",");
+  let normalized: string;
+  if (lastDot === -1 && lastComma === -1) {
+    normalized = digits;
+  } else if (lastComma > lastDot) {
+    normalized = digits.replace(/\./g, "").replace(",", ".");
+  } else {
+    normalized = digits.replace(/,/g, "");
+  }
+  const value = Number.parseFloat(normalized);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+// Turns the raise-exception strings from enforce_listing_feature_entitlement
+// into something a seller can act on. Anything unrecognised falls back to a
+// generic line rather than leaking raw SQL at the user.
+function featureErrorMessage(raw: string): string {
+  if (raw.includes("NO_FEATURED_SLOTS"))
+    return "All your featured slots are in use. Free one up or buy more.";
+  if (raw.includes("FEATURE_NOT_OWNER"))
+    return "Only the business owner can feature listings.";
+  if (raw.includes("FEATURE_DURATION_LIMIT"))
+    return "Featured placement cannot exceed 31 days.";
+  if (raw.includes("BOOST_REQUIRES_PURCHASE"))
+    return "This listing must belong to a business to be featured.";
+  return "Could not feature that listing. Try again.";
 }
 
 function buildTones(color: ColorPalette) {
@@ -364,35 +540,6 @@ function buildStyles(color: ColorPalette) {
       color: color.textOnBrand,
     },
     slotOptions: { gap: 8, marginTop: 10 },
-    slotOpt: {
-      flex: 1,
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: color.surfaceAlt,
-      borderRadius: 10,
-      paddingVertical: 12,
-      borderWidth: 1.5,
-      borderColor: "transparent",
-      position: "relative",
-    },
-    slotOptReco: { borderColor: color.gold, backgroundColor: color.goldTint },
-    slotOptTag: {
-      position: "absolute",
-      top: -9,
-      alignSelf: "center",
-      backgroundColor: color.gold,
-      borderRadius: 20,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-    },
-    slotOptTagText: {
-      fontSize: 9,
-      fontWeight: "800",
-      color: "#fff",
-      letterSpacing: 0.3,
-    },
-    slotOptLabel: { fontSize: 13, fontWeight: "700", color: color.text },
-    slotOptPrice: { fontSize: 15, fontWeight: "800", color: color.brand },
     sectionTitle: {
       fontSize: 12,
       fontWeight: "800",
@@ -439,19 +586,72 @@ function buildStyles(color: ColorPalette) {
       fontWeight: "700",
       color: color.textMuted,
     },
-    durationRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-    durationButton: {
-      flex: 1,
-      paddingVertical: 9,
+    featureButton: {
+      marginTop: 10,
+      paddingVertical: 11,
       borderRadius: 10,
       backgroundColor: color.brand,
       alignItems: "center",
     },
     buttonDisabled: { opacity: 0.5 },
-    durationButtonText: {
-      fontSize: 12,
-      fontWeight: "700",
+    featureButtonText: {
+      fontSize: 12.5,
+      fontWeight: "800",
       color: color.textOnBrand,
+    },
+    capacityBlock: { marginTop: 8, alignItems: "center", gap: 8 },
+    capacityNote: {
+      fontSize: 11.5,
+      color: color.textMuted,
+      textAlign: "center",
+      lineHeight: 17,
+    },
+    capacityCta: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: color.brand,
+    },
+    capacityCtaText: { fontSize: 12, fontWeight: "800", color: color.brand },
+    untilText: { fontSize: 11, color: color.textMuted, marginTop: 2 },
+    intro: { marginBottom: 14 },
+    introTitle: {
+      fontSize: 19,
+      fontWeight: "900",
+      color: color.text,
+      marginBottom: 6,
+    },
+    introBody: { fontSize: 13, color: color.textMuted, lineHeight: 19 },
+    heroMeta: { fontSize: 12, color: color.textMuted, marginTop: 2 },
+    howBox: {
+      backgroundColor: color.surface,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: color.border,
+    },
+    howTitle: {
+      fontSize: 11,
+      fontWeight: "800",
+      color: color.textMuted,
+      letterSpacing: 0.5,
+      marginBottom: 10,
+    },
+    howRow: { flexDirection: "row", gap: 10, marginBottom: 8 },
+    howNum: {
+      fontSize: 11.5,
+      fontWeight: "800",
+      color: color.brand,
+      width: 16,
+      lineHeight: 18,
+    },
+    howText: {
+      flex: 1,
+      fontSize: 12.5,
+      color: color.text,
+      lineHeight: 18,
     },
     emptyText: {
       textAlign: "center",
