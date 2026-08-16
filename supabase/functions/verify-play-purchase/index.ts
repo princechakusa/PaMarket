@@ -392,13 +392,46 @@ Deno.serve(async (req) => {
     // purchase is tied directly to the authenticated caller (user_id),
     // there's no separate entity it's scoped to.
 
+    // Only play_purchases (boosts) has expiry_time — see the matching note in
+    // verify-apple-purchase. Requesting it from the permanent-grant ledgers
+    // fails the entire SELECT with 42703 / HTTP 400, which is what broke
+    // Featured Slot verification on iOS; the same latent defect exists here,
+    // so it is corrected on both platforms rather than only the one that was
+    // observed failing.
+    // Column list stays a literal at each call site — see the matching note in
+    // verify-apple-purchase; a computed string breaks supabase-js's
+    // compile-time column parsing.
+    type ReplayRow = {
+      id: string;
+      status: string;
+      user_id: string;
+      expiry_time?: string | null;
+    };
+    const hasExpiry = table === "play_purchases";
+    const expiryOf = (row: ReplayRow | null) =>
+      (hasExpiry ? row?.expiry_time ?? null : null) || null;
+    const findByToken = async (token: string) => {
+      const q = db.from(table);
+      return hasExpiry
+        ? ((await q
+            .select("id, status, user_id, expiry_time")
+            .eq("purchase_token", token)
+            .maybeSingle()) as {
+            data: ReplayRow | null;
+            error: { message: string } | null;
+          })
+        : ((await q
+            .select("id, status, user_id")
+            .eq("purchase_token", token)
+            .maybeSingle()) as {
+            data: ReplayRow | null;
+            error: { message: string } | null;
+          });
+    };
+
     // Anti-replay / idempotency: if this exact token was already processed,
     // never verify or activate again — just report the existing outcome.
-    const existing = await db
-      .from(table)
-      .select("id, status, expiry_time, user_id")
-      .eq("purchase_token", purchaseToken)
-      .maybeSingle();
+    const existing = await findByToken(purchaseToken);
     if (existing.error) {
       console.error(
         "verify-play-purchase: existing-token lookup failed:",
@@ -425,7 +458,7 @@ Deno.serve(async (req) => {
         return json({
           ok: true,
           already_processed: true,
-          until: existing.data.expiry_time || null,
+          until: expiryOf(existing.data),
         });
       }
       if (existing.data.status === "verified") {
@@ -488,11 +521,7 @@ Deno.serve(async (req) => {
         // Unique-violation on purchase_token means a concurrent request beat
         // us to it — treat as already-processed rather than erroring.
         if (String(insertRes.error?.message || "").includes("unique")) {
-          const raced = await db
-            .from(table)
-            .select("id,status,user_id,expiry_time")
-            .eq("purchase_token", purchaseToken)
-            .maybeSingle();
+          const raced = await findByToken(purchaseToken);
           if (raced.error || !raced.data) {
             return json(
               { error: "Could not resolve the concurrent purchase record" },
@@ -509,7 +538,7 @@ Deno.serve(async (req) => {
             return json({
               ok: true,
               already_processed: true,
-              until: raced.data.expiry_time || null,
+              until: expiryOf(raced.data),
             });
           }
           if (raced.data.status === "verified") {

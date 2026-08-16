@@ -262,13 +262,49 @@ Deno.serve(async (req) => {
       rentalCompanyId = (rlRes.data as any).company_id;
     }
 
+    // Only play_purchases (boosts) has expiry_time — a boost is a timed
+    // entitlement, so its row records when the promotion ends. The other
+    // ledgers hold permanent grants (slot packs, job credits, rental slots)
+    // that never expire and have no such column, and asking PostgREST for it
+    // there fails the whole SELECT with 42703 / HTTP 400 rather than just
+    // omitting the field. That turned every Featured Slot purchase into a
+    // 500 from this function: Apple charged, the listener fired, and
+    // verification then died on this lookup before any row was written.
+    // The column list must stay a string literal at each call site —
+    // supabase-js parses it at compile time, so a computed string degrades the
+    // row type to ParserError and every field access below stops type-checking.
+    // Hence the branch on the query itself rather than on a columns variable.
+    type ReplayRow = {
+      id: string;
+      status: string;
+      user_id: string;
+      expiry_time?: string | null;
+    };
+    const hasExpiry = table === "play_purchases";
+    const expiryOf = (row: ReplayRow | null) =>
+      (hasExpiry ? row?.expiry_time ?? null : null) || null;
+    const findByToken = async (token: string) => {
+      const q = db.from(table);
+      return hasExpiry
+        ? ((await q
+            .select("id, status, user_id, expiry_time")
+            .eq("purchase_token", token)
+            .maybeSingle()) as {
+            data: ReplayRow | null;
+            error: { message: string } | null;
+          })
+        : ((await q
+            .select("id, status, user_id")
+            .eq("purchase_token", token)
+            .maybeSingle()) as {
+            data: ReplayRow | null;
+            error: { message: string } | null;
+          });
+    };
+
     // Anti-replay: same purchase_token column, now shared across platforms.
     // Keyed by the decoded transactionId, not the raw JWS — see comment above.
-    const existing = await db
-      .from(table)
-      .select("id, status, expiry_time, user_id")
-      .eq("purchase_token", ledgerToken)
-      .maybeSingle();
+    const existing = await findByToken(ledgerToken);
     if (existing.error) {
       console.error(
         "verify-apple-purchase: existing-token lookup failed:",
@@ -292,7 +328,7 @@ Deno.serve(async (req) => {
         return json({
           ok: true,
           already_processed: true,
-          until: existing.data.expiry_time || null,
+          until: expiryOf(existing.data),
         });
       }
       if (existing.data.status === "verified") {
@@ -346,11 +382,7 @@ Deno.serve(async (req) => {
         .single();
       if (insertRes.error || !insertRes.data) {
         if (String(insertRes.error?.message || "").includes("unique")) {
-          const raced = await db
-            .from(table)
-            .select("id,status,user_id,expiry_time")
-            .eq("purchase_token", ledgerToken)
-            .maybeSingle();
+          const raced = await findByToken(ledgerToken);
           if (raced.error || !raced.data) {
             return json(
               { error: "Could not resolve the concurrent purchase record" },
@@ -367,7 +399,7 @@ Deno.serve(async (req) => {
             return json({
               ok: true,
               already_processed: true,
-              until: raced.data.expiry_time || null,
+              until: expiryOf(raced.data),
             });
           }
           if (raced.data.status === "verified") {
