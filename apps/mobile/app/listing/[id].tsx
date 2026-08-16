@@ -81,6 +81,17 @@ const CONDITION_LABELS: Record<string, string> = {
 const SIMILAR_CARD_WIDTH = 170;
 const BOOST_PRODUCT_IDS = Object.keys(BOOST_PRODUCTS);
 
+// "Aug 23, 2026" — matches the en-US short-month convention used elsewhere
+// (see memberSince below and app/(tabs)/profile.tsx).
+function formatPromotionEnd(dateString: string | null | undefined): string {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function timeAgo(dateString: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(dateString).getTime()) / 1000
@@ -393,6 +404,15 @@ export default function ListingDetailScreen() {
     "";
   const conditionRaw = (listing?.attributes?.condition as string) ?? "";
   const conditionLabel = CONDITION_LABELS[conditionRaw] ?? "";
+  // Round up so the final partial day still reads "1 day left" rather than 0.
+  const promotionDaysLeft = listing?.featured_until
+    ? Math.max(
+        1,
+        Math.ceil(
+          (new Date(listing.featured_until).getTime() - Date.now()) / 86400000
+        )
+      )
+    : 0;
 
   // Category attributes (excluding condition, which gets its own badge).
   // "chips" fields (property/vehicles/rooms/pets features) are split out
@@ -828,9 +848,9 @@ export default function ListingDetailScreen() {
                 <Text style={styles.conditionChipText}>{conditionLabel}</Text>
               </View>
             ) : null}
-            {listing.boost ? (
+            {isFeatured(listing) ? (
               <View style={styles.featuredChip}>
-                <Text style={styles.featuredChipText}>Featured</Text>
+                <Text style={styles.featuredChipText}>Promoted</Text>
               </View>
             ) : null}
           </View>
@@ -1021,13 +1041,25 @@ export default function ListingDetailScreen() {
               </Card>
 
               {isFeatured(listing) ? (
-                <View style={styles.boostActiveRow}>
-                  <StarIcon c={color.gold} />
-                  <Text style={styles.boostActiveText}>
-                    Boosted until{" "}
-                    {new Date(
-                      listing.featured_until as string
-                    ).toLocaleDateString()}
+                <View>
+                  <View style={styles.boostActiveRow}>
+                    <StarIcon c={color.gold} />
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.boostActiveText}>
+                        Promoted · {promotionDaysLeft} day
+                        {promotionDaysLeft === 1 ? "" : "s"} left
+                      </Text>
+                      <Text style={styles.boostActiveMeta}>
+                        Ends {formatPromotionEnd(listing.featured_until)}
+                      </Text>
+                    </View>
+                  </View>
+                  {/* Deliberately says nothing about what buying a second
+                      boost does while one is active — that stacking behavior
+                      has not been verified, so it must not be claimed here. */}
+                  <Text style={styles.boostActiveNote}>
+                    Promotion ends automatically. Your listing stays active and
+                    there is no recurring charge.
                   </Text>
                 </View>
               ) : (
@@ -1519,6 +1551,19 @@ function buildStyles(color: ColorPalette) {
       marginTop: space.md,
     },
     boostActiveText: { ...font.sub, color: color.text, fontWeight: "700" },
+    boostActiveMeta: {
+      ...font.caption,
+      color: color.textMuted,
+      fontWeight: "500",
+      marginTop: 2,
+    },
+    boostActiveNote: {
+      ...font.caption,
+      color: color.textMuted,
+      fontWeight: "500",
+      marginTop: space.sm,
+      lineHeight: 16,
+    },
 
     boostBanner: {
       flexDirection: "row",

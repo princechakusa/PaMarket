@@ -37,7 +37,7 @@ export function ListingRow({ listing, onPress, saved, onToggleSave }: ListingRow
         )}
         {featured ? (
           <View style={[styles.ribbon, styles.ribbonGold]}>
-            <Text style={styles.ribbonText}>FEATURED</Text>
+            <Text style={styles.ribbonText}>PROMOTED</Text>
           </View>
         ) : fresh ? (
           <View style={[styles.ribbon, styles.ribbonGreen]}>

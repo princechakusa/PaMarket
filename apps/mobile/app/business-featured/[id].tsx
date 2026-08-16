@@ -394,18 +394,24 @@ export default function BusinessFeaturedScreen() {
                   </View>
                 </View>
                 {feat ? (
-                  <Pressable
-                    style={[
-                      styles.removeButton,
-                      busyListingId === l.id && styles.buttonDisabled,
-                    ]}
-                    onPress={() => unfeatureListing(l.id)}
-                    disabled={busyListingId === l.id}
-                  >
-                    <Text style={styles.removeButtonText}>
-                      Remove from featured
+                  <>
+                    <Pressable
+                      style={[
+                        styles.removeButton,
+                        busyListingId === l.id && styles.buttonDisabled,
+                      ]}
+                      onPress={() => unfeatureListing(l.id)}
+                      disabled={busyListingId === l.id}
+                    >
+                      <Text style={styles.removeButtonText}>
+                        Remove from Featured
+                      </Text>
+                    </Pressable>
+                    <Text style={styles.removeHint}>
+                      Removing this listing from Featured will make the slot
+                      available for another listing.
                     </Text>
-                  </Pressable>
+                  </>
                 ) : (
                   <>
                     <Pressable
@@ -585,6 +591,13 @@ function buildStyles(color: ColorPalette) {
       fontSize: 12.5,
       fontWeight: "700",
       color: color.textMuted,
+    },
+    removeHint: {
+      fontSize: 11.5,
+      color: color.textMuted,
+      marginTop: 7,
+      textAlign: "center",
+      lineHeight: 16,
     },
     featureButton: {
       marginTop: 10,

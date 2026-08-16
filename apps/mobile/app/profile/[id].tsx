@@ -39,7 +39,7 @@ function joinedYear(dateString: string | null | undefined): string {
 }
 
 function listingTag(listing: Listing): string {
-  if (isFeatured(listing)) return "Featured";
+  if (isFeatured(listing)) return "Promoted";
   if (isNew(listing)) return "New";
   return listing.category ? listing.category.charAt(0).toUpperCase() + listing.category.slice(1) : "Listing";
 }

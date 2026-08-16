@@ -192,7 +192,7 @@ export default function BusinessManageScreen() {
 
         <MenuGroup title="Store" styles={styles}>
           <MenuRow label="Listings" value={`${activeListings} active`} onPress={() => router.push({ pathname: "/business-listings/[id]", params: { id: business.id } })} styles={styles} />
-          <MenuRow label="Featured & Boost" value="Boost" onPress={() => router.push(`/business-featured/${business.id}`)} styles={styles} />
+          <MenuRow label="Featured listings" value="Slots" onPress={() => router.push(`/business-featured/${business.id}`)} styles={styles} />
           <MenuRow label="Quick Replies" value="0 saved" onPress={() => router.push(`/business-messaging/${business.id}`)} styles={styles} />
         </MenuGroup>
 

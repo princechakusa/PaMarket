@@ -57,7 +57,7 @@ export function ListingCard({ listing, onPress, width, saved, onToggleSave, veri
 
         {featured ? (
           <View style={[styles.ribbon, styles.ribbonGold, compact && styles.ribbonCompact]}>
-            <Text style={styles.ribbonText}>FEATURED</Text>
+            <Text style={styles.ribbonText}>PROMOTED</Text>
           </View>
         ) : fresh ? (
           <View style={[styles.ribbon, styles.ribbonGreen, compact && styles.ribbonCompact]}>
