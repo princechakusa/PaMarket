@@ -35,7 +35,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // launch) and carries the current production work: the iOS subscription
     // readiness pass, live StoreKit/Play pricing, account deletion,
     // reporting/blocking, and the Apple 2.1.1 review fixes.
-    buildNumber: "16",
+    //
+    // 17 adds the Featured Listings product correction (a slot is reusable
+    // capacity, not a duration currency — the 7/14-day options are gone and
+    // activation is a flat 30 days), the promotion-badge fix (public surfaces
+    // say PROMOTED and expire with featured_until instead of hanging around
+    // forever on listings.boost), and ships against the server-side fix that
+    // stopped Featured Slot purchases failing verification.
+    buildNumber: "17",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
