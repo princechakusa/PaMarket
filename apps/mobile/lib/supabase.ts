@@ -22,34 +22,82 @@ function chunkKey(key: string, index: number) {
   return `${key}_chunk_${index}`;
 }
 
+// The Keychain is not always readable. iOS throws
+// `KeyChainException: User interaction is not allowed` for a WHEN_UNLOCKED
+// item whenever the process runs while the device is locked — a background
+// push wake, a StoreKit transaction replay, or a launch during the lock
+// screen. supabase-js reads this adapter internally while constructing the
+// client and on every token refresh, i.e. outside any try/catch in auth.tsx,
+// so an unhandled rejection there surfaced as a startup crash:
+//
+//   FunctionCallException: Calling 'getValueWithKeyAsync' failed
+//   → KeyChainException: User interaction is not allowed
+//
+// Two changes close that:
+//   1. AFTER_FIRST_UNLOCK — the session token stays readable once the user has
+//      unlocked the device at least once since boot, which is what background
+//      wakes need. It is still not readable before first unlock, so the token
+//      is not stored more permissively than necessary.
+//   2. Every call is wrapped. A failed read degrades to "no stored session"
+//      (the user signs in again) instead of taking the app down. Writes and
+//      deletes are best-effort for the same reason.
+const KEYCHAIN_OPTIONS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
+};
+
+async function safeGet(key: string): Promise<string | null> {
+  try {
+    return await SecureStore.getItemAsync(key, KEYCHAIN_OPTIONS);
+  } catch (e) {
+    console.warn("[secure-store] read failed:", (e as Error)?.message || e);
+    return null;
+  }
+}
+
+async function safeSet(key: string, value: string): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(key, value, KEYCHAIN_OPTIONS);
+  } catch (e) {
+    console.warn("[secure-store] write failed:", (e as Error)?.message || e);
+  }
+}
+
+async function safeDelete(key: string): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(key, KEYCHAIN_OPTIONS);
+  } catch {
+    // Deleting a missing/locked item must never propagate.
+  }
+}
+
 export const SecureStoreAdapter = {
   async getItem(key: string) {
-    const chunkCountRaw = await SecureStore.getItemAsync(`${key}_chunks`);
+    const chunkCountRaw = await safeGet(`${key}_chunks`);
     if (!chunkCountRaw) {
-      return SecureStore.getItemAsync(key);
+      return safeGet(key);
     }
     const chunkCount = parseInt(chunkCountRaw, 10);
     const parts: string[] = [];
     for (let i = 0; i < chunkCount; i++) {
-      const part = await SecureStore.getItemAsync(chunkKey(key, i));
+      const part = await safeGet(chunkKey(key, i));
       if (part == null) return null;
       parts.push(part);
     }
     return parts.join("");
   },
   async setItem(key: string, value: string) {
-    await SecureStore.deleteItemAsync(key);
-    const previousChunkCountRaw = await SecureStore.getItemAsync(`${key}_chunks`);
+    await safeDelete(key);
+    const previousChunkCountRaw = await safeGet(`${key}_chunks`);
     if (previousChunkCountRaw) {
       const previousCount = parseInt(previousChunkCountRaw, 10);
       for (let i = 0; i < previousCount; i++) {
-        await SecureStore.deleteItemAsync(chunkKey(key, i));
+        await safeDelete(chunkKey(key, i));
       }
     }
 
     if (value.length <= CHUNK_SIZE) {
-      await SecureStore.deleteItemAsync(`${key}_chunks`);
-      await SecureStore.setItemAsync(key, value);
+      await safeDelete(`${key}_chunks`);
+      await safeSet(key, value);
       return;
     }
 
@@ -57,19 +105,19 @@ export const SecureStoreAdapter = {
     for (let i = 0; i < value.length; i += CHUNK_SIZE) {
       chunks.push(value.slice(i, i + CHUNK_SIZE));
     }
-    await Promise.all(chunks.map((chunk, i) => SecureStore.setItemAsync(chunkKey(key, i), chunk)));
-    await SecureStore.setItemAsync(`${key}_chunks`, String(chunks.length));
+    await Promise.all(chunks.map((chunk, i) => safeSet(chunkKey(key, i), chunk)));
+    await safeSet(`${key}_chunks`, String(chunks.length));
   },
   async removeItem(key: string) {
-    const chunkCountRaw = await SecureStore.getItemAsync(`${key}_chunks`);
+    const chunkCountRaw = await safeGet(`${key}_chunks`);
     if (chunkCountRaw) {
       const chunkCount = parseInt(chunkCountRaw, 10);
       for (let i = 0; i < chunkCount; i++) {
-        await SecureStore.deleteItemAsync(chunkKey(key, i));
+        await safeDelete(chunkKey(key, i));
       }
-      await SecureStore.deleteItemAsync(`${key}_chunks`);
+      await safeDelete(`${key}_chunks`);
     }
-    await SecureStore.deleteItemAsync(key);
+    await safeDelete(key);
   },
 };
 

@@ -41,17 +41,38 @@ type PendingContext = {
   savedAt: number;
 };
 
+// AFTER_FIRST_UNLOCK because this is read while StoreKit replays unfinished
+// transactions, which happens on a background wake with the device still
+// locked. A WHEN_UNLOCKED item throws "User interaction is not allowed" there.
+const IAP_KEYCHAIN_OPTIONS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
+};
+
 async function savePendingContext(ctx: Omit<PendingContext, "savedAt">) {
+  // Caller treats a throw here as "purchase couldn't be prepared" and aborts
+  // before charging, so this deliberately still propagates — but the Keychain
+  // options above stop it firing on a locked device.
   await SecureStore.setItemAsync(
     PENDING_CONTEXT_KEY,
-    JSON.stringify({ ...ctx, savedAt: Date.now() })
+    JSON.stringify({ ...ctx, savedAt: Date.now() }),
+    IAP_KEYCHAIN_OPTIONS
   );
 }
 
 async function loadPendingContext(
   productId: string
 ): Promise<PendingContext | null> {
-  const raw = await SecureStore.getItemAsync(PENDING_CONTEXT_KEY);
+  let raw: string | null;
+  try {
+    raw = await SecureStore.getItemAsync(
+      PENDING_CONTEXT_KEY,
+      IAP_KEYCHAIN_OPTIONS
+    );
+  } catch (e) {
+    // A locked Keychain must not abort verification of a completed purchase.
+    console.warn("[iap] pending context read failed:", (e as Error)?.message || e);
+    return null;
+  }
   if (!raw) return null;
   try {
     const ctx = JSON.parse(raw) as PendingContext;
@@ -67,7 +88,10 @@ async function loadPendingContext(
 }
 
 async function clearPendingContext() {
-  await SecureStore.deleteItemAsync(PENDING_CONTEXT_KEY).catch(() => {});
+  await SecureStore.deleteItemAsync(
+    PENDING_CONTEXT_KEY,
+    IAP_KEYCHAIN_OPTIONS
+  ).catch(() => {});
 }
 
 function verifyEndpointFor(
@@ -333,9 +357,23 @@ export async function initIAP(): Promise<boolean> {
       return false;
     }
     removeUpdateListener = purchaseUpdatedListener((purchase) => {
-      handlePurchase(purchase).catch((error) =>
-        console.warn("iap: handlePurchase threw", safeIapError(error))
-      );
+      handlePurchase(purchase).catch((error) => {
+        console.warn("iap: handlePurchase threw", safeIapError(error));
+        // Without this the caller waits the full 120s timeout whenever
+        // handlePurchase throws before reaching one of its own
+        // resolvePending() calls. Release the in-flight marker too, so a
+        // StoreKit replay of the same transaction can be retried rather than
+        // being swallowed by the duplicate guard forever.
+        const key = `${purchase.store}:${
+          purchase.transactionId || purchase.id
+        }`;
+        processingTransactions.delete(key);
+        resolvePending(purchase.productId, {
+          ok: false,
+          code: "verification-failed",
+          error: `${NATIVE_STORE_NAME} confirmed the purchase, but PaMarket couldn't verify it. Please contact support before trying again.`,
+        });
+      });
     });
     removeErrorListener = purchaseErrorListener((error) => {
       console.warn("iap: purchase error", safeIapError(error));
