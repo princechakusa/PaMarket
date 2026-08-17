@@ -42,7 +42,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // say PROMOTED and expire with featured_until instead of hanging around
     // forever on listings.boost), and ships against the server-side fix that
     // stopped Featured Slot purchases failing verification.
-    buildNumber: "17",
+    // 18 is the release candidate. It carries the fix for the locked-Keychain
+    // startup crash (the SecureStore adapter behind Supabase auth had no error
+    // handling and used WHEN_UNLOCKED accessibility, so a background wake or a
+    // launch from the lock screen threw "User interaction is not allowed"),
+    // two IAP paths that could leave a purchase promise unresolved until the
+    // 120s timeout, server-side job entitlement via create_job_listing with
+    // atomic credit spend, and the business-subscription expiry correction.
+    buildNumber: "18",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
