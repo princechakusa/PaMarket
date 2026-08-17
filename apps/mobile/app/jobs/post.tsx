@@ -39,11 +39,20 @@ import { useStoreProducts } from "../../lib/use-store-products";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import {
   Badge,
+  BriefcaseIcon,
   Button,
   Card,
   Chip,
+  CollapsibleCard,
+  CountedTextArea,
+  DocumentIcon,
+  FieldCol,
+  FieldLabel,
+  FieldRow,
   GlassBackButton,
-  SectionHeader,
+  MoneyIcon,
+  SendIcon,
+  ToolsIcon,
 } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
@@ -127,6 +136,9 @@ export default function PostJobScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
+  // Section icons are stroke-only, so they need the raw brand colour rather
+  // than a StyleSheet entry.
+  const tones = useThemedStyles((c: ColorPalette) => ({ brand: c.brand }));
 
   useIOSNativeHeader({
     backgroundColor: color.brand,
@@ -223,9 +235,19 @@ export default function PostJobScreen() {
   function addSkill() {
     const s = skillInput.trim();
     if (!s) return;
+    // The card says "up to 5 key skills", so enforce it rather than letting
+    // the chip row grow unbounded.
+    if (skills.length >= 5) {
+      toast("You can add up to 5 skills.");
+      return;
+    }
     if (!skills.some((x) => x.toLowerCase() === s.toLowerCase()))
       setSkills([...skills, s]);
     setSkillInput("");
+  }
+
+  function removeSkill(skill: string) {
+    setSkills(skills.filter((s) => s !== skill));
   }
 
   const ent = recruiterPlanEntitlements(planId);
@@ -559,306 +581,235 @@ export default function PostJobScreen() {
         </View>
 
         {/* ── Company ─────────────────────────────────────── */}
-        <SectionHeader title="Company" subtitle="Who is hiring" />
+        {/* Card 1 — Job Details */}
         <Padded styles={styles}>
-          <Card>
-            <Label text="Company name" required styles={styles} />
-            <Input
-              value={company}
-              onChangeText={setCompany}
-              placeholder="Your company or organisation name"
-              last
-              styles={styles}
-            />
-          </Card>
-        </Padded>
-
-        {/* ── Role ────────────────────────────────────────── */}
-        <SectionHeader
-          title="The role"
-          subtitle="Title, industry and employment type"
-        />
-        <Padded styles={styles}>
-          <Card>
-            <Label text="Job title" required styles={styles} />
-            <Input
-              value={title}
-              onChangeText={setTitle}
-              placeholder="e.g. Accountant, Delivery Driver, Sales Representative"
-              styles={styles}
-            />
-
-            <Label text="Industry" required styles={styles} />
-            <View style={styles.chipsWrap}>
-              {JOB_CATEGORIES.map((c) => (
-                <Chip
-                  key={c}
-                  label={c}
-                  active={category === c}
-                  onPress={() => setCategory(c)}
+          <CollapsibleCard title="Job Details" icon={<BriefcaseIcon c={tones.brand} />}>
+            <FieldRow>
+              <FieldCol>
+                <FieldLabel text="Job title" required />
+                <Input
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder="e.g. Accountant"
+                  last
+                  styles={styles}
                 />
-              ))}
+              </FieldCol>
+              <FieldCol>
+                <FieldLabel text="Company" required />
+                <Input
+                  value={company}
+                  onChangeText={setCompany}
+                  placeholder="Your company"
+                  last
+                  styles={styles}
+                />
+              </FieldCol>
+            </FieldRow>
+
+            <View>
+              <FieldLabel text="Industry" required />
+              <View style={styles.chipsWrap}>
+                {JOB_CATEGORIES.map((c) => (
+                  <Chip key={c} label={c} active={category === c} onPress={() => setCategory(c)} />
+                ))}
+              </View>
             </View>
 
-            <Label
-              text="Employment type"
-              style={styles.spacedLabel}
-              styles={styles}
-            />
-            <View style={styles.chipsWrap}>
-              {JOB_TYPES.map((t) => (
-                <Chip
-                  key={t}
-                  label={t}
-                  active={jobType === t}
-                  onPress={() => setJobType(t)}
-                />
-              ))}
+            <View>
+              <FieldLabel text="Employment type" required />
+              <View style={styles.chipsWrap}>
+                {JOB_TYPES.map((t) => (
+                  <Chip key={t} label={t} active={jobType === t} onPress={() => setJobType(t)} />
+                ))}
+              </View>
             </View>
 
-          </Card>
-        </Padded>
-
-        {/* ── Location ────────────────────────────────────── */}
-        <SectionHeader title="Location" subtitle="Where the role is based" />
-        <Padded styles={styles}>
-          <Card>
-            <Label text="Province" required styles={styles} />
-            <View style={styles.chipsWrap}>
-              {PROVINCES.map((p) => (
-                <Chip
-                  key={p}
-                  label={p}
-                  active={province === p}
-                  onPress={() => {
-                    setProvince(p);
-                    if (!(CITIES_BY_PROVINCE[p] || []).includes(city))
-                      setCity("");
-                  }}
-                />
-              ))}
-            </View>
-
-            <Label
-              text="City / town"
-              required
-              style={styles.spacedLabel}
-              styles={styles}
-            />
-            <Input
-              value={city}
-              onChangeText={setCity}
-              placeholder="e.g. Harare, or Remote"
-              last={!cityOptions.length}
-              styles={styles}
-            />
-            {cityOptions.length ? (
-              <View style={[styles.chipsWrap, { marginTop: space.md }]}>
-                {cityOptions.slice(0, 14).map((c) => (
+            <View>
+              <FieldLabel text="Province" required />
+              <View style={styles.chipsWrap}>
+                {PROVINCES.map((p) => (
                   <Chip
-                    key={c}
-                    label={c}
-                    active={city === c}
-                    onPress={() => setCity(c)}
+                    key={p}
+                    label={p}
+                    active={province === p}
+                    onPress={() => {
+                      setProvince(p);
+                      setCity("");
+                    }}
                   />
                 ))}
               </View>
-            ) : null}
-          </Card>
-        </Padded>
-
-        {/* ── Pay ─────────────────────────────────────────── */}
-        {/* Experience sits with pay rather than with the job title: both are
-            what a candidate screens on first, and grouping them keeps the
-            role card down to identity fields. */}
-        <SectionHeader
-          title="Salary & experience"
-          subtitle="Postings with a salary get more applications"
-        />
-        <Padded styles={styles}>
-          <Card>
-            <Label text="Monthly salary" styles={styles} />
-            <Input
-              value={salary}
-              onChangeText={setSalary}
-              placeholder="e.g. 500, 500-1000, or Negotiable"
-              last
-              styles={styles}
-            />
-            <View style={[styles.chipsWrap, { marginTop: space.md }]}>
-              {CURRENCIES.map((c) => (
-                <Chip
-                  key={c}
-                  label={c}
-                  active={currency === c}
-                  onPress={() => setCurrency(c)}
-                />
-              ))}
             </View>
-            <Text style={styles.hint}>
-              Leave blank to show &ldquo;Negotiable&rdquo; on the listing.
-            </Text>
 
-            <Label
-              text="Experience level"
-              style={styles.spacedLabel}
-              styles={styles}
-            />
-            <View style={styles.chipsWrap}>
-              {EXPERIENCE_LEVELS.map((lv) => (
-                <Chip
-                  key={lv}
-                  label={lv}
-                  active={experience === lv}
-                  onPress={() => setExperience(experience === lv ? "" : lv)}
-                />
-              ))}
-            </View>
-          </Card>
-        </Padded>
-
-        {/* ── Description ─────────────────────────────────── */}
-        {/* Description, responsibilities and requirements each get their own
-            card: they are three separate answers, and stacking them in one
-            container made the longest part of the form read as an
-            undifferentiated wall of inputs. They still merge into the single
-            generated description on submit — see buildDescription. */}
-        <SectionHeader
-          title="Job description"
-          subtitle="Give candidates a clear overview of the role"
-        />
-        <Padded styles={styles}>
-          <Card>
-            <Label text="About the role" required styles={styles} />
-            <TextInput
-              style={[styles.input, styles.textarea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Describe the role, the team, and what a typical week looks like…"
-              placeholderTextColor={color.textMuted}
-              multiline
-            />
-            <Text style={styles.counter}>
-              {description.trim().length}/30 minimum
-            </Text>
-          </Card>
-        </Padded>
-
-        <SectionHeader
-          title="Key responsibilities"
-          subtitle="List the main duties and responsibilities for this role"
-        />
-        <Padded styles={styles}>
-          <Card>
-            <TextInput
-              style={[styles.input, styles.textareaSm]}
-              value={responsibilities}
-              onChangeText={setResponsibilities}
-              placeholder="List the main duties, one per line…"
-              placeholderTextColor={color.textMuted}
-              multiline
-            />
-            <Text style={styles.helperText}>
-              One duty per line — each line becomes its own bullet on the job
-              page.
-            </Text>
-          </Card>
-        </Padded>
-
-        <SectionHeader
-          title="Requirements & qualifications"
-          subtitle="Add the experience, education or qualifications candidates should have"
-        />
-        <Padded styles={styles}>
-          <Card>
-            <TextInput
-              style={[styles.input, styles.textareaSm]}
-              value={requirements}
-              onChangeText={setRequirements}
-              placeholder="Qualifications, licences and experience a candidate must have…"
-              placeholderTextColor={color.textMuted}
-              multiline
-            />
-            <Text style={styles.helperText}>
-              One requirement per line keeps this easy for candidates to scan.
-            </Text>
-          </Card>
-        </Padded>
-
-        {/* ── Skills ──────────────────────────────────────── */}
-        <SectionHeader
-          title="Skills required"
-          subtitle="Helps the right candidates find this role"
-        />
-        <Padded styles={styles}>
-          <Card>
-            <View style={styles.skillAddRow}>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                value={skillInput}
-                onChangeText={setSkillInput}
-                placeholder="Add a skill (e.g. QuickBooks)"
-                placeholderTextColor={color.textMuted}
-                onSubmitEditing={addSkill}
-                returnKeyType="done"
+            <View>
+              <FieldLabel text="City / town" required />
+              <Input
+                value={city}
+                onChangeText={setCity}
+                placeholder="e.g. Harare"
+                last
+                styles={styles}
               />
-              <Button
-                label="Add"
-                size="sm"
-                fullWidth={false}
-                onPress={addSkill}
+              {cityOptions.length ? (
+                <View style={[styles.chipsWrap, { marginTop: space.sm }]}>
+                  {cityOptions.slice(0, 14).map((c) => (
+                    <Chip key={c} label={c} active={city === c} onPress={() => setCity(c)} />
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          </CollapsibleCard>
+        </Padded>
+
+        {/* Card 2 — Job Description */}
+        <Padded styles={styles}>
+          <CollapsibleCard title="Job Description" icon={<DocumentIcon c={tones.brand} />}>
+            <View>
+              <FieldLabel text="Summary" required />
+              <CountedTextArea
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Describe the role, the team, and what a typical week looks like…"
+                limit={600}
+                minHeight={96}
+              />
+              {description.trim().length < 30 ? (
+                <Text style={styles.helperText}>Minimum 30 characters.</Text>
+              ) : null}
+            </View>
+
+            <View>
+              <FieldLabel text="Responsibilities" />
+              <CountedTextArea
+                value={responsibilities}
+                onChangeText={setResponsibilities}
+                placeholder="List the main duties, one per line…"
+                limit={500}
+                minHeight={90}
+              />
+              <Text style={styles.helperText}>
+                One duty per line — each line becomes its own bullet on the job page.
+              </Text>
+            </View>
+
+            <View>
+              <FieldLabel text="Requirements & Qualifications" />
+              <CountedTextArea
+                value={requirements}
+                onChangeText={setRequirements}
+                placeholder="Qualifications, licences and experience a candidate must have…"
+                limit={500}
+                minHeight={90}
               />
             </View>
-            {skills.length ? (
-              <View style={[styles.chipsWrap, { marginTop: space.md }]}>
-                {skills.map((s) => (
-                  <Pressable
-                    key={s}
-                    style={styles.removableChip}
-                    onPress={() => setSkills(skills.filter((x) => x !== s))}
-                  >
-                    <Text style={styles.removableChipText}>{s}</Text>
-                    <Text style={styles.removableChipX}>×</Text>
-                  </Pressable>
+
+            <View>
+              <FieldLabel text="Experience level" />
+              <View style={styles.chipsWrap}>
+                {EXPERIENCE_LEVELS.map((lv) => (
+                  <Chip
+                    key={lv}
+                    label={lv}
+                    active={experience === lv}
+                    onPress={() => setExperience(experience === lv ? "" : lv)}
+                  />
                 ))}
               </View>
-            ) : (
-              <Text style={styles.hint}>
-                No skills added yet — add three to five for the best match rate.
-              </Text>
-            )}
-          </Card>
+            </View>
+          </CollapsibleCard>
         </Padded>
 
-        {/* ── How to apply ────────────────────────────────── */}
-        <SectionHeader
-          title="How to apply"
-          subtitle="Where applications should reach you"
-        />
+        {/* Card 3 — Skills required */}
         <Padded styles={styles}>
-          <Card>
-            <Label text="Application email" styles={styles} />
-            <Input
-              value={email}
-              onChangeText={setEmail}
-              placeholder="hiring@yourcompany.co.zw"
-              keyboardType="email-address"
-              styles={styles}
-            />
-            <Label text="WhatsApp number" styles={styles} />
-            <Input
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="e.g. +263771234567"
-              keyboardType="phone-pad"
-              last
-              styles={styles}
-            />
-            <Text style={styles.hint}>
-              Candidates can also apply in-app — you&apos;ll see every applicant
-              under Applications.
-            </Text>
-          </Card>
+          <CollapsibleCard
+            title="Skills required"
+            subtitle="Add up to 5 key skills for this role"
+            icon={<ToolsIcon c={tones.brand} />}
+          >
+            <View style={styles.skillRow}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Input
+                  value={skillInput}
+                  onChangeText={setSkillInput}
+                  placeholder="Add a skill (e.g. QuickBooks)"
+                  last
+                  styles={styles}
+                  onSubmitEditing={addSkill}
+                />
+              </View>
+              <Button label="Add" variant="secondary" onPress={addSkill} />
+            </View>
+            {skills.length ? (
+              <View style={styles.chipsWrap}>
+                {skills.map((s) => (
+                  <Chip key={s} label={`${s}  ✕`} active onPress={() => removeSkill(s)} />
+                ))}
+              </View>
+            ) : null}
+          </CollapsibleCard>
+        </Padded>
+
+        {/* Card 4 — Compensation (optional, collapsed by default) */}
+        <Padded styles={styles}>
+          <CollapsibleCard
+            title="Compensation"
+            subtitle="Optional — postings with a salary get more applications"
+            icon={<MoneyIcon c={tones.brand} />}
+            defaultOpen={false}
+          >
+            <View>
+              <FieldLabel text="Monthly salary" />
+              <Input
+                value={salary}
+                onChangeText={setSalary}
+                placeholder="e.g. 500, 500-1000, or Negotiable"
+                last
+                styles={styles}
+              />
+              <View style={[styles.chipsWrap, { marginTop: space.sm }]}>
+                {CURRENCIES.map((c) => (
+                  <Chip key={c} label={c} active={currency === c} onPress={() => setCurrency(c)} />
+                ))}
+              </View>
+              <Text style={styles.helperText}>
+                Leave blank to show &ldquo;Negotiable&rdquo; on the listing.
+              </Text>
+            </View>
+          </CollapsibleCard>
+        </Padded>
+
+        {/* Card 5 — How to apply */}
+        <Padded styles={styles}>
+          <CollapsibleCard
+            title="How to apply"
+            subtitle="Where applications should reach you"
+            icon={<SendIcon c={tones.brand} />}
+          >
+            <View>
+              <FieldLabel text="Application email" />
+              <Input
+                value={email}
+                onChangeText={setEmail}
+                placeholder="hiring@yourcompany.co.zw"
+                last
+                styles={styles}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+            <View>
+              <FieldLabel text="WhatsApp number" />
+              <Input
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="e.g. +263771234567"
+                last
+                styles={styles}
+                keyboardType="phone-pad"
+              />
+            </View>
+          </CollapsibleCard>
         </Padded>
       </ScrollView>
 
@@ -928,25 +879,6 @@ function Padded({
   return <View style={styles.padded}>{children}</View>;
 }
 
-function Label({
-  text,
-  required,
-  style,
-  styles,
-}: {
-  text: string;
-  required?: boolean;
-  style?: object;
-  styles: Styles;
-}) {
-  return (
-    <Text style={[styles.label, style]}>
-      {text}
-      {required ? <Text style={styles.required}> *</Text> : null}
-    </Text>
-  );
-}
-
 function GateRow({ text, styles }: { text: string; styles: Styles }) {
   return (
     <View style={styles.gateRow}>
@@ -962,6 +894,8 @@ function Input({
   placeholder,
   last,
   keyboardType,
+  autoCapitalize,
+  onSubmitEditing,
   styles,
 }: {
   value: string;
@@ -969,6 +903,8 @@ function Input({
   placeholder: string;
   last?: boolean;
   keyboardType?: "email-address" | "phone-pad";
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  onSubmitEditing?: () => void;
   styles: Styles;
 }) {
   return (
@@ -979,7 +915,12 @@ function Input({
       placeholder={placeholder}
       placeholderTextColor={color.textMuted}
       keyboardType={keyboardType}
-      autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
+      autoCapitalize={
+        autoCapitalize ??
+        (keyboardType === "email-address" ? "none" : "sentences")
+      }
+      onSubmitEditing={onSubmitEditing}
+      returnKeyType={onSubmitEditing ? "done" : undefined}
     />
   );
 }
@@ -1038,6 +979,7 @@ function buildStyles(color: ColorPalette) {
       marginTop: space.sm,
       lineHeight: 16,
     },
+    skillRow: { flexDirection: "row", alignItems: "flex-start", gap: space.sm },
     creditActions: {
       flexDirection: "row",
       alignItems: "center",
