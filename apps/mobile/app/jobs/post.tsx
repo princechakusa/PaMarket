@@ -231,6 +231,10 @@ export default function PostJobScreen() {
   const ent = recruiterPlanEntitlements(planId);
   const overLimit =
     ent.activeJobPosts >= 0 && activeJobPosts >= ent.activeJobPosts;
+  const remainingFreePosts =
+    ent.activeJobPosts < 0
+      ? Infinity
+      : Math.max(0, ent.activeJobPosts - activeJobPosts);
 
   // Counts the generated description, not the raw fields — that is what the
   // database limit applies to, so this is the only number that tells a seller
@@ -501,18 +505,36 @@ export default function PostJobScreen() {
                   }.`
                 : ""}
             </Text>
-            {overLimit ? (
-              <View style={styles.creditActions}>
-                <Pressable onPress={() => setCreditPickerOpen((v) => !v)}>
-                  <Text style={styles.creditLink}>View credit options</Text>
-                </Pressable>
-                <Text style={styles.creditOr}>or</Text>
-                <Pressable
-                  onPress={() => router.push("/jobs/recruiter-subscription")}
-                >
-                  <Text style={styles.creditLink}>upgrade plan</Text>
-                </Pressable>
-              </View>
+            {/* Shown at every allowance level, not only once the free posts
+                run out. Gating this behind overLimit meant a seller only ever
+                discovered credits and the recruiter plan at the moment they
+                were blocked — by which point the options read as a paywall
+                rather than something they could have chosen earlier. */}
+            {ent.activeJobPosts >= 0 ? (
+              <>
+                {!overLimit ? (
+                  <Text style={styles.creditHint}>
+                    {remainingFreePosts > 0
+                      ? `${remainingFreePosts} free post${
+                          remainingFreePosts === 1 ? "" : "s"
+                        } left. Need more? Buy credits or go unlimited.`
+                      : "Buy credits or go unlimited to keep posting."}
+                  </Text>
+                ) : null}
+                <View style={styles.creditActions}>
+                  <Pressable onPress={() => setCreditPickerOpen((v) => !v)}>
+                    <Text style={styles.creditLink}>
+                      {creditPickerOpen ? "Hide credit options" : "Buy job credits"}
+                    </Text>
+                  </Pressable>
+                  <Text style={styles.creditOr}>or</Text>
+                  <Pressable
+                    onPress={() => router.push("/jobs/recruiter-subscription")}
+                  >
+                    <Text style={styles.creditLink}>upgrade plan</Text>
+                  </Pressable>
+                </View>
+              </>
             ) : null}
             {creditPickerOpen ? (
               <View style={styles.creditOptions}>
@@ -1002,6 +1024,13 @@ function buildStyles(color: ColorPalette) {
 
     creditCard: { backgroundColor: color.surfaceAlt },
     creditText: { ...font.sub, color: color.textSub, lineHeight: 19 },
+    creditHint: {
+      ...font.caption,
+      color: color.textMuted,
+      fontWeight: "500",
+      marginTop: space.xs,
+      lineHeight: 16,
+    },
     counterText: {
       ...font.caption,
       color: color.textMuted,

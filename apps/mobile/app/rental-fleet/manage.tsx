@@ -405,7 +405,12 @@ export default function RentalManageFleetScreen() {
                         )
                       }
                     >
-                      <Text style={styles.featureButtonText}>Options</Text>
+                      {/* "Options" gave no hint this was a paid promotion, so
+                          the rental featured-slot products were effectively
+                          undiscoverable. */}
+                      <Text style={styles.featureButtonText}>
+                        {featurePickerFor === v.id ? "Hide" : "Feature"}
+                      </Text>
                     </Pressable>
                   )}
                 </Pressable>

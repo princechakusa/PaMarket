@@ -446,7 +446,7 @@ export default function JobDetailScreen() {
             <View style={styles.boostActiveRow}>
               <StarIcon c={color.gold} />
               <Text style={styles.boostActiveText}>
-                Boosted until{" "}
+                Promoted until{" "}
                 {new Date(job.featured_until as string).toLocaleDateString()}
               </Text>
             </View>
