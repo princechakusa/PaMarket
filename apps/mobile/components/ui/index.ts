@@ -21,4 +21,10 @@ export {
   MoneyIcon,
   CheckCircleIcon,
   SendIcon,
+  BuildingIcon,
+  UsersIcon,
+  ClockIcon,
+  PinIcon,
+  CalendarIcon,
+  DollarIcon,
 } from "./SectionIcons";

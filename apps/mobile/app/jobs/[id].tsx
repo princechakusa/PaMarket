@@ -43,10 +43,18 @@ import { isListingSaved, toggleSave } from "../../lib/saves";
 import { toast } from "../../components/ui/Toast";
 import {
   Badge,
+  BriefcaseIcon,
+  BuildingIcon,
   Button,
+  CalendarIcon,
   Card,
+  CheckCircleIcon,
+  ClockIcon,
+  DollarIcon,
   EmptyState,
   GlassBackButton,
+  PinIcon,
+  UsersIcon,
 } from "../../components/ui";
 
 type JobListing = {
@@ -92,26 +100,6 @@ function StarIcon({ c }: { c: string }) {
 
 type Styles = ReturnType<typeof buildStyles>;
 
-function MetaChip({
-  label,
-  value,
-  styles,
-}: {
-  label: string;
-  value: string;
-  styles: Styles;
-}) {
-  if (!value) return null;
-  return (
-    <View style={styles.metaChip}>
-      <Text style={styles.metaChipLabel}>{label}</Text>
-      <Text style={styles.metaChipValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 function DetailSection({
   title,
   body,
@@ -127,6 +115,37 @@ function DetailSection({
       <Text style={styles.sectionTitle}>{title}</Text>
       <Text style={styles.sectionBody}>{body.trim()}</Text>
     </View>
+  );
+}
+
+// Summary is clipped to a few lines with a Show more toggle, but only when
+// there is enough text for clipping to matter.
+const SUMMARY_COLLAPSED_LINES = 5;
+const SUMMARY_TOGGLE_THRESHOLD = 260;
+
+// "17 Aug 2026" — same en-GB day-month-year shape as the approved design.
+function formatPostedDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function Chevron({ c, up }: { c: string; up: boolean }) {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+      <Path
+        d={up ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"}
+        stroke={c}
+        strokeWidth={2.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
@@ -148,12 +167,28 @@ function DetailBullets({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      {items.map((item, i) => (
-        <View key={`${i}-${item.slice(0, 24)}`} style={styles.bulletRow}>
-          <View style={[styles.bulletDot, { backgroundColor: tick }]} />
-          <Text style={styles.bulletText}>{item}</Text>
-        </View>
-      ))}
+      {items.map((item, i) => {
+        // Sellers commonly write "Heading: detail" per line. When that shape
+        // is present, show the heading in bold with the detail beneath it,
+        // as in the approved design. Plain lines stay as a single line rather
+        // than inventing a heading that was never written.
+        const split = item.match(/^([^:]{3,60}):\s*(.+)$/s);
+        const heading = split ? split[1].trim() : null;
+        const detail = split ? split[2].trim() : item;
+        return (
+          <View key={`${i}-${item.slice(0, 24)}`} style={styles.bulletRow}>
+            <View style={styles.bulletTick}>
+              <CheckCircleIcon c={tick} size={18} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              {heading ? (
+                <Text style={styles.bulletHeading}>{heading}</Text>
+              ) : null}
+              <Text style={styles.bulletText}>{detail}</Text>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -164,11 +199,17 @@ export default function JobDetailScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
+  // Stroke-only icons need raw colours, not StyleSheet entries.
+  const tones = useThemedStyles((c: ColorPalette) => ({
+    brand: c.brand,
+    muted: c.textMuted,
+  }));
   const [job, setJob] = useState<JobListing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savingBusy, setSavingBusy] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const {
     prices: boostPrices,
@@ -292,6 +333,40 @@ export default function JobDetailScreen() {
   // hidden and the page still reads cleanly instead of breaking.
   const structured = hasStructuredJobSections(job.description);
 
+  // "About the role" rows are built from what the job actually stores, so a
+  // posting without a salary or experience level shows fewer rows instead of
+  // empty labels. There is deliberately no Department row: buildDescription
+  // never writes one, and inventing it would mean displaying data the seller
+  // was never asked for.
+  const salaryText = jobSalary(job.description);
+  const aboutRows: { label: string; value: string; icon: React.ReactNode }[] = [
+    industry && {
+      label: "Industry",
+      value: industry,
+      icon: <BuildingIcon c={tones.brand} size={16} />,
+    },
+    salaryText && {
+      label: "Salary",
+      value: salaryText,
+      icon: <DollarIcon c={tones.brand} size={16} />,
+    },
+    expLabel && {
+      label: "Experience",
+      value: expLabel,
+      icon: <UsersIcon c={tones.brand} size={16} />,
+    },
+    type && {
+      label: "Employment type",
+      value: type,
+      icon: <ClockIcon c={tones.brand} size={16} />,
+    },
+    location && {
+      label: "Location",
+      value: location,
+      icon: <PinIcon c={tones.brand} size={16} />,
+    },
+  ].filter(Boolean) as { label: string; value: string; icon: React.ReactNode }[];
+
   async function buyBoost(productId: string) {
     if (!job) return;
     if (!availableBoostIds.includes(productId)) {
@@ -381,32 +456,85 @@ export default function JobDetailScreen() {
             </View>
           </View>
 
-          <View style={styles.metaChips}>
-            <MetaChip
-              label="Type"
-              value={type || "Not specified"}
-              styles={styles}
-            />
-            <MetaChip
-              label="Salary"
-              value={jobSalary(job.description)}
-              styles={styles}
-            />
-            {expLabel ? (
-              <MetaChip label="Experience" value={expLabel} styles={styles} />
+          {/* Compact icon + text row under the title, matching the approved
+              design. Posted date comes from created_at, which every listing
+              has, so it never renders empty. */}
+          <View style={styles.headMetaRow}>
+            {type ? (
+              <View style={styles.headMetaItem}>
+                <BriefcaseIcon c={tones.muted} size={14} />
+                <Text style={styles.headMetaText}>{type}</Text>
+              </View>
             ) : null}
-            {industry ? (
-              <MetaChip label="Industry" value={industry} styles={styles} />
+            {location ? (
+              <View style={styles.headMetaItem}>
+                <PinIcon c={tones.muted} size={14} />
+                <Text style={styles.headMetaText} numberOfLines={1}>
+                  {location}
+                </Text>
+              </View>
             ) : null}
+            <View style={styles.headMetaItem}>
+              <CalendarIcon c={tones.muted} size={14} />
+              <Text style={styles.headMetaText}>
+                Posted {formatPostedDate(job.created_at)}
+              </Text>
+            </View>
           </View>
         </Card>
 
+        {/* About the role — one labelled row per stored value. Rows only
+            render when the underlying field exists, so a job without a salary
+            or industry simply shows fewer rows rather than empty labels. */}
+        {aboutRows.length ? (
+          <Card style={styles.detailsCard}>
+            <Text style={styles.sectionTitle}>About the role</Text>
+            {aboutRows.map((row, i) => (
+              <View
+                key={row.label}
+                style={[
+                  styles.aboutRow,
+                  i === aboutRows.length - 1 && styles.aboutRowLast,
+                ]}
+              >
+                <View style={styles.aboutIcon}>{row.icon}</View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.aboutLabel}>{row.label}</Text>
+                  <Text style={styles.aboutValue}>{row.value}</Text>
+                </View>
+              </View>
+            ))}
+          </Card>
+        ) : null}
+
         <Card style={styles.detailsCard}>
-          <DetailSection
-            title={structured ? "Job summary" : "About the role"}
-            body={about}
-            styles={styles}
-          />
+          {about.trim() ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {structured ? "Job summary" : "About the role"}
+              </Text>
+              <Text
+                style={styles.sectionBody}
+                numberOfLines={summaryExpanded ? undefined : SUMMARY_COLLAPSED_LINES}
+              >
+                {about.trim()}
+              </Text>
+              {/* Only offer the toggle when the text is long enough to be
+                  clipped — a three-line summary should not show "Show more". */}
+              {about.trim().length > SUMMARY_TOGGLE_THRESHOLD ? (
+                <Pressable
+                  onPress={() => setSummaryExpanded((v) => !v)}
+                  hitSlop={8}
+                  style={styles.showMoreRow}
+                >
+                  <Text style={styles.showMoreText}>
+                    {summaryExpanded ? "Show less" : "Show more"}
+                  </Text>
+                  <Chevron c={tones.brand} up={summaryExpanded} />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
           <DetailBullets
             title="Key responsibilities"
             items={responsibilities}
@@ -526,12 +654,22 @@ export default function JobDetailScreen() {
             </View>
           </View>
         ) : (
-          <Button
-            label="Apply now"
-            variant="gold"
-            size="lg"
-            onPress={applyNow}
-          />
+          // Candidate view: Save job sits beside Apply now, matching the
+          // approved design. Saving already existed as a heart in the header;
+          // this surfaces the same action where a candidate actually decides.
+          <View style={styles.ownerRow}>
+            <View style={{ flex: 1 }}>
+              <Button
+                label={isSaved ? "Saved" : "Save job"}
+                variant="secondary"
+                size="lg"
+                onPress={handleToggleSave}
+              />
+            </View>
+            <View style={{ flex: 1.3 }}>
+              <Button label="Apply now" size="lg" onPress={applyNow} />
+            </View>
+          </View>
         )}
       </View>
     </View>
@@ -579,22 +717,6 @@ function buildStyles(color: ColorPalette) {
     jobTitle: { ...font.h3, color: color.text },
     company: { ...font.bodyStrong, color: color.brand, marginTop: space.xxs },
     location: { ...font.sub, color: color.textMuted, marginTop: space.xxs },
-    metaChips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
-    metaChip: {
-      backgroundColor: color.surfaceAlt,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: color.border,
-      paddingHorizontal: space.md,
-      paddingVertical: space.sm,
-      minWidth: 96,
-    },
-    metaChipLabel: {
-      ...font.micro,
-      color: color.textMuted,
-      textTransform: "uppercase",
-    },
-    metaChipValue: { ...font.bodyStrong, color: color.text, marginTop: 2 },
     detailsCard: { marginTop: space.lg, gap: 0 },
     section: { marginBottom: space.xl },
     sectionTitle: { ...font.title, color: color.text, marginBottom: space.sm },
@@ -604,15 +726,54 @@ function buildStyles(color: ColorPalette) {
       flexDirection: "row",
       alignItems: "flex-start",
       gap: space.sm,
-      marginBottom: space.sm,
+      marginBottom: space.md,
     },
-    bulletDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      marginTop: 8,
-      flexShrink: 0,
+    bulletTick: { marginTop: 1, flexShrink: 0 },
+    bulletHeading: {
+      ...font.bodyStrong,
+      color: color.text,
+      marginBottom: 2,
     },
+    headMetaRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: space.md,
+      marginTop: space.md,
+    },
+    headMetaItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      flexShrink: 1,
+    },
+    headMetaText: { ...font.caption, color: color.textMuted, flexShrink: 1 },
+    aboutRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      paddingVertical: space.md,
+      borderBottomWidth: 1,
+      borderBottomColor: color.border,
+    },
+    aboutRowLast: { borderBottomWidth: 0, paddingBottom: 0 },
+    aboutIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: radius.sm,
+      backgroundColor: color.brandTint,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    aboutLabel: { ...font.bodyStrong, color: color.text },
+    aboutValue: { ...font.sub, color: color.textSub, marginTop: 1 },
+    showMoreRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: space.sm,
+    },
+    showMoreText: { ...font.sub, color: color.brand, fontWeight: "700" },
     bulletText: {
       ...font.body,
       color: color.textSub,

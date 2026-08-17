@@ -49,6 +49,62 @@ export function CheckCircleIcon({ c, size = 18 }: P) {
   );
 }
 
+export function BuildingIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 21V5a1 1 0 011-1h9a1 1 0 011 1v16" stroke={c} strokeWidth={2} strokeLinejoin="round" />
+      <Path d="M15 10h4a1 1 0 011 1v10" stroke={c} strokeWidth={2} strokeLinejoin="round" />
+      <Path d="M8 8h3M8 12h3M8 16h3M2 21h20" stroke={c} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function UsersIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={9} cy={8} r={3.2} stroke={c} strokeWidth={2} />
+      <Path d="M3 20a6 6 0 0112 0" stroke={c} strokeWidth={2} strokeLinecap="round" />
+      <Path d="M16.5 5.5a3 3 0 010 5.6M17 20a6 6 0 00-1.6-4" stroke={c} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function ClockIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={9} stroke={c} strokeWidth={2} />
+      <Path d="M12 7v5.2l3.2 2" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function PinIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z" stroke={c} strokeWidth={2} strokeLinejoin="round" />
+      <Circle cx={12} cy={10} r={2.6} stroke={c} strokeWidth={2} />
+    </Svg>
+  );
+}
+
+export function CalendarIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 6a1 1 0 011-1h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6z" stroke={c} strokeWidth={2} strokeLinejoin="round" />
+      <Path d="M8 3v4M16 3v4M4 10h16" stroke={c} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function DollarIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 3v18" stroke={c} strokeWidth={2} strokeLinecap="round" />
+      <Path d="M16 7.5C16 6 14.2 5 12 5S8 6 8 7.8c0 4 8 2.2 8 6.2 0 1.8-1.8 3-4 3s-4-1-4-2.5" stroke={c} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function SendIcon({ c, size = 18 }: P) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
