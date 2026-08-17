@@ -261,6 +261,21 @@ export function parseJobList(block: string): string[] {
     .filter(Boolean);
 }
 
+// Strips the `KEY: value` metadata lines buildDescription() writes at the top.
+// Those are storage markers, not prose: a job saved with inline metadata but
+// no DESCRIPTION: block (older posts, or one saved with an empty summary)
+// would otherwise render "COMPANY: Acme / JOB TYPE: Full-time / SALARY: …"
+// as the visible body. The values are already shown as their own labelled
+// rows, so showing them again as raw text is both duplicated and wrong.
+export function stripJobMetadataLines(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .split("\n")
+    .filter((line) => !isSectionHeading(line))
+    .join("\n")
+    .trim();
+}
+
 // True when the text still looks like the raw generated blob — used to decide
 // between structured sections and a plain "About the role" fallback for
 // legacy or hand-edited posts that never had the generated headings.

@@ -33,6 +33,7 @@ import {
   parseJobBlock,
   parseJobField,
   parseJobList,
+  stripJobMetadataLines,
 } from "../../lib/jobs";
 import { isFeatured } from "../../lib/listings";
 import { JOB_BOOST_PRODUCTS } from "../../lib/billing-products";
@@ -316,7 +317,10 @@ export default function JobDetailScreen() {
   const expLabel = parseJobField(job.description, "EXPERIENCE");
   const industry = parseJobField(job.description, "INDUSTRY");
   const about =
-    parseJobBlock(job.description, "DESCRIPTION") || job.description || "";
+    parseJobBlock(job.description, "DESCRIPTION") ||
+    // Fallback for posts with no DESCRIPTION: block. Metadata lines are
+    // stripped first so storage markers never surface as visible prose.
+    stripJobMetadataLines(job.description);
   const responsibilities = parseJobList(
     parseJobBlock(job.description, "RESPONSIBILITIES")
   );
