@@ -4,7 +4,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
-import { JOB_CATEGORIES, JOB_TYPES, parseJobField } from "../../../lib/jobs";
+import {
+  JOB_CATEGORIES,
+  JOB_TYPES,
+  jobDescriptionOverflow,
+  parseJobField,
+} from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { color, type ColorPalette } from "../../../lib/theme";
@@ -133,7 +138,6 @@ export default function EditJobScreen() {
     const salaryRaw = salary.trim();
     if (salaryRaw && !SALARY_RE.test(salaryRaw)) return toast('Enter a valid salary amount or "Negotiable"');
 
-    setIsSaving(true);
     const finalSalary = salaryRaw || "Negotiable";
     const fullDescription = buildDescription({
       company: company.trim(),
@@ -147,6 +151,21 @@ export default function EditJobScreen() {
       phone: phone.trim(),
     });
 
+    // Same guard as the create screen — the database caps the generated
+    // description at 5000 characters and its error text means nothing to a
+    // seller. Editing an already-long post is the likeliest way to cross it.
+    const over = jobDescriptionOverflow(fullDescription);
+    if (over > 0) {
+      return toast(
+        `Your job post is too long. Please remove about ${over.toLocaleString()} character${
+          over === 1 ? "" : "s"
+        } and try again.`,
+        5000,
+        true
+      );
+    }
+
+    setIsSaving(true);
     const { error } = await supabase
       .from("listings")
       .update({

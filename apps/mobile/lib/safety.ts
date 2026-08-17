@@ -7,7 +7,7 @@ import { supabase } from "./supabase";
 
 type FriendlyError = { code: string | null; message: string; blocked: boolean; label: string | null };
 
-const ERROR_MAP: Record<string, { message: string }> = {
+const ERROR_MAP: Record<string, { message: string; blocked?: boolean }> = {
   content_blocked: {
     message:
       "This ad can't be posted because it contains prohibited content. Please review our community guidelines and edit your listing.",
@@ -24,6 +24,14 @@ const ERROR_MAP: Record<string, { message: string }> = {
   company_verification_required: {
     message: "Employer verification is required before you can post a job. Complete verification to continue.",
   },
+  // Not a moderation decision — a CHECK constraint on listings.description
+  // (max 5000 characters). The screens validate before submitting, so this is
+  // the backstop for anything that slips through; without it the raw
+  // "violates check constraint" text was shown to the user verbatim.
+  listings_description_length: {
+    message: "Your job description is too long. Please shorten it and try again.",
+    blocked: false,
+  },
 };
 
 export function friendlyError(err: unknown): FriendlyError {
@@ -36,8 +44,26 @@ export function friendlyError(err: unknown): FriendlyError {
   for (const code of Object.keys(ERROR_MAP)) {
     if (lower.includes(code)) {
       const match = raw.match(/\(([^)]+)\)\s*$/);
-      return { code, message: ERROR_MAP[code].message, blocked: true, label: match ? match[1] : null };
+      return {
+        code,
+        message: ERROR_MAP[code].message,
+        blocked: ERROR_MAP[code].blocked ?? true,
+        label: match ? match[1] : null,
+      };
     }
+  }
+  // Anything that still looks like raw Postgres gets a generic message. The
+  // listings_description_length case above is mapped explicitly; this stops
+  // any *other* constraint, trigger or driver error from being shown verbatim
+  // — users were seeing text like 'new row for relation "listings" violates
+  // check constraint'.
+  if (/violates|constraint|relation |sqlstate|duplicate key|null value in column/i.test(raw)) {
+    return {
+      code: null,
+      message: "We couldn't save that. Please check your details and try again.",
+      blocked: false,
+      label: null,
+    };
   }
   return { code: null, message: raw || "Something went wrong. Please try again.", blocked: false, label: null };
 }

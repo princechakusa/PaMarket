@@ -25,7 +25,15 @@ import {
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { businessInitials } from "../../lib/businesses";
-import { jobCompany, jobSalary, jobType, parseJobField } from "../../lib/jobs";
+import {
+  hasStructuredJobSections,
+  jobCompany,
+  jobSalary,
+  jobType,
+  parseJobBlock,
+  parseJobField,
+  parseJobList,
+} from "../../lib/jobs";
 import { isFeatured } from "../../lib/listings";
 import { JOB_BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
@@ -118,6 +126,34 @@ function DetailSection({
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <Text style={styles.sectionBody}>{body.trim()}</Text>
+    </View>
+  );
+}
+
+// Renders a parsed section as scannable rows instead of one paragraph — the
+// specific problem with the old screen, where responsibilities and
+// requirements arrived as an unbroken block of text.
+function DetailBullets({
+  title,
+  items,
+  styles,
+  tick,
+}: {
+  title: string;
+  items: string[];
+  styles: Styles;
+  tick: string;
+}) {
+  if (!items.length) return null;
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {items.map((item, i) => (
+        <View key={`${i}-${item.slice(0, 24)}`} style={styles.bulletRow}>
+          <View style={[styles.bulletDot, { backgroundColor: tick }]} />
+          <Text style={styles.bulletText}>{item}</Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -239,10 +275,22 @@ export default function JobDetailScreen() {
   const expLabel = parseJobField(job.description, "EXPERIENCE");
   const industry = parseJobField(job.description, "INDUSTRY");
   const about =
-    parseJobField(job.description, "DESCRIPTION") || job.description || "";
-  const responsibilities = parseJobField(job.description, "RESPONSIBILITIES");
-  const requirements = parseJobField(job.description, "REQUIREMENTS");
-  const howToApply = parseJobField(job.description, "HOW TO APPLY");
+    parseJobBlock(job.description, "DESCRIPTION") || job.description || "";
+  const responsibilities = parseJobList(
+    parseJobBlock(job.description, "RESPONSIBILITIES")
+  );
+  const requirements = parseJobList(
+    parseJobBlock(job.description, "REQUIREMENTS")
+  );
+  const howToApply = parseJobBlock(job.description, "HOW TO APPLY");
+  const skills = parseJobField(job.description, "SKILLS")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  // Legacy and hand-edited posts have no generated headings; for those `about`
+  // already falls back to the whole description, so the bulleted sections stay
+  // hidden and the page still reads cleanly instead of breaking.
+  const structured = hasStructuredJobSections(job.description);
 
   async function buyBoost(productId: string) {
     if (!job) return;
@@ -354,23 +402,41 @@ export default function JobDetailScreen() {
         </Card>
 
         <Card style={styles.detailsCard}>
-          <DetailSection title="About the role" body={about} styles={styles} />
           <DetailSection
-            title="Responsibilities"
-            body={responsibilities}
+            title={structured ? "Job summary" : "About the role"}
+            body={about}
             styles={styles}
           />
-          <DetailSection
-            title="Requirements"
-            body={requirements}
+          <DetailBullets
+            title="Key responsibilities"
+            items={responsibilities}
             styles={styles}
+            tick={color.brand}
           />
+          <DetailBullets
+            title="Requirements & qualifications"
+            items={requirements}
+            styles={styles}
+            tick={color.brand}
+          />
+          {skills.length ? (
+            <View style={styles.detailBlock}>
+              <Text style={styles.sectionTitle}>Skills</Text>
+              <View style={styles.skillWrap}>
+                {skills.map((s) => (
+                  <View key={s} style={styles.skillChip}>
+                    <Text style={styles.skillChipText}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
           <DetailSection
             title="How to apply"
             body={howToApply}
             styles={styles}
           />
-          {!about.trim() && !responsibilities && !requirements ? (
+          {!about.trim() && !responsibilities.length && !requirements.length ? (
             <Text style={styles.sectionBody}>No description provided.</Text>
           ) : null}
         </Card>
@@ -533,6 +599,35 @@ function buildStyles(color: ColorPalette) {
     section: { marginBottom: space.xl },
     sectionTitle: { ...font.title, color: color.text, marginBottom: space.sm },
     sectionBody: { ...font.body, color: color.textSub, lineHeight: 22 },
+    detailBlock: { marginBottom: space.xl },
+    bulletRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: space.sm,
+      marginBottom: space.sm,
+    },
+    bulletDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginTop: 8,
+      flexShrink: 0,
+    },
+    bulletText: {
+      ...font.body,
+      color: color.textSub,
+      lineHeight: 22,
+      flex: 1,
+      minWidth: 0,
+    },
+    skillWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+    skillChip: {
+      backgroundColor: color.brandTint,
+      borderRadius: radius.sm,
+      paddingHorizontal: space.md,
+      paddingVertical: 6,
+    },
+    skillChipText: { ...font.caption, color: color.brand, fontWeight: "700" },
     ctaBar: {
       padding: space.lg,
       paddingBottom: space.md,

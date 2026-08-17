@@ -5665,6 +5665,8 @@ var _raAuditAction   = '';        // Module 9 action-type filter
 var _raReportSeverity= '';        // Module 5 report severity filter
 var _raReviewTab     = 'flagged'; // Module 6 review moderation queue tab
 var _raCompanySearch = '';        // Module 3 company search
+var _raCompaniesLoading = false;  // in-flight guard for raLoadCompanies
+var _raCompaniesError = '';       // last load failure, surfaced in the list
 var _raAnalyticsWindow = 7;       // Module 8 analytics time window (days)
 
 function raPill(s) {
@@ -5682,8 +5684,14 @@ function raPill(s) {
   return '<span style="font-size:10px;font-weight:800;color:'+c[0]+';background:'+c[1]+';border-radius:20px;padding:2px 8px;white-space:nowrap">'+esc(s||'—')+'</span>';
 }
 
-function raStatCard(val, label, sub) {
-  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center">'
+// `tab` makes the card a shortcut to wherever the work actually gets done.
+// Without it the dashboard reported counts like "Pending Companies: 1" as dead
+// text, and an admin had no way to reach the company from there — the queue
+// itself lives under Company Management.
+function raStatCard(val, label, sub, tab) {
+  var clickable = tab ? 'cursor:pointer' : '';
+  var onclick = tab ? ' onclick="showTab(\''+tab+'\')"' : '';
+  return '<div'+onclick+' style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;'+clickable+'">'
     + '<div style="font-size:22px;font-weight:800;color:var(--accent)">'+val+'</div>'
     + '<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:2px">'+esc(label)+'</div>'
     + (sub ? '<div style="font-size:11px;color:var(--sub);margin-top:1px">'+esc(sub)+'</div>' : '')
@@ -5717,11 +5725,11 @@ function renderRentalDashboard() {
       + '</button>';
   };
   var html = '<div class="stats-grid">';
-  html += raStatCard(s.pending_listings, 'Pending Listings', 'Awaiting review');
-  html += raStatCard(s.pending_companies, 'Pending Companies', 'Awaiting verify');
-  html += raStatCard(s.open_reports, 'Open Reports', 'Need action');
-  html += raStatCard(s.active_listings, 'Live Listings', 'Active & approved');
-  html += raStatCard(s.total_companies, 'Companies', 'All statuses');
+  html += raStatCard(s.pending_listings, 'Pending Listings', 'Awaiting review', 'rentalApprovals');
+  html += raStatCard(s.pending_companies, 'Pending Companies', 'Tap to verify', 'rentalCompanies');
+  html += raStatCard(s.open_reports, 'Open Reports', 'Need action', 'rentalReports');
+  html += raStatCard(s.active_listings, 'Live Listings', 'Active & approved', 'rentalListings');
+  html += raStatCard(s.total_companies, 'Companies', 'All statuses', 'rentalCompanies');
   html += raStatCard(s.total_reviews, 'Reviews', 'Published');
   html += '</div>';
   html += '<div class="sec-head"><div class="sec-title">Admin Sections</div><button class="btn-refresh" onclick="raLoadSummary()">Refresh</button></div>';
@@ -5792,7 +5800,12 @@ async function raShowListingHistory(id) {
 
 // ── Render: Companies ─────────────────────────────────────
 function renderRentalCompanies() {
-  if (!RA_DATA.companies.length) { raLoadCompanies(); }
+  // raLoadCompanies is async: on the first paint RA_DATA.companies is still
+  // empty, so this render only ever shows "Loading…" and depends on the
+  // loader's own re-render to fill in. _raCompaniesLoading stops a repeated
+  // render (search input, status change) from firing a second overlapping
+  // fetch that would clobber the first.
+  if (!RA_DATA.companies.length && !_raCompaniesLoading) { raLoadCompanies(); }
   var companies = RA_DATA.companies;
   var pending   = companies.filter(function(c){return c.status==='pending';});
   var active    = companies.filter(function(c){return c.status==='active';});
@@ -5818,12 +5831,13 @@ function renderRentalCompanies() {
       + '</div></div>';
   }
 
-  var html = '<div class="sec-head"><div class="sec-title">Companies</div><button class="btn-refresh" onclick="RA_DATA.companies=[];raLoadCompanies()">Refresh</button></div>';
+  var html = '<div class="sec-head"><div class="sec-title">Companies</div><button class="btn-refresh" onclick="_raCompaniesError=\'\';RA_DATA.companies=[];raLoadCompanies()">Refresh</button></div>';
   html += '<div style="margin-bottom:12px"><input id="raCompanySearch" class="search-input" placeholder="Search companies…" value="'+esc(_raCompanySearch)+'" oninput="_raCompanySearch=this.value;renderRentalCompanies();var el=document.getElementById(\'raCompanySearch\');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}" style="width:100%;max-width:320px"></div>';
   if (pending.length)   html += '<div class="sec-head" style="margin-top:8px"><div class="sec-title" style="font-size:13px;color:var(--amber)">Pending Verification ('+pending.length+')</div></div>' + pending.map(coCard).join('');
   if (suspended.length) html += '<div class="sec-head" style="margin-top:8px"><div class="sec-title" style="font-size:13px;color:var(--red)">Suspended ('+suspended.length+')</div></div>' + suspended.map(coCard).join('');
   if (active.length)    html += '<div class="sec-head" style="margin-top:8px"><div class="sec-title" style="font-size:13px">Active ('+active.length+')</div></div>' + active.map(coCard).join('');
-  if (!companies.length) html += '<div class="empty-msg">Loading…</div>';
+  if (_raCompaniesError) html += '<div class="empty-msg">Could not load companies: '+esc(_raCompaniesError)+'<br><button class="btn-refresh" style="margin-top:8px" onclick="_raCompaniesError=\'\';RA_DATA.companies=[];raLoadCompanies()">Retry</button></div>';
+  else if (!companies.length) html += '<div class="empty-msg">'+(_raCompaniesLoading ? 'Loading…' : 'No rental companies yet.')+'</div>';
   else if (!pending.length && !active.length && !suspended.length) html += '<div class="empty-msg">No companies match.</div>';
   document.getElementById('mainContent').innerHTML = html;
 }
@@ -6381,6 +6395,8 @@ async function raLoadPendingListings() {
 
 async function raLoadCompanies() {
   if (!sb) return;
+  _raCompaniesLoading = true;
+  _raCompaniesError = '';
   try {
     var {data, error} = await sb.from('rental_companies')
       .select('id,status,avg_rating,review_count,fleet_count,created_at,business_id')
@@ -6390,7 +6406,14 @@ async function raLoadCompanies() {
     var bizRes = bizIds.length ? await sb.from('businesses').select('id,name').in('id',bizIds) : {data:[]};
     var bizMap = Object.fromEntries((bizRes.data||[]).map(function(b){return [b.id,b.name];}));
     RA_DATA.companies = (data||[]).map(function(c){return Object.assign({},c,{name:bizMap[c.business_id]||'—'});});
-  } catch(e) { console.warn('ra companies:', e); }
+  } catch(e) {
+    // Previously only console.warn'd, so an RLS or network failure looked
+    // identical to "no companies" — the dashboard counted 1 pending while
+    // this list sat empty with no explanation.
+    _raCompaniesError = e && e.message ? e.message : String(e);
+    console.warn('ra companies:', e);
+  }
+  _raCompaniesLoading = false;
   if (currentTab === 'rentalCompanies') renderRentalCompanies();
 }
 

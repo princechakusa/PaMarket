@@ -187,3 +187,92 @@ export const RECRUITER_PLAN_ENTITLEMENTS: Record<string, RecruiterPlanEntitlemen
 export function recruiterPlanEntitlements(planId: string | null | undefined): RecruiterPlanEntitlements {
   return RECRUITER_PLAN_ENTITLEMENTS[planId || "free"] || RECRUITER_PLAN_ENTITLEMENTS.free;
 }
+
+// listings.description is capped by the listings_description_length CHECK
+// constraint (char_length(description) <= 5000). A job post doesn't store the
+// typed fields separately — post.tsx/edit build one combined description from
+// company, job type, industry, salary, experience, skills, description,
+// responsibilities, requirements and contact details, so the limit applies to
+// that generated string, never to any single field. Checking it per field
+// would be both too strict and unable to catch the real overflow.
+export const JOB_DESCRIPTION_MAX = 5000;
+
+// Section headings buildDescription() emits on their own line, each followed
+// by a block of text rather than an inline value. parseJobField only reads the
+// remainder of the matching line, so it returns "" for every one of these —
+// which is why the details screen fell back to printing the whole generated
+// blob as one wall of text.
+const JOB_BLOCK_KEYS = [
+  "DESCRIPTION",
+  "RESPONSIBILITIES",
+  "REQUIREMENTS",
+  "HOW TO APPLY",
+] as const;
+
+// Inline `KEY: value` headers, used to know where a block ends.
+const JOB_INLINE_KEYS = [
+  "COMPANY",
+  "JOB TYPE",
+  "INDUSTRY",
+  "SALARY",
+  "EXPERIENCE",
+  "SKILLS",
+] as const;
+
+const ALL_JOB_KEYS: string[] = [...JOB_BLOCK_KEYS, ...JOB_INLINE_KEYS];
+
+function isSectionHeading(line: string): boolean {
+  const t = line.trim().toUpperCase();
+  return ALL_JOB_KEYS.some((k) => t === `${k}:` || t.startsWith(`${k}: `));
+}
+
+// Reads a multi-line section: everything after `KEY:` up to the next known
+// heading. Returns "" when the section is absent, so callers can hide the
+// block instead of rendering an empty card.
+export function parseJobBlock(
+  description: string | null | undefined,
+  key: string
+): string {
+  if (!description) return "";
+  const lines = description.split("\n");
+  const upper = key.toUpperCase();
+  const start = lines.findIndex((l) => {
+    const t = l.trim().toUpperCase();
+    return t === `${upper}:` || t.startsWith(`${upper}:`);
+  });
+  if (start === -1) return "";
+  const first = lines[start].slice(lines[start].indexOf(":") + 1).trim();
+  const rest: string[] = [];
+  for (let i = start + 1; i < lines.length; i++) {
+    if (isSectionHeading(lines[i])) break;
+    rest.push(lines[i]);
+  }
+  return [first, ...rest].join("\n").trim();
+}
+
+// Splits a block into display lines, tolerating the bullet characters and
+// numbering people paste in from job boards. Legacy posts written as one
+// paragraph come back as a single item, which still renders correctly.
+export function parseJobList(block: string): string[] {
+  if (!block) return [];
+  return block
+    .split("\n")
+    .map((l) => l.replace(/^\s*(?:[-•*▪]|\d+[.)])\s*/, "").trim())
+    .filter(Boolean);
+}
+
+// True when the text still looks like the raw generated blob — used to decide
+// between structured sections and a plain "About the role" fallback for
+// legacy or hand-edited posts that never had the generated headings.
+export function hasStructuredJobSections(
+  description: string | null | undefined
+): boolean {
+  if (!description) return false;
+  return JOB_BLOCK_KEYS.some((k) => parseJobBlock(description, k).length > 0);
+}
+
+// How many characters over the limit, or 0 when it fits. Callers use this both
+// for the live counter and to block the request before it reaches Postgres.
+export function jobDescriptionOverflow(fullDescription: string): number {
+  return Math.max(0, fullDescription.length - JOB_DESCRIPTION_MAX);
+}

@@ -27,7 +27,9 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import {
   JOB_CATEGORIES,
+  JOB_DESCRIPTION_MAX,
   JOB_TYPES,
+  jobDescriptionOverflow,
   recruiterPlanEntitlements,
 } from "../../lib/jobs";
 import { friendlyError } from "../../lib/safety";
@@ -230,6 +232,43 @@ export default function PostJobScreen() {
   const overLimit =
     ent.activeJobPosts >= 0 && activeJobPosts >= ent.activeJobPosts;
 
+  // Counts the generated description, not the raw fields — that is what the
+  // database limit applies to, so this is the only number that tells a seller
+  // whether the post will actually save.
+  const descriptionLength = useMemo(
+    () =>
+      buildDescription({
+        company: company.trim(),
+        jobType,
+        category,
+        salary: salary.trim()
+          ? `${currency} ${salary.trim()}`
+          : "Negotiable",
+        experience,
+        skills,
+        description: description.trim(),
+        responsibilities: responsibilities.trim(),
+        requirements: requirements.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+      }).length,
+    [
+      company,
+      jobType,
+      category,
+      salary,
+      currency,
+      experience,
+      skills,
+      description,
+      responsibilities,
+      requirements,
+      email,
+      phone,
+    ]
+  );
+  const descriptionOver = descriptionLength > JOB_DESCRIPTION_MAX;
+
   async function buyCredit(productId: string) {
     if (!availableCreditIds.includes(productId)) {
       toast(
@@ -275,7 +314,6 @@ export default function PostJobScreen() {
       return;
     }
 
-    setIsSubmitting(true);
     const finalSalary = salaryRaw || "Negotiable";
     const salaryLabel = salaryRaw ? `${currency} ${finalSalary}` : finalSalary;
     const fullDescription = buildDescription({
@@ -292,6 +330,21 @@ export default function PostJobScreen() {
       phone: phone.trim(),
     });
 
+    // Checked against the string that is actually submitted, before any
+    // network call — the database rejects anything longer and the raw
+    // constraint error is meaningless to a seller.
+    const over = jobDescriptionOverflow(fullDescription);
+    if (over > 0) {
+      return toast(
+        `Your job post is too long. Please remove about ${over.toLocaleString()} character${
+          over === 1 ? "" : "s"
+        } and try again.`,
+        5000,
+        true
+      );
+    }
+
+    setIsSubmitting(true);
     const { data, error } = await supabase
       .from("listings")
       .insert({
@@ -549,21 +602,6 @@ export default function PostJobScreen() {
               ))}
             </View>
 
-            <Label
-              text="Experience level"
-              style={styles.spacedLabel}
-              styles={styles}
-            />
-            <View style={styles.chipsWrap}>
-              {EXPERIENCE_LEVELS.map((lv) => (
-                <Chip
-                  key={lv}
-                  label={lv}
-                  active={experience === lv}
-                  onPress={() => setExperience(experience === lv ? "" : lv)}
-                />
-              ))}
-            </View>
           </Card>
         </Padded>
 
@@ -616,8 +654,11 @@ export default function PostJobScreen() {
         </Padded>
 
         {/* ── Pay ─────────────────────────────────────────── */}
+        {/* Experience sits with pay rather than with the job title: both are
+            what a candidate screens on first, and grouping them keeps the
+            role card down to identity fields. */}
         <SectionHeader
-          title="Pay"
+          title="Salary & experience"
           subtitle="Postings with a salary get more applications"
         />
         <Padded styles={styles}>
@@ -643,11 +684,35 @@ export default function PostJobScreen() {
             <Text style={styles.hint}>
               Leave blank to show &ldquo;Negotiable&rdquo; on the listing.
             </Text>
+
+            <Label
+              text="Experience level"
+              style={styles.spacedLabel}
+              styles={styles}
+            />
+            <View style={styles.chipsWrap}>
+              {EXPERIENCE_LEVELS.map((lv) => (
+                <Chip
+                  key={lv}
+                  label={lv}
+                  active={experience === lv}
+                  onPress={() => setExperience(experience === lv ? "" : lv)}
+                />
+              ))}
+            </View>
           </Card>
         </Padded>
 
         {/* ── Description ─────────────────────────────────── */}
-        <SectionHeader title="Job details" subtitle="What the work involves" />
+        {/* Description, responsibilities and requirements each get their own
+            card: they are three separate answers, and stacking them in one
+            container made the longest part of the form read as an
+            undifferentiated wall of inputs. They still merge into the single
+            generated description on submit — see buildDescription. */}
+        <SectionHeader
+          title="Job description"
+          subtitle="Give candidates a clear overview of the role"
+        />
         <Padded styles={styles}>
           <Card>
             <Label text="About the role" required styles={styles} />
@@ -662,12 +727,15 @@ export default function PostJobScreen() {
             <Text style={styles.counter}>
               {description.trim().length}/30 minimum
             </Text>
+          </Card>
+        </Padded>
 
-            <Label
-              text="Key responsibilities"
-              style={styles.spacedLabel}
-              styles={styles}
-            />
+        <SectionHeader
+          title="Key responsibilities"
+          subtitle="List the main duties and responsibilities for this role"
+        />
+        <Padded styles={styles}>
+          <Card>
             <TextInput
               style={[styles.input, styles.textareaSm]}
               value={responsibilities}
@@ -676,12 +744,19 @@ export default function PostJobScreen() {
               placeholderTextColor={color.textMuted}
               multiline
             />
+            <Text style={styles.helperText}>
+              One duty per line — each line becomes its own bullet on the job
+              page.
+            </Text>
+          </Card>
+        </Padded>
 
-            <Label
-              text="Requirements & qualifications"
-              style={styles.spacedLabel}
-              styles={styles}
-            />
+        <SectionHeader
+          title="Requirements & qualifications"
+          subtitle="Add the experience, education or qualifications candidates should have"
+        />
+        <Padded styles={styles}>
+          <Card>
             <TextInput
               style={[styles.input, styles.textareaSm]}
               value={requirements}
@@ -690,6 +765,9 @@ export default function PostJobScreen() {
               placeholderTextColor={color.textMuted}
               multiline
             />
+            <Text style={styles.helperText}>
+              One requirement per line keeps this easy for candidates to scan.
+            </Text>
           </Card>
         </Padded>
 
@@ -773,6 +851,23 @@ export default function PostJobScreen() {
       <View
         style={[styles.ctaBar, { paddingBottom: insets.bottom + space.md }]}
       >
+        {/* Sits directly above Publish because it describes the whole post,
+            not any single field — it counts the generated description that
+            listings.description actually stores. */}
+        <Text
+          style={[
+            styles.counterText,
+            descriptionOver && styles.counterTextOver,
+          ]}
+        >
+          {descriptionLength.toLocaleString()} /{" "}
+          {JOB_DESCRIPTION_MAX.toLocaleString()} characters used
+          {descriptionOver
+            ? ` — remove about ${(
+                descriptionLength - JOB_DESCRIPTION_MAX
+              ).toLocaleString()}`
+            : ""}
+        </Text>
         <Button
           label={isSubmitting ? "Publishing…" : "Publish job"}
           variant="gold"
@@ -907,6 +1002,21 @@ function buildStyles(color: ColorPalette) {
 
     creditCard: { backgroundColor: color.surfaceAlt },
     creditText: { ...font.sub, color: color.textSub, lineHeight: 19 },
+    counterText: {
+      ...font.caption,
+      color: color.textMuted,
+      fontWeight: "500",
+      textAlign: "center",
+      marginBottom: space.sm,
+    },
+    counterTextOver: { color: color.danger, fontWeight: "700" },
+    helperText: {
+      ...font.caption,
+      color: color.textMuted,
+      fontWeight: "500",
+      marginTop: space.sm,
+      lineHeight: 16,
+    },
     creditActions: {
       flexDirection: "row",
       alignItems: "center",
