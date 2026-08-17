@@ -349,48 +349,40 @@ export default function PostJobScreen() {
     }
 
     setIsSubmitting(true);
-    const { data, error } = await supabase
-      .from("listings")
-      .insert({
-        seller_id: session.user.id,
-        seller_name: company.trim(),
-        seller_phone: phone.trim(),
-        title: title.trim(),
-        description: fullDescription,
-        price: parseFloat(finalSalary) || 0,
-        currency,
-        category: "jobs",
-        city: city.trim(),
-        province: province.trim(),
-        photos: [],
-        status: "active",
-      })
-      .select("id,status")
-      .single();
+    // create_job_listing checks the entitlement, inserts the listing and spends
+    // the credit in one transaction. The previous flow inserted the row and
+    // then fired spend_job_credit in an unawaited .then(), so a failed spend
+    // left the job published and unpaid. The server also owns seller_id, and a
+    // direct insert to `listings` with category='jobs' is now rejected.
+    const { data, error } = await supabase.rpc("create_job_listing", {
+      p_title: title.trim(),
+      p_description: fullDescription,
+      p_price: parseFloat(finalSalary) || 0,
+      p_currency: currency,
+      p_city: city.trim(),
+      p_province: province.trim(),
+      p_seller_name: company.trim(),
+      p_seller_phone: phone.trim(),
+    });
 
     setIsSubmitting(false);
-    if (error || !data) {
+    if (error) {
+      toast(friendlyError(error).message, 4000, true);
+      return;
+    }
+    const result = data as
+      | { ok: boolean; msg?: string; used_credit?: boolean }
+      | null;
+    if (!result?.ok) {
       toast(
-        error
-          ? friendlyError(error).message
-          : "Could not post job — please try again",
+        result?.msg || "Could not post job — please try again",
         4000,
         true
       );
       return;
     }
-    if (overLimit) {
-      supabase
-        .rpc("spend_job_credit", { p_listing_id: data.id })
-        .then(({ error: spendError }) => {
-          if (!spendError) refreshCredits();
-        });
-    }
-    if (data.status && data.status !== "active") {
-      toast("Job submitted — it will appear once it passes review.");
-    } else {
-      toast("Job posted! Candidates can now apply.");
-    }
+    if (result.used_credit) refreshCredits();
+    toast("Job posted! Candidates can now apply.");
     router.back();
   }
 

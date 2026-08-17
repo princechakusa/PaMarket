@@ -41,7 +41,13 @@ export async function activeSubscription(businessId: string): Promise<BusinessSu
     .eq("status", "active")
     .maybeSingle();
   if (!data) return null;
-  if (data.current_period_end && !data.auto_renew && Date.now() > new Date(data.current_period_end).getTime()) {
+  // auto_renew says Apple/Google *intends* to bill again — it does not extend
+  // entitlement past the period already paid for. The old condition included
+  // `&& !data.auto_renew`, so a lapsed subscription whose auto_renew was still
+  // true stayed on a paid plan forever; that is why a reset Starter kept
+  // reappearing. A renewal moves current_period_end forward, and that is the
+  // only thing that should keep access alive.
+  if (data.current_period_end && Date.now() > new Date(data.current_period_end).getTime()) {
     return null;
   }
   return data as BusinessSubscription;
@@ -49,6 +55,14 @@ export async function activeSubscription(businessId: string): Promise<BusinessSu
 
 export async function businessEntitlements(businessId: string, fallbackPlanId?: string | null): Promise<PlanEntitlements> {
   const active = await activeSubscription(businessId);
-  const planId = active?.plan_id || fallbackPlanId || "free";
-  return planEntitlements(planId);
+  if (active) return planEntitlements(active.plan_id);
+
+  // businesses.plan_id is a cached display value written by
+  // activate_play_subscription; it is not authoritative and nothing clears it
+  // when a period lapses. Using it as a fallback re-granted the paid plan the
+  // moment the expiry check above started working, so a stale 'starter' here
+  // must never outrank an expired (or absent) subscription row. Only trust it
+  // when it is already a free tier.
+  const cached = (fallbackPlanId || "free").toLowerCase();
+  return planEntitlements(cached === "free" ? cached : "free");
 }

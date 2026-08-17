@@ -214,11 +214,23 @@ async function handlePurchase(purchase: Purchase) {
   const transactionKey = `${purchase.store}:${
     purchase.transactionId || purchase.id
   }`;
-  if (
-    processedTransactions.has(transactionKey) ||
-    processingTransactions.has(transactionKey)
-  )
+  // A replayed transaction must never leave the caller hanging. This branch
+  // used to `return` outright, so if StoreKit re-delivered a transaction that
+  // was already handled, purchaseProduct() waited the full 120s and then
+  // reported "The store didn't return a result" even though the purchase had
+  // actually succeeded.
+  //
+  // Already finished: report success to the waiting caller without
+  // re-verifying or re-granting anything — anti-replay is preserved because
+  // no server call and no finishTransaction happens here.
+  if (processedTransactions.has(transactionKey)) {
+    resolvePending(productId, { ok: true });
     return;
+  }
+  // Still in flight from an earlier delivery of the same transaction: the
+  // in-progress run owns resolution, so drop this duplicate rather than
+  // double-processing it. resolvePending is a no-op if nothing is waiting.
+  if (processingTransactions.has(transactionKey)) return;
   processingTransactions.add(transactionKey);
 
   if (!family || !purchaseToken) {
