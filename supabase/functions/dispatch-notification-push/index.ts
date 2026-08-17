@@ -65,7 +65,25 @@ async function getFCMAccessToken(sa: any): Promise<string> {
   return _tokenCache.value;
 }
 
-async function sendFCM(pushToken: string, projectId: string, accessToken: string, title: string, body: string, data: Record<string, string>): Promise<boolean> {
+// FCM permanent registration failures — the device token will never work
+// again, so retrying it forever is pointless. Anything else (5xx, quota,
+// network) is treated as temporary and the token is left alone.
+const FCM_PERMANENT_TOKEN_ERRORS = [
+  'UNREGISTERED',
+  'INVALID_ARGUMENT',
+  'SENDER_ID_MISMATCH',
+  'NOT_FOUND',
+];
+
+type FcmResult = {
+  ok: boolean;
+  /** Sanitized reason, safe to persist — never contains the token or payload. */
+  reason?: string;
+  /** True only for errors that mean this device token is permanently dead. */
+  permanentTokenFailure?: boolean;
+};
+
+async function sendFCM(pushToken: string, projectId: string, accessToken: string, title: string, body: string, data: Record<string, string>): Promise<FcmResult> {
   const message = {
     token: pushToken,
     notification: { title, body },
@@ -74,13 +92,38 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     apns: { payload: { aps: { sound: 'default' } } },
   };
   const url = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message }),
-  });
-  const result = await res.json().catch(() => ({}));
-  return res.ok && !result['error'];
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+  } catch (e) {
+    // Network/DNS failure never reached FCM — temporary by definition.
+    return { ok: false, reason: 'network: ' + String((e as Error)?.message || e).slice(0, 120) };
+  }
+
+  const result = await res.json().catch(() => ({} as Record<string, unknown>));
+  const err = result['error'] as
+    | { status?: string; message?: string; details?: Array<Record<string, string>> }
+    | undefined;
+
+  if (res.ok && !err) return { ok: true };
+
+  // Record the status code and FCM's own status enum only — the message can
+  // echo request content, and the token must never be persisted.
+  const status = err?.status || '';
+  const detail = err?.details?.find((d) => typeof d['errorCode'] === 'string')?.['errorCode'] || '';
+  const code = detail || status;
+  const permanent = FCM_PERMANENT_TOKEN_ERRORS.includes(code);
+
+  return {
+    ok: false,
+    reason: ('http ' + res.status + (code ? ' ' + code : '')).slice(0, 200),
+    permanentTokenFailure: permanent,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -141,10 +184,33 @@ Deno.serve(async (req) => {
     const data: Record<string, string> = { type: notif.type, notificationId: notif.id };
     if (deepLink) data['deepLink'] = deepLink;
 
-    const ok = await sendFCM(tokenRes.data.token, sa['project_id'], accessToken, notif.title, notif.body, data);
-    await markSent();
+    const fcm = await sendFCM(tokenRes.data.token, sa['project_id'], accessToken, notif.title, notif.body, data);
 
-    return json({ success: ok });
+    if (!fcm.ok) {
+      // Previously markSent() ran here too, so a rejected push was recorded as
+      // delivered — the row looked identical to a success and there was no way
+      // to see, or retry, a failure. Leave push_sent false and keep the reason.
+      await db
+        .from('notifications')
+        .update({ push_error: fcm.reason || 'unknown push failure' })
+        .eq('id', notif.id);
+
+      // A permanently dead registration should not be retried forever. Only
+      // remove on FCM's permanent codes — never on 5xx, quota or network
+      // errors, which are transient and would drop a healthy device.
+      if (fcm.permanentTokenFailure) {
+        await db.from('push_tokens').delete().eq('user_id', notif.user_id);
+      }
+
+      return json({ success: false, error: fcm.reason, tokenRemoved: Boolean(fcm.permanentTokenFailure) });
+    }
+
+    await db
+      .from('notifications')
+      .update({ push_sent: true, push_error: null })
+      .eq('id', notif.id);
+
+    return json({ success: true });
   } catch (err) {
     return json({ error: (err as Error).message }, 500);
   }
