@@ -103,6 +103,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://pamarketzw.com/l/sony-alpha-7-iv-full-frame-mirrorless-interchangeable-lens-c-48fafbbe-0b9f-4f71-8249-dbb0dfd0997a</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://pamarketzw.com/l/bulk-earring-back-stoppers-for-sale-5eed82c0-0325-473f-95c8-642e06f1c5c7</loc>
     <lastmod>2026-08-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -541,12 +547,6 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=961b5b49-f135-4152-8c0c-c8f07821ad32</loc>
-    <lastmod>2026-05-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=0911dba2-fefc-48ae-bd8f-cde21a130422</loc>
     <lastmod>2026-07-11</lastmod>
     <changefreq>monthly</changefreq>
@@ -609,6 +609,18 @@
   <url>
     <loc>https://pamarketzw.com/profile?id=918cc7ac-fea7-42f6-bb5f-90677f1b8dc6</loc>
     <lastmod>2026-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=28a61c69-085c-47a1-9149-8c62fb5d9fd3</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=961b5b49-f135-4152-8c0c-c8f07821ad32</loc>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
