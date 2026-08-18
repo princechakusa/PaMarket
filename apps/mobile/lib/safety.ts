@@ -57,7 +57,7 @@ export function friendlyError(err: unknown): FriendlyError {
   // any *other* constraint, trigger or driver error from being shown verbatim
   // — users were seeing text like 'new row for relation "listings" violates
   // check constraint'.
-  if (/violates|constraint|relation |sqlstate|duplicate key|null value in column/i.test(raw)) {
+  if (/violates|constraint|relation |sqlstate|duplicate key|null value in column|permission denied/i.test(raw)) {
     return {
       code: null,
       message: "We couldn't save that. Please check your details and try again.",

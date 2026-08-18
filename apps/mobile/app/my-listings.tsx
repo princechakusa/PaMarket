@@ -14,7 +14,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { formatPrice, type Listing } from "../lib/listings";
-import { listingStatus } from "../lib/safety";
+import { friendlyError, listingStatus } from "../lib/safety";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { ErrorState } from "../components/ui";
@@ -84,7 +84,7 @@ export default function MyListingsScreen() {
     const { error } = await supabase.from("listings").update({ status }).eq("id", listingId);
     if (error) {
       setListings(previous);
-      Alert.alert("Couldn't update listing", error.message);
+      Alert.alert("Couldn't update listing", friendlyError(error).message);
     }
   }
 

@@ -21,6 +21,7 @@ import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { friendlyError } from "../../lib/safety";
 
 type Review = {
   reviewer_id: string;
@@ -162,7 +163,7 @@ export default function ReviewsScreen() {
         );
     setIsSubmitting(false);
     if (error) {
-      Alert.alert("Could not submit review", error.message);
+      Alert.alert("Could not submit review", friendlyError(error).message);
       return;
     }
     setReviewModalVisible(false);

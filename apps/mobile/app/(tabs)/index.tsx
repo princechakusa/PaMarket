@@ -16,6 +16,7 @@ type HomeCache = { listings: Listing[]; businesses: Business[]; ads: PaidAd[] };
 const HOME_CACHE_KEY = "home-feed";
 import { useAuth } from "../../lib/auth";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
+import { friendlyError } from "../../lib/safety";
 import { HomeHeader } from "../../components/home/HomeHeader";
 import { CityPicker } from "../../components/home/CityPicker";
 import { CategoryGrid } from "../../components/home/CategoryGrid";
@@ -159,7 +160,7 @@ export default function HomeScreen() {
     const listingsRes = await listingsRequest;
 
     let freshListings: Listing[] | null = null;
-    if (listingsRes.error) setError(listingsRes.error.message);
+    if (listingsRes.error) setError(friendlyError(listingsRes.error).message);
     else {
       freshListings = (listingsRes.data as Listing[]) ?? [];
       setListings(freshListings);
