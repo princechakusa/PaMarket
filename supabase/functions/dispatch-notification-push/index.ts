@@ -40,6 +40,16 @@ const PREFERENCE_COLUMN_BY_TYPE: Record<string, string> = {
   boost: 'promotions',
   promotion: 'promotions',
   sale: 'promotions',
+  // notification_type_enabled() (see
+  // 202607280002_notification_preferences_and_listing_reminders.sql) groups
+  // these three under the `messages` preference column — this map never got
+  // the same three keys, so a user who turned off message notifications
+  // still received chat_scam_warning and message_noreply_reminder pushes.
+  // 'message' itself isn't listed here on purpose: real chat messages push
+  // via a separate direct-FCM path (send-push), not scheduled_notifications,
+  // so it never reaches this function.
+  chat_scam_warning: 'messages',
+  message_noreply_reminder: 'messages',
 };
 
 let _tokenCache: { value: string; exp: number } | null = null;
