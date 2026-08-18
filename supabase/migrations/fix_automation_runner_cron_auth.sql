@@ -1,4 +1,12 @@
 -- ============================================================================
+-- SUPERSEDED by remove_duplicate_automation_runner_cron.sql — the
+-- 'automation-runner-tick' job this file creates turned out to duplicate an
+-- older, already-correct job ('pamarket-automation-runner', jobid 3,
+-- untracked in this repo) that this migration's own diagnosis missed. Left
+-- here unmodified for history; do not re-run without checking
+-- remove_duplicate_automation_runner_cron.sql first.
+-- ============================================================================
+--
 -- PaMarket — automation-runner cron job never actually ran: same gateway
 -- auth bug as fix_notification_push_dispatch_auth.sql, in the trigger that
 -- starts the whole pipeline instead of the one that sends the final push.

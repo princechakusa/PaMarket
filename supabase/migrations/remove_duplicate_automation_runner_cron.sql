@@ -1,0 +1,40 @@
+-- ============================================================================
+-- PaMarket — remove the duplicate automation-runner cron job
+-- ----------------------------------------------------------------------------
+-- fix_automation_runner_cron_auth.sql created 'automation-runner-tick'
+-- (jobid 18, every 15 minutes) to fix what looked like a gateway-auth bug —
+-- the migration's own probe of the function with no headers returned
+-- UNAUTHORIZED_NO_AUTH_HEADER, and no migration in this repo referenced any
+-- other job calling automation-runner, so that read as the only trigger.
+--
+-- It wasn't. `select jobid, jobname, schedule, active, command from cron.job`
+-- run live after applying that migration shows a second, older job already
+-- doing this correctly:
+--
+--   jobid 3, 'pamarket-automation-runner', every minute, sending
+--   Authorization + apikey + x-automation-secret, with the URL itself
+--   pulled from vault ('pamarket_automation_url'). It predates every
+--   migration in this repository — created directly in the database, not
+--   through a tracked migration — which is why the earlier audit's
+--   unauthenticated external probe of the function couldn't distinguish
+--   "no job is calling this correctly" from "the correctly-configured job
+--   is simply not the request I just sent."
+--
+-- Net effect since fix_automation_runner_cron_auth.sql ran: automation-runner
+-- has been invoked by BOTH jobs — every minute by job 3, and again every 15
+-- minutes by job 18 — which is wasted invocations, not a correctness bug
+-- (every generator function in this pipeline is dedup/watermark-guarded, so
+-- a duplicate run finds nothing new to do). Removing the newer, redundant
+-- job and keeping the original live one, per instruction not to touch
+-- already-working production cron state.
+--
+-- Idempotent: cron.unschedule on a jobname that doesn't exist is a no-op.
+-- ============================================================================
+
+select cron.unschedule(jobid) from cron.job where jobname = 'automation-runner-tick';
+
+-- Verification (run manually after applying):
+--   -- confirm exactly one job now calls automation-runner
+--   select jobid, jobname, schedule, active from cron.job
+--     where command ilike '%automation-runner%';
+--   -- expected: exactly one row — jobid 3, 'pamarket-automation-runner'
