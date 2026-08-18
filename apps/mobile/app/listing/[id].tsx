@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { openWhatsApp } from "../../lib/open-url";
+import { openPhone, openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
   FlatList,
-  Linking,
   Modal,
   Platform,
   Pressable,
@@ -562,7 +561,7 @@ export default function ListingDetailScreen() {
   async function callSeller() {
     if (listing?.seller_phone) {
       await captureListingLead("call");
-      Linking.openURL(`tel:${listing.seller_phone}`);
+      openPhone(listing.seller_phone);
     }
   }
   async function whatsappSeller() {

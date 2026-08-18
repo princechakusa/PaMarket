@@ -1,4 +1,5 @@
-import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { openExternalUrl } from "../../lib/open-url";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { LEGAL_DOCS, type LegalDocKey } from "../../lib/legal";
 import type { ColorPalette } from "../../lib/theme";
@@ -34,7 +35,7 @@ export default function LegalDocScreen() {
 
         <View style={styles.contactCard}>
           <Text style={styles.contactLabel}>Questions about this document?</Text>
-          <Text style={styles.contactEmail} onPress={() => Linking.openURL("mailto:support@pamarketzw.com")}>
+          <Text style={styles.contactEmail} onPress={() => openExternalUrl("mailto:support@pamarketzw.com", "No mail app is set up on this device.")}>
             support@pamarketzw.com
           </Text>
         </View>

@@ -1,5 +1,5 @@
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { openWhatsApp, openPhone } from "../lib/open-url";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { openExternalUrl, openPhone, openWhatsApp } from "../lib/open-url";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import Svg, { Path, Polyline } from "react-native-svg";
@@ -93,7 +93,7 @@ export default function AboutScreen() {
       <Card padded={false} style={styles.group}>
         <LinkRow label="Help Centre" onPress={() => router.push("/help")} color={color} styles={styles} />
         <View style={styles.divider} />
-        <LinkRow label="Email us" onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} color={color} styles={styles} />
+        <LinkRow label="Email us" onPress={() => openExternalUrl(`mailto:${SUPPORT_EMAIL}`, "No mail app is set up on this device.")} color={color} styles={styles} />
         <View style={styles.divider} />
         <LinkRow label="WhatsApp" onPress={() => openWhatsApp(WHATSAPP_DIGITS)} color={color} styles={styles} />
         <View style={styles.divider} />
@@ -105,7 +105,7 @@ export default function AboutScreen() {
         {SOCIALS.map((s, i) => (
           <View key={s.name}>
             {i > 0 ? <View style={styles.divider} /> : null}
-            <LinkRow label={s.name} onPress={() => Linking.openURL(s.url)} color={color} styles={styles} />
+            <LinkRow label={s.name} onPress={() => openExternalUrl(s.url)} color={color} styles={styles} />
           </View>
         ))}
       </Card>

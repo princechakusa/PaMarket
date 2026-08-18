@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { openExternalUrl } from "../lib/open-url";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { TERMS, PRIVACY, type LegalDoc } from "../lib/legal";
 import { LegalDocSheet } from "../components/LegalDocSheet";
@@ -202,11 +202,11 @@ export default function HelpScreen() {
           <Text style={styles.contactLabel}>WhatsApp</Text>
           <Text style={styles.contactValue}>Usually replies in minutes</Text>
         </Pressable>
-        <Pressable style={styles.contactRow} onPress={() => Linking.openURL(EMAIL_URL)}>
+        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(EMAIL_URL, "No mail app is set up on this device.")}>
           <Text style={styles.contactLabel}>Email</Text>
           <Text style={styles.contactValue}>Send details</Text>
         </Pressable>
-        <Pressable style={styles.contactRow} onPress={() => Linking.openURL(PHONE_URL)}>
+        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(PHONE_URL, "This device can't make calls.")}>
           <Text style={styles.contactLabel}>Call</Text>
           <Text style={styles.contactValue}>Phone support</Text>
         </Pressable>

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { openWhatsApp } from "../../lib/open-url";
+import { openPhone, openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -347,7 +346,7 @@ export default function RentalVehicleDetailScreen() {
     }
     if (business?.phone) {
       await captureLead("call_click");
-      Linking.openURL(`tel:${business.phone}`);
+      openPhone(business.phone);
     }
   }
 

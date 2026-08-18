@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { openExternalUrl } from "../lib/open-url";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Polyline, Circle, Line } from "react-native-svg";
 import { LEGAL_DOCS, LEGAL_SECTIONS, type LegalDocKey } from "../lib/legal";
@@ -97,14 +98,14 @@ export default function LegalHubScreen() {
 
       <Text style={styles.sectionLabel}>Contact</Text>
       <View style={styles.group}>
-        <Pressable style={styles.row} onPress={() => Linking.openURL("mailto:support@pamarketzw.com")}>
+        <Pressable style={styles.row} onPress={() => openExternalUrl("mailto:support@pamarketzw.com", "No mail app is set up on this device.")}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.rowLabel, { color: color.brand }]}>support@pamarketzw.com</Text>
             <Text style={styles.rowSub}>General &amp; Terms</Text>
           </View>
           <ChevronRight />
         </Pressable>
-        <Pressable style={styles.row} onPress={() => Linking.openURL("mailto:info@pamarketzw.com")}>
+        <Pressable style={styles.row} onPress={() => openExternalUrl("mailto:info@pamarketzw.com", "No mail app is set up on this device.")}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.rowLabel, { color: color.brand }]}>info@pamarketzw.com</Text>
             <Text style={styles.rowSub}>Privacy &amp; Data</Text>

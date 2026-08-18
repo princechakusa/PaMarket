@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { openExternalUrl } from "../../lib/open-url";
 import {
   ActivityIndicator,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -317,14 +317,14 @@ export default function RecruiterSubscriptionScreen() {
           subscription settings. By subscribing you agree to our{" "}
           <Text
             style={styles.legalLink}
-            onPress={() => Linking.openURL(TERMS_URL)}
+            onPress={() => openExternalUrl(TERMS_URL)}
           >
             Terms of Use
           </Text>{" "}
           and{" "}
           <Text
             style={styles.legalLink}
-            onPress={() => Linking.openURL(PRIVACY_URL)}
+            onPress={() => openExternalUrl(PRIVACY_URL)}
           >
             Privacy Policy
           </Text>

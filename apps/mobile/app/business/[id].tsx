@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { openWhatsApp } from "../../lib/open-url";
+import { openPhone, openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -174,7 +173,7 @@ export default function BusinessShopScreen() {
   async function callShop() {
     if (!business?.phone) return;
     await captureShopLead("call");
-    Linking.openURL(`tel:${business.phone}`);
+    openPhone(business.phone);
   }
 
   async function whatsappShop() {

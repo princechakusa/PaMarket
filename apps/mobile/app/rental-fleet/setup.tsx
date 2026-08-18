@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { openExternalUrl } from "../../lib/open-url";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -48,7 +49,7 @@ export default function RentalCompanySetupScreen() {
     const body = encodeURIComponent(
       `Business ID: ${bizId || ""}\n\nPlease attach the following before sending:\n  1. Company registration certificate\n  2. Vehicle registration book(s)\n  3. Owner's national ID\n`
     );
-    Linking.openURL(`mailto:support@pamarketzw.com?subject=${subject}&body=${body}`);
+    openExternalUrl(`mailto:support@pamarketzw.com?subject=${subject}&body=${body}`, "No mail app is set up on this device.");
   }
 
   return (

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { openExternalUrl } from "../../../lib/open-url";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -309,7 +310,7 @@ export default function CandidateCvScreen() {
             <Section title="Portfolio & links" styles={styles}>
               {portfolio.map((p, i) =>
                 p.url ? (
-                  <Pressable key={i} style={styles.linkRow} onPress={() => Linking.openURL(p.url as string)}>
+                  <Pressable key={i} style={styles.linkRow} onPress={() => openExternalUrl(p.url as string)}>
                     <Text style={styles.linkLabel}>{p.label || "Link"}</Text>
                     <Text style={styles.linkUrl} numberOfLines={1}>
                       {p.url}

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { openExternalUrl } from "../lib/open-url";
 import {
   FlatList,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -322,15 +322,15 @@ export default function ReportProblemScreen() {
                 </View>
                 <View style={{ flex: 1, gap: 8 }}>
                   <Text style={styles.contactHeading}>CONTACT OUR TEAM DIRECTLY</Text>
-                  <Pressable style={[styles.contactCard, styles.contactCardGreen]} onPress={() => Linking.openURL(WA)}>
+                  <Pressable style={[styles.contactCard, styles.contactCardGreen]} onPress={() => openExternalUrl(WA, "WhatsApp isn't installed on this device.")}>
                     <Text style={styles.contactCardTitleGreen}>WhatsApp</Text>
                     <Text style={styles.contactCardSubtitle}>+971 589 772 645 · Fastest reply</Text>
                   </Pressable>
-                  <Pressable style={[styles.contactCard, styles.contactCardBlue]} onPress={() => Linking.openURL(ML)}>
+                  <Pressable style={[styles.contactCard, styles.contactCardBlue]} onPress={() => openExternalUrl(ML, "No mail app is set up on this device.")}>
                     <Text style={styles.contactCardTitleBlue}>Email</Text>
                     <Text style={styles.contactCardSubtitle}>support@pamarketzw.com</Text>
                   </Pressable>
-                  <Pressable style={[styles.contactCard, styles.contactCardGreen]} onPress={() => Linking.openURL(PH)}>
+                  <Pressable style={[styles.contactCard, styles.contactCardGreen]} onPress={() => openExternalUrl(PH, "This device can't make calls.")}>
                     <Text style={styles.contactCardTitleGreen}>Call / WhatsApp</Text>
                     <Text style={styles.contactCardSubtitle}>+971 589 772 645</Text>
                   </Pressable>

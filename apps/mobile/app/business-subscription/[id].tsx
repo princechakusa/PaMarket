@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { openExternalUrl } from "../../lib/open-url";
 import {
   ActivityIndicator,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -386,7 +386,7 @@ export default function BusinessSubscriptionScreen() {
         <Text
           accessibilityRole="link"
           style={styles.legalLink}
-          onPress={() => Linking.openURL(TERMS_URL)}
+          onPress={() => openExternalUrl(TERMS_URL)}
         >
           Terms of Use
         </Text>
@@ -394,7 +394,7 @@ export default function BusinessSubscriptionScreen() {
         <Text
           accessibilityRole="link"
           style={styles.legalLink}
-          onPress={() => Linking.openURL(PRIVACY_URL)}
+          onPress={() => openExternalUrl(PRIVACY_URL)}
         >
           Privacy Policy
         </Text>

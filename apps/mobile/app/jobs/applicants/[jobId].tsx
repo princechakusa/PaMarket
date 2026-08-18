@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { openExternalUrl, openPhone } from "../../../lib/open-url";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -341,13 +342,13 @@ export default function JobApplicantsScreen() {
 
               <View style={styles.contactRow}>
                 {item.applicant_phone ? (
-                  <Pressable style={styles.contactPill} onPress={() => Linking.openURL(`tel:${item.applicant_phone}`)}>
+                  <Pressable style={styles.contactPill} onPress={() => openPhone(item.applicant_phone)}>
                     <PhoneIcon c={themeColor.brand} />
                     <Text style={styles.contactText} numberOfLines={1}>{item.applicant_phone}</Text>
                   </Pressable>
                 ) : null}
                 {item.applicant_email ? (
-                  <Pressable style={styles.contactPill} onPress={() => Linking.openURL(`mailto:${item.applicant_email}`)}>
+                  <Pressable style={styles.contactPill} onPress={() => openExternalUrl(`mailto:${item.applicant_email}`, "No mail app is set up on this device.")}>
                     <MailIcon c={themeColor.brand} />
                     <Text style={styles.contactText} numberOfLines={1}>{item.applicant_email}</Text>
                   </Pressable>
