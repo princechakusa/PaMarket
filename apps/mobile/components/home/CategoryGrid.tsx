@@ -29,7 +29,20 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
 // so the images had no visible seam — which meant the whole section never
 // respected the in-app dark mode toggle at all. Only the icon itself needs
 // a white backing; everything else here now follows the theme normally.
-export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory: (id: string) => void; onSeeAll: () => void }) {
+export function CategoryGrid({
+  onSelectCategory,
+  onSeeAll,
+  onPressRentals,
+}: {
+  onSelectCategory: (id: string) => void;
+  onSeeAll: () => void;
+  // Rentals is a separate vertical with its own tables and detail screens, so
+  // it is not a member of CATEGORIES (those ids drive listings.category
+  // queries). It still needs a home on this grid: before this, the only public
+  // way in was a "Browse Rentals" row buried in Account, which is why a live
+  // rental company and an approved vehicle were effectively undiscoverable.
+  onPressRentals?: () => void;
+}) {
   const styles = useThemedStyles(buildStyles);
   return (
     <View style={styles.section}>
@@ -50,6 +63,16 @@ export function CategoryGrid({ onSelectCategory, onSeeAll }: { onSelectCategory:
             </Text>
           </Pressable>
         ))}
+        {onPressRentals ? (
+          <Pressable style={styles.item} onPress={onPressRentals}>
+            <View style={styles.iconChip}>
+              <Image source={CAT_ICONS.vehicles} style={styles.icon} />
+            </View>
+            <Text style={styles.label} numberOfLines={2}>
+              Car Rentals
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );

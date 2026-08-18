@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path } from "react-native-svg";
@@ -270,7 +270,16 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      <View style={styles.controlsRow}>
+      {/* Horizontal scroll rather than a flex row: Filters + Save + four sort
+          chips cannot fit an iPhone width, and sharing leftover space via
+          flex:1 squeezed every chip until labels clipped. Scrolling keeps each
+          control at its natural size and its full touch target. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.controlsRow}
+        keyboardShouldPersistTaps="handled"
+      >
         <Pressable style={styles.filterButton} onPress={() => setFilterPanelVisible(true)}>
           <FilterIcon color={themeColor} />
           <Text style={styles.filterButtonText}>Filters</Text>
@@ -305,7 +314,7 @@ export default function SearchScreen() {
             />
           ))}
         </View>
-      </View>
+      </ScrollView>
 
       {isLoading ? (
         <View style={styles.listContent}>
@@ -464,9 +473,12 @@ function buildStyles(color: ColorPalette) {
     paddingHorizontal: space.lg,
     paddingVertical: space.md,
   },
+  controlsScroll: { flexGrow: 0 },
   filterButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 44,
     gap: space.xs,
     backgroundColor: color.surface,
     borderRadius: radius.md,
@@ -487,7 +499,9 @@ function buildStyles(color: ColorPalette) {
     paddingHorizontal: 3,
   },
   filterCountDotText: { fontSize: 9, fontWeight: "800", color: color.textOnBrand },
-  sortWrap: { flexDirection: "row", gap: space.xs, flex: 1, justifyContent: "flex-end" },
+  // No flex:1 — inside a horizontal ScrollView the row must size to its
+  // content, otherwise the chips are squeezed back into the visible width.
+  sortWrap: { flexDirection: "row", gap: space.xs },
   listContent: { paddingHorizontal: space.lg, paddingTop: space.sm, paddingBottom: space.xxl },
   footer: { paddingVertical: space.lg, alignItems: "center" },
   });
