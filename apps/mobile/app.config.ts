@@ -42,14 +42,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // say PROMOTED and expire with featured_until instead of hanging around
     // forever on listings.boost), and ships against the server-side fix that
     // stopped Featured Slot purchases failing verification.
-    // 18 is the release candidate. It carries the fix for the locked-Keychain
+    // 19 rebuilds the Jobs screens to the approved design — Post a Job as
+    // collapsible cards with per-field counters, and the candidate Job details
+    // view with icon metadata rows, a collapsible summary, checkmark
+    // responsibilities and Save job — plus a fix for generated-description
+    // storage markers leaking into the job body on posts with no DESCRIPTION
+    // block. Carries everything in 18.
+    //
+    // 18 was the previous release candidate. It carries the fix for the locked-Keychain
     // startup crash (the SecureStore adapter behind Supabase auth had no error
     // handling and used WHEN_UNLOCKED accessibility, so a background wake or a
     // launch from the lock screen threw "User interaction is not allowed"),
     // two IAP paths that could leave a purchase promise unresolved until the
     // 120s timeout, server-side job entitlement via create_job_listing with
     // atomic credit spend, and the business-subscription expiry correction.
-    buildNumber: "18",
+    buildNumber: "19",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
