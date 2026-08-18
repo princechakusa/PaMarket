@@ -197,10 +197,19 @@ export default function PostJobScreen() {
           )
           .eq("id", session.user.id)
           .maybeSingle(),
+        // recruiter_profiles.plan_id is display/config state with no status or
+        // expiry of its own, so reading it alone showed "unlimited job posts"
+        // for anyone who had ever subscribed — including after the period
+        // lapsed. create_job_listing decides on the subscription row
+        // (status='active' AND current_period_end > now()), so the UI reads the
+        // same thing. recruiter_id references recruiter_profiles.id, not the
+        // user id, hence the join.
         supabase
-          .from("recruiter_profiles")
-          .select("plan_id")
-          .eq("user_id", session.user.id)
+          .from("recruiter_subscriptions")
+          .select("plan_id, status, current_period_end, recruiter_profiles!inner(user_id)")
+          .eq("recruiter_profiles.user_id", session.user.id)
+          .eq("status", "active")
+          .gt("current_period_end", new Date().toISOString())
           .maybeSingle(),
         supabase
           .from("listings")
@@ -217,6 +226,8 @@ export default function PostJobScreen() {
     setEmail(p?.email || "");
     setPhone(p?.phone || "");
     if (p?.city) setCity(p.city);
+    // No unexpired active subscription -> free, regardless of any stale
+    // plan_id left on the profile by earlier Sandbox testing.
     setPlanId((recruiterProfile as any)?.plan_id || "free");
     setActiveJobPosts(count || 0);
     await refreshCredits();
