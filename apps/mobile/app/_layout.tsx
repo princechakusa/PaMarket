@@ -14,7 +14,7 @@ import { AnnouncementModal } from "../components/AnnouncementModal";
 import { RatingPromptModal } from "../components/RatingPromptModal";
 import { initTelemetry } from "../lib/telemetry";
 import { initIAP, teardownIAP } from "../lib/iap";
-import { registerForPushNotifications } from "../lib/push";
+import { registerForPushNotifications, saveRotatedPushToken } from "../lib/push";
 import { resolveNotifRoute } from "../lib/notifications";
 import TwoFactorVerifyScreen from "./two-factor-verify";
 
@@ -63,10 +63,32 @@ function usePushNotifications() {
 
   useEffect(() => {
     const userId = session?.user?.id;
-    if (!userId || registeredForRef.current === userId) return;
+    // Clearing the marker on sign-out is what makes a same-process
+    // logout -> login work. Logout deletes the row from push_tokens, but the
+    // ref still held the user id, so signing back in without killing the app
+    // skipped registration and left that session with no token at all.
+    if (!userId) {
+      registeredForRef.current = null;
+      return;
+    }
+    if (registeredForRef.current === userId) return;
     registeredForRef.current = userId;
+    // Deliberately not awaited: registration is best-effort and must never
+    // sit between launch and first paint.
     registerForPushNotifications(userId);
   }, [session?.user?.id]);
+
+  // Firebase can rotate the FCM token while the user stays signed in, which
+  // would otherwise leave PaMarket sending to a dead token until the next
+  // launch. The listener re-reads the *current* user at fire time rather than
+  // closing over one, so a token that arrives after sign-out is dropped
+  // instead of being written back under the user who just left.
+  useEffect(() => {
+    const unsubscribe = messaging().onTokenRefresh((token: string) => {
+      saveRotatedPushToken(token).catch(() => {});
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     // Cold start: app opened by tapping a push notification. The root

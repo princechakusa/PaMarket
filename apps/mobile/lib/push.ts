@@ -96,6 +96,32 @@ export async function registerForPushNotifications(userId: string): Promise<void
   }
 }
 
+// Called when Firebase rotates the device token while the app is running.
+// The current user is read from Supabase at call time rather than captured in
+// a closure: a rotation that lands just after sign-out must not resurrect a
+// token row for the user who has already left. Same upsert/onConflict as
+// registration, so a rotation updates the existing row instead of adding one.
+export async function saveRotatedPushToken(token: string): Promise<void> {
+  try {
+    if (!token || typeof token !== "string") return;
+    const { data } = await supabase.auth.getSession();
+    const userId = data.session?.user?.id;
+    if (!userId) return; // signed out — nothing to attach the token to
+    const { error } = await supabase.from("push_tokens").upsert(
+      {
+        user_id: userId,
+        token,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+    if (error) console.warn("[push] rotated token upsert failed:", error.message);
+  } catch (e) {
+    // Best-effort, exactly like registration.
+    console.warn("[push] saveRotatedPushToken threw:", (e as Error)?.message || e);
+  }
+}
+
 export async function clearPushToken(userId: string): Promise<void> {
   try {
     await supabase.from("push_tokens").delete().eq("user_id", userId);

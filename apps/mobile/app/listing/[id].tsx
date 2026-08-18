@@ -71,6 +71,15 @@ import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at,attributes";
 
+// On iOS this screen shows a transparent *native* header (see
+// headerShown: Platform.OS === "ios" in app/_layout.tsx). A native header sits
+// above the JS view tree and swallows touches inside its band, so buttons
+// placed at insets.top + 10 were visible but not tappable — dragging the page
+// down moved them clear of that band, which is exactly the reported symptom.
+// Clearing the header height fixes it; Android has no native header here and
+// keeps the original spacing.
+const TOP_ACTION_OFFSET = Platform.OS === "ios" ? 54 : 10;
+
 const CONDITION_LABELS: Record<string, string> = {
   new: "New",
   "like-new": "Like New",
@@ -680,7 +689,7 @@ export default function ListingDetailScreen() {
       <View style={styles.container}>
         <Skeleton width={width} height={330} radius={0} />
         {Platform.OS !== "ios" ? (
-          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <View style={[styles.topBar, { top: insets.top + TOP_ACTION_OFFSET }]}>
             <GlassBackButton onPress={() => router.back()} tone="light" />
           </View>
         ) : null}
@@ -1304,11 +1313,17 @@ function buildStyles(color: ColorPalette) {
       flexDirection: "row",
       alignItems: "center",
       gap: space.sm,
+      // Without these the group renders behind later siblings (the photo
+      // counter, the gallery pager) and taps land on whatever is drawn on
+      // top. elevation is the Android equivalent of zIndex for touch order.
+      zIndex: 20,
+      elevation: 20,
     },
     iconButton: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      // 44x44 is Apple's minimum comfortable touch target; these were 38.
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: "rgba(16,24,40,0.42)",
       alignItems: "center",
       justifyContent: "center",
