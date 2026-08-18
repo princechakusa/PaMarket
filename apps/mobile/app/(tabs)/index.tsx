@@ -404,7 +404,6 @@ export default function HomeScreen() {
             <CategoryGrid
               onSelectCategory={openCategory}
               onSeeAll={() => router.push("/(tabs)/search")}
-              onPressRentals={() => router.push("/rentals")}
             />
 
             <AdCarousel ads={ads} />
