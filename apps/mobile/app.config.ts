@@ -56,7 +56,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // two IAP paths that could leave a purchase promise unresolved until the
     // 120s timeout, server-side job entitlement via create_job_listing with
     // atomic credit spend, and the business-subscription expiry correction.
-    buildNumber: "19",
+    //
+    // 20 is the final TestFlight candidate for the App Store resubmission. It
+    // carries everything in 19 plus the Sentry-reported production fixes: the
+    // business reviews screen read and wrote a `text` column that does not
+    // exist (the column is `comment`), guests hit a 401 on the business_leads
+    // analytics insert before their Call/WhatsApp tap could go through, and
+    // every external link now opens through lib/open-url.ts so a device with
+    // no WhatsApp, no dialer or no mail client shows an explanation instead of
+    // an uncaught "Unable to open URL" rejection.
+    buildNumber: "20",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
