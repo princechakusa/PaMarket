@@ -22,7 +22,10 @@ export async function getLocallyHiddenIds(conversationId: string): Promise<Set<s
 export async function hideMessageLocally(conversationId: string, messageId: string): Promise<Set<string>> {
   const current = await getLocallyHiddenIds(conversationId);
   current.add(messageId);
-  await SecureStore.setItemAsync(hiddenIdsKey(conversationId), JSON.stringify([...current]));
+  // Best-effort, like every other SecureStore write in this file: a locked
+  // Keychain must not surface as an uncaught rejection to the caller, which
+  // has no try/catch of its own around this call.
+  await SecureStore.setItemAsync(hiddenIdsKey(conversationId), JSON.stringify([...current])).catch(() => {});
   return current;
 }
 
