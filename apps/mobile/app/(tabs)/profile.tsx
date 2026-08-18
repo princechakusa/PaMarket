@@ -175,7 +175,7 @@ function GuestAccountScreen({
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 64 + insets.bottom + space.xxxl }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 58 + insets.bottom + space.xxxl }}>
       <View style={[styles.guestHeader, { paddingTop: insets.top + space.xl }]}>
         <BrandWordmark size={22} />
       </View>
@@ -355,7 +355,7 @@ export default function AccountScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 64 + insets.bottom + space.xxxl }}
+      contentContainerStyle={{ paddingBottom: 58 + insets.bottom + space.xxxl }}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
       {/* Brand-tinted profile header */}

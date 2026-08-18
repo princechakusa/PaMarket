@@ -20,7 +20,7 @@ type Route = BottomTabBarProps["state"]["routes"][number];
 
 function HomeIcon({ color }: { color: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
       <Path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <Polyline points="9 22 9 12 15 12 15 22" />
     </Svg>
@@ -29,7 +29,7 @@ function HomeIcon({ color }: { color: string }) {
 
 function SearchIcon({ color }: { color: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
       <Circle cx={11} cy={11} r={8} />
       <Line x1={21} y1={21} x2="16.65" y2="16.65" />
     </Svg>
@@ -38,7 +38,7 @@ function SearchIcon({ color }: { color: string }) {
 
 function MessagesIcon({ color }: { color: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
       <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </Svg>
   );
@@ -46,7 +46,7 @@ function MessagesIcon({ color }: { color: string }) {
 
 function ProfileIcon({ color }: { color: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
       <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <Circle cx={12} cy={7} r={4} />
     </Svg>
@@ -105,19 +105,23 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
       >
         {isFocused ? <View style={styles.activeIndicator} /> : null}
         {Icon ? <Icon color={color} /> : null}
-        <Text style={[styles.tabLabel, { color }]}>{label}</Text>
+        <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>
+          {label}
+        </Text>
       </Pressable>
     );
   }
 
   return (
-    <View style={[styles.container, { height: 64 + insets.bottom, paddingBottom: insets.bottom }]}>
-      <BlurView
-        intensity={glass.intensity.standard}
-        tint={resolvedScheme === "dark" ? "dark" : "light"}
-        blurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
-        style={StyleSheet.absoluteFill}
-      />
+    <View style={[styles.container, { height: 58 + insets.bottom, paddingBottom: insets.bottom }]}>
+      <View style={styles.background} pointerEvents="none">
+        <BlurView
+          intensity={glass.intensity.standard}
+          tint={resolvedScheme === "dark" ? "dark" : "light"}
+          blurMethod={Platform.OS === "android" ? glass.androidBlurMethod : undefined}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
       {leftRoutes.map(renderTab)}
 
       <View style={styles.fabWrap}>
@@ -128,12 +132,14 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
             if (postRoute) goToTab(postRoute.name);
           }}
         >
-          <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={tones.active} strokeWidth={2.5}>
+          <Svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={tones.active} strokeWidth={2.4}>
             <Line x1={12} y1={5} x2={12} y2={19} />
             <Line x1={5} y1={12} x2={19} y2={12} />
           </Svg>
         </Pressable>
-        <Text style={styles.fabLabel}>Post</Text>
+        <Text style={styles.fabLabel} numberOfLines={1}>
+          Post
+        </Text>
       </View>
 
       {rightRoutes.map(renderTab)}
@@ -156,7 +162,15 @@ function buildStyles(color: ColorPalette) {
       right: 0,
       bottom: 0,
       flexDirection: "row",
-      height: 64,
+      height: 58,
+      overflow: "visible",
+    },
+    background: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
       backgroundColor: color.glassOverlay,
       borderTopWidth: StyleSheet.hairlineWidth * 1.5,
       borderTopColor: color.glassBorder,
@@ -166,7 +180,8 @@ function buildStyles(color: ColorPalette) {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      gap: 3,
+      gap: 2,
+      paddingTop: 3,
     },
     activeIndicator: {
       position: "absolute",
@@ -177,7 +192,7 @@ function buildStyles(color: ColorPalette) {
       borderRadius: 3,
     },
     tabLabel: {
-      fontSize: 10,
+      fontSize: 10.5,
       fontWeight: "600",
       textTransform: "uppercase",
       letterSpacing: 0.2,
@@ -189,11 +204,13 @@ function buildStyles(color: ColorPalette) {
     },
     fab: {
       position: "absolute",
-      top: -22,
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      top: -30,
+      width: 60,
+      height: 60,
+      borderRadius: 30,
       backgroundColor: color.gold,
+      borderWidth: 4,
+      borderColor: color.surface,
       alignItems: "center",
       justifyContent: "center",
       shadowColor: "#000",
@@ -203,12 +220,13 @@ function buildStyles(color: ColorPalette) {
       elevation: 6,
     },
     fabLabel: {
-      fontSize: 9,
+      position: "absolute",
+      top: 38,
+      fontSize: 10.5,
       fontWeight: "700",
       color: color.goldDark,
       textTransform: "uppercase",
       letterSpacing: 0.3,
-      marginTop: 28,
     },
   });
 }

@@ -384,7 +384,7 @@ export default function HomeScreen() {
       {header}
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 64 + insets.bottom + space.xxxl }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 58 + insets.bottom + space.xxxl }]}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={color.brand} />}
         showsVerticalScrollIndicator={false}
       >
