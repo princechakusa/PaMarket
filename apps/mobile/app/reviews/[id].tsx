@@ -26,7 +26,9 @@ type Review = {
   reviewer_id: string;
   reviewer_name: string | null;
   rating: number;
-  text: string | null;
+  // Column is business_reviews.comment — selecting/writing `text` returned
+  // HTTP 400 (column does not exist) and silently broke reviews.
+  comment: string | null;
   created_at: string;
 };
 
@@ -91,7 +93,7 @@ export default function ReviewsScreen() {
       const [reviewsRes, businessRes] = await Promise.all([
         supabase
           .from("business_reviews")
-          .select("reviewer_id,reviewer_name,rating,text,created_at")
+          .select("reviewer_id,reviewer_name,rating,comment,created_at")
           .eq("business_id", id)
           .order("created_at", { ascending: false })
           .limit(50),
@@ -105,7 +107,7 @@ export default function ReviewsScreen() {
     const [reviewsRes, profileRes] = await Promise.all([
       supabase
         .from("reviews")
-        .select("reviewer_id,reviewer_name,rating,text,created_at")
+        .select("reviewer_id,reviewer_name,rating,comment,created_at")
         .eq("seller_id", id)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -142,7 +144,7 @@ export default function ReviewsScreen() {
             reviewer_id: session.user.id,
             reviewer_name: profile?.name ?? "User",
             rating: draftRating,
-            text: draftText || "",
+            comment: draftText || "",
             created_at: new Date().toISOString(),
           },
           { onConflict: "business_id,reviewer_id" }
@@ -153,7 +155,7 @@ export default function ReviewsScreen() {
             reviewer_id: session.user.id,
             reviewer_name: profile?.name ?? "User",
             rating: draftRating,
-            text: draftText || "",
+            comment: draftText || "",
             created_at: new Date().toISOString(),
           },
           { onConflict: "seller_id,reviewer_id" }
@@ -241,7 +243,7 @@ export default function ReviewsScreen() {
                 </View>
                 <Text style={styles.reviewTime}>{timeAgo(r.created_at)}</Text>
               </View>
-              {r.text ? <Text style={styles.reviewText}>{r.text}</Text> : null}
+              {r.comment ? <Text style={styles.reviewText}>{r.comment}</Text> : null}
             </View>
           ))
         ) : (

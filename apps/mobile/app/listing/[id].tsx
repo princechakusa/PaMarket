@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
   FlatList,
@@ -568,7 +569,7 @@ export default function ListingDetailScreen() {
     if (listing?.seller_phone) {
       await captureListingLead("whatsapp");
       const digits = listing.seller_phone.replace(/[^0-9]/g, "");
-      Linking.openURL(`https://wa.me/${digits}`);
+      openWhatsApp(digits);
     }
   }
 

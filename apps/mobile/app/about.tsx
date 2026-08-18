@@ -1,4 +1,5 @@
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { openWhatsApp, openPhone } from "../lib/open-url";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import Svg, { Path, Polyline } from "react-native-svg";
@@ -9,7 +10,8 @@ import { BrandSymbol, BrandWordmark } from "../components/BrandLogo";
 
 const SUPPORT_EMAIL = "support@pamarketzw.com";
 const SUPPORT_PHONE = "+971589772645";
-const WHATSAPP = "https://wa.me/971589772645";
+// openWhatsApp builds the wa.me URL itself, so this is just the number.
+const WHATSAPP_DIGITS = "971589772645";
 
 const SOCIALS: { name: string; url: string }[] = [
   { name: "TikTok", url: "https://www.tiktok.com/@pamarketzw" },
@@ -93,9 +95,9 @@ export default function AboutScreen() {
         <View style={styles.divider} />
         <LinkRow label="Email us" onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} color={color} styles={styles} />
         <View style={styles.divider} />
-        <LinkRow label="WhatsApp" onPress={() => Linking.openURL(WHATSAPP)} color={color} styles={styles} />
+        <LinkRow label="WhatsApp" onPress={() => openWhatsApp(WHATSAPP_DIGITS)} color={color} styles={styles} />
         <View style={styles.divider} />
-        <LinkRow label="Call support" onPress={() => Linking.openURL(`tel:${SUPPORT_PHONE}`)} color={color} styles={styles} />
+        <LinkRow label="Call support" onPress={() => openPhone(SUPPORT_PHONE)} color={color} styles={styles} />
       </Card>
 
       <Text style={styles.groupLabel}>Follow us</Text>

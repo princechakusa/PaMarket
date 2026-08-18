@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
   Alert,
@@ -358,10 +359,12 @@ export default function RentalVehicleDetailScreen() {
     if (business?.whatsapp) {
       await captureLead("whatsapp_click");
       const digits = business.whatsapp.replace(/[^0-9]/g, "");
-      const text = encodeURIComponent(
+      // openWhatsApp encodes the message itself — pre-encoding here would
+      // double-escape it and show %20 in the chat draft.
+      openWhatsApp(
+        digits,
         `Hi ${business.name}! I saw your ${brandLabel(brandSlug)} ${vehicle?.model} rental on PaMarket Zimbabwe. Is it available?`
       );
-      Linking.openURL(`https://wa.me/${digits}?text=${text}`);
     }
   }
 

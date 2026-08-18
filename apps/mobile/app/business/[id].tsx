@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
   Linking,
@@ -180,7 +181,7 @@ export default function BusinessShopScreen() {
     if (!business?.whatsapp) return;
     await captureShopLead("whatsapp");
     const digits = business.whatsapp.replace(/[^0-9]/g, "");
-    Linking.openURL(`https://wa.me/${digits}`);
+    openWhatsApp(digits);
   }
 
   if (isLoading) {

@@ -34,14 +34,22 @@ export async function recordLead(listingId: string, type: LeadType, userId: stri
     .maybeSingle();
   if (!listing?.business_id) return;
 
-  await supabase.from("business_leads").insert({
-    business_id: listing.business_id,
-    listing_id: listingId,
-    user_id: userId,
-    user_name: userName,
-    type,
-    status: "new",
-  });
+  // business_leads INSERT is restricted to `authenticated` with
+  // user_id = auth.uid(), so a signed-out visitor tapping Call or WhatsApp got
+  // a 401. Lead capture is analytics for the seller — it must never stop a
+  // buyer from making contact, so guests are skipped and any failure is
+  // swallowed rather than propagated to the tap handler.
+  if (userId) {
+    const { error } = await supabase.from("business_leads").insert({
+      business_id: listing.business_id,
+      listing_id: listingId,
+      user_id: userId,
+      user_name: userName,
+      type,
+      status: "new",
+    });
+    if (error) console.warn("[leads] insert failed:", error.message);
+  }
   await supabase
     .from("listings")
     .update({ leads: (listing.leads ?? 0) + 1, clicks: (listing.clicks ?? 0) + 1 })

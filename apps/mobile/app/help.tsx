@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { openExternalUrl } from "../lib/open-url";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { TERMS, PRIVACY, type LegalDoc } from "../lib/legal";
@@ -197,7 +198,7 @@ export default function HelpScreen() {
       </View>
 
       <View style={styles.contactDock}>
-        <Pressable style={styles.contactRow} onPress={() => Linking.openURL(WHATSAPP_URL)}>
+        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(WHATSAPP_URL, "WhatsApp isn't installed on this device.")}>
           <Text style={styles.contactLabel}>WhatsApp</Text>
           <Text style={styles.contactValue}>Usually replies in minutes</Text>
         </Pressable>
