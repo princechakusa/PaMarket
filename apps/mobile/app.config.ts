@@ -65,7 +65,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // every external link now opens through lib/open-url.ts so a device with
     // no WhatsApp, no dialer or no mail client shows an explanation instead of
     // an uncaught "Unable to open URL" rejection.
-    buildNumber: "20",
+    // 21 carries everything in 20 plus the fixes discovered after 20 was
+    // already compiled: listing Share/Save/Report were only reachable in the
+    // loading-skeleton copy of the top-action bar, not the real content bar,
+    // so they sat under the transparent iOS header and never actually
+    // rendered tappable; the search filter row's horizontal ScrollView was
+    // missing its own style (defaulting to flex:1), stretching to fill the
+    // screen and leaving empty bands above and below the Filters/Latest/
+    // Price/Trending chips; Vehicles now opens a small screen offering
+    // "All Vehicles" or "Car Rentals" instead of a stray 13th category tile
+    // on Home; posting a marketplace listing now requires a phone number on
+    // the seller's profile, since a missing one silently hid Call/WhatsApp
+    // from buyers with no warning; the bottom tab bar was rebuilt to a
+    // correct 58pt height with the floating Post button fully clearing the
+    // bar instead of being clipped by it; and three more raw Postgres error
+    // messages were routed through the existing friendly-error translator.
+    buildNumber: "21",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
