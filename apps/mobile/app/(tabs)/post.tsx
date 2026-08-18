@@ -106,6 +106,21 @@ export default function PostScreen() {
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
+  // A listing with no seller_phone renders with Call/WhatsApp both hidden on
+  // the buyer's side — chat-only, with nothing telling the seller that
+  // happened. Checked once on mount (not re-fetched in submit()) so goNext()
+  // can block this at step 1, before any photo upload work is done.
+  const [hasPhone, setHasPhone] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    supabase
+      .from("profiles")
+      .select("phone")
+      .eq("id", session.user.id)
+      .maybeSingle()
+      .then(({ data }) => setHasPhone(!!data?.phone?.trim()));
+  }, [session?.user?.id]);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -205,6 +220,7 @@ export default function PostScreen() {
 
   function goNext() {
     if (state.step === 1) {
+      if (hasPhone === false) return setError("Add a phone number to your profile before posting — buyers need a way to reach you.");
       if (!state.category) return setError("Pick a category");
       if (state.title.trim().length < 5) return setError("Title needs at least 5 characters");
       if (state.description.trim().length < 10) return setError("Description needs at least 10 characters");

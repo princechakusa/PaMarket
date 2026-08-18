@@ -276,6 +276,7 @@ export default function SearchScreen() {
           control at its natural size and its full touch target. */}
       <ScrollView
         horizontal
+        style={styles.controlsScroll}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.controlsRow}
         keyboardShouldPersistTaps="handled"
