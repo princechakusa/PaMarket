@@ -794,7 +794,7 @@ export default function ListingDetailScreen() {
             </View>
           )}
 
-          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <View style={[styles.topBar, { top: insets.top + TOP_ACTION_OFFSET }]}>
             {Platform.OS !== "ios" ? (
               <GlassBackButton onPress={() => router.back()} tone="light" />
             ) : null}

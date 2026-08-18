@@ -221,6 +221,7 @@ function RootNavigator() {
       <Stack.Screen name="about" options={{ headerShown: true, title: "About PaMarket" }} />
       <Stack.Screen name="help" options={{ headerShown: true, title: "Help" }} />
       <Stack.Screen name="legal-hub" options={{ headerShown: true, title: "Legal Hub" }} />
+      <Stack.Screen name="vehicles" options={{ headerShown: true, title: "Vehicles" }} />
       <Stack.Screen name="legal-doc/[key]" options={{ headerShown: true, title: "" }} />
       <Stack.Screen name="report-problem" options={{ headerShown: Platform.OS === "ios", title: "Report a Problem" }} />
       <Stack.Screen name="jobs/index" options={{ headerShown: Platform.OS === "ios", title: "Jobs" }} />

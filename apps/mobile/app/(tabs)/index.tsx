@@ -334,6 +334,10 @@ export default function HomeScreen() {
       router.push("/jobs");
       return;
     }
+    if (categoryId === "vehicles") {
+      router.push("/vehicles");
+      return;
+    }
     router.push({ pathname: "/(tabs)/search", params: { category: categoryId } });
   }
 
