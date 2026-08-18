@@ -28,6 +28,20 @@ import TwoFactorVerifyScreen from "./two-factor-verify";
 // hide) the splash before our own hideAsync() call below ever runs.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// Module import happens at process start, so this is the closest thing to a
+// real launch timestamp available from JS.
+const APP_LAUNCH_AT = Date.now();
+// Long enough for the splash to register as intentional, short enough that it
+// never feels like a stall. Only applied when bootstrap beats it.
+const SPLASH_MIN_MS = 1200;
+
+// Failsafe: nothing may leave the splash up forever. If auth somehow never
+// resolves, this hides it anyway so the user reaches a recoverable screen
+// instead of an unresponsive logo.
+setTimeout(() => {
+  SplashScreen.hideAsync().catch(() => {});
+}, 8000);
+
 // Navigate using the same deep-link mapper the in-app notifications list
 // uses, so a push tap (cold start or backgrounded) and an in-app tap always
 // land on the same real route — never "page not found". Wrapped in try/catch
@@ -107,9 +121,19 @@ function RootNavigator() {
   const headerColors = useThemedStyles((c) => ({ bg: c.bg, text: c.text }));
 
   useEffect(() => {
-    if (!isLoading) {
+    if (isLoading) return;
+    // Session restore usually resolves in a few hundred ms, so hiding the
+    // moment isLoading flips made the splash flash past before it read as a
+    // brand moment. This is a *floor*, not an added delay: once bootstrap is
+    // done we only wait out whatever is left of SPLASH_MIN_MS since launch,
+    // so a slow start (auth retry, cold Keychain) still hides immediately at
+    // 0ms remaining and is never made slower.
+    const elapsed = Date.now() - APP_LAUNCH_AT;
+    const remaining = Math.max(0, SPLASH_MIN_MS - elapsed);
+    const timer = setTimeout(() => {
       SplashScreen.hideAsync().catch(() => {});
-    }
+    }, remaining);
+    return () => clearTimeout(timer);
   }, [isLoading]);
 
   if (pendingTwoFactor) {
