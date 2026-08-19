@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
-import { messagePreview, otherMember, type ConversationRow, type MessageRow } from "../../lib/messages";
+import { isBusinessConversation, messagePreview, otherMember, type ConversationRow, type MessageRow } from "../../lib/messages";
 import type { Profile } from "../../lib/profiles";
 import { initPresence, isUserOnline } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -324,8 +324,16 @@ export default function MessagesScreen() {
 
   const myId = session?.user?.id;
 
-  const personalSummaries = useMemo(() => summaries.filter((s) => !s.conversation.business_id), [summaries]);
-  const businessSummaries = useMemo(() => summaries.filter((s) => !!s.conversation.business_id), [summaries]);
+  // Strict complements over the one shared classifier (lib/messages.ts) — a
+  // conversation lands in exactly one inbox, never both, never neither.
+  const personalSummaries = useMemo(
+    () => summaries.filter((s) => !isBusinessConversation(s.conversation)),
+    [summaries]
+  );
+  const businessSummaries = useMemo(
+    () => summaries.filter((s) => isBusinessConversation(s.conversation)),
+    [summaries]
+  );
   const personalUnread = useMemo(() => personalSummaries.reduce((sum, s) => sum + s.unreadCount, 0), [personalSummaries]);
   const businessUnread = useMemo(() => businessSummaries.reduce((sum, s) => sum + s.unreadCount, 0), [businessSummaries]);
   const hasBizTab = businessSummaries.length > 0;

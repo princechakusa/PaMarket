@@ -68,8 +68,29 @@ export function legacyConversationIdFor(userIdA: string, userIdB: string): strin
   return `conv_${frag(a)}_${frag(b)}`;
 }
 
+// Single authority for Personal vs Business inbox classification.
+//
+// Two signals exist and they do NOT always agree, so both must be honoured:
+//   1. conversations.business_id — written by the mobile app (business
+//      profile / business listing / rental paths).
+//   2. the id prefix (biz_/job_/rental_) — the ONLY signal the website
+//      writes. www/js/app.js ensureConversationInCloud() upserts just
+//      {id, members, listing_id} and never sets business_id (see also the
+//      "No business_id column exists on conversations" comment in
+//      js/chats.js), so every business chat started on the website lands with
+//      business_id NULL and would otherwise fall into the Personal inbox.
+//
+// Classification is derived from how the conversation was CREATED (context or
+// id shape) and is stable for its whole lifetime — it is never inferred from
+// whether a participant happens to own a business.
+export function isBusinessConversation(conversation: ConversationRow): boolean {
+  if (conversation.business_id) return true;
+  const id = conversation.id || "";
+  return id.startsWith("biz_") || id.startsWith("job_") || id.startsWith("rental_");
+}
+
 export function isPersonalConversationFor(conversation: ConversationRow, userIdA: string, userIdB: string): boolean {
-  if (conversation.id.startsWith("biz_") || conversation.id.startsWith("job_") || conversation.id.startsWith("rental_")) {
+  if (isBusinessConversation(conversation)) {
     return false;
   }
 

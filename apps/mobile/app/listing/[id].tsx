@@ -579,6 +579,39 @@ export default function ListingDetailScreen() {
     }
     await captureListingLead("chat");
     const myId = session.user.id;
+
+    // A listing that belongs to a shop is a BUSINESS inquiry and must live in
+    // the Business inbox, in its own conversation — never merged into (or
+    // converted from) this pair's Personal chat. The id format deliberately
+    // matches app/business/[id].tsx's messageShop() so contacting a shop via
+    // its profile and via one of its listings converge on the SAME business
+    // conversation (dedup key = customer + business), instead of forking two.
+    if (listing.business_id) {
+      const bizConvId = `biz_${listing.business_id.slice(-8)}_${myId.slice(-6)}`;
+      const { data: existingBiz } = await supabase
+        .from("conversations")
+        .select("id,listing_id")
+        .eq("id", bizConvId)
+        .maybeSingle();
+      if (!existingBiz) {
+        await supabase.from("conversations").upsert({
+          id: bizConvId,
+          members: [myId, listing.seller_id],
+          listing_id: listing.id,
+          business_id: listing.business_id,
+        });
+      }
+      router.push({
+        pathname: "/chat/[id]",
+        params: {
+          id: bizConvId,
+          name: seller?.name || listing.seller_name || "",
+          avatar: seller?.avatar ?? "",
+        },
+      });
+      return;
+    }
+
     const convId = conversationIdFor(myId, listing.seller_id);
     const { data: conversations } = await supabase
       .from("conversations")
@@ -628,7 +661,6 @@ export default function ListingDetailScreen() {
       const patch: {
         members?: string[];
         listing_id?: string;
-        business_id?: string;
       } = {};
       if (!members.includes(myId) || !members.includes(listing.seller_id)) {
         patch.members = [myId, listing.seller_id];
@@ -636,13 +668,13 @@ export default function ListingDetailScreen() {
       if (!existing.listing_id) {
         patch.listing_id = listing.id;
       }
-      // A conversation started before this listing was assigned to a shop
-      // (or one whose business_id never got set) needs backfilling here too
-      // — otherwise it stays stuck in the Personal tab forever even though
-      // it's really a business inquiry.
-      if (listing.business_id && !existing.business_id) {
-        patch.business_id = listing.business_id;
-      }
+      // Deliberately does NOT backfill business_id here. This branch is only
+      // reachable for a personal (non-shop) listing — business listings return
+      // above — and stamping business_id onto an existing Personal thread
+      // silently moved that whole conversation, history included, out of the
+      // Personal tab and into Business. Personal/Business classification is
+      // set by the context the conversation was CREATED from and must never
+      // change afterwards.
       if (Object.keys(patch).length) {
         await supabase
           .from("conversations")
@@ -660,14 +692,14 @@ export default function ListingDetailScreen() {
       return;
     }
 
-    {
-      await supabase.from("conversations").upsert({
-        id: convId,
-        members: [myId, listing.seller_id],
-        listing_id: listing.id,
-        business_id: listing.business_id ?? null,
-      });
-    }
+    // Personal-only branch (business listings returned above), so this row is
+    // always created with no business context.
+    await supabase.from("conversations").upsert({
+      id: convId,
+      members: [myId, listing.seller_id],
+      listing_id: listing.id,
+      business_id: null,
+    });
     router.push({
       pathname: "/chat/[id]",
       params: {
