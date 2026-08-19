@@ -47,6 +47,7 @@ import {
   getProductStatus,
 } from "../_shared/billing-products.ts";
 import { verifyTransactionJWS } from "../_shared/apple-iap.ts";
+import { checkAmosRateLimit } from "../_shared/amos-rate-limit.ts";
 
 const ALLOWED_ORIGINS = new Set([
   "https://pamarketzw.com",
@@ -99,6 +100,28 @@ Deno.serve(async (req) => {
     if (authResult.error || !authResult.data?.user)
       return json({ error: "Invalid token" }, 401);
     const userId = authResult.data.user.id;
+
+    // Conservative, authenticated-only limit — garbage/replayed tokens still
+    // cost a real Apple verification round-trip. 20/10min comfortably covers
+    // a legitimate purchase or a Restore Purchases pass (bounded by the
+    // user's real StoreKit history, never more than a handful of items) while
+    // bounding a scripted spam attempt. Own bucket, separate from
+    // verify-apple-subscription's, so one flow can't exhaust the other's
+    // budget.
+    const rlClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const rate = await checkAmosRateLimit(rlClient, "verify-apple-purchase", userId, {
+      windowMinutes: 10,
+      maxCalls: 20,
+    });
+    if (!rate.allowed) {
+      return json(
+        { error: `Too many verification attempts — try again in ${rate.retryAfterSeconds}s` },
+        429
+      );
+    }
 
     const body = await req.json();
     const listingId = body?.listingId;

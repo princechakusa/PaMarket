@@ -78,6 +78,7 @@ import {
   RENTAL_FEATURED_SLOT_PRODUCTS,
   getProductStatus,
 } from "../_shared/billing-products.ts";
+import { checkAmosRateLimit } from "../_shared/amos-rate-limit.ts";
 
 // ── Google OAuth (service account → Android Publisher API) ──────────────
 let _tokenCache: { value: string; exp: number } | null = null;
@@ -251,6 +252,21 @@ Deno.serve(async (req) => {
     if (authResult.error || !authResult.data?.user)
       return json({ error: "Invalid token" }, 401);
     const userId = authResult.data.user.id;
+
+    const rlClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const rate = await checkAmosRateLimit(rlClient, "verify-play-purchase", userId, {
+      windowMinutes: 10,
+      maxCalls: 20,
+    });
+    if (!rate.allowed) {
+      return json(
+        { error: `Too many verification attempts — try again in ${rate.retryAfterSeconds}s` },
+        429
+      );
+    }
 
     const body = await req.json();
     const listingId = body?.listingId;
