@@ -86,7 +86,10 @@ export type JobSeekerCv = {
   portfolio?: CvPortfolioItem[];
   educationLevel?: string;
   noticePeriod?: string;
+  /** External link the candidate pasted themselves (Google Drive, etc.) — not our data, not gated. */
   cvFileUrl?: string;
+  /** Internal object path in the private cv-files bucket, e.g. "{userId}/{uuid}.pdf" — never a URL, resolved via get-cv-url. */
+  cvFilePath?: string;
 };
 
 export const AVAILABILITY_OPTIONS = [

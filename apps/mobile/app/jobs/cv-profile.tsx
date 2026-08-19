@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -33,21 +34,34 @@ import {
   type JobSeekerCv,
 } from "../../lib/jobs";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
+import {
+  ALLOWED_CV_MIME_TYPES,
+  CV_VALIDATION_ERROR,
+  MAX_CV_SIZE_BYTES,
+  getCvSignedUrl,
+  openCvUrl,
+  randomCvFileName,
+} from "../../lib/cv";
 import { Avatar, Button, Card, Chip, GlassBackButton, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
 // Mirrors www/js/jobs.js CandidateProfile ("Get Hired" CV builder). The flat
 // profile columns (job_title, skills, sector, exp, city, open_to_work,
-// expected_salary, cv_file_url) are the source of truth; profiles.cv jsonb is
+// expected_salary, cv_file_path) are the source of truth; profiles.cv jsonb is
 // an enriched structured snapshot (experience/education/certifications/
 // languages/portfolio) that only lives in the jsonb — there are no flat
 // columns for those, per supabase/schema/profiles.sql.
 //
-// CV FILE UPLOAD: expo-document-picker is NOT installed (only expo-image-picker
-// is — see package.json). Rather than add a native dependency, users upload an
-// IMAGE of their CV (or a photo/scan); it is stored on R2 and its public URL is
-// written to profiles.cv_file_url (+ cv.cvFileUrl). A pasted link is also
-// supported for those hosting a PDF elsewhere.
+// CV FILE: uploaded as a real PDF via expo-document-picker, straight to the
+// private cv-files Supabase Storage bucket (owner-scoped RLS), and referenced
+// by cv_file_path — an internal object path, never a URL. Viewing it (by the
+// candidate themselves, or an authorized employer) goes through the
+// get-cv-url Edge Function, which returns a short-lived signed URL after an
+// authorization check — see lib/cv.ts.
+//
+// cv_file_url is unrelated and unaffected: it's an *external* link a
+// candidate pastes themselves (e.g. a CV hosted on Google Drive) — never our
+// data, never gated, kept exactly as before.
 
 type ProfileRow = {
   id: string;
@@ -61,6 +75,7 @@ type ProfileRow = {
   open_to_work: boolean | null;
   expected_salary: string | null;
   cv_file_url: string | null;
+  cv_file_path: string | null;
   cv: JobSeekerCv | null;
 };
 
@@ -94,6 +109,7 @@ export default function CvProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [cvUploading, setCvUploading] = useState(false);
+  const [cvOpening, setCvOpening] = useState(false);
 
   // Basics / flat mirror
   const [openToWork, setOpenToWork] = useState(false);
@@ -117,12 +133,17 @@ export default function CvProfileScreen() {
   const [languages, setLanguages] = useState<CvLanguage[]>([]);
   const [portfolio, setPortfolio] = useState<CvPortfolioItem[]>([]);
   const [cvFileUrl, setCvFileUrl] = useState("");
+  const [cvFilePath, setCvFilePath] = useState<string | null>(null);
+  // Old object path pending deletion once the new upload + profile save both
+  // succeed — never deleted before that, so a failed save never leaves the
+  // candidate with no CV on file.
+  const [cvPathPendingDelete, setCvPathPendingDelete] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("id,name,avatar,job_title,skills,sector,exp,city,bio,open_to_work,expected_salary,cv_file_url,cv")
+      .select("id,name,avatar,job_title,skills,sector,exp,city,bio,open_to_work,expected_salary,cv_file_url,cv_file_path,cv")
       .eq("id", session.user.id)
       .maybeSingle();
     const p = data as (ProfileRow & { name: string | null }) | null;
@@ -152,6 +173,7 @@ export default function CvProfileScreen() {
       setLanguages(cv.languages || []);
       setPortfolio(cv.portfolio || []);
       setCvFileUrl(p.cv_file_url || cv.cvFileUrl || "");
+      setCvFilePath(p.cv_file_path || cv.cvFilePath || null);
     }
   }, [session?.user]);
 
@@ -167,26 +189,94 @@ export default function CvProfileScreen() {
     setSkillInput("");
   }
 
-  async function pickAndUpload(kind: "photo" | "cv") {
+  async function pickAndUploadPhoto() {
     if (!session?.user) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.82,
     });
     if (result.canceled || !result.assets?.[0]) return;
-    const uri = result.assets[0].uri;
-    const setBusy = kind === "photo" ? setPhotoUploading : setCvUploading;
-    setBusy(true);
+    setPhotoUploading(true);
     try {
-      const key = `cv/${session.user.id}/${kind}-${Date.now()}.jpg`;
-      const url = await uploadImageUriToR2(uri, key);
-      if (kind === "photo") setAvatarUrl(url);
-      else setCvFileUrl(url);
-      toast(kind === "photo" ? "Photo updated" : "CV uploaded");
+      const key = `cv/${session.user.id}/photo-${Date.now()}.jpg`;
+      const url = await uploadImageUriToR2(result.assets[0].uri, key);
+      setAvatarUrl(url);
+      toast("Photo updated");
     } catch {
       toast("Upload failed, please try again");
     } finally {
-      setBusy(false);
+      setPhotoUploading(false);
+    }
+  }
+
+  // CVs go to the PRIVATE cv-files Supabase Storage bucket, uploaded
+  // directly with the candidate's own authenticated session — RLS on that
+  // bucket only allows writing under {auth.uid()}/, so a client can never
+  // upload into another user's folder even if it tried. Only the resulting
+  // object path (never a public URL) is stored.
+  async function pickAndUploadCv() {
+    if (!session?.user) return;
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ALLOWED_CV_MIME_TYPES,
+      copyToCacheDirectory: true,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+
+    const mime = asset.mimeType || "";
+    if (!ALLOWED_CV_MIME_TYPES.includes(mime)) {
+      toast(CV_VALIDATION_ERROR);
+      return;
+    }
+    if (typeof asset.size === "number" && asset.size > MAX_CV_SIZE_BYTES) {
+      toast(CV_VALIDATION_ERROR);
+      return;
+    }
+
+    setCvUploading(true);
+    try {
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      if (blob.size > MAX_CV_SIZE_BYTES) {
+        toast(CV_VALIDATION_ERROR);
+        return;
+      }
+      const path = `${session.user.id}/${randomCvFileName(mime)}`;
+      const { error } = await supabase.storage.from("cv-files").upload(path, blob, {
+        contentType: mime,
+        upsert: false,
+      });
+      if (error) throw error;
+
+      // Defer deleting the previous object until the profile save below
+      // actually succeeds — never lose the old CV on a failed save.
+      if (cvFilePath) setCvPathPendingDelete(cvFilePath);
+      setCvFilePath(path);
+      toast("CV uploaded");
+    } catch {
+      toast("Upload failed, please try again");
+    } finally {
+      setCvUploading(false);
+    }
+  }
+
+  function removeCv() {
+    if (cvFilePath) setCvPathPendingDelete(cvFilePath);
+    setCvFilePath(null);
+  }
+
+  async function viewMyCv() {
+    setCvOpening(true);
+    try {
+      const result = await getCvSignedUrl();
+      if (!result.ok) {
+        toast(result.reason === "no_cv" ? "No CV uploaded." : "Could not open your CV. Please try again.");
+        return;
+      }
+      const opened = await openCvUrl(result.url);
+      if (!opened) toast("Could not open your CV. Please try again.");
+    } finally {
+      setCvOpening(false);
     }
   }
 
@@ -229,6 +319,7 @@ export default function CvProfileScreen() {
       languages: cleanLangs,
       portfolio: cleanPortfolio,
       cvFileUrl: cvFileUrl.trim() || undefined,
+      cvFilePath: cvFilePath || undefined,
     };
 
     const { error } = await supabase
@@ -242,6 +333,7 @@ export default function CvProfileScreen() {
         expected_salary: expectedSalary.trim(),
         skills: skills.join(","),
         cv_file_url: cvFileUrl.trim() || null,
+        cv_file_path: cvFilePath,
         cv,
       })
       .eq("id", session.user.id);
@@ -250,6 +342,15 @@ export default function CvProfileScreen() {
       toast("Could not save your profile");
       return;
     }
+
+    // Only remove the old CV object now that the new path is durably saved
+    // — a failed save above left cvFilePath/cvPathPendingDelete untouched,
+    // so nothing is deleted unless the swap actually took effect.
+    if (cvPathPendingDelete) {
+      await supabase.storage.from("cv-files").remove([cvPathPendingDelete]).catch(() => {});
+      setCvPathPendingDelete(null);
+    }
+
     toast(openToWork ? "Profile saved — employers can now find you!" : "Profile saved");
     router.back();
   }
@@ -276,7 +377,7 @@ export default function CvProfileScreen() {
           {/* ── Identity header ─────────────────────────────── */}
           <Card style={styles.identityCard}>
             <View style={styles.identityRow}>
-              <Pressable onPress={() => pickAndUpload("photo")} disabled={photoUploading}>
+              <Pressable onPress={pickAndUploadPhoto} disabled={photoUploading}>
                 <Avatar uri={avatarUrl} name={fullName} size={72} ring />
                 <View style={styles.photoBadge}>
                   {photoUploading ? <ActivityIndicator color={color.textOnBrand} size="small" /> : <CameraIcon />}
@@ -452,24 +553,28 @@ export default function CvProfileScreen() {
           {/* ── CV file ─────────────────────────────────────── */}
           <SectionRow title="CV / Resume file"  styles={styles} />
           <Card>
-            {cvFileUrl ? (
+            {cvFilePath ? (
               <View style={styles.cvFileRow}>
                 <Text style={styles.cvFileText} numberOfLines={1}>
-                  {cvFileUrl}
+                  CV on file (PDF)
                 </Text>
-                <Pressable onPress={() => setCvFileUrl("")} hitSlop={8}>
+                <Pressable onPress={viewMyCv} disabled={cvOpening} hitSlop={8}>
+                  <Text style={styles.removeLink}>{cvOpening ? "Opening…" : "View"}</Text>
+                </Pressable>
+                <Pressable onPress={removeCv} hitSlop={8}>
                   <Text style={styles.removeLink}>Remove</Text>
                 </Pressable>
               </View>
             ) : null}
             <Button
-              label={cvFileUrl ? "Replace with image" : "Upload CV image / scan"}
+              label={cvFilePath ? "Replace CV (PDF)" : "Upload CV (PDF)"}
               variant="secondary"
               loading={cvUploading}
-              onPress={() => pickAndUpload("cv")}
+              onPress={pickAndUploadCv}
               style={{ marginBottom: space.md }}
             />
-            <Text style={styles.label}>Or paste a link (PDF hosted elsewhere)</Text>
+            <Text style={styles.hintText}>PDF only, up to 5 MB. This file is private — only you and employers you apply to can view it.</Text>
+            <Text style={[styles.label, styles.spacedLabel]}>Or paste a link (CV hosted elsewhere)</Text>
             <Input value={cvFileUrl} onChangeText={setCvFileUrl} placeholder="https://…" last  styles={styles} />
           </Card>
 
@@ -667,5 +772,6 @@ function buildStyles(color: ColorPalette) {
     marginBottom: space.md,
   },
   cvFileText: { ...font.sub, color: color.textSub, flex: 1 },
+  hintText: { ...font.caption, color: color.textMuted },
   });
 }

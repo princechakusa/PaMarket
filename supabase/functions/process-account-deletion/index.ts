@@ -169,6 +169,19 @@ Deno.serve(async (req) => {
       console.warn('R2 storage cleanup failed (continuing):', (e as Error).message)
     }
 
+    // ── Private cv-files Supabase Storage bucket — separate system from R2
+    //    above, holds candidate CVs referenced by profiles.cv_file_path. ──
+    try {
+      const listRes = await db.storage.from('cv-files').list(userId, { limit: 1000 })
+      const names = (listRes.data || []).map((f) => `${userId}/${f.name}`)
+      if (names.length) {
+        await db.storage.from('cv-files').remove(names)
+        deletedTables.push('cv_files_storage')
+      }
+    } catch (e) {
+      console.warn('cv-files storage cleanup failed (continuing):', (e as Error).message)
+    }
+
     // ── Everything below cascades automatically via
     //    `references public.profiles(id) on delete cascade` /
     //    `references auth.users(id) on delete cascade` once the profile row

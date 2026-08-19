@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { openExternalUrl, openPhone } from "../../../lib/open-url";
+import { getCvSignedUrl, openCvUrl } from "../../../lib/cv";
 import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -43,7 +44,6 @@ type ApplicantProfile = {
   avatar: string | null;
   verified: boolean | null;
   job_title: string | null;
-  cv_file_url: string | null;
 };
 
 const STATUS_META: Record<ApplicationStatus, { label: string; tone: "gold" | "success" | "danger" }> = {
@@ -105,6 +105,7 @@ export default function JobApplicantsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [notAllowed, setNotAllowed] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [cvOpeningId, setCvOpeningId] = useState<string | null>(null);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants" });
 
@@ -148,7 +149,7 @@ export default function JobApplicantsScreen() {
 
     const { data: profileRows } = await supabase
       .from("profiles")
-      .select("id,name,avatar,verified,job_title,cv_file_url")
+      .select("id,name,avatar,verified,job_title")
       .in("id", applicantIds);
 
     const byId: Record<string, ApplicantProfile> = {};
@@ -225,6 +226,27 @@ export default function JobApplicantsScreen() {
 
     await supabase.from("conversations").upsert({ id: convId, members: [myId, otherId] });
     router.push({ pathname: "/chat/[id]", params: { id: convId } });
+  }
+
+  // CVs are never fetched via the profiles table — get-cv-url verifies this
+  // employer actually has a real application from this candidate for this
+  // exact job before it will sign anything, then returns a short-lived URL.
+  async function viewApplicantCv(app: JobApplicant) {
+    if (cvOpeningId) return;
+    setCvOpeningId(app.id);
+    try {
+      const result = await getCvSignedUrl({ candidateId: app.applicant_id, jobId: app.job_id });
+      if (!result.ok) {
+        if (result.reason === "no_cv") toast("No CV uploaded.");
+        else if (result.reason === "forbidden") toast("You're not authorized to view this CV.", 3500, true);
+        else toast("Could not open this CV. Please try again.", 3500, true);
+        return;
+      }
+      const opened = await openCvUrl(result.url);
+      if (!opened) toast("Could not open this CV. Please try again.", 3500, true);
+    } finally {
+      setCvOpeningId(null);
+    }
   }
 
   if (isLoading) {
@@ -363,6 +385,13 @@ export default function JobApplicantsScreen() {
                   onPress={() => router.push({ pathname: "/jobs/candidate/[id]", params: { id: item.applicant_id } })}
                 />
                 <Button label="Message" variant="secondary" size="sm" onPress={() => openChat(item)} />
+                <Button
+                  label="View CV"
+                  variant="secondary"
+                  size="sm"
+                  loading={cvOpeningId === item.id}
+                  onPress={() => viewApplicantCv(item)}
+                />
                 <Button
                   label="Shortlist"
                   variant={item.status === "shortlisted" ? "primary" : "secondary"}
