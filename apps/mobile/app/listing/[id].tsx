@@ -71,15 +71,6 @@ import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at,attributes";
 
-// On iOS this screen shows a transparent *native* header (see
-// headerShown: Platform.OS === "ios" in app/_layout.tsx). A native header sits
-// above the JS view tree and swallows touches inside its band, so buttons
-// placed at insets.top + 10 were visible but not tappable — dragging the page
-// down moved them clear of that band, which is exactly the reported symptom.
-// Clearing the header height fixes it; Android has no native header here and
-// keeps the original spacing.
-const TOP_ACTION_OFFSET = Platform.OS === "ios" ? 54 : 10;
-
 const CONDITION_LABELS: Record<string, string> = {
   new: "New",
   "like-new": "Like New",
@@ -311,18 +302,27 @@ export default function ListingDetailScreen() {
   } = useStoreProducts(BOOST_PRODUCT_IDS, "consumable");
   const galleryRef = useRef<FlatList<string>>(null);
 
-  // headerRight deliberately omitted: a transparent native-stack header
-  // combined with tappable headerRight buttons does not reliably hit-test
+  // headerRight deliberately omitted: native-stack header actions did not
+  // reliably hit-test
   // on iOS (confirmed — Android, which never used a native headerRight
   // here, worked fine while iOS's share/save/report buttons in the native
   // header silently ate every tap). Share/save/report are rendered as a
-  // floating RN overlay on both platforms instead (below) — only the
-  // transparent back button stays on the real native header.
+  // floating RN overlay on both platforms instead (below). The iOS header is
+  // intentionally non-transparent so the navigator lays the hero below its
+  // real header. A transparent header absolutely overlaps content, which hid
+  // the top of the hero at rest and forced these actions into an intercepted
+  // touch band.
   useIOSNativeHeader({
-    transparent: true,
-    backgroundColor: "transparent",
+    transparent: false,
+    backgroundColor: color.brand,
     tintColor: "#FFFFFF",
   });
+
+  // Local coordinate within the hero. On iOS the native header has already
+  // positioned the entire hero below the safe/header area. Android keeps its
+  // existing full-bleed hero, so its status-bar inset is part of the hero's
+  // local top clearance. This value never follows the viewport or scroll.
+  const heroActionTop = Platform.OS === "ios" ? space.md : insets.top + space.md;
 
   const load = useCallback(async () => {
     setError(null);
@@ -687,12 +687,14 @@ export default function ListingDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Skeleton width={width} height={330} radius={0} />
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.topBar, { top: insets.top + TOP_ACTION_OFFSET }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" />
-          </View>
-        ) : null}
+        <View style={styles.heroContainer}>
+          <Skeleton width={width} height={330} radius={0} />
+          {Platform.OS !== "ios" ? (
+            <View style={[styles.heroActions, { top: heroActionTop }]}>
+              <GlassBackButton onPress={() => router.back()} tone="light" />
+            </View>
+          ) : null}
+        </View>
         <View style={styles.content}>
           <Skeleton width={140} height={30} style={{ marginTop: space.md }} />
           <Skeleton width="80%" height={22} style={{ marginTop: space.sm }} />
@@ -714,7 +716,7 @@ export default function ListingDetailScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         {Platform.OS !== "ios" ? (
-          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <View style={[styles.screenBack, { top: insets.top + space.md }]}>
             <GlassBackButton onPress={() => router.back()} tone="light" />
           </View>
         ) : null}
@@ -730,7 +732,7 @@ export default function ListingDetailScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         {Platform.OS !== "ios" ? (
-          <View style={[styles.topBar, { top: insets.top + 10 }]}>
+          <View style={[styles.screenBack, { top: insets.top + space.md }]}>
             <GlassBackButton onPress={() => router.back()} tone="light" />
           </View>
         ) : null}
@@ -753,7 +755,7 @@ export default function ListingDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Gallery ── */}
-        <View style={styles.photoWrap}>
+        <View style={styles.heroContainer}>
           {photos.length ? (
             <FlatList
               ref={galleryRef}
@@ -794,7 +796,7 @@ export default function ListingDetailScreen() {
             </View>
           )}
 
-          <View style={[styles.topBar, { top: insets.top + TOP_ACTION_OFFSET }]}>
+          <View style={[styles.heroActions, { top: heroActionTop }]}>
             {Platform.OS !== "ios" ? (
               <GlassBackButton onPress={() => router.back()} tone="light" />
             ) : null}
@@ -1292,7 +1294,7 @@ function buildStyles(color: ColorPalette) {
     container: { flex: 1, backgroundColor: color.bg },
     centered: { justifyContent: "center" },
 
-    photoWrap: {
+    heroContainer: {
       height: 330,
       backgroundColor: "#0F1729",
       position: "relative",
@@ -1306,7 +1308,7 @@ function buildStyles(color: ColorPalette) {
     },
     photoPlaceholderText: { ...font.caption, color: color.textMuted },
 
-    topBar: {
+    heroActions: {
       position: "absolute",
       left: space.md,
       right: space.md,
@@ -1316,6 +1318,12 @@ function buildStyles(color: ColorPalette) {
       // Without these the group renders behind later siblings (the photo
       // counter, the gallery pager) and taps land on whatever is drawn on
       // top. elevation is the Android equivalent of zIndex for touch order.
+      zIndex: 20,
+      elevation: 20,
+    },
+    screenBack: {
+      position: "absolute",
+      left: space.md,
       zIndex: 20,
       elevation: 20,
     },

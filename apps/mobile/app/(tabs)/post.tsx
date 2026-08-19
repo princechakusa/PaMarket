@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
+  BackHandler,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +14,7 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
@@ -106,21 +107,31 @@ export default function PostScreen() {
   const [submitStatus, setSubmitStatus] = useState<string | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
-  // A listing with no seller_phone renders with Call/WhatsApp both hidden on
-  // the buyer's side — chat-only, with nothing telling the seller that
-  // happened. Checked once on mount (not re-fetched in submit()) so goNext()
-  // can block this at step 1, before any photo upload work is done.
+  // A listing with no seller_phone remains chat-only. This value drives only
+  // a non-blocking reminder, and is refreshed whenever the persistent Post
+  // tab regains focus so an Edit Profile save appears without an app restart.
   const [hasPhone, setHasPhone] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (!session?.user) return;
-    supabase
-      .from("profiles")
-      .select("phone")
-      .eq("id", session.user.id)
-      .maybeSingle()
-      .then(({ data }) => setHasPhone(!!data?.phone?.trim()));
-  }, [session?.user?.id]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!session?.user) {
+        setHasPhone(null);
+        return;
+      }
+      let cancelled = false;
+      supabase
+        .from("profiles")
+        .select("phone")
+        .eq("id", session.user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!cancelled) setHasPhone(!!data?.phone?.trim());
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [session?.user?.id])
+  );
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -147,6 +158,25 @@ export default function PostScreen() {
       appStateSub.remove();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") return;
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (state.step > 1) {
+          setState((s) => ({ ...s, step: (s.step - 1) as PostState["step"] }));
+          return true;
+        }
+        if (state.category) {
+          setState((s) => ({ ...s, category: null }));
+          setError(null);
+          return true;
+        }
+        return false;
+      });
+      return () => subscription.remove();
+    }, [state.step, state.category])
+  );
 
   if (!session?.user) {
     return (
@@ -220,7 +250,6 @@ export default function PostScreen() {
 
   function goNext() {
     if (state.step === 1) {
-      if (hasPhone === false) return setError("Add a phone number to your profile before posting — buyers need a way to reach you.");
       if (!state.category) return setError("Pick a category");
       if (state.title.trim().length < 5) return setError("Title needs at least 5 characters");
       if (state.description.trim().length < 10) return setError("Description needs at least 10 characters");
@@ -395,6 +424,15 @@ export default function PostScreen() {
             {state.category ? (
               <AttrFields category={state.category} values={state.attrs} onChange={(attrs) => update({ attrs })} />
             ) : null}
+
+            {hasPhone === false ? (
+              <View style={styles.phoneReminder}>
+                <Text style={styles.tipBody}>
+                  Add a phone number to your profile if you&apos;d like buyers to contact you by phone. You can continue
+                  and use in-app chat without one.
+                </Text>
+              </View>
+            ) : null}
           </Card>
         ) : null}
 
@@ -503,12 +541,10 @@ export default function PostScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
 
-      {/* Fixed footer, not part of ScrollView content — previously the
-          Continue/Post button scrolled with the form and could end up below
-          the fold, looking like it had vanished. The header's back button
-          (handleHeaderBack) already steps back one wizard step when
-          state.step > 1, so a second inline back button here was pure
-          duplication — removed. */}
+      {/* Fixed footer, not part of ScrollView content — Continue/Post and the
+          wizard Back action remain reachable without scrolling. Back is kept
+          here as the reliable cross-platform step control; the iOS native
+          header remains a second affordance rather than the only one. */}
       {state.step === 1 && !state.category ? null : (
         // Generous fixed buffer (not just an exact-fit calculation) above the
         // floating tab bar's own footprint (64 + insets.bottom, see
@@ -523,11 +559,28 @@ export default function PostScreen() {
           ]}
         >
           {isSubmitting && submitStatus ? <Text style={styles.submitStatus}>{submitStatus}</Text> : null}
-          {state.step < 4 ? (
-            <Button label={state.step === 3 ? "Preview →" : "Continue →"} onPress={goNext} />
-          ) : (
-            <Button label="Post Ad →" variant="gold" onPress={submit} loading={isSubmitting} />
-          )}
+          <View style={styles.footerActions}>
+            {state.step > 1 ? (
+              <Button label="Back" variant="secondary" onPress={goBack} fullWidth={false} style={styles.footerBack} />
+            ) : null}
+            {state.step < 4 ? (
+              <Button
+                label={state.step === 3 ? "Preview →" : "Continue →"}
+                onPress={goNext}
+                fullWidth={state.step === 1}
+                style={state.step > 1 ? styles.footerPrimary : undefined}
+              />
+            ) : (
+              <Button
+                label="Post Ad →"
+                variant="gold"
+                onPress={submit}
+                loading={isSubmitting}
+                fullWidth={false}
+                style={styles.footerPrimary}
+              />
+            )}
+          </View>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -604,6 +657,7 @@ function buildStyles(color: ColorPalette) {
   currencyOptionTextActive: { color: color.textOnBrand },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   tipBox: { backgroundColor: color.goldTint, borderRadius: radius.md, padding: space.lg, marginTop: space.lg },
+  phoneReminder: { backgroundColor: color.brandTint, borderRadius: radius.md, padding: space.md, marginTop: space.lg },
   tipTitle: { ...font.caption, color: color.text, marginBottom: space.xs },
   tipBody: { ...font.sub, color: color.textSub },
   previewCard: { padding: space.lg },
@@ -621,6 +675,9 @@ function buildStyles(color: ColorPalette) {
     zIndex: 20,
     elevation: 20,
   },
+  footerActions: { flexDirection: "row", gap: space.md },
+  footerBack: { flex: 1 },
+  footerPrimary: { flex: 2 },
   submitStatus: {
     ...font.caption,
     color: color.textSub,

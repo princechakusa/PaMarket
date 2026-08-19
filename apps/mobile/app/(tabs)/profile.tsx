@@ -280,28 +280,30 @@ export default function AccountScreen() {
     }
   }, [session]);
 
-  useEffect(() => {
-    setIsLoading(true);
-    // On a dead/flaky connection these queries can hang rather than fail
-    // fast, and isLoading gates the whole screen behind a spinner — so the
-    // Account tab could sit spinning forever and look like it simply never
-    // opens. Everything below renders safely without this data
-    // (profile?.name falls back to "PaMarket User", counts to 0), so
-    // showing the screen after a few seconds is strictly better than an
-    // indefinite spinner; pull-to-refresh retries.
-    let settled = false;
-    const stopLoading = () => {
-      if (settled) return;
-      settled = true;
-      setIsLoading(false);
-    };
-    const timeout = setTimeout(stopLoading, 8000);
-    load().finally(() => {
-      clearTimeout(timeout);
-      stopLoading();
-    });
-    return () => clearTimeout(timeout);
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      // On a dead/flaky connection these queries can hang rather than fail
+      // fast, and isLoading gates the whole screen behind a spinner — so the
+      // Account tab could sit spinning forever and look like it simply never
+      // opens. Everything below renders safely without this data
+      // (profile?.name falls back to "PaMarket User", counts to 0), so
+      // showing the screen after a few seconds is strictly better than an
+      // indefinite spinner; pull-to-refresh retries.
+      let settled = false;
+      const stopLoading = () => {
+        if (settled) return;
+        settled = true;
+        setIsLoading(false);
+      };
+      const timeout = setTimeout(stopLoading, 8000);
+      load().finally(() => {
+        clearTimeout(timeout);
+        stopLoading();
+      });
+      return () => clearTimeout(timeout);
+    }, [load])
+  );
 
   // The unread-messages stat was only ever fetched once on mount — reading
   // your messages elsewhere and coming back to Profile left this stat

@@ -48,6 +48,15 @@ const SORT_OPTIONS = [
   { value: "views", label: "Trending" },
 ] as const;
 
+function resetSecondaryFilters(filters: BrowseFilters): BrowseFilters {
+  return {
+    ...DEFAULT_FILTERS,
+    // A selected category is the browsing context, not a secondary filter.
+    // It changes only through an explicit category choice.
+    categories: filters.categories,
+  };
+}
+
 function SearchIcon({ color }: { color: ColorPalette }) {
   return (
     <Svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke={color.textOnBrand} strokeWidth={2}>
@@ -374,7 +383,7 @@ export default function SearchScreen() {
               title="No matches"
               subtitle="Try a different search term or clear your filters."
               buttonLabel="Reset filters"
-              onPressButton={() => setFilters(DEFAULT_FILTERS)}
+              onPressButton={() => setFilters((current) => resetSecondaryFilters(current))}
             />
           }
           renderItem={({ item }) => (
@@ -404,7 +413,7 @@ export default function SearchScreen() {
         locations={locations}
         onChange={setFilters}
         onApply={() => setFilterPanelVisible(false)}
-        onReset={() => setFilters(DEFAULT_FILTERS)}
+        onReset={() => setFilters((current) => resetSecondaryFilters(current))}
         onClose={() => setFilterPanelVisible(false)}
       />
     </View>
