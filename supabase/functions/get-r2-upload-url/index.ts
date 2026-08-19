@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { S3Client, PutObjectCommand, GetObjectCommand } from 'npm:@aws-sdk/client-s3'
 import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner'
+import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 
 // Allowed request origins — tightened from wildcard (*)
 const ALLOWED_ORIGINS = new Set([
@@ -66,6 +67,35 @@ const AMOS_ADDITIONAL_CONTENT_TYPES = new Set([
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
 const MAX_AMOS_VIDEO_SIZE_BYTES = 200 * 1024 * 1024 // 200 MB — video files are much larger than the general 10MB cap
 
+// File extension used for the server-generated object name (see keyPrefix
+// below) — keyed off the already-validated contentType, never off whatever
+// filename/extension the caller's key happened to end with.
+const EXT_BY_CONTENT_TYPE: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+  'application/pdf': 'pdf',
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov',
+  'video/webm': 'webm',
+}
+
+// Signed-URL issuance limits — bounds how much storage an authenticated
+// user can cause to be written regardless of whether they ever attach the
+// upload to a listing/message/business/rental. Sized generously: 8
+// photos/listing x several listings, 5 photos/rental vehicle x a fleet,
+// plus business/chat/profile photos in the same day, comfortably fits
+// under DAILY_UPLOAD_QUOTA. Reuses the same log-and-count pattern already
+// used elsewhere in this codebase (see admin-login-guard's login throttle
+// and _shared/amos-rate-limit.ts) rather than inventing new architecture —
+// backed by the existing generic amos_manual_trigger_log table, which has
+// no AMOS-specific constraint on fn_name.
+const BURST_LIMIT = { windowMinutes: 1, maxCalls: 20 }
+const DAILY_QUOTA  = { windowMinutes: 24 * 60, maxCalls: 150 }
+
 Deno.serve(async (req) => {
   const cors = corsHeaders(req)
 
@@ -80,6 +110,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: auth } } }
     )
+    // Service-role client, used only for the rate-limit ledger below —
+    // amos_manual_trigger_log's RLS denies anon/authenticated entirely (by
+    // design, see _shared/amos-rate-limit.ts), so the anon-scoped `sb`
+    // above cannot write to it.
+    const db = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
 
     const { data: { user }, error: authErr } = await sb.auth.getUser()
     if (authErr || !user) throw new Error('Unauthorized')
@@ -92,6 +130,14 @@ Deno.serve(async (req) => {
     const isAmos = key.startsWith('amos/manual-media/')
     const isBusiness = key.startsWith('businesses/')
     const isGet = verb === 'GET'
+
+    // Populated below (upload/PUT path only) with whichever prefix the
+    // request validated against, so the actual object key written to R2 is
+    // always server-generated (prefix + random name), never the caller's
+    // literal `key`. This closes the "arbitrary key selection" gap — a
+    // caller can no longer choose a filename to collide with/overwrite an
+    // existing object, even one of their own from a stale retry.
+    let keyPrefix: string | null = null
 
     if (isGet && isVerification) {
       // Admin can access any verification path; users only their own
@@ -124,6 +170,7 @@ Deno.serve(async (req) => {
           .eq('id', businessId)
           .single()
         if (bizErr || business?.owner_user_id !== user.id) throw new Error('Forbidden')
+        keyPrefix = `businesses/${businessId}/`
       }
 
       // Non-ad, non-amos, non-business PUTs remain scoped to the
@@ -136,7 +183,13 @@ Deno.serve(async (req) => {
         `profiles/${user.id}/`,
         `rentals/${user.id}/`,
       ]
-      if (!isAd && !isAmos && !isBusiness && !allowed.some(p => key.startsWith(p))) throw new Error('Forbidden path')
+      if (!isAd && !isAmos && !isBusiness) {
+        const matched = allowed.find(p => key.startsWith(p))
+        if (!matched) throw new Error('Forbidden path')
+        keyPrefix = matched
+      }
+      if (isAd) keyPrefix = 'ads/'
+      if (isAmos) keyPrefix = 'amos/manual-media/'
       if (!contentType) throw new Error('contentType required for upload')
 
       // Validate content type against allowlist (AMOS additionally allows video)
@@ -156,6 +209,31 @@ Deno.serve(async (req) => {
       if (contentLength > sizeLimit) {
         throw new Error(`File exceeds maximum size of ${Math.round(sizeLimit / 1024 / 1024)} MB`)
       }
+
+      // Signed-URL issuance rate limit + daily quota (see BURST_LIMIT /
+      // DAILY_QUOTA above) — every authenticated caller, regardless of
+      // prefix type, so a script can't mint unlimited signed PUT URLs and
+      // fill the bucket with never-referenced objects. Checked only for
+      // actual uploads (not GET/read requests) since storage cost is
+      // created by successful PUTs, not by reads.
+      const burst = await checkAmosRateLimit(db, 'r2-upload-burst', user.id, BURST_LIMIT)
+      if (!burst.allowed) throw new Error(`Too many upload requests — try again in ${burst.retryAfterSeconds}s`)
+      const daily = await checkAmosRateLimit(db, 'r2-upload-daily', user.id, DAILY_QUOTA)
+      if (!daily.allowed) throw new Error(`Daily upload limit reached — try again in ${Math.ceil((daily.retryAfterSeconds || 0) / 3600)}h`)
+    }
+
+    // For uploads, the object key is always server-generated from the
+    // validated prefix — never the caller-supplied `key` (which is only
+    // used to route to the right prefix check above). This is what makes
+    // "cannot overwrite arbitrary objects" actually true: a caller can no
+    // longer pick a filename that collides with an existing object, theirs
+    // or anyone else's. GET (read) requests are unaffected — the caller
+    // must supply the real, already-existing key to read.
+    let finalKey = key
+    if (!isGet) {
+      if (!keyPrefix) throw new Error('Forbidden path')
+      const ext = EXT_BY_CONTENT_TYPE[contentType] ?? 'bin'
+      finalKey = `${keyPrefix}${crypto.randomUUID()}.${ext}`
     }
 
     const s3 = new S3Client({
@@ -170,15 +248,15 @@ Deno.serve(async (req) => {
     const bucket = Deno.env.get('R2_PUBLIC_BUCKET')!
 
     const cmd = isGet
-      ? new GetObjectCommand({ Bucket: bucket, Key: key })
-      : new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType })
+      ? new GetObjectCommand({ Bucket: bucket, Key: finalKey })
+      : new PutObjectCommand({ Bucket: bucket, Key: finalKey, ContentType: contentType })
 
     const ttl = isGet ? (expiresIn || 300) : 120
     const signedUrl = await getSignedUrl(s3, cmd, { expiresIn: ttl })
 
     const publicUrl = isVerification
       ? undefined
-      : `${Deno.env.get('R2_PUBLIC_URL')}/${key}`
+      : `${Deno.env.get('R2_PUBLIC_URL')}/${finalKey}`
 
     return new Response(JSON.stringify({ signedUrl, publicUrl }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
@@ -188,6 +266,7 @@ Deno.serve(async (req) => {
     const status =
       msg === 'Unauthorized' ? 401
       : msg === 'Forbidden' || msg === 'Forbidden path' ? 403
+      : msg.startsWith('Too many upload requests') || msg.startsWith('Daily upload limit reached') ? 429
       : 400
     return new Response(JSON.stringify({ error: msg }), {
       status,

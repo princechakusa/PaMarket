@@ -66,7 +66,20 @@ async function getFCMAccessToken(sa) {
   return tokenData['access_token'];
 }
 
-async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, imageUrl) {
+// FCM permanent registration failures — the device token will never work
+// again, so retrying it forever (or just leaving the dead row in place
+// forever) is pointless. Anything else (5xx, quota, network) is transient
+// and must NOT delete the token. Mirrors dispatch-notification-push's own
+// FCM_PERMANENT_TOKEN_ERRORS list exactly, so both push paths agree on what
+// "permanently dead" means.
+const FCM_PERMANENT_TOKEN_ERRORS = [
+  'UNREGISTERED',
+  'INVALID_ARGUMENT',
+  'SENDER_ID_MISMATCH',
+  'NOT_FOUND',
+];
+
+async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, imageUrl): Promise<{ ok: boolean; permanentTokenFailure?: boolean }> {
   const message = {
     token: pushToken,
     notification: { title: title, body: body },
@@ -80,13 +93,25 @@ async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, 
     apns: { payload: { aps: { sound: 'default' } }, ...(imageUrl ? { fcm_options: { image: imageUrl } } : {}) },
   };
   const fcmUrl = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';
-  const res = await fetch(fcmUrl, {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: message }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(fcmUrl, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message }),
+    });
+  } catch (_e) {
+    // Network/DNS failure never reached FCM — temporary by definition.
+    return { ok: false };
+  }
   const result = await res.json();
-  return !result['error'];
+  const err = result['error'] as { status?: string; details?: Array<Record<string, string>> } | undefined;
+  if (!err) return { ok: true };
+
+  const status = err.status || '';
+  const detail = err.details?.find((d) => typeof d['errorCode'] === 'string')?.['errorCode'] || '';
+  const code = detail || status;
+  return { ok: false, permanentTokenFailure: FCM_PERMANENT_TOKEN_ERRORS.includes(code) };
 }
 
 // ── Web Push (VAPID) ──────────────────────────────────────
@@ -272,6 +297,12 @@ Deno.serve(async (req) => {
     let q = db.from('profiles').select('id, push_subscription, province');
     if (target === 'verified')        q = q.eq('verified', true);
     else if (target === 'unverified') q = q.eq('verified', false);
+    // 'admins' — internal target used by admin-login-guard's security alert.
+    // Reuses the existing profiles.role column (the same role set
+    // alertAdmins() already uses for the in-app notifications row) instead
+    // of a new admin list/table — not exposed in any admin-panel broadcast
+    // UI, just a value this function happens to accept, same as 'all'.
+    else if (target === 'admins')     q = q.in('role', ['admin', 'moderator', 'support', 'finance']);
     else if (target !== 'all' && target !== 'sellers' && target !== 'buyers') q = q.eq('id', target);
     if (provinces && provinces.length > 0) q = q.in('province', provinces);
 
@@ -400,10 +431,26 @@ Deno.serve(async (req) => {
         if (title) fcmData['title'] = String(title).slice(0, 200);
         if (msg) fcmData['body'] = String(msg).slice(0, 1000);
         if (imageUrl) fcmData['image'] = String(imageUrl);
+        const deadUserIds: string[] = [];
         for (let i = 0; i < withFCM.length; i += 25) {
           const batch = withFCM.slice(i, i + 25);
           const results = await Promise.all(batch.map((p) => sendFCM(p['push_token'], sa['project_id'], accessToken, title, msg, fcmData, imageUrl)));
-          results.forEach((ok) => { if (ok) fcmSent++; else fcmFailed++; });
+          results.forEach((r, idx) => {
+            if (r.ok) { fcmSent++; return; }
+            fcmFailed++;
+            if (r.permanentTokenFailure) deadUserIds.push(batch[idx]['id'] as string);
+          });
+        }
+
+        // Same cleanup notify-message and dispatch-notification-push already
+        // do per-send — send-push was the one push path that never pruned
+        // dead tokens despite tracking fcm_failed counts. Batched delete,
+        // only for FCM's own permanent-failure codes (see
+        // FCM_PERMANENT_TOKEN_ERRORS above) — never for transient errors.
+        if (deadUserIds.length > 0) {
+          for (let i = 0; i < deadUserIds.length; i += 500) {
+            await db.from('push_tokens').delete().in('user_id', deadUserIds.slice(i, i + 500));
+          }
         }
       }
     }

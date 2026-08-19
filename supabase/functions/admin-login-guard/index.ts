@@ -216,7 +216,29 @@ Deno.serve(async (req) => {
   }
 });
 
+// How often this function will actually alert admins, regardless of how
+// many times `record` crosses the lockout threshold in that window. The
+// `record` action is unauthenticated by design (it runs before Supabase
+// login), so without this an anonymous caller could keep tripping the
+// lockout and force a fresh alert (and, before this fix, a fresh
+// full-userbase push) on every single call.
+const ALERT_COOLDOWN_MS = 5 * 60 * 1000;
+
 async function alertAdmins(db: any, info: { ip: string; email: string; ipFails: number; emailFails: number; blockReason: string }) {
+  // Cooldown check: skip alerting entirely (no new in-app row, no push) if
+  // we already sent a security_alert within the cooldown window. Reuses the
+  // notifications table itself as the ledger rather than a new table —
+  // notifications_type_idx (user_id, type, created_at desc) doesn't cover a
+  // user_id-less scan, so this is a small bounded scan (recent rows only,
+  // capped by the 30-day purge job), acceptable for a low-frequency check.
+  const since = Date.now() - ALERT_COOLDOWN_MS;
+  const recent = await db
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('type', 'security_alert')
+    .gt('created_at', since);
+  if ((recent.count || 0) > 0) return;
+
   const explicit = (Deno.env.get('ADMIN_ALERT_USER_IDS') || '').split(',').map((s) => s.trim()).filter(Boolean);
 
   let targetIds = explicit;
@@ -246,6 +268,12 @@ async function alertAdmins(db: any, info: { ip: string; email: string; ipFails: 
   // Reuse the existing push pipeline (FCM/web-push + preference checks) rather
   // than reimplementing delivery here — security_alert is not in the opt-out
   // map in notify-message/send-push, so it always reaches the device.
+  //
+  // target:'admins' (not 'all'): this is a security alert about a blocked
+  // login attempt — it must reach admin/moderator/support/finance staff
+  // only, the same role set the in-app notifications rows above are scoped
+  // to. send-push resolves 'admins' via profiles.role, matching the existing
+  // admin-role mechanism rather than a new one.
   try {
     await fetch(Deno.env.get('SUPABASE_URL') + '/functions/v1/send-push', {
       method: 'POST',
@@ -254,7 +282,7 @@ async function alertAdmins(db: any, info: { ip: string; email: string; ipFails: 
         'Authorization': 'Bearer ' + Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
         'x-automation-secret': Deno.env.get('AUTOMATION_SECRET') || '',
       },
-      body: JSON.stringify({ target: 'all', title, body: message, type: 'security_alert' }),
+      body: JSON.stringify({ target: 'admins', title, body: message, type: 'security_alert' }),
     });
   } catch (_e) { /* db notification row above is the durable record */ }
 }
