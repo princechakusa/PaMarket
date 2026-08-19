@@ -11,6 +11,7 @@ import { businessInitials, type Business } from "../../lib/businesses";
 import { CATEGORIES } from "../../lib/constants";
 import { Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { publicListingExpiryFilter } from "../../lib/listings";
 
 // Dedicated shops directory — mirrors www/js/business-profile.js's
 // BusinessSearch page (H._bizSearch), which the mobile app never had: "See
@@ -67,6 +68,7 @@ export default function ShopsDirectoryScreen() {
       .from("listings")
       .select("seller_id,business_id")
       .eq("status", "active")
+      .or(publicListingExpiryFilter())
       .or(`business_id.in.(${businessIds.join(",")}),seller_id.in.(${ownerIds.join(",")})`);
     const counts: Record<string, number> = {};
     (data ?? []).forEach((l: any) => {

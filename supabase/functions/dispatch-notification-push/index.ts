@@ -152,19 +152,20 @@ Deno.serve(async (req) => {
 
     const notifRes = await db
       .from('notifications')
-      .select('id,user_id,title,body,type,meta,push_sent')
+      .select('id,user_id,title,body,type,meta,push_sent,push_status')
       .eq('id', notificationId)
       .maybeSingle();
     if (notifRes.error || !notifRes.data) return json({ skipped: 'notification not found' });
 
-    const notif = notifRes.data as { id: string; user_id: string; title: string; body: string; type: string; meta: any; push_sent: boolean };
+    const notif = notifRes.data as { id: string; user_id: string; title: string; body: string; type: string; meta: any; push_sent: boolean; push_status: string };
     // Already handled (e.g. send-push inserted this row itself and already
     // pushed) — the trigger's guard should already prevent this call, but
     // re-check here too since the http_post dispatch is async and could in
     // principle be retried by pg_net.
-    if (notif.push_sent) return json({ skipped: 'already sent' });
+    if (notif.push_sent || notif.push_status !== 'pending') return json({ skipped: 'already handled' });
 
-    const markSent = () => db.from('notifications').update({ push_sent: true }).eq('id', notif.id);
+    const markStatus = (push_status: string, push_sent: boolean, push_error: string | null = null) =>
+      db.from('notifications').update({ push_status, push_sent, push_error }).eq('id', notif.id);
 
     const preferenceColumn = PREFERENCE_COLUMN_BY_TYPE[String(notif.type).toLowerCase()];
     if (preferenceColumn) {
@@ -174,27 +175,45 @@ Deno.serve(async (req) => {
         .eq('user_id', notif.user_id)
         .maybeSingle();
       if (!prefRes.error && prefRes.data && (prefRes.data as any)[preferenceColumn] === false) {
-        await markSent();
+        await markStatus('opted_out', false);
         return json({ skipped: 'opted out' });
       }
     }
 
-    const tokenRes = await db.from('push_tokens').select('token').eq('user_id', notif.user_id).maybeSingle();
-    if (tokenRes.error || !tokenRes.data?.token) {
-      await markSent();
+    const tokenRes = await db.from('push_tokens').select('id,token').eq('user_id', notif.user_id);
+    const tokens = (tokenRes.data || []).filter((row: { token?: string }) => row.token);
+    if (tokenRes.error || tokens.length === 0) {
+      await markStatus('no_token', false, 'no registered device');
       return json({ skipped: 'no push token' });
     }
 
+    await markStatus('sending', false);
     const saEnv = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
-    if (!saEnv) return json({ error: 'FIREBASE_SERVICE_ACCOUNT not set' }, 500);
+    if (!saEnv) {
+      await markStatus('failed', false, 'push transport unavailable');
+      return json({ error: 'FIREBASE_SERVICE_ACCOUNT not set' }, 500);
+    }
     const sa = JSON.parse(saEnv);
-    const accessToken = await getFCMAccessToken(sa);
+    let accessToken: string;
+    try {
+      accessToken = await getFCMAccessToken(sa);
+    } catch (_error) {
+      await markStatus('failed', false, 'FCM authentication failed');
+      return json({ error: 'FCM authentication failed' }, 500);
+    }
 
     const deepLink = notif.meta?.deepLink || null;
     const data: Record<string, string> = { type: notif.type, notificationId: notif.id };
     if (deepLink) data['deepLink'] = deepLink;
 
-    const fcm = await sendFCM(tokenRes.data.token, sa['project_id'], accessToken, notif.title, notif.body, data);
+    const attempts = await Promise.all(tokens.map((row: { id: string; token: string }) =>
+      sendFCM(row.token, sa['project_id'], accessToken, notif.title, notif.body, data)
+    ));
+    const deadTokenIds = tokens
+      .filter((_row: { id: string }, index: number) => attempts[index].permanentTokenFailure)
+      .map((row: { id: string }) => row.id);
+    if (deadTokenIds.length) await db.from('push_tokens').delete().in('id', deadTokenIds);
+    const fcm = attempts.find((attempt) => attempt.ok) || attempts[0];
 
     if (!fcm.ok) {
       // Previously markSent() ran here too, so a rejected push was recorded as
@@ -202,25 +221,21 @@ Deno.serve(async (req) => {
       // to see, or retry, a failure. Leave push_sent false and keep the reason.
       await db
         .from('notifications')
-        .update({ push_error: fcm.reason || 'unknown push failure' })
+        .update({ push_status: 'failed', push_sent: false, push_error: fcm.reason || 'all device pushes failed' })
         .eq('id', notif.id);
 
       // A permanently dead registration should not be retried forever. Only
       // remove on FCM's permanent codes — never on 5xx, quota or network
       // errors, which are transient and would drop a healthy device.
-      if (fcm.permanentTokenFailure) {
-        await db.from('push_tokens').delete().eq('user_id', notif.user_id);
-      }
-
-      return json({ success: false, error: fcm.reason, tokenRemoved: Boolean(fcm.permanentTokenFailure) });
+      return json({ success: false, sent: 0, failed: attempts.length, pruned: deadTokenIds.length, error: fcm.reason });
     }
 
     await db
       .from('notifications')
-      .update({ push_sent: true, push_error: null })
+      .update({ push_status: 'sent', push_sent: true, push_error: null })
       .eq('id', notif.id);
 
-    return json({ success: true });
+    return json({ success: true, sent: attempts.filter((attempt) => attempt.ok).length, failed: attempts.filter((attempt) => !attempt.ok).length, pruned: deadTokenIds.length });
   } catch (err) {
     return json({ error: (err as Error).message }, 500);
   }

@@ -195,7 +195,7 @@ export default function MyListingsScreen() {
                 <Text style={styles.actionText}>Mark sold</Text>
               </Pressable>
             ) : null}
-            {item.status === "sold" ? (
+            {item.status === "sold" || item.status === "deleted" ? (
               <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "active")}>
                 <Text style={styles.actionText}>Relist</Text>
               </Pressable>

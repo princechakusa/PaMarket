@@ -408,8 +408,13 @@ export default function MessagesScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.conversation.id}
+          // BottomNav is an absolute overlay (58pt bar + insets.bottom, with
+          // the Post button floating 30pt above the bar's top edge), so this
+          // list scrolls underneath it. The previous value (48 + inset) left
+          // the last conversation row ~10pt behind the bar and up to 40pt
+          // behind the floating button. Same formula as Home/Account/Search.
           contentContainerStyle={
-            filtered.length ? { paddingBottom: space.xxxl + space.lg + insets.bottom } : styles.emptyContent
+            filtered.length ? { paddingBottom: 58 + insets.bottom + space.xxxl } : styles.emptyContent
           }
           keyboardShouldPersistTaps="handled"
           refreshControl={

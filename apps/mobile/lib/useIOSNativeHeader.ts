@@ -20,6 +20,11 @@ type NativeHeaderOptions = {
   // OS's own back button (with its real previous-title/gesture behavior)
   // is what actually renders.
   headerLeft?: () => React.ReactNode;
+  // Call sites whose header component keeps the same presence but changes
+  // behavior can increment this key to make React Navigation rebuild it.
+  // A wizard step is the typical case: the button remains visible while its
+  // Back action must read the newly rendered step.
+  headerLeftKey?: string | number;
   // For photo/hero screens where the back button (and any right-side
   // actions) float directly over the content with no banner behind them —
   // still the real native header/back button, just with no background of
@@ -95,5 +100,6 @@ export function useIOSNativeHeader(options: NativeHeaderOptions) {
     !!options.headerTitle,
     !!options.headerRight,
     !!options.headerLeft,
+    options.headerLeftKey,
   ]);
 }

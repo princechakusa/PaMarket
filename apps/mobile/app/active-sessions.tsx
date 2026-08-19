@@ -1,6 +1,7 @@
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "../lib/supabase";
+import { clearAllPushTokens } from "../lib/push";
 import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -16,6 +17,7 @@ export default function ActiveSessionsScreen() {
   const deviceLabel = Platform.OS === "ios" ? "iPhone / iPad" : "Android Device";
 
   async function signOutEverywhere() {
+    await clearAllPushTokens();
     const { error } = await supabase.auth.signOut({ scope: "global" });
     if (error) {
       toast("Failed to sign out other devices", 3000, true);

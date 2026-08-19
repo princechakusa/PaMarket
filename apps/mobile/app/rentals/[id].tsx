@@ -218,6 +218,10 @@ export default function RentalVehicleDetailScreen() {
   async function getOrCreateRentalConversation() {
     if (!session?.user || !business || !company || !id) return null;
 
+    if (session.user.id === business.owner_user_id) {
+      throw new Error("Cannot open a conversation with your own rental company.");
+    }
+
     const { data: rpcConvId, error: rpcError } = await supabase.rpc("get_or_create_rental_conversation", {
       p_listing_id: id,
       p_company_id: company.id,
@@ -229,23 +233,46 @@ export default function RentalVehicleDetailScreen() {
       if (existing) return rpcConvId;
     }
 
-    const convId = `biz_${company.business_id!.slice(-8)}_${session.user.id.slice(-6)}`;
-    const { data: existing } = await supabase.from("conversations").select("id").eq("id", convId).maybeSingle();
-    if (!existing) {
-      const { error: convError } = await supabase.from("conversations").upsert({
+    // The hardened RPC owns the rental-context write, but a new context has
+    // a foreign key to conversations and the RPC no longer creates that row.
+    // Only recover from that exact missing-conversation failure here. Other
+    // authorization or validation errors must remain visible to the caller.
+    if (rpcError?.code !== "23503") throw rpcError ?? new Error("Rental conversation was not created.");
+
+    const [firstMember, secondMember] = [session.user.id, business.owner_user_id].sort();
+    const convId = `rental_${firstMember}_${secondMember}_${id.replace(/-/g, "")}`;
+    const { error: convError } = await supabase.from("conversations").upsert(
+      {
         id: convId,
         members: [session.user.id, business.owner_user_id],
         listing_id: null,
         business_id: company.business_id,
-      });
-      if (convError) throw convError;
-    }
-    const { error: contextError } = await supabase.from("rental_conversation_context").upsert(
-      { conversation_id: convId, listing_id: id, company_id: company.id, user_id: session.user.id },
-      { onConflict: "user_id,listing_id" }
+      },
+      { onConflict: "id", ignoreDuplicates: true }
     );
-    if (contextError) throw contextError;
-    return convId;
+    if (convError) throw convError;
+
+    // Retry the authoritative RPC now that its FK target exists. It resolves
+    // the owner from company -> business, binds the rental context under
+    // auth.uid(), and safely reuses an existing user/listing context.
+    const { data: retryConvId, error: retryError } = await supabase.rpc("get_or_create_rental_conversation", {
+      p_listing_id: id,
+      p_company_id: company.id,
+      p_user_id: session.user.id,
+    });
+    if (retryError) throw retryError;
+    if (typeof retryConvId !== "string" || retryConvId.length === 0) {
+      throw new Error("Rental conversation was not created.");
+    }
+
+    const { data: created, error: verifyError } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("id", retryConvId)
+      .maybeSingle();
+    if (verifyError) throw verifyError;
+    if (!created) throw new Error("Rental conversation could not be verified.");
+    return retryConvId;
   }
 
   async function captureLead(
@@ -298,6 +325,10 @@ export default function RentalVehicleDetailScreen() {
       return;
     }
     if (!business || !company) return;
+    if (business.owner_user_id === session.user.id) {
+      Alert.alert("Your rental listing", "You cannot start a chat with your own rental company.");
+      return;
+    }
     try {
       const convId = await getOrCreateRentalConversation();
       if (!convId) return;
@@ -315,6 +346,10 @@ export default function RentalVehicleDetailScreen() {
       return;
     }
     if (!business || !company || !startDate || !endDate) return;
+    if (business.owner_user_id === session.user.id) {
+      Alert.alert("Your rental listing", "You cannot request a booking from your own rental company.");
+      return;
+    }
     if (rangeHasBlockedDate(startDate, endDate, availability)) {
       Alert.alert("Dates unavailable", "One or more days in this rental period are already blocked. Please pick different dates.");
       return;

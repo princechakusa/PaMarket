@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { publicListingExpiryFilter } from "./listings";
 
 // Real backend-backed saved listings (table: user_saves — see
 // supabase/schema/user_saves.sql). Replaces the earlier client-only stub so
@@ -23,6 +24,8 @@ export async function fetchValidSavedCount(userId: string): Promise<number> {
   const { count } = await supabase
     .from("listings")
     .select("id", { count: "exact", head: true })
+    .eq("status", "active")
+    .or(publicListingExpiryFilter())
     .in("id", Array.from(ids));
   return count ?? 0;
 }

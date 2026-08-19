@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
-import type { Listing } from "../lib/listings";
+import { publicListingExpiryFilter, type Listing } from "../lib/listings";
 import { fetchSavedListingIds, toggleSave } from "../lib/saves";
 import { space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -11,7 +11,7 @@ import { ListingRow } from "../components/ListingRow";
 import { EmptyState, ErrorState, ListSkeleton } from "../components/ui";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at";
 
 // Real backend-backed favourites — reads from user_saves (see lib/saves.ts),
 // replacing the earlier client-only stub that always showed empty.
@@ -36,6 +36,8 @@ export default function FavouritesScreen() {
     const { data, error: queryError } = await supabase
       .from("listings")
       .select(LISTING_COLUMNS)
+      .eq("status", "active")
+      .or(publicListingExpiryFilter())
       .in("id", Array.from(ids));
     if (queryError) {
       setError(queryError.message);

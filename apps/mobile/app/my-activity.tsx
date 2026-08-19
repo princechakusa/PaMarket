@@ -4,14 +4,14 @@ import { useRouter } from "expo-router";
 import Svg, { Path, Polyline, Rect } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
-import type { Listing } from "../lib/listings";
+import { publicListingExpiryFilter, type Listing } from "../lib/listings";
 import { ListingCard } from "../components/ListingCard";
 import { SectionHeader } from "../components/ui";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
 const RECENTLY_VIEWED_COLUMNS =
-  "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
+  "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at";
 const RECENT_CARD_WIDTH = 170;
 
 // Mirrors www/js/settings.js pages.MyActivity. Purchase History and Recent
@@ -40,7 +40,12 @@ export default function MyActivityScreen() {
       setRecentlyViewed([]);
       return;
     }
-    const { data: listings } = await supabase.from("listings").select(RECENTLY_VIEWED_COLUMNS).in("id", ids).eq("status", "active");
+    const { data: listings } = await supabase
+      .from("listings")
+      .select(RECENTLY_VIEWED_COLUMNS)
+      .in("id", ids)
+      .eq("status", "active")
+      .or(publicListingExpiryFilter());
     const byId = new Map((listings ?? []).map((l: any) => [l.id, l as Listing]));
     setRecentlyViewed(ids.map((id: string) => byId.get(id)).filter((l): l is Listing => !!l));
   }, [session?.user]);

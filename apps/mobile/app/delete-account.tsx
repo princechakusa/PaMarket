@@ -1,11 +1,22 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
+import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 
 // The RPC this used to call (`delete_my_account`) has never actually
 // existed in the database — every call silently fell through to a
@@ -50,6 +61,7 @@ export default function DeleteAccountScreen() {
   const styles = useThemedStyles(buildStyles);
   const { session } = useAuth();
   const router = useRouter();
+  const kavResetKey = useKeyboardAvoidingReset();
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -76,38 +88,56 @@ export default function DeleteAccountScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-      <View style={styles.warnBox}>
-        <Text style={styles.warnTitle}>Delete Account</Text>
-        <Text style={styles.warnSub}>This permanently deletes your account, listings and messages. Cannot be undone.</Text>
-      </View>
+    // The confirmation input sits below the warning box and the seven-item
+    // "what will be deleted" list, so on shorter iPhones it lands under the
+    // keyboard with no avoidance. Same pattern as the other native-header
+    // form screens (edit-profile, business-edit): padding behavior on iOS,
+    // and the shared reset key so backgrounding with the keyboard open
+    // doesn't leave a stale inset behind.
+    <KeyboardAvoidingView
+      key={kavResetKey}
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        // Without this the first tap on Permanently Delete only dismisses
+        // the keyboard instead of pressing the button.
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
+        <View style={styles.warnBox}>
+          <Text style={styles.warnTitle}>Delete Account</Text>
+          <Text style={styles.warnSub}>This permanently deletes your account, listings and messages. Cannot be undone.</Text>
+        </View>
 
-      <View style={styles.box}>
-        <Text style={styles.boxTitle}>What will be deleted</Text>
-        {DELETED_ITEMS.map((item) => (
-          <View key={item} style={styles.itemRow}>
-            <Text style={styles.itemLabel}>{item}</Text>
-            <Text style={styles.itemValue}>Permanently removed</Text>
-          </View>
-        ))}
-      </View>
+        <View style={styles.box}>
+          <Text style={styles.boxTitle}>What will be deleted</Text>
+          {DELETED_ITEMS.map((item) => (
+            <View key={item} style={styles.itemRow}>
+              <Text style={styles.itemLabel}>{item}</Text>
+              <Text style={styles.itemValue}>Permanently removed</Text>
+            </View>
+          ))}
+        </View>
 
-      <Text style={styles.label}>Type DELETE to confirm</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Type DELETE"
-        autoCapitalize="characters"
-        value={confirmText}
-        onChangeText={setConfirmText}
-      />
+        <Text style={styles.label}>Type DELETE to confirm</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Type DELETE"
+          autoCapitalize="characters"
+          value={confirmText}
+          onChangeText={setConfirmText}
+        />
 
-      <Pressable style={[styles.deleteButton, isDeleting && styles.buttonDisabled]} onPress={confirm} disabled={isDeleting}>
-        {isDeleting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.deleteButtonText}>Permanently Delete Account</Text>}
-      </Pressable>
-      <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-        <Text style={styles.cancelButtonText}>Cancel · Keep Account</Text>
-      </Pressable>
-    </ScrollView>
+        <Pressable style={[styles.deleteButton, isDeleting && styles.buttonDisabled]} onPress={confirm} disabled={isDeleting}>
+          {isDeleting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.deleteButtonText}>Permanently Delete Account</Text>}
+        </Pressable>
+        <Pressable style={styles.cancelButton} onPress={() => router.back()}>
+          <Text style={styles.cancelButtonText}>Cancel · Keep Account</Text>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

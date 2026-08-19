@@ -5,7 +5,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import Svg, { Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
-import { filterListings, isFeatured, type Listing } from "../../lib/listings";
+import {
+  filterListings,
+  isFeatured,
+  isPublicListingEligible,
+  publicListingExpiryFilter,
+  type Listing,
+} from "../../lib/listings";
 import { CATEGORIES } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { fetchActiveAds, type PaidAd } from "../../lib/ads";
@@ -37,7 +43,7 @@ import { color, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
-  "id,seller_id,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,business_id,created_at";
+  "id,seller_id,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,business_id,created_at";
 const BUSINESS_COLUMNS =
   "id,owner_user_id,name,logo,category,province,city,status,verification_level";
 
@@ -146,6 +152,7 @@ export default function HomeScreen() {
       .from("listings")
       .select(LISTING_COLUMNS)
       .eq("status", "active")
+      .or(publicListingExpiryFilter())
       .order("created_at", { ascending: false })
       .limit(60)
       .then((result) => result);
@@ -286,7 +293,7 @@ export default function HomeScreen() {
   );
 
   const activeNonJobListings = useMemo(
-    () => listings.filter((l) => l.status === "active" && (l.category || "").toLowerCase() !== "jobs"),
+    () => listings.filter((l) => isPublicListingEligible(l) && (l.category || "").toLowerCase() !== "jobs"),
     [listings]
   );
 

@@ -6,7 +6,13 @@ import Svg, { Circle, Line, Path } from "react-native-svg";
 import { Image } from "expo-image";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { applyBrowseFilters, type BrowseFilters, type Listing } from "../../lib/listings";
+import {
+  applyBrowseFilters,
+  isPublicListingEligible,
+  publicListingExpiryFilter,
+  type BrowseFilters,
+  type Listing,
+} from "../../lib/listings";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { fetchActiveAds, adsForCategory, type PaidAd } from "../../lib/ads";
 import { logSearch } from "../../lib/telemetry";
@@ -14,6 +20,7 @@ import { saveSearch } from "../../lib/saved-searches";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
 import { toast } from "../../components/ui/Toast";
 import { loadCache, saveCache } from "../../lib/offlineCache";
+import { CATEGORIES } from "../../lib/constants";
 
 const SEARCH_CACHE_KEY = "search-browse";
 import { ListingRow } from "../../components/ListingRow";
@@ -24,7 +31,7 @@ import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme"
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at,attributes,condition";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes,condition";
 
 const PAGE_SIZE = 30;
 
@@ -47,6 +54,21 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "Price ↓" },
   { value: "views", label: "Trending" },
 ] as const;
+
+function searchTokenFilter(token: string): string {
+  // .or() accepts raw PostgREST syntax. Quoting the wildcard value prevents
+  // punctuation in user-entered terms from changing the filter expression.
+  const pattern = JSON.stringify(`*${token}*`);
+  const branches = ["title", "description", "city", "suburb", "province", "category"].map(
+    (column) => `${column}.ilike.${pattern}`
+  );
+  const matchingCategoryIds = CATEGORIES.filter(
+    (category) =>
+      category.id.toLowerCase().includes(token) || category.name.toLowerCase().includes(token)
+  ).map((category) => category.id);
+  if (matchingCategoryIds.length) branches.push(`category.in.(${matchingCategoryIds.join(",")})`);
+  return branches.join(",");
+}
 
 function resetSecondaryFilters(filters: BrowseFilters): BrowseFilters {
   return {
@@ -74,10 +96,10 @@ function FilterIcon({ color }: { color: ColorPalette }) {
   );
 }
 
-// Pagination note: we paginate the RAW query in pages of PAGE_SIZE via .range(),
-// accumulate into `listings`, and apply applyBrowseFilters (client-side) to the
-// accumulated list. Category/query params drive both the DB query (category) and
-// the client filter, so filtered pages stay consistent as more pages load.
+// Filters that map directly to listing columns are applied before pagination.
+// Otherwise a category can appear incomplete merely because its older rows sit
+// outside the newest global page. Free-text tokens scope the DB query too;
+// client-side filtering then supplies relevance scoring and derived filters.
 export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -95,8 +117,10 @@ export default function SearchScreen() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [matchingShops, setMatchingShops] = useState<Business[]>([]);
   const [showingCached, setShowingCached] = useState(false);
+  const [queryScope, setQueryScope] = useState("");
 
   const pageRef = useRef(0);
+  const queryGenerationRef = useRef(0);
   const styles = useThemedStyles(buildStyles);
   const themeColor = useThemedStyles((c) => c);
 
@@ -119,21 +143,85 @@ export default function SearchScreen() {
     }
   }, [params.category, params.query]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setQueryScope(filters.query.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [filters.query]);
+
   const buildQuery = useCallback((from: number, to: number) => {
-    return supabase
+    let query = supabase
       .from("listings")
       .select(LISTING_COLUMNS)
       .eq("status", "active")
-      .neq("category", "jobs")
-      .order("created_at", { ascending: false })
-      .range(from, to);
-  }, []);
+      .or(publicListingExpiryFilter())
+      .neq("category", "jobs");
+
+    if (filters.categories.length === 1) {
+      query = query.eq("category", filters.categories[0]);
+    } else if (filters.categories.length > 1) {
+      query = query.in("category", filters.categories);
+    }
+    const searchTokens = queryScope.toLowerCase().split(/\s+/).filter(Boolean);
+    for (const token of searchTokens) query = query.or(searchTokenFilter(token));
+    if (filters.priceMin > 0) query = query.gte("price", filters.priceMin);
+    if (Number.isFinite(filters.priceMax)) {
+      query = filters.priceMin > 0
+        ? query.lte("price", filters.priceMax)
+        : query.or(`price.lte.${filters.priceMax},price.is.null`);
+    }
+    if (filters.currency === "USD") {
+      // Legacy null currency values are displayed as USD throughout the app.
+      query = query.or("currency.eq.USD,currency.is.null");
+    } else if (filters.currency === "ZiG") {
+      query = query.eq("currency", "ZiG");
+    }
+    if (filters.condition !== "all") {
+      query = query.or(
+        `condition.eq.${filters.condition},attributes->>condition.eq.${filters.condition}`
+      );
+    }
+    if (filters.location && filters.location !== "all") {
+      // LocationSheet only supplies repository-owned city names. JSON quoting
+      // also keeps spaces and PostgREST-reserved punctuation inside the value.
+      const location = JSON.stringify(filters.location);
+      query = query.or(`city.eq.${location},province.eq.${location}`);
+    }
+
+    if (filters.sortBy === "price_asc") {
+      query = query
+        .order("price", { ascending: true, nullsFirst: true })
+        .order("created_at", { ascending: false });
+    } else if (filters.sortBy === "price_desc") {
+      query = query
+        .order("price", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false });
+    } else if (filters.sortBy === "views") {
+      query = query
+        .order("views", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    return query.range(from, to);
+  }, [
+    filters.categories,
+    filters.condition,
+    filters.currency,
+    filters.location,
+    filters.priceMax,
+    filters.priceMin,
+    queryScope,
+    filters.sortBy,
+  ]);
 
   const loadFirstPage = useCallback(async () => {
+    const generation = ++queryGenerationRef.current;
     setIsLoading(true);
     setError(null);
     pageRef.current = 0;
     const { data, error: queryError } = await buildQuery(0, PAGE_SIZE - 1);
+    if (generation !== queryGenerationRef.current) return;
     if (queryError) {
       setError(queryError.message);
     } else {
@@ -168,7 +256,12 @@ export default function SearchScreen() {
     setIsLoadingMore(true);
     const nextPage = pageRef.current + 1;
     const from = nextPage * PAGE_SIZE;
+    const generation = queryGenerationRef.current;
     const { data, error: queryError } = await buildQuery(from, from + PAGE_SIZE - 1);
+    if (generation !== queryGenerationRef.current) {
+      setIsLoadingMore(false);
+      return;
+    }
     if (!queryError) {
       const page = (data as Listing[]) ?? [];
       pageRef.current = nextPage;
@@ -187,7 +280,10 @@ export default function SearchScreen() {
     return Array.from(set).sort();
   }, [listings]);
 
-  const results = useMemo(() => applyBrowseFilters(listings, filters), [listings, filters]);
+  const results = useMemo(
+    () => applyBrowseFilters(listings.filter((listing) => isPublicListingEligible(listing)), filters),
+    [listings, filters]
+  );
 
   useEffect(() => {
     if (!filters.query.trim()) return;
@@ -336,7 +432,12 @@ export default function SearchScreen() {
         <FlatList
           data={results}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          // BottomNav is an absolute overlay (components/BottomNav.tsx: a
+          // 58pt bar + insets.bottom, with the Post button floating 30pt
+          // ABOVE the bar's top edge), so the list scrolls underneath it and
+          // the last card was being clipped. space.xxxl (32) clears the
+          // 30pt Post-button overhang. Same formula as Home and Account.
+          contentContainerStyle={[styles.listContent, { paddingBottom: 58 + insets.bottom + space.xxxl }]}
           ListHeaderComponent={
             <>
               {error ? (

@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
     if (!recipients.length) { console.log('skipped: no recipient for', convId); return json({ skipped: 'no recipient' }); }
 
     // Read tokens from the isolated push_tokens table (not from the public profiles row)
-    const tokRes = await db.from('push_tokens').select('user_id, token').in('user_id', recipients);
+    const tokRes = await db.from('push_tokens').select('id, user_id, token').in('user_id', recipients);
     if (tokRes.error) console.warn('push_tokens lookup error:', tokRes.error.message);
     const tokens = (tokRes.data || []).filter((p: any) => p.token);
     if (!tokens.length) { console.log('skipped: no push tokens for', recipients); return json({ skipped: 'no push tokens' }); }
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     const RECENT_MS = 2 * 60 * 1000;
     const sinceIso = new Date(Date.now() - RECENT_MS).toISOString();
     let sent = 0, failed = 0;
-    const deadUserIds: string[] = [];
+    const deadTokenIds: string[] = [];
     await Promise.all(tokens.map(async (p: any) => {
       let title = senderName;
       let body = latestPreview;
@@ -195,18 +195,18 @@ Deno.serve(async (req) => {
       } catch (_) { /* fall back to single-message body */ }
       const data = { type: 'message', deepLink: 'chat:' + convId, conversationId: convId };
       const r = await sendFCM(p.token, sa['project_id'], accessToken, title, body, data);
-      if (r.ok) { sent++; } else { failed++; if (r.invalid) deadUserIds.push(p.user_id); }
+      if (r.ok) { sent++; } else { failed++; if (r.invalid) deadTokenIds.push(p.id); }
     }));
 
     // Prune dead/expired tokens from push_tokens
-    if (deadUserIds.length) {
-      const del = await db.from('push_tokens').delete().in('user_id', deadUserIds);
+    if (deadTokenIds.length) {
+      const del = await db.from('push_tokens').delete().in('id', deadTokenIds);
       if (del.error) console.warn('failed to clear dead tokens:', del.error.message);
-      else console.log('cleared dead push tokens for', deadUserIds.length, 'user(s)');
+      else console.log('cleared', deadTokenIds.length, 'dead push token(s)');
     }
 
-    console.log('done → sent:', sent, 'failed:', failed, 'pruned:', deadUserIds.length);
-    return json({ success: true, sent, failed, pruned: deadUserIds.length });
+    console.log('done → sent:', sent, 'failed:', failed, 'pruned:', deadTokenIds.length);
+    return json({ success: true, sent, failed, pruned: deadTokenIds.length });
   } catch (err) {
     console.error('notify-message error:', (err as Error).message);
     return json({ error: (err as Error).message }, 500);

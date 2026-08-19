@@ -17,12 +17,32 @@ export type Listing = {
   status: string;
   boost?: boolean | null;
   featured_until?: string | null;
+  expires_at?: string | null;
   views?: number | null;
   business_id?: string | null;
   created_at: string;
   updated_at?: string | null;
   attributes?: Record<string, unknown> | null;
+  condition?: string | null;
 };
+
+// Keep public feed queries aligned with the database RLS rule. The database
+// remains authoritative (its clock decides access); this client-side clause is
+// defense in depth for signed-in owners/admins and for cached feed snapshots.
+export function publicListingExpiryFilter(now = new Date()): string {
+  return `expires_at.gt.${now.toISOString()}`;
+}
+
+export function isPublicListingEligible(
+  listing: Pick<Listing, "status" | "expires_at">,
+  now = Date.now()
+): boolean {
+  if (listing.status !== "active") return false;
+  // Missing expiry metadata (including old cache entries) fails closed.
+  if (!listing.expires_at) return false;
+  const expiresAt = new Date(listing.expires_at).getTime();
+  return Number.isFinite(expiresAt) && expiresAt > now;
+}
 
 export type SortMode = "newest" | "oldest" | "price_asc" | "price_desc" | "views";
 
@@ -150,8 +170,10 @@ export function applyBrowseFilters(list: Listing[], filters: BrowseFilters): Lis
     const price = listing.price ?? 0;
     if (price < filters.priceMin || price > filters.priceMax) return false;
     if (filters.condition !== "all") {
-      const attrCondition = (listing.attributes?.condition as string) ?? "";
-      if (attrCondition !== filters.condition) return false;
+      // Current listings store condition in the dedicated column. Keep the
+      // attributes fallback for legacy rows created before that column existed.
+      const condition = listing.condition ?? (listing.attributes?.condition as string) ?? "";
+      if (condition !== filters.condition) return false;
     }
     if (filters.currency !== "all" && (listing.currency ?? "USD") !== filters.currency) return false;
     if (filters.location && filters.location !== "all") {

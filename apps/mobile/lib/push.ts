@@ -1,5 +1,7 @@
 import { Platform } from "react-native";
+import * as Crypto from "expo-crypto";
 import * as Notifications from "expo-notifications";
+import * as SecureStore from "expo-secure-store";
 import messaging, { AuthorizationStatus } from "@react-native-firebase/messaging";
 import { supabase } from "./supabase";
 
@@ -10,6 +12,9 @@ import { supabase } from "./supabase";
 // (getDevicePushTokenAsync), not Expo's push token service.
 
 const ANDROID_CHANNEL_ID = "pamarket_default";
+const PUSH_DEVICE_ID_KEY = "pamarket.push-device-id";
+
+export type PushPermissionState = "granted" | "denied" | "undetermined";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -36,10 +41,26 @@ async function ensureAndroidChannel() {
   });
 }
 
+async function getPushDeviceId(): Promise<string> {
+  const existing = await SecureStore.getItemAsync(PUSH_DEVICE_ID_KEY);
+  if (existing) return existing;
+  const created = Crypto.randomUUID();
+  await SecureStore.setItemAsync(PUSH_DEVICE_ID_KEY, created);
+  return created;
+}
+
+export async function getPushPermissionState(): Promise<PushPermissionState> {
+  const permission = await Notifications.getPermissionsAsync();
+  if (permission.granted) return "granted";
+  return permission.canAskAgain ? "undetermined" : "denied";
+}
+
 async function getFirebaseMessagingToken(): Promise<string | null> {
   const instance = messaging();
   if (Platform.OS === "ios") {
-    const authStatus = await instance.requestPermission();
+    // expo-notifications owns the user-facing prompt. RN Firebase only
+    // verifies the result and binds the granted installation to APNs/FCM.
+    const authStatus = await instance.hasPermission();
     const enabled =
       authStatus === AuthorizationStatus.AUTHORIZED ||
       authStatus === AuthorizationStatus.PROVISIONAL;
@@ -52,19 +73,20 @@ async function getFirebaseMessagingToken(): Promise<string | null> {
   return token || null;
 }
 
-export async function registerForPushNotifications(userId: string): Promise<void> {
+export async function registerForPushNotifications(
+  userId: string,
+  options: { requestIfUndetermined?: boolean } = { requestIfUndetermined: true }
+): Promise<PushPermissionState> {
   try {
     await ensureAndroidChannel();
 
-    const existing = await Notifications.getPermissionsAsync();
-    let granted = existing.granted;
-    if (!granted) {
-      const requested = await Notifications.requestPermissionsAsync();
-      granted = requested.granted;
+    let permission = await Notifications.getPermissionsAsync();
+    if (!permission.granted && permission.canAskAgain && options.requestIfUndetermined !== false) {
+      permission = await Notifications.requestPermissionsAsync();
     }
-    if (!granted) {
+    if (!permission.granted) {
       console.warn("[push] permission not granted — skipping token registration");
-      return;
+      return permission.canAskAgain ? "undetermined" : "denied";
     }
 
     // Firebase Cloud Messaging token. The backend sends via FCM HTTP v1 and
@@ -72,27 +94,27 @@ export async function registerForPushNotifications(userId: string): Promise<void
     const token = await getFirebaseMessagingToken();
     if (!token || typeof token !== "string") {
       console.warn("[push] getFirebaseMessagingToken() returned no token");
-      return;
+      return "granted";
     }
 
-    const { error } = await supabase.from("push_tokens").upsert(
-      {
-        user_id: userId,
-        token,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
+    const deviceId = await getPushDeviceId();
+    const { error } = await supabase.rpc("register_push_token", {
+      p_token: token,
+      p_device_id: deviceId,
+      p_platform: Platform.OS,
+    });
     if (error) {
       console.warn("[push] push_tokens upsert failed:", error.message);
     } else {
       console.log("[push] token registered:", token.slice(0, 12) + "...");
     }
+    return "granted";
   } catch (e) {
     // Push registration is best-effort — never block app usage on failure
     // (e.g. emulator without Play Services, permission denial, etc) — but
     // log it so this isn't a silent, undiagnosable failure.
     console.warn("[push] registerForPushNotifications threw:", (e as Error)?.message || e);
+    return getPushPermissionState().catch(() => "undetermined");
   }
 }
 
@@ -107,14 +129,12 @@ export async function saveRotatedPushToken(token: string): Promise<void> {
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
     if (!userId) return; // signed out — nothing to attach the token to
-    const { error } = await supabase.from("push_tokens").upsert(
-      {
-        user_id: userId,
-        token,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
+    const deviceId = await getPushDeviceId();
+    const { error } = await supabase.rpc("register_push_token", {
+      p_token: token,
+      p_device_id: deviceId,
+      p_platform: Platform.OS,
+    });
     if (error) console.warn("[push] rotated token upsert failed:", error.message);
   } catch (e) {
     // Best-effort, exactly like registration.
@@ -124,8 +144,18 @@ export async function saveRotatedPushToken(token: string): Promise<void> {
 
 export async function clearPushToken(userId: string): Promise<void> {
   try {
-    await supabase.from("push_tokens").delete().eq("user_id", userId);
+    if (!userId) return;
+    const deviceId = await getPushDeviceId();
+    await supabase.rpc("unregister_push_token", { p_device_id: deviceId });
   } catch {
     // best-effort
+  }
+}
+
+export async function clearAllPushTokens(): Promise<void> {
+  try {
+    await supabase.rpc("unregister_all_push_tokens");
+  } catch {
+    // Best-effort; session revocation must not be blocked by cleanup failure.
   }
 }

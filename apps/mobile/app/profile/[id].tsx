@@ -9,7 +9,7 @@ import { useAuth } from "../../lib/auth";
 import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../lib/messages";
 import { fetchSellerRatingSummary, sellerInitials, type PublicProfile } from "../../lib/sellers";
 import { REPORT_REASONS } from "../../lib/safety";
-import { formatPrice, isFeatured, isNew, listingLocation, type Listing } from "../../lib/listings";
+import { formatPrice, isFeatured, isNew, listingLocation, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge, toast } from "../../components/ui";
 import { StarRow } from "../../components/StarRow";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
@@ -276,9 +276,10 @@ export default function UserProfileScreen() {
       fetchSellerRatingSummary(id),
       supabase
         .from("listings")
-        .select("id,seller_id,seller_name,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,created_at")
+        .select("id,seller_id,seller_name,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,created_at")
         .eq("seller_id", id)
         .eq("status", "active")
+        .or(publicListingExpiryFilter())
         .neq("category", "jobs")
         .order("created_at", { ascending: false })
         .limit(30),

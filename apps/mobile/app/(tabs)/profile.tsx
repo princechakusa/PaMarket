@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -220,6 +220,7 @@ function GuestAccountScreen({
 
 export default function AccountScreen() {
   const { session } = useAuth();
+  const userId = session?.user?.id;
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
@@ -237,10 +238,11 @@ export default function AccountScreen() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [bizProductCount, setBizProductCount] = useState(0);
   const [companyVerified, setCompanyVerified] = useState(false);
+  const loadedUserIdRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!session?.user) return;
-    const myId = session.user.id;
+    if (!userId) return;
+    const myId = userId;
     // Unread-messages is handled entirely by the useFocusEffect below (it
     // also fires on this same initial mount) -- fetching it here too fired
     // the same count query twice back to back on every first visit.
@@ -278,11 +280,16 @@ export default function AccountScreen() {
     } else {
       setBizProductCount(0);
     }
-  }, [session]);
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
+      if (!userId) return;
+      // Refresh on every genuine focus, but only replace the whole screen
+      // with a spinner for this user's first load. Returning from Edit
+      // Profile/Settings keeps the current content visible while one fresh
+      // request batch updates it in place.
+      if (loadedUserIdRef.current !== userId) setIsLoading(true);
       // On a dead/flaky connection these queries can hang rather than fail
       // fast, and isLoading gates the whole screen behind a spinner — so the
       // Account tab could sit spinning forever and look like it simply never
@@ -299,10 +306,11 @@ export default function AccountScreen() {
       const timeout = setTimeout(stopLoading, 8000);
       load().finally(() => {
         clearTimeout(timeout);
+        loadedUserIdRef.current = userId;
         stopLoading();
       });
       return () => clearTimeout(timeout);
-    }, [load])
+    }, [load, userId])
   );
 
   // The unread-messages stat was only ever fetched once on mount — reading
@@ -311,11 +319,11 @@ export default function AccountScreen() {
   // focus instead of re-running the full profile load.
   useFocusEffect(
     useCallback(() => {
-      if (!session?.user) return;
+      if (!userId) return;
       supabase
         .rpc("get_unread_message_count")
         .then(({ data }) => setUnreadMessages(data ?? 0), () => {});
-    }, [session])
+    }, [userId])
   );
 
   async function onRefresh() {

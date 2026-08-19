@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
@@ -76,6 +76,20 @@ function usePushNotifications() {
     // Deliberately not awaited: registration is best-effort and must never
     // sit between launch and first paint.
     registerForPushNotifications(userId);
+  }, [session?.user?.id]);
+
+  // iOS does not re-run a denied permission prompt. If the user enables
+  // notifications in Settings, register as soon as the app becomes active
+  // again so delivery recovers without a force-quit or fresh login.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        registerForPushNotifications(userId, { requestIfUndetermined: false }).catch(() => {});
+      }
+    });
+    return () => subscription.remove();
   }, [session?.user?.id]);
 
   // Firebase can rotate the FCM token while the user stays signed in, which

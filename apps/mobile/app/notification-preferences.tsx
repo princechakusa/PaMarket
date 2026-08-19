@@ -1,9 +1,10 @@
 import { useEffect, useState, type ReactElement } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import Svg, { Line, Path, Polygon, Polyline, Rect } from "react-native-svg";
 import { toast } from "../components/ui/Toast";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
+import { getPushPermissionState, registerForPushNotifications, type PushPermissionState } from "../lib/push";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
@@ -132,6 +133,34 @@ export default function NotificationPreferencesScreen() {
   const rows = buildRows(palette);
   const [prefs, setPrefs] = useState<Record<PrefKey, boolean>>(DEFAULTS);
   const [loading, setLoading] = useState(true);
+  const [systemPermission, setSystemPermission] = useState<PushPermissionState>("undetermined");
+
+  useEffect(() => {
+    let active = true;
+    const refreshSystemPermission = async () => {
+      const state = await getPushPermissionState().catch(() => "undetermined" as const);
+      if (!active) return;
+      setSystemPermission(state);
+      if (state === "granted" && session?.user.id) {
+        await registerForPushNotifications(session.user.id, { requestIfUndetermined: false });
+      }
+    };
+    void refreshSystemPermission();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void refreshSystemPermission();
+    });
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, [session?.user.id]);
+
+  async function enableSystemNotifications() {
+    if (!session?.user.id) return;
+    const state = await registerForPushNotifications(session.user.id, { requestIfUndetermined: true });
+    setSystemPermission(state);
+    if (state === "denied") await Linking.openSettings();
+  }
 
   useEffect(() => {
     let active = true;
@@ -200,6 +229,25 @@ export default function NotificationPreferencesScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+      <Text style={styles.sectionLabel}>Device</Text>
+      <View style={[styles.card, styles.systemCard]}>
+        <View style={styles.systemCopy}>
+          <Text style={styles.rowLabel}>System notifications</Text>
+          <Text style={styles.rowSub}>{systemPermission === "granted" ? "On" : "Off"}</Text>
+          {systemPermission !== "granted" ? (
+            <Text style={styles.systemHint}>Notifications are disabled for PaMarket on this device.</Text>
+          ) : null}
+        </View>
+        {systemPermission === "undetermined" ? (
+          <Pressable style={styles.settingsButton} onPress={() => void enableSystemNotifications()}>
+            <Text style={styles.settingsButtonText}>Enable</Text>
+          </Pressable>
+        ) : (
+          <Pressable style={styles.settingsButton} onPress={() => void Linking.openSettings()}>
+            <Text style={styles.settingsButtonText}>Open Settings</Text>
+          </Pressable>
+        )}
+      </View>
       <Text style={styles.sectionLabel}>Alerts</Text>
       <View style={styles.card}>
         {rows.map((row, i) => (
@@ -253,6 +301,11 @@ function buildStyles(color: ColorPalette) {
       marginBottom: 8,
     },
     card: { backgroundColor: color.surface, borderRadius: 14, overflow: "hidden" },
+    systemCard: { flexDirection: "row", alignItems: "center", padding: 14, marginBottom: 20 },
+    systemCopy: { flex: 1 },
+    systemHint: { color: color.textMuted, fontSize: 11.5, lineHeight: 16, marginTop: 4, paddingRight: 8 },
+    settingsButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 12, borderRadius: 10, backgroundColor: color.brandTint },
+    settingsButtonText: { color: color.brand, fontSize: 12, fontWeight: "700" },
     row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
     rowBorder: { borderTopWidth: 1, borderTopColor: color.divider },
     iconWrap: { width: 30, height: 30, borderRadius: 8, backgroundColor: color.surfaceAlt, alignItems: "center", justifyContent: "center" },

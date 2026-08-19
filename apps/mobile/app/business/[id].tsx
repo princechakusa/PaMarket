@@ -18,7 +18,7 @@ import { CATEGORIES } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import { recordShopLead, type LeadType } from "../../lib/business-leads";
-import { formatPrice, type Listing } from "../../lib/listings";
+import { formatPrice, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { averageRating } from "../../lib/sellers";
 import { StarRow } from "../../components/StarRow";
 import { space, type ColorPalette } from "../../lib/theme";
@@ -27,7 +27,7 @@ import { Card, GlassBackButton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at";
 
 export default function BusinessShopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -80,6 +80,7 @@ export default function BusinessShopScreen() {
         .select(LISTING_COLUMNS)
         .eq("business_id", id)
         .eq("status", "active")
+        .or(publicListingExpiryFilter())
         .neq("category", "jobs"),
       supabase.from("business_reviews").select("rating").eq("business_id", id),
       supabase.from("business_followers").select("user_id", { count: "exact", head: true }).eq("business_id", id),

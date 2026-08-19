@@ -22,7 +22,7 @@ import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
-import { formatPrice, isFeatured, type Listing } from "../../lib/listings";
+import { formatPrice, isFeatured, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { useStoreProducts } from "../../lib/use-store-products";
@@ -69,7 +69,7 @@ import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at,attributes";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes";
 
 const CONDITION_LABELS: Record<string, string> = {
   new: "New",
@@ -357,6 +357,7 @@ export default function ListingDetailScreen() {
             .select(LISTING_COLUMNS)
             .eq("category", found.category)
             .eq("status", "active")
+            .or(publicListingExpiryFilter())
             .neq("id", found.id)
             .order("created_at", { ascending: false })
             .limit(8)

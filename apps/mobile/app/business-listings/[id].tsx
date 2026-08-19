@@ -23,7 +23,8 @@ function buildStatusTones(color: ColorPalette) {
     pending: { fg: color.warning, bg: color.warningTint, label: "Pending" },
     active: { fg: color.success, bg: color.successTint, label: "Active" },
     sold: { fg: color.info, bg: color.infoTint, label: "Sold" },
-    archived: { fg: color.textMuted, bg: color.surfaceAlt, label: "Archived" },
+    deleted: { fg: color.textMuted, bg: color.surfaceAlt, label: "Expired" },
+    paused: { fg: color.textMuted, bg: color.surfaceAlt, label: "Paused" },
   } as Record<string, { fg: string; bg: string; label: string }>;
 }
 
@@ -171,9 +172,13 @@ export default function BusinessListingsScreen() {
                   <Text style={styles.actionButtonText}>Mark sold</Text>
                 </Pressable>
               ) : null}
-              {l.status !== "archived" ? (
-                <Pressable style={styles.actionButton} onPress={() => setStatus(l.id, "archived")}>
-                  <Text style={styles.actionButtonText}>Archive</Text>
+              {l.status === "deleted" ? (
+                <Pressable style={styles.actionButton} onPress={() => setStatus(l.id, "active")}>
+                  <Text style={styles.actionButtonText}>Reactivate</Text>
+                </Pressable>
+              ) : l.status !== "paused" ? (
+                <Pressable style={styles.actionButton} onPress={() => setStatus(l.id, "paused")}>
+                  <Text style={styles.actionButtonText}>Pause</Text>
                 </Pressable>
               ) : (
                 <Pressable style={styles.actionButton} onPress={() => setStatus(l.id, "active")}>

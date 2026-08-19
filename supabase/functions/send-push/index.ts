@@ -337,14 +337,17 @@ Deno.serve(async (req) => {
     // FCM tokens live in the isolated push_tokens table (security_hardening_2026_06.sql
     // dropped profiles.push_token so it's no longer publicly readable) — join them in
     // by user id, same as notify-message does, instead of querying the dropped column.
-    const tokenMap: Record<string, string> = {};
+    const tokenMap: Record<string, Array<{ id: string; token: string }>> = {};
     for (let i = 0; i < profiles.length; i += 500) {
       const idsBatch = profiles.slice(i, i + 500).map((p) => p['id']);
-      const tokenRows = await db.from('push_tokens').select('user_id, token').in('user_id', idsBatch);
+      const tokenRows = await db.from('push_tokens').select('id, user_id, token').in('user_id', idsBatch);
       if (tokenRows.error) console.warn('push_tokens lookup:', tokenRows.error.message);
-      for (const t of (tokenRows.data || [])) tokenMap[t['user_id']] = t['token'];
+      for (const t of (tokenRows.data || [])) {
+        const userId = t['user_id'] as string;
+        (tokenMap[userId] ||= []).push({ id: t['id'] as string, token: t['token'] as string });
+      }
     }
-    profiles = profiles.map((p) => ({ ...p, push_token: tokenMap[p['id'] as string] || null }));
+    profiles = profiles.map((p) => ({ ...p, push_tokens: tokenMap[p['id'] as string] || [] }));
 
     if (target === 'sellers' || target === 'buyers') {
       // Same truncation risk as the profiles fetch above — an active
@@ -407,7 +410,8 @@ Deno.serve(async (req) => {
       read: false,
       created_at: now,
       meta: { deepLink: deepLink, imageUrl: imageUrl },
-      push_sent: true,
+      push_sent: false,
+      push_status: 'sending',
     }));
     for (let i = 0; i < dbRows.length; i += 100) {
       await db.from('notifications').insert(dbRows.slice(i, i + 100));
@@ -416,8 +420,16 @@ Deno.serve(async (req) => {
     const pushPayload = JSON.stringify({ title, body: msg, type, deepLink, image: imageUrl || undefined });
 
     // ── FCM (legacy push_token) ────────────────────────────
-    const withFCM = profiles.filter((p) => p['push_token']);
+    const withFCM = profiles.flatMap((profile) =>
+      ((profile['push_tokens'] as Array<{ id: string; token: string }>) || []).map((registration) => ({
+        user_id: profile['id'] as string,
+        token_id: registration.id,
+        push_token: registration.token,
+      }))
+    );
     let fcmSent = 0, fcmFailed = 0;
+    const deliveredUserIds = new Set<string>();
+    const attemptedUserIds = new Set<string>();
 
     if (withFCM.length > 0) {
       const saEnv = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
@@ -431,14 +443,15 @@ Deno.serve(async (req) => {
         if (title) fcmData['title'] = String(title).slice(0, 200);
         if (msg) fcmData['body'] = String(msg).slice(0, 1000);
         if (imageUrl) fcmData['image'] = String(imageUrl);
-        const deadUserIds: string[] = [];
+        const deadTokenIds: string[] = [];
         for (let i = 0; i < withFCM.length; i += 25) {
           const batch = withFCM.slice(i, i + 25);
+          batch.forEach((registration) => attemptedUserIds.add(registration['user_id']));
           const results = await Promise.all(batch.map((p) => sendFCM(p['push_token'], sa['project_id'], accessToken, title, msg, fcmData, imageUrl)));
           results.forEach((r, idx) => {
-            if (r.ok) { fcmSent++; return; }
+            if (r.ok) { fcmSent++; deliveredUserIds.add(batch[idx]['user_id']); return; }
             fcmFailed++;
-            if (r.permanentTokenFailure) deadUserIds.push(batch[idx]['id'] as string);
+            if (r.permanentTokenFailure) deadTokenIds.push(batch[idx]['token_id'] as string);
           });
         }
 
@@ -447,9 +460,9 @@ Deno.serve(async (req) => {
         // dead tokens despite tracking fcm_failed counts. Batched delete,
         // only for FCM's own permanent-failure codes (see
         // FCM_PERMANENT_TOKEN_ERRORS above) — never for transient errors.
-        if (deadUserIds.length > 0) {
-          for (let i = 0; i < deadUserIds.length; i += 500) {
-            await db.from('push_tokens').delete().in('user_id', deadUserIds.slice(i, i + 500));
+        if (deadTokenIds.length > 0) {
+          for (let i = 0; i < deadTokenIds.length; i += 500) {
+            await db.from('push_tokens').delete().in('id', deadTokenIds.slice(i, i + 500));
           }
         }
       }
@@ -463,16 +476,40 @@ Deno.serve(async (req) => {
 
     if (withWebPush.length > 0 && vapidPublic && vapidPrivate) {
       for (const p of withWebPush) {
+        attemptedUserIds.add(p['id'] as string);
         try {
           const sub = typeof p['push_subscription'] === 'string'
             ? JSON.parse(p['push_subscription'])
             : p['push_subscription'];
           const ok = await sendWebPush(sub, pushPayload, vapidPublic, vapidPrivate);
-          if (ok) webPushSent++; else webPushFailed++;
+          if (ok) {
+            webPushSent++;
+            deliveredUserIds.add(p['id'] as string);
+          } else webPushFailed++;
         } catch(e) {
           webPushFailed++;
         }
       }
+    }
+
+    // Persist one truthful outcome per in-app notification. A user is marked
+    // sent when at least one of their registered devices (or web endpoint)
+    // accepted the push; a missing registration is a distinct terminal state.
+    const profileById = new Map(profiles.map((profile) => [profile['id'] as string, profile]));
+    for (let i = 0; i < dbRows.length; i += 100) {
+      await Promise.all(dbRows.slice(i, i + 100).map((row) => {
+        const userId = row.user_id as string;
+        const profile = profileById.get(userId);
+        const hasEndpoint = Boolean(
+          ((profile?.['push_tokens'] as unknown[]) || []).length || profile?.['push_subscription']
+        );
+        const outcome = deliveredUserIds.has(userId)
+          ? { push_status: 'sent', push_sent: true, push_error: null }
+          : hasEndpoint
+            ? { push_status: 'failed', push_sent: false, push_error: attemptedUserIds.has(userId) ? 'all push endpoints failed' : 'push transport unavailable' }
+            : { push_status: 'no_token', push_sent: false, push_error: 'no registered device' };
+        return db.from('notifications').update(outcome).eq('id', row.id);
+      }));
     }
 
     return json({
@@ -483,7 +520,7 @@ Deno.serve(async (req) => {
       fcm_failed:     fcmFailed,
       web_push_sent:  webPushSent,
       web_push_failed: webPushFailed,
-      no_token:       profiles.filter(p => !p['push_token'] && !p['push_subscription']).length,
+      no_token:       profiles.filter(p => !((p['push_tokens'] as unknown[]) || []).length && !p['push_subscription']).length,
       db_inserted:    dbRows.length,
     });
 

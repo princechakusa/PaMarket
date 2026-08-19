@@ -127,7 +127,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-apple-authentication",
     "expo-iap",
     "expo-router",
-    "expo-secure-store",
+    [
+      "expo-secure-store",
+      {
+        // SecureStore is only ever used with keychainAccessible:
+        // AFTER_FIRST_UNLOCK (lib/supabase.ts, lib/iap.ts) — never with
+        // requireAuthentication, which is the only option that would invoke
+        // Face ID. expo-local-authentication isn't installed. Left unset,
+        // this plugin injects a default NSFaceIDUsageDescription for a
+        // capability the app cannot use.
+        faceIDPermission: false,
+      },
+    ],
     "expo-status-bar",
     [
       "expo-build-properties",
@@ -180,6 +191,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         photosPermission: "PaMarket uses your photos to add pictures to listings, profiles, and chat messages.",
         cameraPermission: "PaMarket uses your camera to take photos for listings, verification, and chat messages.",
+        // Every picker call in the app is images-only (mediaTypes: ["images"]);
+        // nothing records video or audio. Left unset, this plugin injects a
+        // default NSMicrophoneUsageDescription and adds RECORD_AUDIO on
+        // Android for a capability the binary never exercises. `false` makes
+        // the plugin delete the key and block the Android permission.
+        microphonePermission: false,
       },
     ],
     [

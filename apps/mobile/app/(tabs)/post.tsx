@@ -100,6 +100,7 @@ export default function PostScreen() {
     title: "Post a Free Ad",
     headerLeft:
       state.step > 1 || state.category ? () => <GlassBackButton onPress={handleHeaderBack} tone="light" flat /> : undefined,
+    headerLeftKey: state.step,
   });
   const [error, setError] = useState<string | null>(null);
   const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
@@ -541,10 +542,9 @@ export default function PostScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
 
-      {/* Fixed footer, not part of ScrollView content — Continue/Post and the
-          wizard Back action remain reachable without scrolling. Back is kept
-          here as the reliable cross-platform step control; the iOS native
-          header remains a second affordance rather than the only one. */}
+      {/* Fixed footer, not part of ScrollView content — Continue/Post remains
+          reachable without scrolling. Wizard Back lives in the single top
+          header control (and Android's system hardware Back path). */}
       {state.step === 1 && !state.category ? null : (
         // Generous fixed buffer (not just an exact-fit calculation) above the
         // floating tab bar's own footprint (64 + insets.bottom, see
@@ -560,9 +560,6 @@ export default function PostScreen() {
         >
           {isSubmitting && submitStatus ? <Text style={styles.submitStatus}>{submitStatus}</Text> : null}
           <View style={styles.footerActions}>
-            {state.step > 1 ? (
-              <Button label="Back" variant="secondary" onPress={goBack} fullWidth={false} style={styles.footerBack} />
-            ) : null}
             {state.step < 4 ? (
               <Button
                 label={state.step === 3 ? "Preview →" : "Continue →"}
@@ -676,7 +673,6 @@ function buildStyles(color: ColorPalette) {
     elevation: 20,
   },
   footerActions: { flexDirection: "row", gap: space.md },
-  footerBack: { flex: 1 },
   footerPrimary: { flex: 2 },
   submitStatus: {
     ...font.caption,

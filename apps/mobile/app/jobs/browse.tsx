@@ -12,6 +12,7 @@ import { businessInitials } from "../../lib/businesses";
 import { Badge, Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton } from "../../components/ui";
 import { loadCache, saveCache } from "../../lib/offlineCache";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { publicListingExpiryFilter } from "../../lib/listings";
 
 const JOBS_CACHE_KEY = "jobs-browse";
 
@@ -25,9 +26,10 @@ type JobListing = {
   province: string | null;
   photos: string[] | null;
   created_at: string;
+  expires_at: string | null;
 };
 
-const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at";
+const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at,expires_at";
 const PAGE_SIZE = 30;
 
 function SearchIcon() {
@@ -69,6 +71,7 @@ export default function JobsListScreen() {
       .select(JOB_COLUMNS)
       .eq("category", "jobs")
       .eq("status", "active")
+      .or(publicListingExpiryFilter())
       .order("created_at", { ascending: false })
       .range(from, to);
   }, []);
@@ -92,7 +95,11 @@ export default function JobsListScreen() {
     let cancelled = false;
     loadCache<JobListing[]>(JOBS_CACHE_KEY).then((cached) => {
       if (cancelled || !cached || !cached.length) return;
-      setJobs((current) => (current.length ? current : cached));
+      const now = Date.now();
+      const eligible = cached.filter((job) =>
+        !!job.expires_at && new Date(job.expires_at).getTime() > now
+      );
+      setJobs((current) => (current.length ? current : eligible));
       setShowingCached(true);
       setIsLoading(false);
     });
