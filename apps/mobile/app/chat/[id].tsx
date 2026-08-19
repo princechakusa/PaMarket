@@ -546,7 +546,19 @@ export default function ChatScreen() {
       // rejects the insert because either party has blocked the other).
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       const isBlocked = /block exists between these users/i.test(insertError.message);
-      toast(isBlocked ? "This message couldn't be delivered." : "Message not sent — try again.", 3000, true);
+      const isNewRecipientLimited = /rate_limited: too many new conversations/i.test(insertError.message);
+      const isVolumeLimited = /rate_limited: too many messages/i.test(insertError.message);
+      toast(
+        isBlocked
+          ? "This message couldn't be delivered."
+          : isNewRecipientLimited
+            ? "You're messaging a lot of new people. Please wait a little before starting more conversations."
+            : isVolumeLimited
+              ? "You're sending messages quickly. Please wait a moment and try again."
+              : "Message not sent — try again.",
+        3000,
+        true
+      );
       return;
     }
 
@@ -652,7 +664,7 @@ export default function ChatScreen() {
   async function forwardTo(candidate: ForwardCandidate) {
     if (!forwardTarget || !myId) return;
     const { data: profile } = await supabase.from("profiles").select("name").eq("id", myId).maybeSingle();
-    await supabase.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       conversation_id: candidate.conversationId,
       sender_id: myId,
       sender_name: profile?.name ?? "",
@@ -661,6 +673,20 @@ export default function ChatScreen() {
       read: false,
     });
     setForwardTarget(null);
+    if (error) {
+      const isNewRecipientLimited = /rate_limited: too many new conversations/i.test(error.message);
+      const isVolumeLimited = /rate_limited: too many messages/i.test(error.message);
+      toast(
+        isNewRecipientLimited
+          ? "You're messaging a lot of new people. Please wait a little before starting more conversations."
+          : isVolumeLimited
+            ? "You're sending messages quickly. Please wait a moment and try again."
+            : "Could not forward — try again.",
+        3000,
+        true
+      );
+      return;
+    }
     toast(`Forwarded to ${candidate.name}`);
   }
 

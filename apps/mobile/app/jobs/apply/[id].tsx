@@ -101,6 +101,10 @@ export default function ApplyJobScreen() {
         router.back();
         return;
       }
+      if (/rate_limited:/i.test(error.message)) {
+        toast("You've submitted several applications recently. Please wait a little before applying again.", 3500, true);
+        return;
+      }
       toast("Could not submit your application");
       return;
     }
