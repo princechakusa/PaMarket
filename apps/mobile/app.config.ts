@@ -80,7 +80,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // correct 58pt height with the floating Post button fully clearing the
     // bar instead of being clipped by it; and three more raw Postgres error
     // messages were routed through the existing friendly-error translator.
-    buildNumber: "21",
+    buildNumber: "22",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
