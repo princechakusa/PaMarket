@@ -355,12 +355,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://pamarketzw.com/profile?id=e1abd2b1-ae10-49e5-aa61-d2625990a3e0</loc>
-    <lastmod>2026-07-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://pamarketzw.com/profile?id=b7ecb41f-00e2-4d9b-b2d1-8b3a8db3b104</loc>
     <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
@@ -387,6 +381,12 @@
   <url>
     <loc>https://pamarketzw.com/profile?id=9bb26090-1f9b-42ba-88cf-928303a7afab</loc>
     <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pamarketzw.com/profile?id=e1abd2b1-ae10-49e5-aa61-d2625990a3e0</loc>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
