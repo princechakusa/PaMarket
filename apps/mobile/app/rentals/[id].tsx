@@ -167,6 +167,14 @@ export default function RentalVehicleDetailScreen() {
     if (!v) return;
     setVehicle(v as RentalVehicleDetail);
 
+    // Mirrors listing/[id].tsx's increment_listing_view — this call was
+    // simply never ported here, so rental view counts stayed frozen at 0
+    // no matter how many times a listing was actually viewed.
+    supabase.rpc("rental_increment_view", { p_listing_id: id }).then(
+      () => {},
+      () => {}
+    );
+
     const [mediaRes, specsRes, featuresRes, brandRes] = await Promise.all([
       supabase.from("rental_vehicle_media").select("url,sort_order,is_cover").eq("listing_id", id).order("sort_order"),
       supabase
@@ -332,8 +340,10 @@ export default function RentalVehicleDetailScreen() {
     try {
       const convId = await getOrCreateRentalConversation();
       if (!convId) return;
-      await captureLead("chat", convId);
-      router.push({ pathname: "/chat/[id]", params: { id: convId } });
+      // Lead capture happens once the customer actually sends a message
+      // (chat/[id].tsx, gated on rentalListingId) — not here, so merely
+      // opening the chat screen doesn't record an inquiry that never happened.
+      router.push({ pathname: "/chat/[id]", params: { id: convId, rentalListingId: id } });
     } catch (e) {
       console.warn("rental chat:", e);
       Alert.alert("Could not open chat", "Please try again in a moment.");

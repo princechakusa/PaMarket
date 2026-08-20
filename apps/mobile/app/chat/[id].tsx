@@ -144,11 +144,21 @@ export default function ChatScreen() {
   // so opening a chat never flashes "PaMarket User" first. Purely cosmetic:
   // the authoritative otherProfile/conversationBusiness fetch below still
   // always runs and overwrites this once it resolves.
-  const { id, name: nameHint, avatar: avatarHint } = useLocalSearchParams<{ id: string; name?: string; avatar?: string }>();
+  const { id, name: nameHint, avatar: avatarHint, rentalListingId } = useLocalSearchParams<{
+    id: string;
+    name?: string;
+    avatar?: string;
+    rentalListingId?: string;
+  }>();
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const myId = session?.user?.id;
+  // Rental inquiries are only recorded once the customer actually sends a
+  // message in this conversation, not just for opening the chat screen — see
+  // rentals/[id].tsx's contactViaChat, which passes rentalListingId instead
+  // of capturing the lead itself.
+  const rentalLeadCapturedRef = useRef(false);
 
   const [conversation, setConversation] = useState<ConversationRow | null>(null);
   const [otherProfile, setOtherProfile] = useState<Profile | null>(null);
@@ -391,7 +401,7 @@ export default function ChatScreen() {
         ? supabase.from("profiles_public").select("id,name,avatar,verified,last_seen").eq("id", oId).maybeSingle()
         : Promise.resolve({ data: null }),
       businessId
-        ? supabase.from("businesses").select("id,name,logo").eq("id", businessId).maybeSingle()
+        ? supabase.from("businesses").select("id,name,logo,owner_user_id").eq("id", businessId).maybeSingle()
         : Promise.resolve({ data: null }),
       listingId
         ? supabase.from("listings").select("id,title,price,currency,photos").eq("id", listingId).maybeSingle()
@@ -409,7 +419,15 @@ export default function ChatScreen() {
       return;
     }
     setOtherProfile((profileRes.data as Profile) ?? null);
-    setConversationBusiness((bizRes.data as { id: string; name: string | null; logo: string | null } | null) ?? null);
+    // The business identity is only shown to the OTHER side of the
+    // conversation — the customer. When the viewer is the business's own
+    // owner, showing "conversationBusiness" here made the header display
+    // their own business's name/logo instead of the customer they're
+    // actually talking to (read as "messaging myself"). Falling back to
+    // null for the owner's view lets displayName/displayAvatar below
+    // resolve to otherProfile (the real customer) instead.
+    const biz = bizRes.data as { id: string; name: string | null; logo: string | null; owner_user_id: string | null } | null;
+    setConversationBusiness(biz && biz.owner_user_id !== myId ? { id: biz.id, name: biz.name, logo: biz.logo } : null);
     setListing((listingRes.data as ListingContext) ?? null);
     setMessages((msgsRes.data as MessageRow[]) ?? []);
 
@@ -517,7 +535,12 @@ export default function ChatScreen() {
       conversation_id: id,
       sender_id: myId,
       sender_name: profile?.name ?? "",
-      text: storedText || null,
+      // messages.text is NOT NULL — an image-only send has storedText === ""
+      // (the empty string satisfies that; displayText() already treats ""
+      // and null identically, so nothing downstream needs to change), but
+      // sending literal `null` here violates the constraint and the insert
+      // is rejected outright.
+      text: storedText,
       image: imageUrl ?? null,
       read: false,
       created_at: new Date().toISOString(),
@@ -532,7 +555,7 @@ export default function ChatScreen() {
         conversation_id: id,
         sender_id: myId,
         sender_name: profile?.name ?? "",
-        text: storedText || null,
+        text: storedText,
         image: imageUrl ?? null,
         read: false,
       })
@@ -560,6 +583,16 @@ export default function ChatScreen() {
         true
       );
       return;
+    }
+
+    if (rentalListingId && !rentalLeadCapturedRef.current) {
+      rentalLeadCapturedRef.current = true;
+      supabase
+        .rpc("rental_capture_lead", { p_listing_id: rentalListingId, p_lead_source: "chat", p_conversation_id: id })
+        .then(
+          () => {},
+          (e) => console.warn("rental lead capture (chat):", e)
+        );
     }
 
     // Pattern-matched scam categories get auto-flagged for moderator review
@@ -668,7 +701,9 @@ export default function ChatScreen() {
       conversation_id: candidate.conversationId,
       sender_id: myId,
       sender_name: profile?.name ?? "",
-      text: forwardTarget.image ? null : displayText(forwardTarget.text),
+      // Same NOT NULL constraint as sendMessage() — an image-only forward
+      // must send "", not null.
+      text: forwardTarget.image ? "" : displayText(forwardTarget.text),
       image: forwardTarget.image ?? null,
       read: false,
     });

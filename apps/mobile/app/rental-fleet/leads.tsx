@@ -191,13 +191,10 @@ export default function RentalLeadsScreen() {
         toast(`This customer has not opened chat yet. Source: ${SOURCE_LABEL[lead.lead_source] || lead.lead_source}.`);
         return;
       }
-      if (lead.status === "new") {
-        supabase.from("rental_vehicle_leads").update({ status: "contacted", contacted_at: new Date().toISOString() }).eq("id", lead.id).then(
-          () => {},
-          () => {}
-        );
-        setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: "contacted" } : l)));
-      }
+      // Opening the chat is not the same as contacting the customer — the
+      // owner still has to actually send something. "Mark Contacted" below
+      // (and updateLeadStatus) is the real, explicit way to flip this status;
+      // auto-setting it here recorded a contact that may never have happened.
       router.push(`/chat/${convId}`);
     } catch (e) {
       console.warn("open inquiry:", e);
