@@ -80,7 +80,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // correct 58pt height with the floating Post button fully clearing the
     // bar instead of being clipped by it; and three more raw Postgres error
     // messages were routed through the existing friendly-error translator.
-    buildNumber: "22",
+    // 23 carries everything in 21 (22 was never built) plus the Build 23
+    // consolidation: multi-device push token lifecycle with per-device
+    // logout, server-authoritative listing expiry (30-day lifecycle, RLS
+    // hides expired public listings), Personal/Business chat separation,
+    // rental chat via RPC with fallback, post-wizard per-step Back state
+    // preservation, phone-optional posting, Search/Messages bottom-nav
+    // clearance fixes, the Delete Account keyboard-avoidance fix, and the
+    // unused-permission cleanup (microphone, Face ID descriptors removed).
+    buildNumber: "23",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
