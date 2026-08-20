@@ -13,17 +13,21 @@ type ChipProps = {
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     chip: {
+      minHeight: 44,
       paddingHorizontal: space.lg,
       paddingVertical: space.sm,
       borderRadius: radius.pill,
       borderWidth: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
     },
     inactive: {
       backgroundColor: color.surface,
       borderColor: color.borderStrong,
     },
     pressed: { opacity: 0.8 },
-    label: { ...font.caption },
+    label: { ...font.caption, textAlign: "center" },
     labelActive: { color: color.textOnBrand },
     labelInactive: { color: color.textSub },
   });
