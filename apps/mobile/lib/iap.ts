@@ -36,6 +36,11 @@ const NATIVE_STORE_NAME = Platform.OS === "ios" ? "App Store" : "Google Play";
 
 type PendingContext = {
   productId: string;
+  // The PaMarket user who started this purchase — checked on read so a
+  // purchase-update event that arrives after an account switch can't apply
+  // one user's listingId/businessId to another user's purchase. Required
+  // (not optional) so a pre-this-fix context saved without it never matches.
+  userId: string;
   listingId?: string;
   businessId?: string;
   savedAt: number;
@@ -60,7 +65,8 @@ async function savePendingContext(ctx: Omit<PendingContext, "savedAt">) {
 }
 
 async function loadPendingContext(
-  productId: string
+  productId: string,
+  currentUserId: string | undefined
 ): Promise<PendingContext | null> {
   let raw: string | null;
   try {
@@ -78,7 +84,15 @@ async function loadPendingContext(
     const ctx = JSON.parse(raw) as PendingContext;
     if (
       Date.now() - ctx.savedAt > PENDING_CONTEXT_TTL_MS ||
-      ctx.productId !== productId
+      ctx.productId !== productId ||
+      // Not provably this user's context (missing — e.g. a pre-upgrade
+      // context with no userId field — or belongs to a different account
+      // than the one currently signed in, e.g. after a sign-out/sign-in
+      // switch). The purchase itself still verifies against the caller's
+      // own session below; it just proceeds without this listing/business
+      // context rather than risk applying it to the wrong account.
+      !ctx.userId ||
+      ctx.userId !== currentUserId
     )
       return null;
     return ctx;
@@ -274,7 +288,8 @@ async function handlePurchase(purchase: Purchase) {
 
   let ctx: PendingContext | null;
   try {
-    ctx = await loadPendingContext(productId);
+    const { data: currentSession } = await supabase.auth.getSession();
+    ctx = await loadPendingContext(productId, currentSession.session?.user.id);
   } catch (error) {
     console.warn("iap: could not read purchase context", safeIapError(error));
     resolvePending(productId, {
@@ -392,6 +407,34 @@ export async function initIAP(): Promise<boolean> {
     connectionPromise = null;
   });
   return connectionPromise;
+}
+
+// Clears client-side IAP state bound to the signing-out user: any purchase
+// promise still waiting on a result, and the pending purchase context
+// (listingId/businessId a purchase was started for). Call this before
+// supabase.auth.signOut() so a purchase-update event that arrives after a
+// different user signs in can't inherit this user's context (see
+// loadPendingContext's userId check, which is the other half of this fix).
+//
+// This deliberately does NOT touch the native store connection, the
+// purchase/error listeners, or call finishTransaction/consume/acknowledge
+// on anything — an unfinished legitimate StoreKit/Play Billing transaction
+// must survive a sign-out so it can still be recovered (by this user
+// signing back in, or via Restore Purchases) rather than being silently
+// discarded. That distinction is also why this is a separate, narrower
+// function from teardownIAP(), which does close the native connection and
+// is only meant for app-unmount.
+export async function clearIAPUserContext() {
+  for (const waiter of pendingCalls.values()) {
+    clearTimeout(waiter.timeout);
+    waiter.resolve({
+      ok: false,
+      code: "purchase-failed",
+      error: "Signed out before the purchase finished. Please sign in and try again.",
+    });
+  }
+  pendingCalls.clear();
+  await clearPendingContext();
 }
 
 export async function teardownIAP() {
@@ -600,6 +643,7 @@ export async function purchaseProduct(
   try {
     await savePendingContext({
       productId,
+      userId: sessionCheck.session.user.id,
       listingId: ctx.listingId,
       businessId: ctx.businessId,
     });

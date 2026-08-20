@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
+import { clearIAPUserContext } from "../lib/iap";
 import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -43,6 +44,7 @@ async function purgeMyAccount(): Promise<{ ok: boolean; error?: string }> {
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body?.success) return { ok: false, error: body?.error || `Server error (${res.status})` };
 
+  await clearIAPUserContext();
   await supabase.auth.signOut();
   return { ok: true };
 }

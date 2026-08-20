@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,7 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { GlassBackButton } from "../components/ui";
 import { supabase } from "../lib/supabase";
@@ -208,6 +210,24 @@ export default function BusinessOnboardingScreen() {
     if (i > 0) setStep(STEPS[i - 1]);
     else router.back();
   }
+
+  // Same pattern as the Post wizard's hardware-back handling: Android system
+  // Back should step the wizard back one stage, not exit the whole screen,
+  // for every step after the first.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") return;
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        const i = STEPS.indexOf(step);
+        if (i > 0) {
+          setStep(STEPS[i - 1]);
+          return true;
+        }
+        return false;
+      });
+      return () => subscription.remove();
+    }, [step])
+  );
 
   async function activate() {
     if (!draft.name || !draft.phone || !draft.province || !draft.city) { setStep("details"); return; }

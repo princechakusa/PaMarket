@@ -4,6 +4,7 @@ import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { clearPushToken } from "../lib/push";
+import { clearIAPUserContext } from "../lib/iap";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
@@ -59,6 +60,7 @@ export default function SettingsScreen() {
         style: "destructive",
         onPress: async () => {
           const userId = session?.user?.id;
+          await clearIAPUserContext();
           if (userId) await clearPushToken(userId);
           await supabase.auth.signOut();
         },

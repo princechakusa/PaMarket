@@ -21,6 +21,7 @@ import type { Profile } from "../../lib/profiles";
 import { fetchSellerRatingSummary } from "../../lib/sellers";
 import { fetchValidSavedCount } from "../../lib/saves";
 import { clearPushToken } from "../../lib/push";
+import { clearIAPUserContext } from "../../lib/iap";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { Avatar, Badge, Card, SectionHeader, VerifiedBadge } from "../../components/ui";
 import { BrandWordmark } from "../../components/BrandLogo";
@@ -340,6 +341,7 @@ export default function AccountScreen() {
         style: "destructive",
         onPress: async () => {
           const userId = session?.user?.id;
+          await clearIAPUserContext();
           if (userId) await clearPushToken(userId);
           await supabase.auth.signOut();
         },
