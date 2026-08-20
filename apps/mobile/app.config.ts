@@ -88,7 +88,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // preservation, phone-optional posting, Search/Messages bottom-nav
     // clearance fixes, the Delete Account keyboard-avoidance fix, and the
     // unused-permission cleanup (microphone, Face ID descriptors removed).
-    buildNumber: "23",
+    // 24 carries everything in 23 plus the device-test fixes found after 23
+    // was uploaded to TestFlight: image-only chat messages no longer violate
+    // messages.text's NOT NULL constraint (send and forward paths), the
+    // Delete Account keyboard-avoidance double-adjustment fix, and three
+    // rental-chat bugs (business-identity shown to both sides instead of
+    // the other party, an inquiry lead recorded merely from opening chat
+    // instead of sending a message, and the rental view counter never being
+    // incremented).
+    buildNumber: "24",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
