@@ -26,7 +26,7 @@ import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "
 import { CategoryPicker } from "../../components/post/CategoryPicker";
 import { AttrFields, type AttrValues } from "../../components/post/AttrFields";
 import { PhotoGrid } from "../../components/post/PhotoGrid";
-import { Button, Card, Chip, GlassBackButton } from "../../components/ui";
+import { Button, Card, Chip, GlassBackButton, ProvinceCityFields } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -67,8 +67,8 @@ const INITIAL_STATE: PostState = {
   description: "",
   price: "",
   currency: "USD",
-  province: PROVINCES[0],
-  city: CITIES_BY_PROVINCE[PROVINCES[0]][0],
+  province: "",
+  city: "",
   suburb: "",
   photos: [],
   condition: null,
@@ -257,6 +257,10 @@ export default function PostScreen() {
       if (showCondition && !state.condition) return setError("Select the item condition");
     } else if (state.step === 2) {
       if (!state.price || Number(state.price) <= 0) return setError("Enter a valid price");
+      if (!PROVINCES.includes(state.province)) return setError("Select a valid Province");
+      if (!(CITIES_BY_PROVINCE[state.province] ?? []).includes(state.city)) {
+        return setError("Select a valid City / Town for that Province");
+      }
     } else if (state.step === 3) {
       if (!state.photos.length) return setError("Add at least one photo");
     }
@@ -374,7 +378,18 @@ export default function PostScreen() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {state.step === 1 && !state.category ? (
-          <CategoryPicker onSelect={(id) => update({ category: id })} />
+          <CategoryPicker
+            onSelect={(id) => {
+              // Jobs is its own dedicated employer flow (job credits/boosts,
+              // recruiter entitlements, company verification) — it was never
+              // meant to go through the generic marketplace listing form.
+              if (id === "jobs") {
+                router.push("/jobs/post");
+                return;
+              }
+              update({ category: id });
+            }}
+          />
         ) : state.step === 1 ? (
           <Card style={styles.card}>
             <View style={styles.categoryBar}>
@@ -466,26 +481,15 @@ export default function PostScreen() {
               </View>
             </View>
 
-            <Text style={styles.fieldLabel}>Province</Text>
-            <View style={styles.chipWrap}>
-              {PROVINCES.map((p) => (
-                <Chip
-                  key={p}
-                  label={p}
-                  active={state.province === p}
-                  onPress={() => update({ province: p, city: CITIES_BY_PROVINCE[p][0] })}
-                />
-              ))}
-            </View>
+            <ProvinceCityFields
+              provinces={PROVINCES}
+              citiesByProvince={CITIES_BY_PROVINCE}
+              province={state.province}
+              city={state.city}
+              onChange={({ province, city }) => update({ province, city })}
+            />
 
-            <Text style={styles.fieldLabel}>City / Town</Text>
-            <View style={styles.chipWrap}>
-              {(CITIES_BY_PROVINCE[state.province] ?? []).slice(0, 20).map((c) => (
-                <Chip key={c} label={c} active={state.city === c} onPress={() => update({ city: c })} />
-              ))}
-            </View>
-
-            <Text style={styles.fieldLabel}>Suburb / Area (optional)</Text>
+            <Text style={[styles.fieldLabel, { marginTop: space.md }]}>Suburb / Area (optional)</Text>
             <TextInput
               style={styles.input}
               value={state.suburb}

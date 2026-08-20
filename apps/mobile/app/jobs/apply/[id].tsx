@@ -38,6 +38,7 @@ export default function ApplyJobScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasCv, setHasCv] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,14 +51,15 @@ export default function ApplyJobScreen() {
     if (!id || !session?.user) return;
     const [{ data: jobData }, profileRes, existingRes] = await Promise.all([
       supabase.from("listings").select("id,seller_id,seller_name,title,description").eq("id", id).maybeSingle(),
-      supabase.from("profiles").select("name,email,phone").eq("id", session.user.id).maybeSingle(),
+      supabase.from("profiles").select("name,email,phone,cv_file_path").eq("id", session.user.id).maybeSingle(),
       supabase.from("applications").select("id").eq("job_id", id).eq("applicant_id", session.user.id).maybeSingle(),
     ]);
     setJob((jobData as JobListing) ?? null);
-    const p = profileRes.data as { name: string | null; email: string | null; phone: string | null } | null;
+    const p = profileRes.data as { name: string | null; email: string | null; phone: string | null; cv_file_path: string | null } | null;
     setName(p?.name || "");
     setEmail(p?.email || session.user.email || "");
     setPhone(p?.phone || "");
+    setHasCv(!!p?.cv_file_path);
     setAlreadyApplied(!!existingRes.data);
   }, [id, session]);
 
@@ -92,7 +94,6 @@ export default function ApplyJobScreen() {
       applicant_email: email.trim(),
       message: message.trim(),
       status: "pending",
-      employer_id: job.seller_id,
     });
     setIsSubmitting(false);
     if (error) {
@@ -172,6 +173,18 @@ export default function ApplyJobScreen() {
             <Field label="Full name" required value={name} onChangeText={setName} placeholder="e.g. Tendai Moyo" styles={styles} />
             <Field label="Email address" required value={email} onChangeText={setEmail} placeholder="you@gmail.com" keyboardType="email-address" styles={styles} />
             <Field label="Phone number" required value={phone} onChangeText={setPhone} placeholder="077 123 4567" keyboardType="phone-pad" styles={styles} />
+
+            <View style={styles.cvCard}>
+              <Text style={styles.cvTitle}>{hasCv ? "CV on file" : "No CV on file"}</Text>
+              <Text style={styles.cvText}>
+                {hasCv
+                  ? "This employer can access your private CV only after this application is submitted."
+                  : "You can still apply, or add a CV to strengthen your application."}
+              </Text>
+              <Pressable onPress={() => router.push("/jobs/cv-profile")} hitSlop={8}>
+                <Text style={styles.cvLink}>Add / Update CV</Text>
+              </Pressable>
+            </View>
 
             <Text style={styles.sectionLabel}>Why are you a good fit?</Text>
             <TextInput
@@ -254,6 +267,10 @@ function buildStyles(color: ColorPalette) {
   jobCompany: { fontSize: 13, color: color.textSub, marginTop: 3 },
   appliedBanner: { backgroundColor: color.brandTint, borderRadius: 12, padding: 16, alignItems: "center" },
   appliedBannerText: { fontSize: 14, fontWeight: "600", color: color.brand },
+  cvCard: { backgroundColor: color.brandTint, borderRadius: 12, padding: 14, marginBottom: 16, gap: 5 },
+  cvTitle: { fontSize: 13.5, fontWeight: "700", color: color.text },
+  cvText: { fontSize: 12.5, lineHeight: 18, color: color.textSub },
+  cvLink: { fontSize: 13, fontWeight: "700", color: color.brand, marginTop: 3 },
   sectionLabel: { fontSize: 13, fontWeight: "700", color: color.text, marginTop: 8, marginBottom: 12 },
   label: { fontSize: 12.5, fontWeight: "700", color: color.text, marginBottom: 7 },
   input: {

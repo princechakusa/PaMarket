@@ -51,6 +51,7 @@ import {
   FieldRow,
   GlassBackButton,
   MoneyIcon,
+  ProvinceCityFields,
   SendIcon,
   ToolsIcon,
 } from "../../components/ui";
@@ -238,10 +239,6 @@ export default function PostJobScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
-  const cityOptions = useMemo(
-    () => (province ? CITIES_BY_PROVINCE[province] || [] : []),
-    [province]
-  );
 
   function addSkill() {
     const s = skillInput.trim();
@@ -636,40 +633,16 @@ export default function PostJobScreen() {
               </View>
             </View>
 
-            <View>
-              <FieldLabel text="Province" required />
-              <View style={styles.chipsWrap}>
-                {PROVINCES.map((p) => (
-                  <Chip
-                    key={p}
-                    label={p}
-                    active={province === p}
-                    onPress={() => {
-                      setProvince(p);
-                      setCity("");
-                    }}
-                  />
-                ))}
-              </View>
-            </View>
-
-            <View>
-              <FieldLabel text="City / town" required />
-              <Input
-                value={city}
-                onChangeText={setCity}
-                placeholder="e.g. Harare"
-                last
-                styles={styles}
-              />
-              {cityOptions.length ? (
-                <View style={[styles.chipsWrap, { marginTop: space.sm }]}>
-                  {cityOptions.slice(0, 14).map((c) => (
-                    <Chip key={c} label={c} active={city === c} onPress={() => setCity(c)} />
-                  ))}
-                </View>
-              ) : null}
-            </View>
+            <ProvinceCityFields
+              provinces={PROVINCES}
+              citiesByProvince={CITIES_BY_PROVINCE}
+              province={province}
+              city={city}
+              onChange={(next) => {
+                setProvince(next.province);
+                setCity(next.city);
+              }}
+            />
           </CollapsibleCard>
         </Padded>
 

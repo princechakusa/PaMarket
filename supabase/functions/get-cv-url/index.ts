@@ -11,8 +11,8 @@
 // Authorization (matches the CV security review's stated rule — no parallel
 // permission system, reuses the existing applications table):
 //   A. caller requests their own CV (candidateId omitted, or === caller id)
-//   B. caller is the employer on an applications row where
-//      applicant_id = candidateId AND job_id = jobId AND employer_id = caller
+//   B. caller owns the real listings row for jobId and that job has an
+//      application from candidateId. applications.employer_id is not trusted.
 //   C. caller has role in (admin, moderator)
 // Everyone else: 403.
 //
@@ -103,19 +103,24 @@ Deno.serve(async (req) => {
 
     if (!authorized) {
       if (!jobId) return json({ error: 'Forbidden' }, 403)
-      // (B) employer on a real application linking this exact candidate to
-      // this exact job, denormalized employer_id must match the caller —
-      // no join to listings needed, applications already carries the
-      // authoritative "job belongs to" relationship.
+      // (B) Prove the application and the real job owner independently.
       const appRes = await db
         .from('applications')
-        .select('id')
+        .select('job_id')
         .eq('applicant_id', candidateId)
         .eq('job_id', jobId)
-        .eq('employer_id', user.id)
         .limit(1)
         .maybeSingle()
-      authorized = Boolean(appRes.data)
+      if (appRes.data) {
+        const jobRes = await db
+          .from('listings')
+          .select('id')
+          .eq('id', appRes.data['job_id'])
+          .eq('seller_id', user.id)
+          .limit(1)
+          .maybeSingle()
+        authorized = Boolean(jobRes.data)
+      }
     }
 
     if (!authorized) return json({ error: 'Forbidden' }, 403)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -12,7 +12,6 @@ import { businessInitials } from "../../lib/businesses";
 import { Badge, Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton } from "../../components/ui";
 import { loadCache, saveCache } from "../../lib/offlineCache";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
-import { publicListingExpiryFilter } from "../../lib/listings";
 
 const JOBS_CACHE_KEY = "jobs-browse";
 
@@ -29,7 +28,6 @@ type JobListing = {
   expires_at: string | null;
 };
 
-const JOB_COLUMNS = "id,seller_id,seller_name,title,description,city,province,photos,created_at,expires_at";
 const PAGE_SIZE = 30;
 
 function SearchIcon() {
@@ -60,21 +58,33 @@ export default function JobsListScreen() {
   const [hasError, setHasError] = useState(false);
   const [showingCached, setShowingCached] = useState(false);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const pageRef = useRef(0);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Jobs" });
 
-  const buildQuery = useCallback((from: number, to: number) => {
-    return supabase
-      .from("listings")
-      .select(JOB_COLUMNS)
-      .eq("category", "jobs")
-      .eq("status", "active")
-      .or(publicListingExpiryFilter())
-      .order("created_at", { ascending: false })
-      .range(from, to);
-  }, []);
+  // Debounced so search runs server-side (title + description) instead of
+  // firing a request per keystroke or, worse, only ever filtering whatever
+  // page of jobs happened to already be loaded client-side — the previous
+  // behavior meant a real match on page 3 was invisible to a search typed
+  // while only page 1 had loaded.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const buildQuery = useCallback(
+    (from: number, to: number) => {
+      return supabase.rpc("search_active_jobs", {
+        p_query: debouncedQuery || null,
+        p_job_type: typeFilter === "all" ? null : typeFilter,
+        p_limit: to - from + 1,
+        p_offset: from,
+      });
+    },
+    [debouncedQuery, typeFilter]
+  );
 
   const load = useCallback(async () => {
     setHasError(false);
@@ -124,21 +134,6 @@ export default function JobsListScreen() {
     }
     setIsLoadingMore(false);
   }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError]);
-
-  const filtered = useMemo(() => {
-    let list = jobs;
-    const q = query.trim().toLowerCase();
-    if (q) {
-      list = list.filter((j) => {
-        const company = jobCompany(j.description, j.seller_name);
-        return [j.title, company, j.city || "", j.province || ""].join(" ").toLowerCase().includes(q);
-      });
-    }
-    if (typeFilter !== "all") {
-      list = list.filter((j) => jobType(j.description) === typeFilter);
-    }
-    return list;
-  }, [jobs, query, typeFilter]);
 
   return (
     <View style={styles.container}>
@@ -192,7 +187,7 @@ export default function JobsListScreen() {
         <ErrorState onRetry={() => { setIsLoading(true); load().finally(() => setIsLoading(false)); }} />
       ) : (
         <FlatList
-          data={filtered}
+          data={jobs}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
@@ -205,9 +200,9 @@ export default function JobsListScreen() {
                   </Text>
                 </View>
               ) : null}
-              {filtered.length ? (
+              {jobs.length ? (
                 <Text style={styles.countText}>
-                  {filtered.length} open {filtered.length === 1 ? "role" : "roles"}
+                  {jobs.length} open {jobs.length === 1 ? "role" : "roles"}
                 </Text>
               ) : null}
             </>

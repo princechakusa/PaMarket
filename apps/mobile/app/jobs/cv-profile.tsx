@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -34,6 +35,7 @@ import {
   type JobSeekerCv,
 } from "../../lib/jobs";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
+import { CITIES_BY_PROVINCE, PROVINCES } from "../../lib/constants";
 import {
   ALLOWED_CV_MIME_TYPES,
   CV_VALIDATION_ERROR,
@@ -42,7 +44,7 @@ import {
   openCvUrl,
   randomCvFileName,
 } from "../../lib/cv";
-import { Avatar, Button, Card, Chip, GlassBackButton, SectionHeader } from "../../components/ui";
+import { Avatar, Button, Card, Chip, GlassBackButton, ProvinceCityFields, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
 // Mirrors www/js/jobs.js CandidateProfile ("Get Hired" CV builder). The flat
@@ -71,6 +73,7 @@ type ProfileRow = {
   sector: string | null;
   exp: string | null;
   city: string | null;
+  province: string | null;
   bio: string | null;
   open_to_work: boolean | null;
   expected_salary: string | null;
@@ -119,6 +122,7 @@ export default function CvProfileScreen() {
   const [jobTitle, setJobTitle] = useState("");
   const [sector, setSector] = useState("");
   const [exp, setExp] = useState("");
+  const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [expectedSalary, setExpectedSalary] = useState("");
@@ -143,7 +147,7 @@ export default function CvProfileScreen() {
     if (!session?.user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("id,name,avatar,job_title,skills,sector,exp,city,bio,open_to_work,expected_salary,cv_file_url,cv_file_path,cv")
+      .select("id,name,avatar,job_title,skills,sector,exp,city,province,bio,open_to_work,expected_salary,cv_file_url,cv_file_path,cv")
       .eq("id", session.user.id)
       .maybeSingle();
     const p = data as (ProfileRow & { name: string | null }) | null;
@@ -157,6 +161,7 @@ export default function CvProfileScreen() {
       setSector(p.sector || cv.sector || "");
       setExp(p.exp || cv.exp || "");
       setCity(p.city || cv.location || "");
+      setProvince(p.province || "");
       // cv.summary is the job-profile's own bio — profiles.bio is a
       // different field entirely (the general marketplace "About" bio
       // edited from edit-profile.tsx). Reading/writing profiles.bio here
@@ -280,18 +285,19 @@ export default function CvProfileScreen() {
     }
   }
 
-  async function save() {
+  async function performSave(publish: boolean) {
     if (!session?.user) return;
-    if (!jobTitle.trim()) {
-      toast("Add your professional title");
+    const hasAnyLocation = !!province.trim() || !!city.trim();
+    if (hasAnyLocation && !PROVINCES.includes(province)) {
+      toast("Select a valid Province for your existing location");
       return;
     }
-    if (!sector.trim()) {
-      toast("Choose a category");
+    if (hasAnyLocation && !(CITIES_BY_PROVINCE[province] ?? []).includes(city)) {
+      toast("Select a valid City / Town for that Province");
       return;
     }
-    if (!city.trim()) {
-      toast("Add your city");
+    if (publish && !hasAnyLocation) {
+      toast("Select your Province and City before turning on Open to Work");
       return;
     }
     setIsSaving(true);
@@ -311,7 +317,7 @@ export default function CvProfileScreen() {
       sector: sector.trim(),
       exp,
       availability,
-      visible: openToWork,
+      visible: publish,
       photoUrl: avatarUrl || undefined,
       experience: cleanExperience,
       education: cleanEducation,
@@ -325,11 +331,12 @@ export default function CvProfileScreen() {
     const { error } = await supabase
       .from("profiles")
       .update({
-        open_to_work: openToWork,
+        open_to_work: publish,
         job_title: jobTitle.trim(),
         sector: sector.trim(),
         exp,
         city: city.trim(),
+        province: province.trim(),
         expected_salary: expectedSalary.trim(),
         skills: skills.join(","),
         cv_file_url: cvFileUrl.trim() || null,
@@ -342,6 +349,7 @@ export default function CvProfileScreen() {
       toast("Could not save your profile");
       return;
     }
+    setOpenToWork(publish);
 
     // Only remove the old CV object now that the new path is durably saved
     // — a failed save above left cvFilePath/cvPathPendingDelete untouched,
@@ -351,8 +359,42 @@ export default function CvProfileScreen() {
       setCvPathPendingDelete(null);
     }
 
-    toast(openToWork ? "Profile saved — employers can now find you!" : "Profile saved");
+    toast(publish ? "Profile saved — employers can now find you!" : "Profile saved");
     router.back();
+  }
+
+  async function save() {
+    if (!session?.user) return;
+    if (!jobTitle.trim()) {
+      toast("Add your professional title");
+      return;
+    }
+    if (!sector.trim()) {
+      toast("Choose a category");
+      return;
+    }
+    if (!city.trim()) {
+      toast("Add your city");
+      return;
+    }
+    // "Open to work" is off by default, and it's the ONLY thing that makes a
+    // profile appear in Browse Candidates — a candidate who fills everything
+    // in but never notices this one switch saves successfully and then
+    // silently never shows up to any employer. Make that consequence explicit
+    // at the moment it matters instead of leaving it to a toast that's easy
+    // to miss, without changing the privacy-by-default behavior itself.
+    if (!openToWork) {
+      Alert.alert(
+        "Stay hidden from employers?",
+        "\"Open to work\" is off, so employers won't see this profile in Hire Talent. You can save it hidden for now, or turn it on so employers can find you.",
+        [
+          { text: "Save hidden", style: "cancel", onPress: () => performSave(false) },
+          { text: "Turn on & save", onPress: () => performSave(true) },
+        ]
+      );
+      return;
+    }
+    await performSave(true);
   }
 
   return (
@@ -594,7 +636,16 @@ export default function CvProfileScreen() {
               ))}
             </View>
             <View style={styles.spacedLabel}>
-              <Input value={city} onChangeText={setCity} placeholder="City (e.g. Harare)"  styles={styles} />
+              <ProvinceCityFields
+                provinces={PROVINCES}
+                citiesByProvince={CITIES_BY_PROVINCE}
+                province={province}
+                city={city}
+                onChange={(next) => {
+                  setProvince(next.province);
+                  setCity(next.city);
+                }}
+              />
             </View>
             <Text style={styles.label}>Expected salary</Text>
             <View style={styles.salaryRow}>

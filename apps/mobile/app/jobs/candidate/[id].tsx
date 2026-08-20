@@ -48,12 +48,11 @@ export default function CandidateCvScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    const { data: candidateData } = await supabase
-      .from("profiles")
-      .select("id,name,avatar,verified,job_title,skills,sector,exp,city,open_to_work,cv")
-      .eq("id", id)
-      .maybeSingle();
-    setCandidate((candidateData as unknown as CandidateProfileRow) ?? null);
+    const { data: candidateRows } = await supabase.rpc("get_recruitment_candidate", {
+      p_candidate_id: id,
+    });
+    const candidateData = Array.isArray(candidateRows) ? candidateRows[0] : null;
+    setCandidate((candidateData as CandidateProfileRow | undefined) ?? null);
 
     if (session?.user) {
       const { data: reqData } = await supabase

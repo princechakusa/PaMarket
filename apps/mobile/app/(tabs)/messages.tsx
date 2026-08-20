@@ -132,9 +132,11 @@ export default function MessagesScreen() {
       new Set(rows.map((c) => c.business_id).filter((bid): bid is string => !!bid))
     );
     const businessesRes = businessIds.length
-      ? await supabase.from("businesses").select("id,name,logo").in("id", businessIds)
-      : { data: [] as BusinessLite[] };
-    const businessesById = new Map((businessesRes.data as BusinessLite[] | null ?? []).map((b) => [b.id, b]));
+      ? await supabase.from("businesses").select("id,name,logo,owner_user_id").in("id", businessIds)
+      : { data: [] as (BusinessLite & { owner_user_id: string | null })[] };
+    const businessesById = new Map(
+      (businessesRes.data as (BusinessLite & { owner_user_id: string | null })[] | null ?? []).map((b) => [b.id, b])
+    );
 
     // Batched last-message + unread-count across ALL conversations at once —
     // this used to fire 2 queries per conversation (up to 400 round trips
@@ -167,13 +169,19 @@ export default function MessagesScreen() {
 
     const summariesList = rows.map((conversation): ConversationSummary => {
       const otherId = otherMember(conversation, myId);
+      // The business identity is only shown to the OTHER side of the
+      // conversation — the customer. Without this check, a business owner's
+      // own inbox row for their own shop's conversations showed their own
+      // business's name/logo instead of the actual customer they're talking
+      // to (same bug already fixed in chat/[id].tsx's header).
+      const business = conversation.business_id ? businessesById.get(conversation.business_id) : undefined;
       return {
         conversation,
         otherProfile: (otherId ? profilesById.get(otherId) : undefined) ?? null,
         lastMessage: lastMessageByConv.get(conversation.id) ?? null,
         unreadCount: unreadCountByConv.get(conversation.id) ?? 0,
         listing: (conversation.listing_id ? listingsById.get(conversation.listing_id) : undefined) ?? null,
-        business: (conversation.business_id ? businessesById.get(conversation.business_id) : undefined) ?? null,
+        business: business && business.owner_user_id !== myId ? business : null,
       };
     });
 

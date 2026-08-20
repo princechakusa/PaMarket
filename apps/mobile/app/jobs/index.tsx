@@ -77,7 +77,6 @@ export default function JobsHubScreen() {
   const { session } = useAuth();
   const styles = useThemedStyles(buildStyles);
   const [applicationsCount, setApplicationsCount] = useState(0);
-  const [companyVerified, setCompanyVerified] = useState(false);
 
   useIOSNativeHeader({ backgroundColor: color.gold, tintColor: color.text, title: "Jobs" });
 
@@ -89,12 +88,6 @@ export default function JobsHubScreen() {
       .select("id", { count: "exact", head: true })
       .eq("applicant_id", myId)
       .then(({ count }) => setApplicationsCount(count ?? 0));
-    supabase
-      .from("profiles")
-      .select("company_verified")
-      .eq("id", myId)
-      .maybeSingle()
-      .then(({ data }) => setCompanyVerified(!!(data as any)?.company_verified));
   }, [session?.user?.id]);
 
   return (
@@ -151,54 +144,6 @@ export default function JobsHubScreen() {
               styles={styles}
             />
             {applicationsCount ? <Badge label={`${applicationsCount} sent`} tone="success" /> : null}
-          </View>
-        </View>
-
-        <View style={[styles.card, shadow.sm]}>
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, styles.iconCircleBrand]}>
-              <BriefcaseIcon tone={color.brand} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>I&apos;m Hiring</Text>
-              <Text style={styles.cardSub}>Browse available candidates and find the right person.</Text>
-            </View>
-            <ChevronIcon />
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.pillRow}>
-            <PillLink
-              tone="brand"
-              icon={<PersonIcon tone={color.brand} />}
-              label="Browse Candidates"
-              onPress={() => router.push("/jobs/hire-talent")}
-              styles={styles}
-            />
-          </View>
-          <View style={styles.pillRow}>
-            <PillLink
-              tone="brand"
-              icon={<PersonIcon tone={color.brand} />}
-              label="My Requests"
-              onPress={() => router.push("/jobs/contact-requests")}
-              styles={styles}
-            />
-            <PillLink
-              tone="brand"
-              icon={<BriefcaseIcon tone={color.brand} />}
-              label="Post a Job"
-              onPress={() => router.push(companyVerified ? "/jobs/post" : "/company-verify")}
-              styles={styles}
-            />
-          </View>
-          <View style={styles.pillRow}>
-            <PillLink
-              tone="brand"
-              icon={<BriefcaseIcon tone={color.brand} />}
-              label="Recruiter Plan"
-              onPress={() => router.push("/jobs/recruiter-subscription")}
-              styles={styles}
-            />
           </View>
         </View>
       </View>

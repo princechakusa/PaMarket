@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -17,6 +17,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { toast } from "../../components/ui/Toast";
+import { ProvinceCityFields } from "../../components/ui";
 import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
@@ -82,7 +83,6 @@ export default function BusinessEditScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
-  const cities = useMemo(() => CITIES_BY_PROVINCE[province] ?? [], [province]);
   const isOwner = session?.user?.id === business?.owner_user_id;
 
   function toggleCategory(catId: string) {
@@ -112,6 +112,15 @@ export default function BusinessEditScreen() {
   async function save() {
     if (!id) return;
     if (!name.trim()) { toast("Business name is required"); return; }
+    if (!categories.length || categories.some((category) => !CATEGORIES.some((valid) => valid.id === category))) {
+      toast("Select at least one valid business category");
+      return;
+    }
+    if (!PROVINCES.includes(province)) { toast("Select a valid Province"); return; }
+    if (!(CITIES_BY_PROVINCE[province] ?? []).includes(city)) {
+      toast("Select a valid City / Town for that Province");
+      return;
+    }
     if (phone.trim() && !/^(\+263|0)[0-9]{9}$/.test(phone.trim())) { toast("Enter a valid Zimbabwe phone"); return; }
     setIsSaving(true);
     const { error } = await supabase
@@ -230,26 +239,16 @@ export default function BusinessEditScreen() {
           <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         </Field>
 
-        <Field label="Province" styles={styles}>
-          <View style={styles.chipsWrap}>
-            {PROVINCES.map((p) => (
-              <Pressable key={p} style={[styles.chip, province === p && styles.chipActive]} onPress={() => { setProvince(p); setCity(""); }}>
-                <Text style={[styles.chipText, province === p && styles.chipTextActive]}>{p}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </Field>
-        {province ? (
-          <Field label="City / Town" styles={styles}>
-            <View style={styles.chipsWrap}>
-              {cities.map((c) => (
-                <Pressable key={c} style={[styles.chip, city === c && styles.chipActive]} onPress={() => setCity(c)}>
-                  <Text style={[styles.chipText, city === c && styles.chipTextActive]}>{c}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </Field>
-        ) : null}
+        <ProvinceCityFields
+          provinces={PROVINCES}
+          citiesByProvince={CITIES_BY_PROVINCE}
+          province={province}
+          city={city}
+          onChange={(next) => {
+            setProvince(next.province);
+            setCity(next.city);
+          }}
+        />
         <Field label="Suburb / Area" styles={styles}>
           <TextInput style={styles.input} value={suburb} onChangeText={setSuburb} />
         </Field>

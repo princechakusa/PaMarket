@@ -19,7 +19,7 @@ import type { Listing } from "../../../lib/listings";
 import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "../../../lib/listing-form";
 import { AttrFields, type AttrValues } from "../../../components/post/AttrFields";
 import { PhotoGrid } from "../../../components/post/PhotoGrid";
-import { Button, Card, Chip, ErrorState, Skeleton, toast } from "../../../components/ui";
+import { Button, Card, Chip, ErrorState, ProvinceCityFields, Skeleton, toast } from "../../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../../lib/useKeyboardAvoidingReset";
@@ -67,7 +67,9 @@ export default function EditListingScreen() {
       (listing as { condition?: ListingCondition | null }).condition ??
       (attrs.condition as ListingCondition | undefined) ??
       null;
-    const province = listing.province && PROVINCES.includes(listing.province) ? listing.province : PROVINCES[0];
+    // Never manufacture a Province for a legacy value. Unknown values remain
+    // visible and save is blocked until the owner chooses a valid pair.
+    const province = listing.province ?? "";
     setState({
       category: listing.category,
       title: listing.title ?? "",
@@ -75,7 +77,7 @@ export default function EditListingScreen() {
       price: listing.price != null ? String(listing.price) : "",
       currency: (listing.currency as "USD" | "ZiG") ?? "USD",
       province,
-      city: listing.city ?? CITIES_BY_PROVINCE[province][0],
+      city: listing.city ?? "",
       suburb: listing.suburb ?? "",
       photos: listing.photos ?? [],
       condition,
@@ -149,6 +151,10 @@ export default function EditListingScreen() {
     if (!state.price || Number(state.price) <= 0) return setError("Enter a valid price");
     if (!state.photos.length) return setError("Add at least one photo");
     if (categoryHasCondition(state.category) && !state.condition) return setError("Select the item condition");
+    if (!PROVINCES.includes(state.province)) return setError("Select a valid Province");
+    if (!(CITIES_BY_PROVINCE[state.province] ?? []).includes(state.city)) {
+      return setError("Select a valid City / Town for that Province");
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -277,26 +283,15 @@ export default function EditListingScreen() {
             </View>
           </View>
 
-          <Text style={styles.fieldLabel}>Province</Text>
-          <View style={styles.chipWrap}>
-            {PROVINCES.map((p) => (
-              <Chip
-                key={p}
-                label={p}
-                active={state.province === p}
-                onPress={() => update({ province: p, city: CITIES_BY_PROVINCE[p][0] })}
-              />
-            ))}
-          </View>
+          <ProvinceCityFields
+            provinces={PROVINCES}
+            citiesByProvince={CITIES_BY_PROVINCE}
+            province={state.province}
+            city={state.city}
+            onChange={({ province, city }) => update({ province, city })}
+          />
 
-          <Text style={styles.fieldLabel}>City / Town</Text>
-          <View style={styles.chipWrap}>
-            {(CITIES_BY_PROVINCE[state.province] ?? []).slice(0, 20).map((c) => (
-              <Chip key={c} label={c} active={state.city === c} onPress={() => update({ city: c })} />
-            ))}
-          </View>
-
-          <Text style={styles.fieldLabel}>Suburb / Area (optional)</Text>
+          <Text style={[styles.fieldLabel, { marginTop: space.md }]}>Suburb / Area (optional)</Text>
           <TextInput
             style={styles.input}
             value={state.suburb}

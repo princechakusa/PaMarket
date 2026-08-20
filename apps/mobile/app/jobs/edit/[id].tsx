@@ -14,8 +14,9 @@ import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { color, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
-import { GlassBackButton } from "../../../components/ui";
+import { GlassBackButton, ProvinceCityFields } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
+import { CITIES_BY_PROVINCE, PROVINCES } from "../../../lib/constants";
 
 type Styles = ReturnType<typeof buildStyles>;
 
@@ -88,6 +89,7 @@ export default function EditJobScreen() {
   const [company, setCompany] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [jobType, setJobType] = useState<string>(JOB_TYPES[0]);
   const [salary, setSalary] = useState("");
@@ -112,6 +114,7 @@ export default function EditJobScreen() {
     setCompany(parseJobField(desc, "COMPANY") || data.seller_name || "");
     setTitle(data.title || "");
     setCategory(parseJobField(desc, "INDUSTRY") || "");
+    setProvince(data.province || "");
     setCity(data.city || "");
     setJobType(parseJobField(desc, "JOB TYPE") || JOB_TYPES[0]);
     setSalary(parseJobField(desc, "SALARY") || "");
@@ -133,7 +136,8 @@ export default function EditJobScreen() {
     if (!company.trim()) return toast("Company name is required");
     if (!title.trim()) return toast("Job title is required");
     if (!category) return toast("Please select a job category");
-    if (!city.trim()) return toast("Please enter a city / town");
+    if (!PROVINCES.includes(province)) return toast("Please select a valid Province");
+    if (!(CITIES_BY_PROVINCE[province] ?? []).includes(city)) return toast("Please select a valid City / Town");
     if (description.trim().length < 30) return toast("Please write a job description (min 30 chars)");
     const salaryRaw = salary.trim();
     if (salaryRaw && !SALARY_RE.test(salaryRaw)) return toast('Enter a valid salary amount or "Negotiable"');
@@ -173,8 +177,8 @@ export default function EditJobScreen() {
         seller_name: company.trim(),
         description: fullDescription,
         price: parseFloat(finalSalary) || 0,
-        city: city.trim(),
-        province: city.trim(),
+        city,
+        province,
       })
       .eq("id", id)
       .eq("seller_id", session.user.id);
@@ -241,7 +245,18 @@ export default function EditJobScreen() {
           ))}
         </View>
 
-        <Field label="City / Town *" value={city} onChangeText={setCity} placeholder="e.g. Harare, or Remote" styles={styles} />
+        <View style={{ marginBottom: 14 }}>
+          <ProvinceCityFields
+            provinces={PROVINCES}
+            citiesByProvince={CITIES_BY_PROVINCE}
+            province={province}
+            city={city}
+            onChange={(next) => {
+              setProvince(next.province);
+              setCity(next.city);
+            }}
+          />
+        </View>
 
         <Text style={styles.label}>Job Type</Text>
         <View style={styles.chipsWrap}>

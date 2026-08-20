@@ -14,6 +14,7 @@ export { ToastHost, toast } from "./Toast";
 export { FeatureIcon } from "./FeatureIcon";
 export { CollapsibleCard } from "./CollapsibleCard";
 export { FieldRow, FieldCol, FieldLabel, CountedTextArea } from "./FormField";
+export { SelectField, ProvinceCityFields } from "./LocationField";
 export {
   BriefcaseIcon,
   DocumentIcon,

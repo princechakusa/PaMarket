@@ -183,6 +183,7 @@ export default function ChatScreen() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
   // The composer row itself is what must clear the keyboard, so it's what
   // gets measured (see the keyboard listener below).
   const composerRef = useRef<View>(null);
@@ -1021,7 +1022,13 @@ export default function ChatScreen() {
                   ]}
                 >
                   {item.image ? (
-                    <Image source={{ uri: item.image }} style={styles.bubbleImage} contentFit="cover" cachePolicy="memory-disk" />
+                    <Pressable
+                      onPress={() => setViewerImage(item.image!)}
+                      onLongPress={() => handleLongPressMessage(item)}
+                      delayLongPress={350}
+                    >
+                      <Image source={{ uri: item.image }} style={styles.bubbleImage} contentFit="cover" cachePolicy="memory-disk" />
+                    </Pressable>
                   ) : null}
                   {quote ? (
                     <View style={[styles.replyQuote, isMine && styles.replyQuoteMine]}>
@@ -1160,6 +1167,26 @@ export default function ChatScreen() {
             )}
           </Pressable>
         </Pressable>
+      </Modal>
+
+      <Modal visible={!!viewerImage} animationType="fade" transparent onRequestClose={() => setViewerImage(null)}>
+        <View style={styles.imageViewerScrim}>
+          <GlassBackButton
+            onPress={() => setViewerImage(null)}
+            tone="light"
+            style={[styles.imageViewerBack, { top: insets.top + space.sm }]}
+          />
+          <Pressable style={styles.imageViewerBody} onPress={() => setViewerImage(null)}>
+            {viewerImage ? (
+              <Image
+                source={{ uri: viewerImage }}
+                style={styles.imageViewerImage}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+            ) : null}
+          </Pressable>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -1489,6 +1516,24 @@ function buildStyles(color: ColorPalette) {
     ...font.bodyStrong,
     color: color.text,
     flex: 1,
+  },
+  imageViewerScrim: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  imageViewerBack: {
+    position: "absolute",
+    left: space.md,
+    zIndex: 1,
+  },
+  imageViewerBody: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageViewerImage: {
+    width: "100%",
+    height: "100%",
   },
   });
 }

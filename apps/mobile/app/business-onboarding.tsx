@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -11,8 +11,9 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useAuth } from "../lib/auth";
-import { GlassBackButton } from "../components/ui";
+import { GlassBackButton, ProvinceCityFields } from "../components/ui";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
 import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../lib/constants";
@@ -29,38 +30,13 @@ import { useThemedStyles } from "../lib/theme-provider";
 const STEPS = ["details", "category", "activate"] as const;
 type Step = (typeof STEPS)[number];
 const STEP_LABELS: Record<Step, string> = { details: "Details", category: "Category", activate: "Activate" };
+const draftStorageKey = (userId: string) => `business-onboarding-draft:${userId}`;
 
 const BIZ_TYPES = [
   { id: "individual", label: "Individual", sub: "Sole trader / personal" },
   { id: "company", label: "Company", sub: "Registered business" },
   { id: "agency", label: "Agency", sub: "Multi-client agency" },
 ];
-
-// Affinity groups — a business may only pick categories from ONE
-// non-universal group. Mirrors H.BIZ_CAT_GROUPS / H.bizCatCompat.
-const CAT_GROUPS = [
-  { id: "home", cats: ["property", "furniture", "rooms"] },
-  { id: "transport", cats: ["vehicles"] },
-  { id: "style", cats: ["fashion", "kids", "electronics"] },
-  { id: "nature", cats: ["agriculture", "pets"] },
-  { id: "work", cats: ["jobs"] },
-  { id: "universal", cats: ["services", "other"] },
-];
-
-function catCompat(existing: string[], newCat: string): { ok: boolean; msg?: string } {
-  const univ = CAT_GROUPS.find((g) => g.id === "universal")?.cats ?? [];
-  if (univ.includes(newCat)) return { ok: true };
-  const newGroup = CAT_GROUPS.find((g) => g.id !== "universal" && g.cats.includes(newCat));
-  if (!newGroup) return { ok: true };
-  const usedGroupIds = new Set(
-    existing
-      .filter((c) => !univ.includes(c))
-      .map((c) => CAT_GROUPS.find((g) => g.id !== "universal" && g.cats.includes(c))?.id)
-      .filter(Boolean)
-  );
-  if (usedGroupIds.size === 0 || usedGroupIds.has(newGroup.id)) return { ok: true };
-  return { ok: false, msg: "That category doesn't match your other categories. Choose categories from the same type of business." };
-}
 
 type Draft = {
   name: string;
@@ -134,8 +110,20 @@ export default function BusinessOnboardingScreen() {
       setBusinessId(data.id);
       setExistingStatus(data.status);
       setDraft(fromBusiness(data as Business));
+      await SecureStore.deleteItemAsync(draftStorageKey(session.user.id)).catch(() => {});
     } else {
-      setDraft(blankDraft(undefined, session.user.email ?? undefined));
+      const saved = await SecureStore.getItemAsync(draftStorageKey(session.user.id)).catch(() => null);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as { draft?: Draft; step?: Step };
+          setDraft(parsed.draft ?? blankDraft(undefined, session.user.email ?? undefined));
+          if (parsed.step && STEPS.includes(parsed.step)) setStep(parsed.step);
+        } catch {
+          setDraft(blankDraft(undefined, session.user.email ?? undefined));
+        }
+      } else {
+        setDraft(blankDraft(undefined, session.user.email ?? undefined));
+      }
     }
   }, [session]);
 
@@ -144,7 +132,19 @@ export default function BusinessOnboardingScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
-  const cities = useMemo(() => CITIES_BY_PROVINCE[draft.province] ?? [], [draft.province]);
+  // Preserve an unsent local draft across temporary navigation without
+  // creating a premature server business record.
+  useEffect(() => {
+    if (isLoading || !session?.user || businessId) return;
+    const timer = setTimeout(() => {
+      SecureStore.setItemAsync(
+        draftStorageKey(session.user.id),
+        JSON.stringify({ draft, step })
+      ).catch(() => {});
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [businessId, draft, isLoading, session?.user?.id, step]);
+
   const stepIndex = STEPS.indexOf(step);
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
@@ -154,13 +154,9 @@ export default function BusinessOnboardingScreen() {
   function toggleCategory(catId: string) {
     setDraft((d) => {
       const has = d.categories.includes(catId);
-      if (has) return { ...d, categories: d.categories.filter((c) => c !== catId) };
-      const check = catCompat(d.categories, catId);
-      if (!check.ok) {
-        toast(check.msg!);
-        return d;
-      }
-      return { ...d, categories: [...d.categories, catId] };
+      return has
+        ? { ...d, categories: d.categories.filter((c) => c !== catId) }
+        : { ...d, categories: [...d.categories, catId] };
     });
   }
 
@@ -197,10 +193,16 @@ export default function BusinessOnboardingScreen() {
       if (!draft.name.trim()) { toast("Enter a business name"); return; }
       if (!draft.phone.trim()) { toast("A contact phone is required"); return; }
       if (!/^(\+263|0)[0-9]{9}$/.test(draft.phone.trim())) { toast("Enter a valid Zimbabwe phone (e.g. 0771234567)"); return; }
-      if (!draft.province || !draft.city) { toast("Select your province and city"); return; }
+      if (!PROVINCES.includes(draft.province) || !(CITIES_BY_PROVINCE[draft.province] ?? []).includes(draft.city)) {
+        toast("Select a valid Province and City");
+        return;
+      }
       setStep("category");
     } else if (step === "category") {
-      if (!draft.categories.length) { toast("Pick at least one category"); return; }
+      if (!draft.categories.length || draft.categories.some((id) => !CATEGORIES.some((category) => category.id === id))) {
+        toast("Pick at least one valid category");
+        return;
+      }
       setStep("activate");
     }
   }
@@ -230,8 +232,13 @@ export default function BusinessOnboardingScreen() {
   );
 
   async function activate() {
-    if (!draft.name || !draft.phone || !draft.province || !draft.city) { setStep("details"); return; }
-    if (!draft.categories.length) { setStep("category"); return; }
+    if (!session?.user) return;
+    if (!draft.name || !draft.phone || !PROVINCES.includes(draft.province)
+      || !(CITIES_BY_PROVINCE[draft.province] ?? []).includes(draft.city)) { setStep("details"); return; }
+    if (!draft.categories.length || draft.categories.some((id) => !CATEGORIES.some((category) => category.id === id))) {
+      setStep("category");
+      return;
+    }
 
     setIsSubmitting(true);
     // New businesses go to pending_activation for admin review; editing an
@@ -240,6 +247,7 @@ export default function BusinessOnboardingScreen() {
     const id = await persist(status);
     setIsSubmitting(false);
     if (!id) return;
+    await SecureStore.deleteItemAsync(draftStorageKey(session.user.id)).catch(() => {});
 
     if (status === "active") {
       toast("Business updated");
@@ -309,26 +317,16 @@ export default function BusinessOnboardingScreen() {
             <Field label="Contact email (optional)" styles={styles}>
               <TextInput style={styles.input} value={draft.email} onChangeText={(v) => update("email", v)} keyboardType="email-address" autoCapitalize="none" placeholder="you@business.com" placeholderTextColor={tones.textMuted} />
             </Field>
-            <Field label="Province" styles={styles}>
-              <View style={styles.chipsWrap}>
-                {PROVINCES.map((p) => (
-                  <Pressable key={p} style={[styles.chip, draft.province === p && styles.chipActive]} onPress={() => { update("province", p); update("city", ""); }}>
-                    <Text style={[styles.chipText, draft.province === p && styles.chipTextActive]}>{p}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </Field>
-            {draft.province ? (
-              <Field label="City / Town" styles={styles}>
-                <View style={styles.chipsWrap}>
-                  {cities.map((c) => (
-                    <Pressable key={c} style={[styles.chip, draft.city === c && styles.chipActive]} onPress={() => update("city", c)}>
-                      <Text style={[styles.chipText, draft.city === c && styles.chipTextActive]}>{c}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </Field>
-            ) : null}
+            <ProvinceCityFields
+              provinces={PROVINCES}
+              citiesByProvince={CITIES_BY_PROVINCE}
+              province={draft.province}
+              city={draft.city}
+              onChange={({ province, city }) => {
+                update("province", province);
+                update("city", city);
+              }}
+            />
             <Field label="Suburb / Area (optional)" styles={styles}>
               <TextInput style={styles.input} value={draft.suburb} onChangeText={(v) => update("suburb", v)} placeholder="e.g. Avondale" placeholderTextColor={tones.textMuted} />
             </Field>

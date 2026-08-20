@@ -13,6 +13,7 @@ import {
   candidateSkillsList,
   type CandidateProfileRow,
 } from "../../lib/jobs";
+import { CITIES_BY_PROVINCE } from "../../lib/constants";
 import {
   Avatar,
   Badge,
@@ -34,7 +35,6 @@ function SearchIcon() {
   );
 }
 
-const CANDIDATE_COLUMNS = "id,name,avatar,verified,job_title,skills,sector,exp,city,open_to_work,cv";
 const PAGE_SIZE = 40;
 
 const EXP_FILTERS: Array<[string, string]> = [
@@ -63,9 +63,17 @@ export default function HireTalentScreen() {
   const [sectorFilter, setSectorFilter] = useState<string>("all");
   const [expFilter, setExpFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
-  const [openOnly, setOpenOnly] = useState(false);
   const [tab, setTab] = useState<FilterTab>("sector");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const pageRef = useRef(0);
+
+  // Debounced so search runs server-side across name/job_title/sector/
+  // skills/city instead of only ever matching whatever page had already
+  // loaded — see the identical fix in jobs/browse.tsx.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useIOSNativeHeader({
     backgroundColor: color.brand,
@@ -78,13 +86,19 @@ export default function HireTalentScreen() {
     ),
   });
 
-  const buildQuery = useCallback((from: number, to: number) => {
-    return supabase
-      .from("profiles")
-      .select(CANDIDATE_COLUMNS)
-      .or("open_to_work.eq.true,cv->>visible.eq.true")
-      .range(from, to);
-  }, []);
+  const buildQuery = useCallback(
+    (from: number, to: number) => {
+      return supabase.rpc("browse_recruitment_candidates", {
+        p_query: debouncedQuery || null,
+        p_sector: sectorFilter === "all" ? null : sectorFilter,
+        p_experience: expFilter === "all" ? null : expFilter,
+        p_city: cityFilter === "all" ? null : cityFilter,
+        p_limit: to - from + 1,
+        p_offset: from,
+      });
+    },
+    [cityFilter, debouncedQuery, expFilter, sectorFilter]
+  );
 
   const load = useCallback(async () => {
     setHasError(false);
@@ -119,67 +133,19 @@ export default function HireTalentScreen() {
     setIsLoadingMore(false);
   }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError]);
 
-  // Only surface profiles that are genuinely searchable — open to work, or a
-  // visible CV with real content behind it.
-  const pool = useMemo(
-    () =>
-      candidates.filter(
-        (c) =>
-          c.open_to_work ||
-          (c.cv && c.cv.visible !== false && (c.cv.headline || c.cv.summary || c.cv.experience?.length))
-      ),
-    [candidates]
-  );
-
   const cityOptions = useMemo(() => {
-    const set = new Set<string>();
-    pool.forEach((c) => {
-      const city = (c.cv?.location || c.city || "").trim();
-      if (city) set.add(city);
-    });
-    return Array.from(set).sort();
-  }, [pool]);
-
-  const filtered = useMemo(() => {
-    let list = pool;
-    const q = query.trim().toLowerCase();
-    if (q) {
-      list = list.filter((c) => {
-        const cv = c.cv || {};
-        return [
-          c.name || "",
-          c.job_title || "",
-          c.sector || "",
-          cv.headline || "",
-          cv.summary || "",
-          candidateSkillsList(c).join(" "),
-          c.city || "",
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(q);
-      });
-    }
-    if (sectorFilter !== "all") list = list.filter((c) => (c.sector || "") === sectorFilter);
-    if (expFilter !== "all") list = list.filter((c) => (c.exp || "") === expFilter);
-    if (cityFilter !== "all") {
-      list = list.filter((c) => (c.cv?.location || c.city || "").trim() === cityFilter);
-    }
-    if (openOnly) list = list.filter((c) => !!c.open_to_work);
-    return list;
-  }, [pool, query, sectorFilter, expFilter, cityFilter, openOnly]);
+    return Array.from(new Set(Object.values(CITIES_BY_PROVINCE).flat())).sort();
+  }, []);
 
   const activeFilterCount =
     (sectorFilter !== "all" ? 1 : 0) +
     (expFilter !== "all" ? 1 : 0) +
-    (cityFilter !== "all" ? 1 : 0) +
-    (openOnly ? 1 : 0);
+    (cityFilter !== "all" ? 1 : 0);
 
   function clearFilters() {
     setSectorFilter("all");
     setExpFilter("all");
     setCityFilter("all");
-    setOpenOnly(false);
     setQuery("");
   }
 
@@ -259,11 +225,7 @@ export default function HireTalentScreen() {
         </ScrollView>
 
         <View style={styles.summaryRow}>
-          <Chip
-            label="Open to work only"
-            active={openOnly}
-            onPress={() => setOpenOnly((v) => !v)}
-          />
+          <Text style={styles.openOnlyLabel}>Open to Work candidates only</Text>
           {activeFilterCount ? (
             <Pressable onPress={clearFilters} hitSlop={8}>
               <Text style={styles.clearLink}>Clear ({activeFilterCount})</Text>
@@ -295,15 +257,15 @@ export default function HireTalentScreen() {
         />
       ) : (
         <FlatList
-          data={filtered}
+          data={candidates}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + space.huge }]}
           ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
           keyboardShouldPersistTaps="handled"
           ListHeaderComponent={
-            filtered.length ? (
+            candidates.length ? (
               <Text style={styles.countText}>
-                {filtered.length} {filtered.length === 1 ? "candidate" : "candidates"} match your search
+                {candidates.length} {candidates.length === 1 ? "candidate" : "candidates"} match your search
               </Text>
             ) : null
           }
@@ -469,6 +431,7 @@ function buildStyles(color: ColorPalette) {
     paddingBottom: space.md,
   },
   clearLink: { ...font.caption, color: color.brand },
+  openOnlyLabel: { ...font.caption, color: color.success },
 
   listContent: { padding: space.lg },
   footer: { paddingVertical: space.lg, alignItems: "center" },

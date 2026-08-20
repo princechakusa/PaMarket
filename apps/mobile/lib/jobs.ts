@@ -131,9 +131,11 @@ export type CandidateProfileRow = {
   skills: string | null;
   sector: string | null;
   exp: string | null;
+  province: string | null;
   city: string | null;
   open_to_work: boolean | null;
   cv: JobSeekerCv | null;
+  updated_at?: string | null;
 };
 
 export function candidateSkillsList(row: Pick<CandidateProfileRow, "skills" | "cv">): string[] {
