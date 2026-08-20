@@ -96,7 +96,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // the other party, an inquiry lead recorded merely from opening chat
     // instead of sending a message, and the rental view counter never being
     // incremented).
-    buildNumber: "24",
+    buildNumber: "25",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
