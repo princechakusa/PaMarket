@@ -72,7 +72,7 @@
   }
 
   H.pages.Property = function () {
-    var all  = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'property'; });
+    var all  = (H.state.listings || []).filter(function (l) { return H.isPublicListingEligible(l) && l.cat === 'property'; });
     var sale = all.filter(function (l) { var rt = (l.attrs && l.attrs.rentalType) || l.rentalType || ''; return rt === '' || rt === 'For Sale'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
     var rent = all.filter(function (l) { return ((l.attrs && l.attrs.rentalType) || l.rentalType || '') === 'For Rent'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 

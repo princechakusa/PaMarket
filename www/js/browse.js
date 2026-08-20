@@ -89,7 +89,7 @@
   }
 
   pages.Browse = function () {
-    const activeListings = (state.listings || []).filter(l => l.status === 'active' && (l.cat || '').toLowerCase() !== 'jobs');
+    const activeListings = (state.listings || []).filter(l => H.isPublicListingEligible(l) && (l.cat || '').toLowerCase() !== 'jobs');
     const u = H.currentUser();
     const recentSearches = (u && u.recentSearches) || [];
 
@@ -172,7 +172,7 @@
           <div class="filter-title">Location</div>
           <select id="locationFilter" class="sort-sel" style="width:100%" onchange="H._browse.onFilterChange()">
             <option value="all">All locations</option>
-            ${[...new Set((state.listings || []).filter(l => l.status === 'active').map(l => l.city || l.prov).filter(Boolean))].sort().map(loc => `<option value="${escHtml(loc)}" ${browseState.location === loc ? 'selected' : ''}>${escHtml(loc)}</option>`).join('')}
+            ${[...new Set((state.listings || []).filter(l => H.isPublicListingEligible(l)).map(l => l.city || l.prov).filter(Boolean))].sort().map(loc => `<option value="${escHtml(loc)}" ${browseState.location === loc ? 'selected' : ''}>${escHtml(loc)}</option>`).join('')}
           </select>
         </div>
 
@@ -215,7 +215,7 @@
         const el = document.getElementById('listingList');
         if (!el || H.currentPageName !== 'Browse') return;
         const q = document.getElementById('searchIn')?.value || '';
-        const active = (state.listings || []).filter(l => l.status === 'active' && (l.cat || '').toLowerCase() !== 'jobs');
+        const active = (state.listings || []).filter(l => H.isPublicListingEligible(l) && (l.cat || '').toLowerCase() !== 'jobs');
         el.innerHTML = active.length
           ? renderListingsWithSponsored(applyBrowseFilters(active, q))
           : H.emptyState('No listings yet', 'Listings will appear here once people start posting', null, null);
@@ -237,7 +237,7 @@
         H._browse._searchTimer = setTimeout(() => {
           const q = document.getElementById('searchIn')?.value || '';
           browseState.lastSearch = q;
-          const activeListings = (state.listings || []).filter(l => l.status === 'active' && (l.cat || '').toLowerCase() !== 'jobs');
+          const activeListings = (state.listings || []).filter(l => H.isPublicListingEligible(l) && (l.cat || '').toLowerCase() !== 'jobs');
           const filtered = applyBrowseFilters(activeListings, q);
           const el = document.getElementById('listingList');
           if (el) el.innerHTML = filtered.length
@@ -362,7 +362,7 @@
     const now = Date.now();
     if (!last) { state.savedSearchSeen = now; H.saveState(); return; }
     const fresh = (state.listings || []).filter(function (l) {
-      return l && l.status === 'active' && (l.createdAt || 0) > last && l.sellerId !== u.id;
+      return H.isPublicListingEligible(l) && (l.createdAt || 0) > last && l.sellerId !== u.id;
     });
     if (fresh.length) {
       searches.forEach(function (s) {

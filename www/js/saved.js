@@ -16,7 +16,9 @@
 
     // Helper: render a status pill for non-active listings
     function statusPillFor(listing) {
-      if (!listing || listing.status === 'active') return '';
+      if (!listing || H.isPublicListingEligible(listing)) return '';
+      if (listing.status === 'active')
+        return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#f59e0b;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Expired</span>`;
       if (listing.status === 'sold')
         return `<span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#ef4444;border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">Sold</span>`;
       if (listing.status === 'expired')
@@ -34,7 +36,7 @@
 </div>`;
       }
       // Unavailable listing — greyed-out card with status pill injected
-      const isUnavailable = listing.status !== 'active';
+      const isUnavailable = !H.isPublicListingEligible(listing);
       const card = renderListCard(listing);
       if (!isUnavailable) return card;
       // Wrap with opacity and inject the status pill right after the card opens

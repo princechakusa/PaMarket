@@ -12,7 +12,7 @@
   H._currentTalentSector = 'All';
 
   // ── SELECT cols used in every category fetch ──────────────────────────────
-  var LISTING_COLS = 'id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes';
+  var LISTING_COLS = 'id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes,expires_at';
 
   function getF(id) { return H._filters[id] || (H._filters[id] = {}); }
 
@@ -75,6 +75,7 @@
     var q = window.supabase.from('listings')
       .select(LISTING_COLS)
       .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
       .eq('category', baseCat);
 
     // Price (top-level column — indexed)
@@ -115,7 +116,7 @@
   H._localFilter = function (catId) {
     var baseCat = catId.replace('_sale', '').replace('_rent', '');
     var pool = (H.state.listings || []).filter(function (l) {
-      return l.status === 'active' && l.cat === baseCat;
+      return H.isPublicListingEligible(l) && l.cat === baseCat;
     });
     var result = H._clientFilter(catId, pool);
     H._renderCatResults(catId, result, baseCat);

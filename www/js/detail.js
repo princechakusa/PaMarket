@@ -197,7 +197,7 @@
     const categoryText = H.escHtml((l.cat||'Listing').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
 
     // Seller stats
-    const sellerListings = (H.state.listings||[]).filter(x => x.sellerId === seller.id && x.status === 'active').length;
+    const sellerListings = (H.state.listings||[]).filter(x => x.sellerId === seller.id && H.isPublicListingEligible(x)).length;
     const sellerSales    = (H.state.listings||[]).filter(x => x.sellerId === seller.id && x.status === 'sold').length;
     const ratings        = (H.state.ratings && H.state.ratings[seller.id]) || [];
     const avgRatingNum   = ratings.length ? ratings.reduce((s,r) => s + (Number(r.rating)||0), 0) / ratings.length : 0;
@@ -466,7 +466,7 @@
         }).catch(function(){});
     })();
 
-    const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && x.status==='active').slice(0,4);
+    const similar = (H.state.listings||[]).filter(x => x.id!==l.id && x.cat===l.cat && H.isPublicListingEligible(x)).slice(0,4);
     // Recently viewed (tracked in localStorage by openListing) — skip the current
     // listing and anything already shown under "Similar".
     let rv = [];
@@ -474,7 +474,7 @@
     const simIds = similar.map(function(s){ return s.id; });
     const recent = rv.filter(function(id){ return id !== l.id && simIds.indexOf(id) === -1; })
       .map(function(id){ return (H.state.listings||[]).find(function(x){ return x.id === id; }); })
-      .filter(function(x){ return x && x.status === 'active'; })
+      .filter(function(x){ return H.isPublicListingEligible(x); })
       .slice(0, 4);
     function simCardHtml(s) {
       const thumb = s.photos && s.photos[0]
@@ -955,7 +955,7 @@
       }
     }
 
-    const myListings = (H.state.listings||[]).filter(l => String(l.sellerId)===id && l.status==='active');
+    const myListings = (H.state.listings||[]).filter(l => String(l.sellerId)===id && H.isPublicListingEligible(l));
     const me   = H.currentUser();
     const isMe = !!(me && String(me.id)===id);
 

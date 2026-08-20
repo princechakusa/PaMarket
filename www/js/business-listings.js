@@ -34,7 +34,8 @@
     pending:  ['#92400e', '#fef3c7', 'Pending'],
     active:   ['#166534', '#dcfce7', 'Active'],
     sold:     ['#1e3a8a', '#dbeafe', 'Sold'],
-    archived: ['#6b7280', '#f3f4f6', 'Archived']
+    deleted:  ['#6b7280', '#f3f4f6', 'Expired'],
+    paused:   ['#6b7280', '#f3f4f6', 'Paused']
   };
   function statusPill(s) { const m = STATUS[s] || STATUS.active; return `<span style="font-size:10px;font-weight:800;color:${m[0]};background:${m[1]};border-radius:20px;padding:2px 8px">${m[2]}</span>`; }
 
@@ -65,7 +66,7 @@
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
         ${l.status === 'active' ? `<button onclick="H._bizListings.setStatus('${l.id}','sold','${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Mark sold</button>` : ''}
-        ${l.status !== 'archived' ? `<button onclick="H._bizListings.setStatus('${l.id}','archived','${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Archive</button>` : `<button onclick="H._bizListings.setStatus('${l.id}','active','${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Reactivate</button>`}
+        ${l.status === 'deleted' ? `<button onclick="H._bizListings.setStatus('${l.id}','active','${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Reactivate</button>` : l.status !== 'paused' ? `<button onclick="H._bizListings.setStatus('${l.id}','paused','${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Pause</button>` : `<button onclick="H._bizListings.setStatus('${l.id}','active','${b.id}')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border,#E8ECF4);background:var(--card,#fff);font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit">Reactivate</button>`}
         <button onclick="H._bizListings.unassign('${l.id}','${b.id}')" style="padding:8px 12px;border-radius:9px;border:1px solid #FECACA;background:#FFF1F0;font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit">Remove</button>
       </div>
     </div>`;

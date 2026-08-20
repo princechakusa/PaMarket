@@ -8,7 +8,7 @@
 (function (H) {
   const pages = H.pages;
 
-  const activeCount = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'active').length;
+  const activeCount = uid => (H.state.listings || []).filter(l => l.sellerId === uid && H.isPublicListingEligible(l)).length;
   const soldCount   = uid => (H.state.listings || []).filter(l => l.sellerId === uid && l.status === 'sold').length;
 
   const IC = {
@@ -67,7 +67,7 @@
         : `<div style="width:44px"></div>`}
     </div>`;
 
-    const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && l.status === 'active');
+    const sellerListings = (H.state.listings || []).filter(l => l.sellerId === u.id && H.isPublicListingEligible(l));
 
     return `<div class="page active${isOwn ? ' sticky-topbar' : ''}">
       ${topbar}
@@ -392,13 +392,13 @@
   pages.MyListings = function () {
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
-    // Hide deleted rows entirely. The remaining backend states are grouped into
-    // the four seller-facing tabs; the exact state is always shown as a badge.
-    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id && !l.businessId && l.status !== 'deleted');
+    // Expiry cleanup uses the existing deleted state. Keep those rows visible
+    // to their owner and reuse the existing Post Again flow.
+    const all      = (H.state.listings || []).filter(l => l.sellerId === u.id && !l.businessId);
     const active   = all.filter(l => l.status === 'active');
     // "In review" = anything the seller is waiting on the backend for.
     const pending  = all.filter(l => ['pending', 'under_review', 'flagged'].includes(l.status));
-    const sold     = all.filter(l => l.status === 'sold');
+    const sold     = all.filter(l => ['sold', 'deleted'].includes(l.status));
     // "Rejected" = anything the backend took down (legacy 'rejected' + 'removed').
     const rejected = all.filter(l => ['rejected', 'removed'].includes(l.status));
     const btn = (label, fn, c, bg, bo) =>
@@ -615,7 +615,7 @@
     const u = H.currentUser();
     if (!u) return H.emptyState('Not logged in', 'Please sign in');
     const saved = (H.state.saves && H.state.saves[u.id]) || [];
-    const list  = (H.state.listings || []).filter(l => saved.includes(l.id) && l.status === 'active');
+    const list  = (H.state.listings || []).filter(l => saved.includes(l.id) && H.isPublicListingEligible(l));
     const savedCard = (l) =>
       `<div style="margin-bottom:14px">
         ${H.renderListCard(l)}

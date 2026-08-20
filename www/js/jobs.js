@@ -170,7 +170,7 @@
   };
 
   H.pages.Jobs = function () {
-    var jobs = (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat||'').toLowerCase() === 'jobs'; });
+    var jobs = (H.state.listings || []).filter(function (l) { return H.isPublicListingEligible(l) && (l.cat||'').toLowerCase() === 'jobs'; });
     var candidates = (H.state.users || []).filter(function (u) { return u.openToWork; });
     var recent = jobs.slice().sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 5);
 
@@ -262,7 +262,7 @@
   };
 
   function _activeJobs() {
-    return (H.state.listings || []).filter(function (l) { return l.status === 'active' && (l.cat || '').toLowerCase() === 'jobs'; });
+    return (H.state.listings || []).filter(function (l) { return H.isPublicListingEligible(l) && (l.cat || '').toLowerCase() === 'jobs'; });
   }
   function _jobIndustry(l) { return parseLine((l.desc || '').split('\n'), 'INDUSTRY') || l.subcat || ''; }
   function _jobTypeOf(l)   { return parseLine((l.desc || '').split('\n'), 'JOB TYPE') || ''; }

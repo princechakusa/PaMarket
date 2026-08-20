@@ -134,7 +134,7 @@
           const u = currentUser();
           if (!u) return '';
           const myProds = (H.state.listings || []).filter(function(l) {
-            return l.status === 'active' && (String(l.sellerId) === String(u.id) || String(l.businessId) === String(e.id));
+            return H.isPublicListingEligible(l) && (String(l.sellerId) === String(u.id) || String(l.businessId) === String(e.id));
           });
           if (!myProds.length) return '';
           const featured = e.featuredListingIds || [];
@@ -253,7 +253,7 @@
         </div>
         <div style="display:flex;gap:18px;margin-top:10px">
           <div><span id="bizFollowerCount" style="font-size:15px;font-weight:800;color:var(--text)">${b.followerCount || 0}</span> <span style="font-size:12.5px;color:var(--sub)">followers</span></div>
-          <div><span style="font-size:15px;font-weight:800;color:var(--text)">${(H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length}</span> <span style="font-size:12.5px;color:var(--sub)">products</span></div>
+          <div><span style="font-size:15px;font-weight:800;color:var(--text)">${(H.state.listings || []).filter(l => l.businessId === b.id && H.isPublicListingEligible(l)).length}</span> <span style="font-size:12.5px;color:var(--sub)">products</span></div>
         </div>
         ${loc ? `<div style="font-size:12.5px;color:var(--sub);margin-top:8px;display:flex;align-items:center;gap:5px">${H.ICONS.location} ${escHtml(loc)}</div>` : ''}
         ${b.description ? `<div style="font-size:13.5px;color:var(--text);line-height:1.6;margin-top:12px">${escHtml(b.description)}</div>` : ''}
@@ -266,7 +266,7 @@
         ${canEdit(b) ? `<button class="ml-act-btn" style="width:100%;padding:13px;margin-top:14px" onclick="H._bizProfile.openEdit('${b.id}')">Edit Profile</button>` : ''}
 
         ${(() => {
-          const products = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active');
+          const products = (H.state.listings || []).filter(l => l.businessId === b.id && H.isPublicListingEligible(l));
           if (!products.length) return `<div style="text-align:center;color:var(--sub);font-size:13px;padding:28px 0 6px">No products listed yet.</div>`;
           const card = (l) => `<div onclick="H.openListing && H.openListing('${l.id}')" style="background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:13px;overflow:hidden;cursor:pointer">
             <div style="aspect-ratio:1/1;background:#EEF2FB;display:flex;align-items:center;justify-content:center;color:#1A3A8F;overflow:hidden">${l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" style="width:100%;height:100%;object-fit:cover">` : (typeof H.categoryIcon === 'function' ? H.categoryIcon(l.cat) : '')}</div>
@@ -302,7 +302,7 @@
 
   function shopProducts(b) {
     return (H.state.listings || []).filter(function (l) {
-      return l.status === 'active' && String(l.businessId) === String(b.id);
+      return H.isPublicListingEligible(l) && String(l.businessId) === String(b.id);
     });
   }
 
@@ -945,7 +945,7 @@
       if ((b.city || '').toLowerCase().indexOf(q) !== -1) return true;
       // Match any active listing this shop sells
       return (H.state.listings || []).some(function(l) {
-        return l.status === 'active' &&
+        return H.isPublicListingEligible(l) &&
           (String(l.businessId) === String(b.id) || String(l.sellerId) === String(b.ownerUserId)) &&
           (l.title || '').toLowerCase().indexOf(q) !== -1;
       });
@@ -960,7 +960,7 @@
       const _bizCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
       const catLabel = _bizCats.map(id => ((H.CATEGORIES.find(c => c.id === id) || {}).name || '')).filter(Boolean).join(' / ');
       const loc = [b.city, b.province].filter(Boolean).join(', ');
-      const prods = (H.state.listings || []).filter(l => l.businessId === b.id && l.status === 'active').length;
+      const prods = (H.state.listings || []).filter(l => l.businessId === b.id && H.isPublicListingEligible(l)).length;
       const verified = (b.verificationLevel || 0) >= 2;
       return `<div onclick="H.openBusinessShop('${b.id}')" style="display:flex;gap:12px;align-items:center;background:var(--card,#fff);border:1px solid var(--border,#E8ECF4);border-radius:8px;padding:12px;margin:0 16px 10px;cursor:pointer">
         <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#1A3A8F,#2245b8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(26,58,143,0.15)">${b.logo ? `<img src="${escHtml(b.logo)}${b.logo.startsWith('data:') ? '' : '?v=' + (b._updatedAt||b.updatedAt||'')}" style="width:100%;height:100%;object-fit:cover">` : _shopIcon}</div>

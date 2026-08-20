@@ -34,7 +34,10 @@
   // ── General listings (public.listings) ──────────────────────────
   // opts: { category, q, province, city, limit, offset, order }
   function listingFilters(opts) {
-    var qp = ['status=eq.active'];
+    var qp = [
+      'status=eq.active',
+      'expires_at=gt.' + esc(new Date().toISOString())
+    ];
     if (opts.category) qp.push('category=eq.' + esc(opts.category));
     if (opts.province) qp.push('province=ilike.*' + esc(opts.province) + '*');
     if (opts.city) qp.push('city=ilike.*' + esc(opts.city) + '*');
@@ -44,7 +47,7 @@
     if (opts.subcat) qp.push('attributes->>subcat=eq.' + esc(opts.subcat));
     return qp;
   }
-  var LISTING_SELECT = 'select=id,title,price,currency,category,province,city,suburb,photos,created_at,boost,featured_until';
+  var LISTING_SELECT = 'select=id,title,price,currency,category,province,city,suburb,photos,created_at,boost,featured_until,expires_at';
 
   function fetchListings(opts) {
     opts = opts || {};
@@ -77,7 +80,7 @@
 
   function fetchListingById(id) {
     return pgFetch(
-      'listings?id=eq.' + esc(id) + '&status=eq.active&select=*'
+      'listings?id=eq.' + esc(id) + '&status=eq.active&expires_at=gt.' + esc(new Date().toISOString()) + '&select=*'
     ).then(function (rows) {
       return rows[0] || null;
     });
@@ -85,7 +88,7 @@
 
   function fetchSimilarListings(category, excludeId, limit) {
     return pgFetch(
-      'listings?status=eq.active&category=eq.' +
+      'listings?status=eq.active&expires_at=gt.' + esc(new Date().toISOString()) + '&category=eq.' +
         esc(category) +
         '&id=neq.' +
         esc(excludeId) +
@@ -95,7 +98,7 @@
   }
 
   function fetchListingCount(category) {
-    var qp = ['status=eq.active', 'select=id'];
+    var qp = ['status=eq.active', 'expires_at=gt.' + esc(new Date().toISOString()), 'select=id'];
     if (category) qp.push('category=eq.' + esc(category));
     return fetch(SB_URL + '/rest/v1/listings?' + qp.join('&'), {
       headers: {
@@ -165,13 +168,13 @@
 
   // ── Job listings (category = 'jobs' on public.listings) ──────────
   function jobFilters(opts) {
-    var qp = ['status=eq.active', 'category=eq.jobs'];
+    var qp = ['status=eq.active', 'expires_at=gt.' + esc(new Date().toISOString()), 'category=eq.jobs'];
     if (opts.q) qp.push('title=ilike.*' + esc(opts.q) + '*');
     if (opts.city) qp.push('city=ilike.*' + esc(opts.city) + '*');
     if (opts.province) qp.push('province=ilike.*' + esc(opts.province) + '*');
     return qp;
   }
-  var JOB_SELECT = 'select=id,title,price,currency,city,province,attributes,created_at,seller_name,featured_until';
+  var JOB_SELECT = 'select=id,title,price,currency,city,province,attributes,created_at,seller_name,featured_until,expires_at';
 
   function fetchJobs(opts) {
     opts = opts || {};
@@ -826,7 +829,7 @@
       if (!saves.length) return [];
       var ids = saves.map(function (x) { return String(x.listing_id).replace(/[^a-zA-Z0-9_-]/g, ''); }).filter(Boolean);
       if (!ids.length) return [];
-      return pgFetch('listings?id=in.(' + ids.join(',') + ')&status=eq.active&select=*').then(function (rows) {
+      return pgFetch('listings?id=in.(' + ids.join(',') + ')&status=eq.active&expires_at=gt.' + esc(new Date().toISOString()) + '&select=*').then(function (rows) {
         var byId = {}; rows.forEach(function (row) { byId[String(row.id)] = row; });
         return saves.map(function (save) {
           var row = byId[String(save.listing_id)];

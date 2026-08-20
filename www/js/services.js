@@ -2,7 +2,7 @@
 (function (H) {
 
   H.pages.Services = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'services'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var ls = (H.state.listings || []).filter(function (l) { return H.isPublicListingEligible(l) && l.cat === 'services'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var f = H._filterCarouselHtml('services', [
       {

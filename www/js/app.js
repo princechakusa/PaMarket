@@ -459,6 +459,13 @@ window.H = {
     return scored.map(s => s.l);
   },
 
+  isPublicListingEligible(l, now) {
+    if (!l || l.status !== 'active') return false;
+    // Missing expiry metadata, including old cache records, fails closed.
+    if (!l.expiresAt) return false;
+    return Number.isFinite(l.expiresAt) && l.expiresAt > (now || Date.now());
+  },
+
   toast(msg, duration=4000, isError=false) {
     const el = document.getElementById('toastEl'); if(!el) return;
     el.setAttribute('aria-live', isError ? 'assertive' : 'polite');
@@ -914,7 +921,7 @@ window.H = {
     else if (_act === 'post')   { if(this.currentUser()) setTimeout(()=>this.navTo('Post',null), 200); }
     else if (_act === 'browse') { setTimeout(()=>this.navTo('Browse',null), 200); }
     try {
-      const _hasCachedListings = (this.state.listings || []).filter(l => l.status === 'active').length > 0;
+      const _hasCachedListings = (this.state.listings || []).filter(l => this.isPublicListingEligible(l)).length > 0;
       if (_hasCachedListings) {
         // Warm start: Home already shows cached data. Fetch fresh data in the
         // background and re-render the feed the MOMENT it lands — don't wait for
@@ -922,10 +929,10 @@ window.H = {
         // this is the difference between an instant Twitter-style refresh on open
         // and the feed sitting stale for tens of seconds.
         const _self = this;
-        const _sigBefore = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+        const _sigBefore = (this.state.listings || []).filter(l => this.isPublicListingEligible(l)).map(l => l.id).join(',');
         _self.fetchListingsFromSupabase().then(function() {
           if (typeof H._checkEngagementAlerts === 'function') H._checkEngagementAlerts();
-          const _sigAfter = (H.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+          const _sigAfter = (H.state.listings || []).filter(l => H.isPublicListingEligible(l)).map(l => l.id).join(',');
           const pg = H.currentPageName;
           const FEED = { Home:1, Browse:1, Property:1, Vehicles:1, Electronics:1, Fashion:1,
             Furniture:1, Services:1, Agriculture:1, Pets:1, Kids:1, Other:1, Jobs:1, Rooms:1 };
@@ -943,11 +950,11 @@ window.H = {
         _self.fetchAppSettings().catch(function(){});
       } else {
         // Cold start (first install or cleared cache): await so Home fills immediately.
-        const _sigBefore = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+        const _sigBefore = (this.state.listings || []).filter(l => this.isPublicListingEligible(l)).map(l => l.id).join(',');
         await this.fetchListingsFromSupabase();
         H._checkEngagementAlerts();
         await Promise.all([this.fetchAdsFromSupabase(), this.fetchAppSettings()]);
-        const _sigAfter = (this.state.listings || []).filter(l => l.status === 'active').map(l => l.id).join(',');
+        const _sigAfter = (this.state.listings || []).filter(l => this.isPublicListingEligible(l)).map(l => l.id).join(',');
         if (_sigBefore !== _sigAfter && this.currentPageName === 'Home' && !this.pageStack.length && !H._userIsTyping()) {
           await this.renderPage('Home', this.currentPageParams);
         }
@@ -1877,6 +1884,7 @@ window.H = {
       prov:r.province, city:r.city, suburb:r.suburb,
       photos:(Array.isArray(r.photos)?r.photos:(r.photos?[r.photos]:[])).filter(p=>typeof p==='string'&&p.startsWith('https://')),
       status:r.status, boost:r.boost, views:r.views||0,
+      expiresAt:r.expires_at?new Date(r.expires_at).getTime():null,
       businessId:r.business_id||null,
       createdAt:r.created_at?new Date(r.created_at).getTime():Date.now(),
       updatedAt:r.updated_at?new Date(r.updated_at).getTime():0
@@ -1894,7 +1902,7 @@ window.H = {
   async _fetchListingById(id) {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return null;
-      const { data, error } = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes').eq('id', id).maybeSingle();
+      const { data, error } = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes,expires_at').eq('id', id).maybeSingle();
       if (error || !data) return null;
       const o = H._mapCloudListing(data);
       H.state.listings = H.state.listings || [];
@@ -1907,8 +1915,9 @@ window.H = {
     try {
       if(!window.supabase||typeof window.supabase.from!=='function') return;
       const {data,error}=await window.supabase
-        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at')
+        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,expires_at')
         .eq('status','active')
+        .gt('expires_at', new Date().toISOString())
         .neq('category','jobs')
         .order('created_at',{ascending:false})
         .limit(50);
@@ -1984,10 +1993,9 @@ window.H = {
       var u = H.currentUser();
       if (!u) return;
       const {data,error}=await window.supabase
-        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
+        .from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes,expires_at')
         .eq('seller_id', u.id)
         .is('business_id', null)
-        .neq('status','deleted')
         .order('created_at',{ascending:false});
       if (error) return;
       var mine = (data||[]).map(function(r){ return H._mapCloudListing(r); });
@@ -2008,8 +2016,9 @@ window.H = {
     var sentinel = document.getElementById('homeLoadMore');
     if (sentinel) sentinel.textContent = 'Loading more listings...';
     try {
-      var res = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes')
+      var res = await window.supabase.from('listings').select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,attributes,expires_at')
         .eq('status', 'active')
+        .gt('expires_at', new Date().toISOString())
         .neq('category', 'jobs')
         .order('created_at', { ascending: false })
         .lt('created_at', H._listingsCursor)
@@ -2048,8 +2057,9 @@ window.H = {
       if (!window.supabase || typeof window.supabase.from !== 'function') return;
       const { data, error } = await window.supabase
         .from('listings')
-        .select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at')
+        .select('id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,views,business_id,created_at,updated_at,expires_at')
         .eq('status', 'active')
+        .gt('expires_at', new Date().toISOString())
         .eq('category', 'jobs')
         .order('created_at', { ascending: false })
         .limit(100);
@@ -2843,7 +2853,7 @@ window.H = {
   _registerCategoryView() {
     this.pages.CategoryView=function({cid}){
       const cat=H.CATEGORIES.find(c=>c.id===cid)||{name:'Category',icon:''};
-      const list=(H.state.listings||[]).filter(l=>l.status==='active'&&l.cat===cid);
+      const list=(H.state.listings||[]).filter(l=>H.isPublicListingEligible(l)&&l.cat===cid);
       return `<div class="page active">${H.innerTopbar(cat.name)}
         <div class="listing-list">
           ${list.length?list.map(H.renderListCard).join(''):H.emptyState('No '+cat.name+' listings yet','Be the first to post in this category!','Post an Ad',"H.navTo('Post',null)")}
@@ -3800,24 +3810,13 @@ H.openAppRating = function() {
 
 H._checkEngagementAlerts = function () {
   try {
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
     const u = H.currentUser();
 
     if (u) {
-      // A. Auto-expire listings older than 30 days
-      let changed = false;
-      (H.state.listings || []).forEach(function (l) {
-        if (l.sellerId === u.id && l.status === 'active' && (Date.now() - l.createdAt) > THIRTY_DAYS) {
-          l.status = 'expired';
-          changed = true;
-        }
-      });
-      if (changed) {
-        H.saveState();
-        H.toast('Some of your listings have expired. Renew them in My Listings.');
-      }
+      // Listing expiry is database-authoritative. Never manufacture the
+      // unsupported local `expired` status from listing age.
 
-      // B. Price drop alerts
+      // Price drop alerts
       const savedPrices = H.state.savedPrices || {};
       const saves = (H.state.saves || {})[u.id] || [];
       const priceDrops = [];

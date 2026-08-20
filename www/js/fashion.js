@@ -2,7 +2,7 @@
 (function (H) {
 
   H.pages.Fashion = function () {
-    var ls = (H.state.listings || []).filter(function (l) { return l.status === 'active' && l.cat === 'fashion'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var ls = (H.state.listings || []).filter(function (l) { return H.isPublicListingEligible(l) && l.cat === 'fashion'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
 
     var f = H._filterCarouselHtml('fashion', [
       {

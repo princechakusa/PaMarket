@@ -37,7 +37,7 @@
   H._renderHomeCatSections = function () {
     const el = document.getElementById('catSections');
     if (!el) return;
-    const active   = (H.state.listings || []).filter(l => l.status === 'active' && (l.cat || '').toLowerCase() !== 'jobs');
+    const active   = (H.state.listings || []).filter(l => H.isPublicListingEligible(l) && (l.cat || '').toLowerCase() !== 'jobs');
     const filtered = filterListings(active);
     el.innerHTML   = buildCatSectionsHTML(filtered);
     const s = document.getElementById('homeLoadMore');
@@ -83,7 +83,7 @@
     if (!Array.isArray(H.state.conversations)) H.state.conversations = [];
     const unreadMsgs   = u ? H.state.conversations.filter(cv =>
       Array.isArray(cv.members) && cv.members.includes(u.id) && (cv.messages || []).some(m => m.from !== u.id && !m.read)).length : 0;
-    const activeListings = (H.state.listings || []).filter(l => l.status === 'active');
+    const activeListings = (H.state.listings || []).filter(l => H.isPublicListingEligible(l));
     const filtered       = filterListings(activeListings);
 
     return `<div class="page active" style="background:var(--bg)">
@@ -183,7 +183,7 @@
           const cards = activeShops.slice(0, 12).map(function(b) {
             const ini = H.initials ? H.initials(b.name || 'Shop') : (b.name || 'S').charAt(0).toUpperCase();
             const bProds = (H.state.listings || []).filter(function(l) {
-              return l.status === 'active' && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
+              return H.isPublicListingEligible(l) && (String(l.sellerId) === String(b.ownerUserId) || String(l.businessId) === String(b.id));
             });
             const lCount = bProds.length;
             const _hCats = b.categories && b.categories.length ? b.categories : (b.category ? [b.category] : []);
@@ -246,7 +246,7 @@
         ${(() => {
           let rvIds = [];
           try { rvIds = JSON.parse(localStorage.getItem('pamarket_rv') || '[]'); } catch(_) {}
-          const rvListings = rvIds.map(id => (H.state.listings || []).find(l => l.id === id && l.status === 'active')).filter(Boolean).slice(0, 10);
+          const rvListings = rvIds.map(id => (H.state.listings || []).find(l => l.id === id && H.isPublicListingEligible(l))).filter(Boolean).slice(0, 10);
           if (!rvListings.length) return '';
           const rvCards = rvListings.map(l => {
             const photo = l.photos && l.photos[0] ? `<img src="${escHtml(l.photos[0])}" loading="lazy" onerror="this.style.display='none'">` : `<div class="home-recent-placeholder"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
@@ -299,7 +299,7 @@
       }
       catDiv.style.display = 'none';
       srDiv.style.display  = '';
-      const active   = (H.state.listings || []).filter(l => l.status === 'active');
+      const active   = (H.state.listings || []).filter(l => H.isPublicListingEligible(l));
       const results  = filterListings(active, q);
       srList.innerHTML = results.length
         ? results.map(l => `<div>${renderListCard(l)}</div>`).join('')
