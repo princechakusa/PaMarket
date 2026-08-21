@@ -237,6 +237,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // of unreadable minified JS.
       },
     ],
+    "./config/plugins/withAndroidReleaseManifest",
   ],
   extra: {
     router: {},
