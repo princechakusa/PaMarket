@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
@@ -39,6 +39,12 @@ export default function ApplyJobScreen() {
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasCv, setHasCv] = useState(false);
+  // A normal PaMarket account is NOT a Candidate Profile — mirrors the exact
+  // same minimum bar jobs/cv-profile.tsx's own save() enforces (job_title,
+  // sector, city). null = not checked yet, so the form never flashes open
+  // before this resolves.
+  const [hasCandidateProfile, setHasCandidateProfile] = useState<boolean | null>(null);
+  const hasMountedRef = useRef(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -51,15 +57,28 @@ export default function ApplyJobScreen() {
     if (!id || !session?.user) return;
     const [{ data: jobData }, profileRes, existingRes] = await Promise.all([
       supabase.from("listings").select("id,seller_id,seller_name,title,description").eq("id", id).maybeSingle(),
-      supabase.from("profiles").select("name,email,phone,cv_file_path").eq("id", session.user.id).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("name,email,phone,cv_file_path,job_title,sector,city")
+        .eq("id", session.user.id)
+        .maybeSingle(),
       supabase.from("applications").select("id").eq("job_id", id).eq("applicant_id", session.user.id).maybeSingle(),
     ]);
     setJob((jobData as JobListing) ?? null);
-    const p = profileRes.data as { name: string | null; email: string | null; phone: string | null; cv_file_path: string | null } | null;
+    const p = profileRes.data as {
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+      cv_file_path: string | null;
+      job_title: string | null;
+      sector: string | null;
+      city: string | null;
+    } | null;
     setName(p?.name || "");
     setEmail(p?.email || session.user.email || "");
     setPhone(p?.phone || "");
     setHasCv(!!p?.cv_file_path);
+    setHasCandidateProfile(!!(p?.job_title?.trim() && p?.sector?.trim() && p?.city?.trim()));
     setAlreadyApplied(!!existingRes.data);
   }, [id, session]);
 
@@ -68,8 +87,42 @@ export default function ApplyJobScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
+  // Re-checks candidate-profile/CV state whenever this screen regains focus
+  // (e.g. returning from Create Candidate Profile or Add/Update CV) without
+  // requiring logout/app-restart/manual refresh. Deliberately does NOT
+  // touch name/email/phone/message — those are either user-typed or only
+  // meant to hydrate once, so a focus refresh must never silently overwrite
+  // what the candidate already typed into this form.
+  const refreshCandidateState = useCallback(async () => {
+    if (!session?.user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("cv_file_path,job_title,sector,city")
+      .eq("id", session.user.id)
+      .maybeSingle();
+    const p = data as { cv_file_path: string | null; job_title: string | null; sector: string | null; city: string | null } | null;
+    setHasCv(!!p?.cv_file_path);
+    setHasCandidateProfile(!!(p?.job_title?.trim() && p?.sector?.trim() && p?.city?.trim()));
+  }, [session]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasMountedRef.current) {
+        // The mount-time useEffect above already covers the first focus —
+        // running this too would just be a redundant duplicate fetch.
+        hasMountedRef.current = true;
+        return;
+      }
+      refreshCandidateState();
+    }, [refreshCandidateState])
+  );
+
   async function submit() {
     if (!session?.user || !job) return;
+    if (!hasCandidateProfile) {
+      toast("Complete your Candidate Profile before applying");
+      return;
+    }
     if (!name.trim()) {
       toast("Please enter your full name");
       return;
@@ -106,6 +159,11 @@ export default function ApplyJobScreen() {
         toast("You've submitted several applications recently. Please wait a little before applying again.", 3500, true);
         return;
       }
+      if (/candidate_profile_required/i.test(error.message)) {
+        setHasCandidateProfile(false);
+        toast("Complete your Candidate Profile before applying");
+        return;
+      }
       toast("Could not submit your application");
       return;
     }
@@ -138,6 +196,41 @@ export default function ApplyJobScreen() {
         ) : null}
         <View style={styles.centered}>
           <Text style={styles.notFoundText}>Job not found</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // A normal PaMarket account alone is not enough to apply — this replaces
+  // the entire form (not an inline banner) so the user can never reach a
+  // submit button before they actually have a Candidate Profile.
+  if (hasCandidateProfile === false && !alreadyApplied) {
+    return (
+      <View style={styles.container}>
+        {Platform.OS !== "ios" ? (
+          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <GlassBackButton onPress={() => router.back()} tone="light" flat />
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              Apply for this Job
+            </Text>
+            <View style={{ width: 20 }} />
+          </View>
+        ) : null}
+        <View style={styles.centered}>
+          <Text style={styles.blockedTitle}>Complete your Candidate Profile</Text>
+          <Text style={styles.blockedBody}>
+            You need a Candidate Profile before applying for jobs. It only takes a minute — add your title, category
+            and location so employers know who you are.
+          </Text>
+          <Pressable
+            style={[styles.submitButton, { paddingHorizontal: 28 }]}
+            onPress={() => router.push("/jobs/cv-profile")}
+          >
+            <Text style={styles.submitButtonText}>Create Candidate Profile</Text>
+          </Pressable>
+          <Pressable style={{ marginTop: 14 }} onPress={() => router.back()} hitSlop={8}>
+            <Text style={styles.backToJobLink}>Back to Job</Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -252,6 +345,9 @@ function buildStyles(color: ColorPalette) {
   container: { flex: 1, backgroundColor: color.bg },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   notFoundText: { fontSize: 15, fontWeight: "600", color: color.text },
+  blockedTitle: { fontSize: 17, fontWeight: "700", color: color.text, textAlign: "center", marginBottom: 8 },
+  blockedBody: { fontSize: 13.5, lineHeight: 20, color: color.textSub, textAlign: "center", marginBottom: 22, paddingHorizontal: 8 },
+  backToJobLink: { fontSize: 13.5, fontWeight: "700", color: color.brand },
   header: {
     flexDirection: "row",
     alignItems: "center",

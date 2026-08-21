@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
-import { isBusinessConversation, messagePreview, otherMember, type ConversationRow, type MessageRow } from "../../lib/messages";
+import { isBusinessConversation, isRecruitmentConversation, messagePreview, otherMember, type ConversationRow, type MessageRow } from "../../lib/messages";
 import type { Profile } from "../../lib/profiles";
 import { initPresence, isUserOnline } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -64,6 +64,10 @@ export default function MessagesScreen() {
   const styles = useThemedStyles(buildStyles);
   const themeColor = useThemedStyles((c) => c);
   const [summaries, setSummaries] = useState<ConversationSummary[]>([]);
+  // Authoritative set of conversation ids the CURRENT user actually has a
+  // recruitment_conversation_context row for — never inferred from the
+  // `recruit_` id prefix alone (that's just a namespace hint, not proof).
+  const [recruitmentContextIds, setRecruitmentContextIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [, setOnlineTick] = useState(0);
@@ -84,12 +88,18 @@ export default function MessagesScreen() {
     if (!session?.user) return;
     const myId = session.user.id;
 
-    const { data: conversations, error: convError } = await supabase
-      .from("conversations")
-      .select("id,members,listing_id,business_id")
-      .contains("members", [myId])
-      .order("updated_at", { ascending: false })
-      .limit(200);
+    const [{ data: conversations, error: convError }, contextRes] = await Promise.all([
+      supabase
+        .from("conversations")
+        .select("id,members,listing_id,business_id")
+        .contains("members", [myId])
+        .order("updated_at", { ascending: false })
+        .limit(200),
+      supabase.from("recruitment_conversation_context").select("conversation_id").limit(400),
+    ]);
+    setRecruitmentContextIds(
+      new Set(((contextRes.data as { conversation_id: string }[] | null) ?? []).map((r) => r.conversation_id))
+    );
 
     if (convError) {
       // A failed fetch must never wipe out whatever's already on screen
@@ -107,13 +117,21 @@ export default function MessagesScreen() {
       return;
     }
 
-    // Batched fetch of other members' profiles (unchanged logic).
+    // Batched fetch of other members' profiles.
     const otherIds = Array.from(
       new Set(rows.map((c) => otherMember(c, myId)).filter((id): id is string => !!id))
     );
     const profilesRes = otherIds.length
       ? await supabase.from("profiles_public").select("id,name,avatar,verified").in("id", otherIds)
-      : { data: [] as Profile[] };
+      : { data: [] as Profile[], error: null };
+    if (profilesRes.error) {
+      // A failed profile batch must never silently render every thread as
+      // "PaMarket User" — same principle as the conversations-fetch
+      // failure above: surface the error, leave whatever was already on
+      // screen untouched, and stop before building degraded summaries.
+      setError(profilesRes.error.message);
+      return;
+    }
     const profilesById = new Map((profilesRes.data as Profile[] | null ?? []).map((p) => [p.id, p]));
 
     // Batched fetch of attached listing titles/thumbnails, same pattern.
@@ -334,9 +352,15 @@ export default function MessagesScreen() {
 
   // Strict complements over the one shared classifier (lib/messages.ts) — a
   // conversation lands in exactly one inbox, never both, never neither.
+  // Recruitment threads are excluded from both: they live in Jobs >
+  // Recruitment Messages, never in Personal (a candidate is also often a
+  // buyer/seller and must not see an employer thread mixed with those).
   const personalSummaries = useMemo(
-    () => summaries.filter((s) => !isBusinessConversation(s.conversation)),
-    [summaries]
+    () =>
+      summaries.filter(
+        (s) => !isBusinessConversation(s.conversation) && !isRecruitmentConversation(s.conversation, recruitmentContextIds)
+      ),
+    [summaries, recruitmentContextIds]
   );
   const businessSummaries = useMemo(
     () => summaries.filter((s) => isBusinessConversation(s.conversation)),
@@ -469,7 +493,12 @@ export default function MessagesScreen() {
               item.lastMessage && otherId && item.lastMessage.sender_id === otherId
                 ? item.lastMessage.sender_name
                 : null;
-            const displayName = item.business?.name || item.otherProfile?.name || otherSenderName || "PaMarket User";
+            // Resolved identity only — never the literal "PaMarket User"
+            // placeholder itself, which would otherwise be passed to Chat
+            // as though it were a real, authoritative nameHint and could
+            // get rendered before Chat's own authoritative fetch resolves.
+            const resolvedName = item.business?.name || item.otherProfile?.name || otherSenderName || "";
+            const displayName = resolvedName || "PaMarket User";
             const displayAvatar = item.business?.logo || item.otherProfile?.avatar;
             return (
               <Pressable
@@ -477,7 +506,7 @@ export default function MessagesScreen() {
                 onPress={() =>
                   router.push({
                     pathname: "/chat/[id]",
-                    params: { id: item.conversation.id, name: displayName, avatar: displayAvatar ?? "" },
+                    params: { id: item.conversation.id, name: resolvedName, avatar: displayAvatar ?? "" },
                   })
                 }
               >

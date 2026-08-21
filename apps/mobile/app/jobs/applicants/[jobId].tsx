@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
-import { conversationIdFor, isPersonalConversationFor, type ConversationRow } from "../../../lib/messages";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
 import { Avatar, Badge, Button, Card, EmptyState, GlassBackButton, toast, VerifiedBadge } from "../../../components/ui";
@@ -106,6 +105,7 @@ export default function JobApplicantsScreen() {
   const [notAllowed, setNotAllowed] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [cvOpeningId, setCvOpeningId] = useState<string | null>(null);
+  const [messagingId, setMessagingId] = useState<string | null>(null);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants" });
 
@@ -198,34 +198,30 @@ export default function JobApplicantsScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
-    const myId = session.user.id;
     const otherId = app.applicant_id;
-    if (!otherId || myId === otherId) return;
+    if (!otherId || session.user.id === otherId || messagingId) return;
 
-    const convId = conversationIdFor(myId, otherId);
-    const { data: conversations } = await supabase
-      .from("conversations")
-      .select("id,members,listing_id,business_id,created_at,updated_at")
-      .contains("members", [myId])
-      .limit(100);
-
-    const candidates = ((conversations as ConversationRow[]) ?? []).filter((conversation) =>
-      isPersonalConversationFor(conversation, myId, otherId)
-    );
-    candidates.sort((a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
-
-    const existing = candidates[0];
-    if (existing) {
-      const members = Array.isArray(existing.members) ? existing.members : [];
-      if (!members.includes(myId) || !members.includes(otherId)) {
-        await supabase.from("conversations").update({ members: [myId, otherId] }).eq("id", existing.id);
-      }
-      router.push({ pathname: "/chat/[id]", params: { id: existing.id } });
+    // Recruitment threads must go through the server-authoritative RPC, not
+    // the generic personal-conversation upsert — this is a real applicant
+    // relationship, but the candidate is also possibly a buyer/seller/
+    // business owner elsewhere, and this thread must carry recruitment
+    // context (job/application), not land as an indistinguishable personal
+    // chat. See get_or_create_recruitment_conversation.
+    setMessagingId(app.id);
+    const { data, error } = await supabase.rpc("get_or_create_recruitment_conversation", {
+      p_candidate_id: otherId,
+      p_job_id: app.job_id,
+    });
+    setMessagingId(null);
+    const result = data as { ok?: boolean; conversation_id?: string; code?: string } | null;
+    if (error || !result?.ok || !result.conversation_id) {
+      toast("Could not open chat — please try again", 3500, true);
       return;
     }
-
-    await supabase.from("conversations").upsert({ id: convId, members: [myId, otherId] });
-    router.push({ pathname: "/chat/[id]", params: { id: convId } });
+    router.push({
+      pathname: "/chat/[id]",
+      params: { id: result.conversation_id, name: app.applicant_name || "", avatar: profiles[otherId]?.avatar ?? "" },
+    });
   }
 
   // CVs are never fetched via the profiles table — get-cv-url verifies this
@@ -384,7 +380,14 @@ export default function JobApplicantsScreen() {
                   size="sm"
                   onPress={() => router.push({ pathname: "/jobs/candidate/[id]", params: { id: item.applicant_id } })}
                 />
-                <Button label="Message" variant="secondary" size="sm" onPress={() => openChat(item)} />
+                <Button
+                  label={messagingId === item.id ? "Opening…" : "Message"}
+                  variant="secondary"
+                  size="sm"
+                  loading={messagingId === item.id}
+                  disabled={messagingId === item.id}
+                  onPress={() => openChat(item)}
+                />
                 <Button
                   label="View CV"
                   variant="secondary"

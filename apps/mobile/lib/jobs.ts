@@ -126,6 +126,10 @@ export type CandidateProfileRow = {
   id: string;
   name: string | null;
   avatar: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contact_authorized?: boolean;
+  has_cv?: boolean;
   verified: boolean | null;
   job_title: string | null;
   skills: string | null;
@@ -154,39 +158,48 @@ export const EXP_LEVEL_LABEL: Record<string, string> = {
 };
 
 // ── contact_requests (Hire Talent contact unlock) ────────────────────────
-// See supabase/migrations/add_contact_requests.sql — admin-approved unlock
-// of a candidate's identity/contact for a specific employer. No money is
-// stored or shown; payment (if any) is handled off-platform by admins.
+// Two gates, not one: an active recruiter_monthly subscription is required
+// just to submit a request (enforced server-side in
+// request_candidate_contact(), see 202608201932_recruiter_contact_
+// entitlement.sql), and a separate admin approval per (requester, candidate)
+// pair is what actually unlocks that candidate's identity/contact —
+// payment alone never unlocks anyone.
 export type ContactRequest = {
   id: string;
-  requester_id: string;
   candidate_id: string;
-  requester_name: string;
-  candidate_name: string;
-  company: string;
-  role: string;
-  note: string;
   status: "pending" | "approved" | "declined";
   created_at: string;
-  decided_at: string | null;
+  // Only present from list_my_contact_requests() (not from
+  // request_candidate_contact()'s minimal return), and even there
+  // candidate_name is server-redacted to null unless the request is
+  // approved, the caller IS the candidate, or the caller is admin/moderator
+  // — see 202608211200_redact_candidate_identity_in_contact_requests.sql.
+  requester_id?: string;
+  requester_name?: string;
+  candidate_name?: string | null;
+  company?: string;
+  role?: string;
+  decided_at?: string | null;
 };
 
 // ── Recruiter plans (RecruiterSubscription) ──────────────────────────────
 // Mirrors www/js/jobs.js H.RECRUITER_PLAN_ENTITLEMENTS / H.RECRUITER_PLANS.
-// Paid upgrades go through Google Play Billing (out of scope here, same as
-// business-subscription.tsx) — "Upgrade" is a coming-soon toast.
+// The "recruiter" plan is live via StoreKit IAP (recruiter_monthly); price
+// is never hardcoded for display — recruiter-subscription.tsx always pulls
+// the real price/duration from the store. `price` here is only an internal
+// sentinel (0 = free tier, >0 = paid tier) used to gate UI, not shown as-is.
+// Any future plan without a mapped product ID falls back to a coming-soon
+// toast (see PRODUCT_ID_BY_PLAN / handleUpgrade in recruiter-subscription.tsx).
 export type RecruiterPlanEntitlements = {
   name: string;
   activeJobPosts: number; // -1 = unlimited
-  candidateAccess: string;
-  profileVisibility: string;
   price: number;
   rank: number;
 };
 
 export const RECRUITER_PLAN_ENTITLEMENTS: Record<string, RecruiterPlanEntitlements> = {
-  free: { name: "Free", activeJobPosts: 2, candidateAccess: "limited", profileVisibility: "standard", price: 0, rank: 0 },
-  recruiter: { name: "Recruiter", activeJobPosts: -1, candidateAccess: "full", profileVisibility: "featured", price: 12, rank: 1 },
+  free: { name: "Free", activeJobPosts: 2, price: 0, rank: 0 },
+  recruiter: { name: "Recruiter", activeJobPosts: -1, price: 12, rank: 1 },
 };
 
 export function recruiterPlanEntitlements(planId: string | null | undefined): RecruiterPlanEntitlements {

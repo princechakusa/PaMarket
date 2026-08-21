@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -256,33 +257,44 @@ export default function ReviewsScreen() {
       </ScrollView>
 
       <Modal visible={reviewModalVisible} transparent animationType="slide" onRequestClose={() => setReviewModalVisible(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Leave a Review</Text>
-            <Text style={styles.modalSubtitle}>Tap to rate your experience</Text>
-            <StarPicker value={draftRating} onChange={setDraftRating} styles={styles} />
-            <TextInput
-              style={styles.modalTextArea}
-              placeholder={`Share your experience with this ${isBusiness ? "shop" : "seller"}…`}
-              placeholderTextColor={color.textMuted}
-              multiline
-              value={draftText}
-              onChangeText={setDraftText}
-            />
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalCancelButton} onPress={() => setReviewModalVisible(false)}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.modalSubmitButton} onPress={submitReview} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <ActivityIndicator color={color.textOnBrand} />
-                ) : (
-                  <Text style={styles.modalSubmitText}>Submit Review</Text>
-                )}
-              </Pressable>
+        {/* This modal previously had no keyboard handling at all, so on iOS
+            the keyboard just covered whatever it overlapped — nothing ever
+            shifted the bottom-anchored card up. A single KeyboardAvoidingView
+            (padding on iOS, matching the simple form-modal pattern used
+            elsewhere — this isn't the chat screen's message-list case, so it
+            doesn't need that custom keyboard-height tracking) is the one
+            layer this needs. */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalCard}>
+              <ScrollView keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>
+                <Text style={styles.modalTitle}>Leave a Review</Text>
+                <Text style={styles.modalSubtitle}>Tap to rate your experience</Text>
+                <StarPicker value={draftRating} onChange={setDraftRating} styles={styles} />
+                <TextInput
+                  style={styles.modalTextArea}
+                  placeholder={`Share your experience with this ${isBusiness ? "shop" : "seller"}…`}
+                  placeholderTextColor={color.textMuted}
+                  multiline
+                  value={draftText}
+                  onChangeText={setDraftText}
+                />
+              </ScrollView>
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.modalCancelButton} onPress={() => setReviewModalVisible(false)}>
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.modalSubmitButton} onPress={submitReview} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <ActivityIndicator color={color.textOnBrand} />
+                  ) : (
+                    <Text style={styles.modalSubmitText}>Submit Review</Text>
+                  )}
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -442,6 +454,11 @@ function buildStyles(color: ColorPalette) {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
+    // A long review plus the open keyboard can exceed the available height —
+    // capping the card and letting its ScrollView take the overflow keeps
+    // the Cancel/Submit row (outside the ScrollView, below it) always
+    // reachable instead of being pushed off-screen.
+    maxHeight: "80%",
   },
   modalTitle: {
     fontSize: 16,

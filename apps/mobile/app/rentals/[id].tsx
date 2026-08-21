@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openPhone, openWhatsApp } from "../../lib/open-url";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Image } from "expo-image";
@@ -18,7 +23,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { brandLabel, type RentalSpecs, type RentalVehicleDetail } from "../../lib/rentals";
 import { businessInitials } from "../../lib/businesses";
-import type { ColorPalette } from "../../lib/theme";
+import { hitSlop, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -111,10 +116,18 @@ export default function RentalVehicleDetailScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const galleryRef = useRef<FlatList<string>>(null);
 
   const [vehicle, setVehicle] = useState<RentalVehicleDetail | null>(null);
   const [specs, setSpecs] = useState<RentalSpecs | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
+  // Purely local UI state for the photo viewer — never touches load(), so
+  // opening/closing/swiping through photos cannot re-trigger the view-count
+  // increment (that only fires once, keyed on `id`, inside load()) or any
+  // inquiry/chat/booking logic.
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [features, setFeatures] = useState<string[]>([]);
   const [brandSlug, setBrandSlug] = useState<string | null>(null);
   const [company, setCompany] = useState<RentalCompany | null>(null);
@@ -456,11 +469,42 @@ export default function RentalVehicleDetailScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
         <View style={styles.photoWrap}>
-          {photos[0] ? (
-            <Image source={{ uri: photos[0] }} style={styles.photo} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+          {photos.length ? (
+            <FlatList
+              ref={galleryRef}
+              data={photos}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(_, i) => String(i)}
+              onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+                if (idx !== photoIndex) setPhotoIndex(idx);
+              }}
+              scrollEventThrottle={16}
+              renderItem={({ item, index }) => (
+                <Pressable onPress={() => { setPhotoIndex(index); setViewerOpen(true); }}>
+                  <Image source={{ uri: item }} style={[styles.photo, { width }]} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+                </Pressable>
+              )}
+            />
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder]} />
           )}
+
+          {photos.length > 1 ? (
+            <View style={styles.photoCounter}>
+              <Text style={styles.photoCounterText}>{photoIndex + 1} / {photos.length}</Text>
+            </View>
+          ) : null}
+
+          {photos.length > 1 ? (
+            <View style={styles.dotsRow}>
+              {photos.map((_, i) => (
+                <View key={i} style={[styles.dot, i === photoIndex && styles.dotActive]} />
+              ))}
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.content}>
@@ -658,6 +702,49 @@ export default function RentalVehicleDetailScreen() {
           )}
         </View>
       ) : null}
+
+      <Modal
+        visible={viewerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewerOpen(false)}
+      >
+        <View style={styles.viewerBackdrop}>
+          <FlatList
+            data={photos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(_, i) => String(i)}
+            initialScrollIndex={photoIndex}
+            getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+            onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+              const idx = Math.max(0, Math.min(photos.length - 1, Math.round(e.nativeEvent.contentOffset.x / width)));
+              if (idx !== photoIndex) setPhotoIndex(idx);
+            }}
+            scrollEventThrottle={16}
+            renderItem={({ item }) => (
+              <View style={{ width, justifyContent: "center" }}>
+                <Image source={{ uri: item }} style={{ width, height: "100%" }} contentFit="contain" cachePolicy="memory-disk" />
+              </View>
+            )}
+          />
+          {photos.length > 1 ? (
+            <View style={[styles.photoCounter, { bottom: insets.bottom + space.md }]}>
+              <Text style={styles.photoCounterText}>{photoIndex + 1} / {photos.length}</Text>
+            </View>
+          ) : null}
+          <Pressable
+            style={[styles.viewerClose, { top: insets.top + 10 }]}
+            onPress={() => setViewerOpen(false)}
+            hitSlop={hitSlop}
+          >
+            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.4}>
+              <Path d="M18 6L6 18M6 6l12 12" />
+            </Svg>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -710,6 +797,7 @@ function buildStyles(color: ColorPalette) {
     photoWrap: {
       width: "100%",
       aspectRatio: 1.6,
+      position: "relative",
     },
     photo: {
       width: "100%",
@@ -717,6 +805,41 @@ function buildStyles(color: ColorPalette) {
     },
     photoPlaceholder: {
       backgroundColor: color.skeleton,
+    },
+    photoCounter: {
+      position: "absolute",
+      right: space.md,
+      bottom: space.md,
+      backgroundColor: "rgba(0,0,0,0.55)",
+      borderRadius: 12,
+      paddingHorizontal: space.sm,
+      paddingVertical: 3,
+    },
+    photoCounterText: { fontSize: 11.5, fontWeight: "700", color: "#fff" },
+    dotsRow: {
+      position: "absolute",
+      bottom: space.md,
+      left: space.md,
+      flexDirection: "row",
+      gap: 5,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: "rgba(255,255,255,0.45)",
+    },
+    dotActive: { backgroundColor: "#fff", width: 16 },
+    viewerBackdrop: { flex: 1, backgroundColor: "#000" },
+    viewerClose: {
+      position: "absolute",
+      right: space.lg,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(255,255,255,0.15)",
+      alignItems: "center",
+      justifyContent: "center",
     },
     content: {
       padding: 16,

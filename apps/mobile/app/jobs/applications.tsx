@@ -42,7 +42,16 @@ export default function MyApplicationsScreen() {
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My Applications" });
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: "My Applications",
+    headerRight: () => (
+      <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
+        <Text style={styles.headerLink}>Messages</Text>
+      </Pressable>
+    ),
+  });
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -65,7 +74,9 @@ export default function MyApplicationsScreen() {
         <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
           <GlassBackButton onPress={() => router.back()} tone="light" flat />
           <Text style={styles.headerTitle}>My Applications</Text>
-          <View style={{ width: 20 }} />
+          <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
+            <Text style={styles.headerLink}>Messages</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -127,6 +138,7 @@ function buildStyles(color: ColorPalette) {
     paddingBottom: 12,
   },
   headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
+  headerLink: { fontSize: 13, fontWeight: "700", color: color.textOnBrand },
   listContent: { padding: 16 },
   card: { backgroundColor: color.surface, borderRadius: 14, padding: 16 },
   cardTopRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 },

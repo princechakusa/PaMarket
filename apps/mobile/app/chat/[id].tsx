@@ -164,6 +164,7 @@ export default function ChatScreen() {
   const [otherProfile, setOtherProfile] = useState<Profile | null>(null);
   const [conversationBusiness, setConversationBusiness] = useState<{ id: string; name: string | null; logo: string | null } | null>(null);
   const [listing, setListing] = useState<ListingContext | null>(null);
+  const [recruitmentContext, setRecruitmentContext] = useState<{ jobTitle: string | null; isEmployer: boolean; viaContactRequest: boolean } | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -395,12 +396,42 @@ export default function ChatScreen() {
     const businessId = (conv as ConversationRow).business_id;
     const listingId = (conv as ConversationRow).listing_id;
 
+    // Recruitment threads (employer <-> candidate) must never render as
+    // though this were a generic personal/listing chat — the candidate may
+    // also be a buyer/seller elsewhere. Resolve the dedicated context row
+    // FIRST (before the profile fetch below) — the context row is the
+    // actual authority, the `recruit_` id prefix is only a namespace hint.
+    type RecruitContextRow = { employer_id: string; job_id: string | null; contact_request_id: string | null };
+    let recruitContextRow: RecruitContextRow | null = null;
+    if (String(id).startsWith("recruit_")) {
+      const { data: ctx } = await supabase
+        .from("recruitment_conversation_context")
+        .select("employer_id,job_id,contact_request_id")
+        .eq("conversation_id", id)
+        .maybeSingle();
+      recruitContextRow = (ctx as RecruitContextRow | null) ?? null;
+    }
+    // Only when the viewer is the EMPLOYER side of a valid recruitment
+    // conversation does the OTHER party's identity need the recruitment-
+    // gated, live-revalidated source instead of the general-purpose public
+    // identity view — a candidate's approval can be revoked later, and
+    // profiles_public has no notion of that; get_recruitment_candidate
+    // re-checks authority every single call. The candidate viewing the
+    // employer keeps using profiles_public — employer identity isn't
+    // recruitment-protected.
+    const useRecruitmentCandidateIdentity = !!recruitContextRow && recruitContextRow.employer_id === myId && !!oId;
+
     // These four don't depend on each other — running them sequentially was
     // turning one screen open into 5 back-to-back network round trips.
     const [profileRes, bizRes, listingRes, msgsRes] = await Promise.all([
       oId
-        ? supabase.from("profiles_public").select("id,name,avatar,verified,last_seen").eq("id", oId).maybeSingle()
-        : Promise.resolve({ data: null }),
+        ? useRecruitmentCandidateIdentity
+          ? supabase.rpc("get_recruitment_candidate", { p_candidate_id: oId }).then((res) => ({
+              data: (res.data as { id: string; name: string | null; avatar: string | null; verified: boolean | null }[] | null)?.[0] ?? null,
+              error: res.error,
+            }))
+          : supabase.from("profiles_public").select("id,name,avatar,verified,last_seen").eq("id", oId).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
       businessId
         ? supabase.from("businesses").select("id,name,logo,owner_user_id").eq("id", businessId).maybeSingle()
         : Promise.resolve({ data: null }),
@@ -419,7 +450,45 @@ export default function ChatScreen() {
       setLoadError("Unable to load messages. Check your connection and try again.");
       return;
     }
-    setOtherProfile((profileRes.data as Profile) ?? null);
+    // A failed/errored profile lookup must never silently replace an
+    // already-known identity with nothing — keep whatever was already
+    // resolved (e.g. from a previous successful load) rather than nulling
+    // it out, and try exactly once more before giving up.
+    if (profileRes.error) {
+      console.warn("[chat] profile lookup failed, retrying once:", profileRes.error.message);
+      const retry = oId
+        ? useRecruitmentCandidateIdentity
+          ? await supabase.rpc("get_recruitment_candidate", { p_candidate_id: oId }).then((res) => ({
+              data: (res.data as { id: string; name: string | null; avatar: string | null; verified: boolean | null }[] | null)?.[0] ?? null,
+              error: res.error,
+            }))
+          : await supabase.from("profiles_public").select("id,name,avatar,verified,last_seen").eq("id", oId).maybeSingle()
+        : { data: null, error: null };
+      if (!retry.error) {
+        setOtherProfile((retry.data as Profile) ?? null);
+      }
+      // Both attempts failed: leave otherProfile exactly as it was (do not
+      // overwrite a resolvable identity with null just because of a
+      // transient error).
+    } else {
+      setOtherProfile((profileRes.data as Profile) ?? null);
+    }
+
+    if (recruitContextRow) {
+      let jobTitle: string | null = null;
+      if (recruitContextRow.job_id) {
+        const { data: jobRow } = await supabase.from("listings").select("title").eq("id", recruitContextRow.job_id).maybeSingle();
+        jobTitle = (jobRow as { title: string | null } | null)?.title ?? null;
+      }
+      setRecruitmentContext({
+        jobTitle,
+        isEmployer: recruitContextRow.employer_id === myId,
+        viaContactRequest: !!recruitContextRow.contact_request_id,
+      });
+    } else {
+      setRecruitmentContext(null);
+    }
+
     // The business identity is only shown to the OTHER side of the
     // conversation — the customer. When the viewer is the business's own
     // owner, showing "conversationBusiness" here made the header display
@@ -853,18 +922,42 @@ export default function ChatScreen() {
   const safetyHint = useMemo(() => chatSafetyHint(inputText), [inputText]);
   const canSend = (!!inputText.trim() || pendingImages.length > 0) && !isSending && !isSendingImages;
 
-  const subtitle = conversationBusiness
-    ? "Shop"
-    : otherTyping
-      ? "Typing…"
-      : otherOnline
-        ? "Online"
-        : lastSeenLabel(otherProfile?.last_seen);
+  // Recruitment threads render their own job/origin context instead of the
+  // generic typing/online subtitle — a candidate or employer opening this
+  // chat needs to immediately understand it's a recruitment conversation,
+  // not just another marketplace chat that happens to be with this person.
+  const recruitmentSubtitle = recruitmentContext
+    ? recruitmentContext.jobTitle
+      ? `Job: ${recruitmentContext.jobTitle}`
+      : recruitmentContext.viaContactRequest
+        ? "Recruitment · contact request"
+        : "Recruitment"
+    : null;
+
+  const subtitle = recruitmentSubtitle
+    ? recruitmentSubtitle
+    : conversationBusiness
+      ? "Shop"
+      : otherTyping
+        ? "Typing…"
+        : otherOnline
+          ? "Online"
+          : lastSeenLabel(otherProfile?.last_seen);
 
   const displayName = conversationBusiness?.name || otherProfile?.name || nameHint || "PaMarket User";
   const displayAvatar = conversationBusiness?.logo || otherProfile?.avatar || avatarHint;
 
   const openProfile = () => {
+    // Recruitment identity is resolved through recruitment authority, never
+    // through the marketplace/business/listing fallback below.
+    if (recruitmentContext) {
+      if (recruitmentContext.isEmployer && otherId) {
+        router.push({ pathname: "/jobs/candidate/[id]", params: { id: otherId } });
+      } else if (otherId) {
+        router.push({ pathname: "/profile/[id]", params: { id: otherId } });
+      }
+      return;
+    }
     if (conversationBusiness) {
       router.push({ pathname: "/business/[id]", params: { id: conversationBusiness.id } });
     } else if (otherId) {
@@ -883,7 +976,16 @@ export default function ChatScreen() {
             {displayName}
           </Text>
           <Text
-            style={[styles.headerSubtitle, otherTyping ? styles.subtitleTyping : otherOnline ? styles.subtitleOnline : styles.subtitleOffline]}
+            style={[
+              styles.headerSubtitle,
+              recruitmentSubtitle
+                ? styles.subtitleOffline
+                : otherTyping
+                  ? styles.subtitleTyping
+                  : otherOnline
+                    ? styles.subtitleOnline
+                    : styles.subtitleOffline,
+            ]}
             numberOfLines={1}
           >
             {subtitle}
@@ -922,7 +1024,16 @@ export default function ChatScreen() {
                 {displayName}
               </Text>
               <Text
-                style={[styles.headerSubtitle, otherTyping ? styles.subtitleTyping : otherOnline ? styles.subtitleOnline : styles.subtitleOffline]}
+                style={[
+                  styles.headerSubtitle,
+                  recruitmentSubtitle
+                    ? styles.subtitleOffline
+                    : otherTyping
+                      ? styles.subtitleTyping
+                      : otherOnline
+                        ? styles.subtitleOnline
+                        : styles.subtitleOffline,
+                ]}
                 numberOfLines={1}
               >
                 {subtitle}

@@ -107,13 +107,6 @@ export default function DeleteAccountScreen() {
         // the keyboard instead of pressing the button.
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        // iOS's automatic keyboard-inset handling (default true on RN
-        // 0.71+) and this screen's own KeyboardAvoidingView both try to
-        // make room for the keyboard at once, which is what left the
-        // DELETE input covered — same double-adjustment bug already fixed
-        // on chat/[id].tsx's message list. Disabling the automatic one
-        // leaves KeyboardAvoidingView as the single source of truth.
-        automaticallyAdjustKeyboardInsets={false}
       >
         <View style={styles.warnBox}>
           <Text style={styles.warnTitle}>Delete Account</Text>

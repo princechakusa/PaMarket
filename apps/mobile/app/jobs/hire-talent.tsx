@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -52,9 +53,17 @@ type FilterTab = "sector" | "experience" | "location";
 // cv jsonb) — no invented columns.
 export default function HireTalentScreen() {
   const router = useRouter();
+  const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
   const [candidates, setCandidates] = useState<CandidateProfileRow[]>([]);
+  // Candidate ids this employer has an APPROVED contact_requests row for —
+  // the same "reveal" rule jobs/candidate/[id].tsx already enforces on the
+  // detail screen. Cards must use the identical rule; showing the real name
+  // here regardless of approval (the previous behavior, despite this file's
+  // own comment claiming otherwise) leaked identity the detail screen was
+  // built specifically to protect.
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -80,9 +89,14 @@ export default function HireTalentScreen() {
     tintColor: color.textOnBrand,
     title: "Find candidates",
     headerRight: () => (
-      <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
-        <Text style={styles.headerLink}>Requests</Text>
-      </Pressable>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+        <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
+          <Text style={styles.headerLink}>Messages</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
+          <Text style={styles.headerLink}>Requests</Text>
+        </Pressable>
+      </View>
     ),
   });
 
@@ -100,6 +114,23 @@ export default function HireTalentScreen() {
     [cityFilter, debouncedQuery, expFilter, sectorFilter]
   );
 
+  // Batched, not per-card — one query for the whole page's candidate ids.
+  const loadUnlocked = useCallback(
+    async (page: CandidateProfileRow[]) => {
+      if (!session?.user || !page.length) return;
+      // contact_requests itself is admin-only to SELECT directly — this RPC
+      // is the safe read path. Only candidate_id/status are used here, so
+      // the redacted candidate_name it also returns is irrelevant.
+      const { data } = await supabase.rpc("list_my_contact_requests");
+      const pageIds = new Set(page.map((c) => c.id));
+      const ids = ((data as { candidate_id: string; status: string }[] | null) ?? [])
+        .filter((r) => r.status === "approved" && pageIds.has(r.candidate_id))
+        .map((r) => r.candidate_id);
+      if (ids.length) setUnlockedIds((prev) => new Set([...prev, ...ids]));
+    },
+    [session?.user]
+  );
+
   const load = useCallback(async () => {
     setHasError(false);
     pageRef.current = 0;
@@ -111,7 +142,8 @@ export default function HireTalentScreen() {
     const page = (data as unknown as CandidateProfileRow[]) ?? [];
     setCandidates(page);
     setHasMore(page.length === PAGE_SIZE);
-  }, [buildQuery]);
+    loadUnlocked(page);
+  }, [buildQuery, loadUnlocked]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -129,9 +161,10 @@ export default function HireTalentScreen() {
       pageRef.current = nextPage;
       setCandidates((prev) => [...prev, ...page]);
       setHasMore(page.length === PAGE_SIZE);
+      loadUnlocked(page);
     }
     setIsLoadingMore(false);
-  }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError]);
+  }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError, loadUnlocked]);
 
   const cityOptions = useMemo(() => {
     return Array.from(new Set(Object.values(CITIES_BY_PROVINCE).flat())).sort();
@@ -161,9 +194,14 @@ export default function HireTalentScreen() {
           <View style={styles.headerRow}>
             <GlassBackButton onPress={() => router.back()} tone="light" flat />
             <Text style={styles.headerTitle}>Find candidates</Text>
-            <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
-              <Text style={styles.headerLink}>Requests</Text>
-            </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+              <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
+                <Text style={styles.headerLink}>Messages</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
+                <Text style={styles.headerLink}>Requests</Text>
+              </Pressable>
+            </View>
           </View>
         ) : null}
         <View style={styles.searchBar}>
@@ -284,6 +322,7 @@ export default function HireTalentScreen() {
           renderItem={({ item }) => (
             <CandidateCard
               candidate={item}
+              reveal={unlockedIds.has(item.id)}
               onPress={() => router.push({ pathname: "/jobs/candidate/[id]", params: { id: item.id } })}
               styles={styles}
             />
@@ -307,10 +346,12 @@ type Styles = ReturnType<typeof buildStyles>;
 
 function CandidateCard({
   candidate,
+  reveal,
   onPress,
   styles,
 }: {
   candidate: CandidateProfileRow;
+  reveal: boolean;
   onPress: () => void;
   styles: Styles;
 }) {
@@ -318,15 +359,17 @@ function CandidateCard({
   const expLabel = candidate.exp ? EXP_LEVEL_LABEL[candidate.exp] || candidate.exp : "";
   const headline = candidate.cv?.headline || candidate.job_title || "Professional";
   const location = candidate.cv?.location || candidate.city || "";
-  // Identity stays hidden until an approved contact_requests row exists — the
-  // candidate detail screen owns that unlock, so the list never leaks a name.
-  const displayName = candidate.open_to_work ? candidate.name || "Candidate" : "Candidate";
+  // Identity stays hidden until an approved contact_requests row exists —
+  // same rule as jobs/candidate/[id].tsx's `reveal`, passed in from the
+  // batched contact_requests lookup in HireTalentScreen so every card here
+  // is consistent with what the detail screen actually enforces.
+  const displayName = reveal ? candidate.name || "Candidate" : "Candidate";
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && styles.cardPressed]}>
       <Card>
         <View style={styles.cardRow}>
-          <Avatar uri={candidate.avatar} name={displayName} size={52} />
+          <Avatar uri={reveal ? candidate.avatar : undefined} name={displayName} size={52} />
           <View style={styles.cardBody}>
             <View style={styles.nameRow}>
               <Text style={styles.candName} numberOfLines={1}>

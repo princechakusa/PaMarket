@@ -11,6 +11,8 @@ export function useStoreProducts(
     [productKey]
   );
   const [prices, setPrices] = useState<Record<string, string>>({});
+  const [titles, setTitles] = useState<Record<string, string>>({});
+  const [durations, setDurations] = useState<Record<string, string>>({});
   const [availableProductIds, setAvailableProductIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
@@ -23,6 +25,8 @@ export function useStoreProducts(
         ? await fetchSubscriptionProducts(stableProductIds)
         : await fetchConsumableProducts(stableProductIds);
     setPrices(result.prices);
+    setTitles(result.titles);
+    setDurations(result.durations);
     setAvailableProductIds(result.availableProductIds);
     setError(result.error);
     setIsLoading(false);
@@ -32,5 +36,5 @@ export function useStoreProducts(
     retry();
   }, [retry]);
 
-  return { prices, availableProductIds, isLoading, error, retry };
+  return { prices, titles, durations, availableProductIds, isLoading, error, retry };
 }

@@ -89,8 +89,38 @@ export function isBusinessConversation(conversation: ConversationRow): boolean {
   return id.startsWith("biz_") || id.startsWith("job_") || id.startsWith("rental_");
 }
 
+// The `recruit_` id prefix is a deterministic-id NAMESPACE/routing hint
+// ONLY — never authority. A conversation is only actually a recruitment
+// conversation when a row for it exists in recruitment_conversation_context
+// (written exclusively by the server-authoritative
+// get_or_create_recruitment_conversation RPC). Anyone could in principle
+// upsert a `recruit_...`-shaped id through the generic conversation path;
+// without a matching context row that's just an ordinary personal
+// conversation and must be treated as one everywhere — inbox
+// classification, the chat header, all of it.
+function hasRecruitmentIdPrefix(conversation: ConversationRow): boolean {
+  const id = conversation.id || "";
+  return id.startsWith("recruit_");
+}
+
+// Recruitment threads (employer <-> candidate) are a separate context, not
+// Personal or Business — they live in the Jobs > Recruitment Messages inbox
+// instead. `contextConversationIds` must be the set of conversation ids the
+// CURRENT user actually has a recruitment_conversation_context row for
+// (fetched from that RLS-scoped table, never inferred) — the id prefix is
+// only used as a cheap pre-filter (skip the context lookup entirely for
+// conversations that can't possibly be recruitment), not as the answer
+// itself.
+export function isRecruitmentConversation(conversation: ConversationRow, contextConversationIds: ReadonlySet<string>): boolean {
+  if (!hasRecruitmentIdPrefix(conversation)) return false;
+  return contextConversationIds.has(conversation.id);
+}
+
 export function isPersonalConversationFor(conversation: ConversationRow, userIdA: string, userIdB: string): boolean {
-  if (isBusinessConversation(conversation)) {
+  // Conservative id-prefix skip only (never grants anything — at worst this
+  // causes a fresh personal conversation to be created instead of an
+  // existing one being reused, which is always safe).
+  if (isBusinessConversation(conversation) || hasRecruitmentIdPrefix(conversation)) {
     return false;
   }
 

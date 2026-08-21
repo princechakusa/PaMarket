@@ -451,6 +451,8 @@ export async function teardownIAP() {
 
 export type SubscriptionProductsResult = {
   prices: Record<string, string>;
+  titles: Record<string, string>;
+  durations: Record<string, string>;
   availableProductIds: string[];
   missingProductIds: string[];
   error?: string;
@@ -462,6 +464,8 @@ export async function fetchSubscriptionProducts(
   if (!(await initIAP())) {
     return {
       prices: {},
+      titles: {},
+      durations: {},
       availableProductIds: [],
       missingProductIds: productIds,
       error: `The ${NATIVE_STORE_NAME} is unavailable. Check your connection and try again.`,
@@ -493,6 +497,8 @@ export async function fetchSubscriptionProducts(
         });
         return {
           prices: {},
+          titles: {},
+          durations: {},
           availableProductIds: [],
           missingProductIds: productIds,
           error:
@@ -504,6 +510,18 @@ export async function fetchSubscriptionProducts(
       prices: Object.fromEntries(
         products.map((product) => [product.id, product.displayPrice])
       ),
+      titles: Object.fromEntries(
+        products.map((product) => [product.id, product.displayName || product.title])
+      ),
+      durations: Object.fromEntries(
+        products.flatMap((product) => {
+          if (product.platform !== "ios" || !product.subscriptionPeriodUnitIOS) return [];
+          const count = Number(product.subscriptionPeriodNumberIOS || "1");
+          const unit = product.subscriptionPeriodUnitIOS;
+          if (unit === "empty") return [];
+          return [[product.id, `${count} ${unit}${count === 1 ? "" : "s"}`]];
+        })
+      ),
       availableProductIds,
       missingProductIds,
       error: missingProductIds.length
@@ -514,6 +532,8 @@ export async function fetchSubscriptionProducts(
     console.warn("iap: fetchSubscriptionProducts failed", safeIapError(error));
     return {
       prices: {},
+      titles: {},
+      durations: {},
       availableProductIds: [],
       missingProductIds: productIds,
       error: `Could not load ${NATIVE_STORE_NAME} pricing. Check your connection and try again.`,
@@ -533,6 +553,8 @@ export async function fetchConsumableProducts(
   if (!(await initIAP())) {
     return {
       prices: {},
+      titles: {},
+      durations: {},
       availableProductIds: [],
       missingProductIds: productIds,
       error: `The ${NATIVE_STORE_NAME} is unavailable. Check your connection and try again.`,
@@ -552,6 +574,10 @@ export async function fetchConsumableProducts(
       prices: Object.fromEntries(
         products.map((product) => [product.id, product.displayPrice])
       ),
+      titles: Object.fromEntries(
+        products.map((product) => [product.id, product.displayName || product.title])
+      ),
+      durations: {},
       availableProductIds,
       missingProductIds,
       error: missingProductIds.length
@@ -562,6 +588,8 @@ export async function fetchConsumableProducts(
     console.warn("iap: fetchConsumableProducts failed", safeIapError(error));
     return {
       prices: {},
+      titles: {},
+      durations: {},
       availableProductIds: [],
       missingProductIds: productIds,
       error: `Could not load ${NATIVE_STORE_NAME} pricing. Check your connection and try again.`,

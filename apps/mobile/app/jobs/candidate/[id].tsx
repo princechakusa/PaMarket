@@ -29,9 +29,9 @@ function LockIcon() {
 
 // Mirrors www/js/jobs.js H.pages.ViewCandidateCV — full candidate CV, with
 // name + contact hidden until an approved public.contact_requests row
-// exists for (requester=me, candidate=this user). See
-// supabase/migrations/add_contact_requests.sql: an admin approves/declines,
-// no money is stored or shown — payment is handled off-platform.
+// exists for (requester=me, candidate=this user). Requesting contact
+// requires an active recruiter_monthly entitlement (StoreKit IAP); an
+// admin then approves/declines the request before identity is revealed.
 export default function CandidateCvScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -43,6 +43,7 @@ export default function CandidateCvScreen() {
   const [request, setRequest] = useState<ContactRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isMessaging, setIsMessaging] = useState(false);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Candidate profile" });
 
@@ -55,13 +56,12 @@ export default function CandidateCvScreen() {
     setCandidate((candidateData as CandidateProfileRow | undefined) ?? null);
 
     if (session?.user) {
-      const { data: reqData } = await supabase
-        .from("contact_requests")
-        .select("id,requester_id,candidate_id,requester_name,candidate_name,company,role,note,status,created_at,decided_at")
-        .eq("requester_id", session.user.id)
-        .eq("candidate_id", id)
-        .maybeSingle();
-      setRequest((reqData as ContactRequest) ?? null);
+      // contact_requests itself is admin-only to SELECT directly now — this
+      // RPC is the safe, redacted read path (candidate_name only included
+      // once approved / for the candidate's own view / for admins).
+      const { data: reqRows } = await supabase.rpc("list_my_contact_requests");
+      const mine = ((reqRows as ContactRequest[] | null) ?? []).find((r) => r.candidate_id === id);
+      setRequest(mine ?? null);
     }
   }, [id, session]);
 
@@ -73,29 +73,50 @@ export default function CandidateCvScreen() {
   async function requestContact() {
     if (!session?.user || !candidate) return;
     setIsRequesting(true);
-    const { data: myProfile } = await supabase.from("profiles").select("name,company").eq("id", session.user.id).maybeSingle();
-    const { data, error } = await supabase
-      .from("contact_requests")
-      .upsert(
-        {
-          requester_id: session.user.id,
-          candidate_id: candidate.id,
-          requester_name: (myProfile as any)?.name || "",
-          candidate_name: candidate.name || "",
-          company: (myProfile as any)?.company || "",
-          status: "pending",
-        },
-        { onConflict: "requester_id,candidate_id" }
-      )
-      .select("id,requester_id,candidate_id,requester_name,candidate_name,company,role,note,status,created_at,decided_at")
-      .single();
+    const { data, error } = await supabase.rpc("request_candidate_contact", {
+      p_candidate_id: candidate.id,
+    });
     setIsRequesting(false);
-    if (error || !data) {
+    const result = data as { ok?: boolean; code?: string; request?: ContactRequest } | null;
+    if (result?.code === "entitlement_required") {
+      router.push({
+        pathname: "/jobs/recruiter-subscription",
+        params: { returnCandidateId: candidate.id },
+      });
+      return;
+    }
+    if (error || !result?.ok || !result.request) {
       toast("Could not send request — please try again");
       return;
     }
-    setRequest(data as ContactRequest);
+    setRequest(result.request);
     toast("Request sent — we'll notify you once approved.");
+  }
+
+  // Recruitment chat has its own server-checked authority (approved contact
+  // request or a real job application) — the generic conv_<sortedIds>
+  // upsert every other "Message" button uses (see profile/[id].tsx) would
+  // let any verified recruiter message a candidate straight from their
+  // known UUID, bypassing recruiter_monthly + Request Contact Details +
+  // admin approval entirely. get_or_create_recruitment_conversation() is
+  // the one authorized front door for this specific flow; only navigate on
+  // a confirmed ok:true with a real conversation id, never on a guess.
+  async function messageCandidate() {
+    if (!session?.user || !candidate) return;
+    setIsMessaging(true);
+    const { data, error } = await supabase.rpc("get_or_create_recruitment_conversation", {
+      p_candidate_id: candidate.id,
+    });
+    setIsMessaging(false);
+    const result = data as { ok?: boolean; conversation_id?: string; code?: string } | null;
+    if (error || !result?.ok || !result.conversation_id) {
+      toast("Could not open chat — please try again");
+      return;
+    }
+    router.push({
+      pathname: "/chat/[id]",
+      params: { id: result.conversation_id, name: candidate.name || "", avatar: candidate.avatar ?? "" },
+    });
   }
 
   if (isLoading) {
@@ -132,7 +153,7 @@ export default function CandidateCvScreen() {
   }
 
   const isMine = session?.user?.id === candidate.id;
-  const unlocked = request?.status === "approved";
+  const unlocked = request?.status === "approved" || candidate.contact_authorized === true;
   const pending = request?.status === "pending";
   const declined = request?.status === "declined";
   const reveal = isMine || unlocked;
@@ -164,7 +185,7 @@ export default function CandidateCvScreen() {
         {/* ── Hero ────────────────────────────────────────── */}
         <View style={styles.hero}>
           <View style={styles.heroRow}>
-            <Avatar uri={reveal ? candidate.avatar : cv.photoUrl || candidate.avatar} name={displayName} size={68} ring />
+            <Avatar uri={reveal ? candidate.avatar : undefined} name={displayName} size={68} ring />
             <View style={{ flex: 1, minWidth: 0 }}>
               <View style={styles.nameRow}>
                 <Text style={styles.name} numberOfLines={1}>
@@ -221,6 +242,13 @@ export default function CandidateCvScreen() {
                       : "We hide a candidate's name and contact details until they've agreed to hear from employers. Request access and our team will unlock this profile for you."}
               </Text>
             </Card>
+          ) : null}
+
+          {reveal && (candidate.phone || candidate.email) ? (
+            <Section title="Contact details" styles={styles}>
+              {candidate.phone ? <Text style={styles.bodyText}>Phone: {candidate.phone}</Text> : null}
+              {candidate.email ? <Text style={styles.bodyText}>Email: {candidate.email}</Text> : null}
+            </Section>
           ) : null}
 
           {/* ── Summary ───────────────────────────────────── */}
@@ -335,10 +363,12 @@ export default function CandidateCvScreen() {
           <Button label="Edit my CV" onPress={() => router.push("/jobs/cv-profile")} />
         ) : reveal ? (
           <Button
-            label="Message candidate"
+            label={isMessaging ? "Opening…" : "Message candidate"}
             variant="gold"
             size="lg"
-            onPress={() => router.push({ pathname: "/chat/[id]", params: { id: candidate.id } })}
+            loading={isMessaging}
+            disabled={isMessaging}
+            onPress={messageCandidate}
           />
         ) : pending ? (
           <Button label="Request under review" variant="secondary" disabled onPress={() => {}} />

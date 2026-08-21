@@ -28,8 +28,9 @@ function timeAgo(dateString: string): string {
 }
 
 // Mirrors www/js/jobs.js H.pages.MyContactRequests — the employer's list of
-// candidate contact-unlock requests, reading directly from
-// public.contact_requests (RLS: requester can read their own rows).
+// candidate contact-unlock requests. contact_requests itself is admin-only
+// to SELECT directly now; list_my_contact_requests() is the safe, redacted
+// read path (candidate_name only included once a request is approved).
 export default function MyContactRequestsScreen() {
   const styles = useThemedStyles(buildStyles);
   const statusMeta = useThemedStyles(buildStatusMeta);
@@ -43,12 +44,11 @@ export default function MyContactRequestsScreen() {
 
   const load = useCallback(async () => {
     if (!session?.user) return;
-    const { data } = await supabase
-      .from("contact_requests")
-      .select("id,requester_id,candidate_id,requester_name,candidate_name,company,role,note,status,created_at,decided_at")
-      .eq("requester_id", session.user.id)
-      .order("created_at", { ascending: false });
-    setRequests((data as ContactRequest[]) ?? []);
+    const { data } = await supabase.rpc("list_my_contact_requests");
+    const mine = ((data as ContactRequest[] | null) ?? [])
+      .filter((r) => r.requester_id === session.user.id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setRequests(mine);
   }, [session]);
 
   useEffect(() => {

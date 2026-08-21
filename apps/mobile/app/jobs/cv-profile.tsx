@@ -253,6 +253,18 @@ export default function CvProfileScreen() {
       });
       if (error) throw error;
 
+      // Persist cv_file_path immediately — leaving it only in local state
+      // until the next full "Save CV" meant View CV could be tapped (it's
+      // shown the instant cvFilePath is set) before the database actually
+      // had a path to sign, so get-cv-url correctly reported "no CV" for a
+      // file that very much existed. Writing it now closes that gap; the
+      // full save below still runs for every other field as before.
+      const { error: pathSaveError } = await supabase
+        .from("profiles")
+        .update({ cv_file_path: path })
+        .eq("id", session.user.id);
+      if (pathSaveError) throw pathSaveError;
+
       // Defer deleting the previous object until the profile save below
       // actually succeeds — never lose the old CV on a failed save.
       if (cvFilePath) setCvPathPendingDelete(cvFilePath);

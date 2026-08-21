@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { openExternalUrl } from "../../lib/open-url";
 import {
   ActivityIndicator,
@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
@@ -52,8 +52,19 @@ type Styles = ReturnType<typeof buildStyles>;
 export default function RecruiterSubscriptionScreen() {
   const styles = useThemedStyles(buildStyles);
   const router = useRouter();
+  const { returnCandidateId } = useLocalSearchParams<{ returnCandidateId?: string }>();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
+  // returnCandidateId is a plain nav param — it isn't bound to who actually
+  // initiated the paywall. If the session changes mid-flow (sign out, a
+  // different account signs in) before the purchase/restore promise
+  // resolves, the redirect must not carry User A's intended destination
+  // into User B's session. Captured once per param value, not re-captured
+  // if the session merely refreshes.
+  const returnInitiatorId = useRef<string | undefined>(session?.user?.id);
+  useEffect(() => {
+    if (returnCandidateId) returnInitiatorId.current = session?.user?.id;
+  }, [returnCandidateId]);
 
   const [planId, setPlanId] = useState("free");
   const [jobsPosted, setJobsPosted] = useState(0);
@@ -62,6 +73,8 @@ export default function RecruiterSubscriptionScreen() {
   const [isRestoring, setIsRestoring] = useState(false);
   const {
     prices: displayPrices,
+    titles: storeTitles,
+    durations: storeDurations,
     availableProductIds,
     isLoading: isLoadingProducts,
     error: productError,
@@ -120,7 +133,10 @@ export default function RecruiterSubscriptionScreen() {
         const result = await purchaseProduct(productId);
         if (result.ok) {
           toast(`Upgraded to ${planName}`);
-          load();
+          await load();
+          if (returnCandidateId && session?.user?.id && session.user.id === returnInitiatorId.current) {
+            router.replace({ pathname: "/jobs/candidate/[id]", params: { id: returnCandidateId } });
+          }
         } else if (result.code === "user-cancelled") {
           toast("Purchase cancelled");
         } else {
@@ -194,7 +210,7 @@ export default function RecruiterSubscriptionScreen() {
             >
               <View style={styles.planHead}>
                 <View style={styles.planNameRow}>
-                  <Text style={styles.planName}>{plan.name}</Text>
+                  <Text style={styles.planName}>{productId ? storeTitles[productId] || plan.name : plan.name}</Text>
                   {isCurrent ? (
                     <View style={styles.currentTag}>
                       <Text style={styles.currentTagText}>CURRENT</Text>
@@ -207,7 +223,7 @@ export default function RecruiterSubscriptionScreen() {
                     : isLoadingProducts
                     ? "Loading price…"
                     : isAvailable && displayPrices[productId]
-                    ? `${displayPrices[productId]} / month`
+                    ? `${displayPrices[productId]} / ${storeDurations[productId] || "subscription period"}`
                     : "Unavailable"}
                 </Text>
               </View>
@@ -219,18 +235,14 @@ export default function RecruiterSubscriptionScreen() {
                   } active job posts`}
                   styles={styles}
                 />
-                <Feature
-                  text={`${plan.candidateAccess} candidate access`}
-                  styles={styles}
-                />
-                <Feature
-                  text={`${plan.profileVisibility} profile visibility`}
-                  styles={styles}
-                />
+                <Feature text="Browse anonymized candidate profiles" styles={styles} />
+                {id === "recruiter" ? (
+                  <Feature text="Request candidate contact details" styles={styles} />
+                ) : null}
               </View>
               {plan.price > 0 ? (
                 <Text style={styles.renewalDisclosure}>
-                  Billed monthly. Auto-renews until cancelled.
+                  Auto-renews every {storeDurations[productId] || "subscription period"} until cancelled.
                 </Text>
               ) : null}
               {plan.price > 0 && !isLoadingProducts && !isAvailable ? (
@@ -284,7 +296,10 @@ export default function RecruiterSubscriptionScreen() {
                 );
               } else if (result.restoredCount > 0) {
                 toast("Purchases restored");
-                load();
+                await load();
+                if (returnCandidateId && session?.user?.id && session.user.id === returnInitiatorId.current) {
+                  router.replace({ pathname: "/jobs/candidate/[id]", params: { id: returnCandidateId } });
+                }
               } else {
                 toast("No previous purchases found to restore");
               }
