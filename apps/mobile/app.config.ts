@@ -96,7 +96,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // the other party, an inquiry lead recorded merely from opening chat
     // instead of sending a message, and the rental view counter never being
     // incremented).
-    buildNumber: "25",
+    // 26 carries the recruitment security lock: server-authoritative
+    // recruitment_conversation_context (not the recruit_ id prefix) as the
+    // sole recruitment-chat authority, independent job/contact origin
+    // validation (including a jobs-category check), an opaque candidate
+    // reference so Browse Candidates/Candidate Detail never expose a real
+    // profile UUID pre-approval, the Candidate Profile gate on job
+    // applications, the dedicated Jobs > Recruitment Messages inbox, the
+    // rental gallery full-screen pagination indicator, and the reviews /
+    // delete-account keyboard fixes.
+    buildNumber: "26",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
