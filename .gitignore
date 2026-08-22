@@ -62,3 +62,6 @@ website/_*.json
 # Bulk-import working files (generate with: node tools/import-listings.js --template)
 listings-template.csv
 listings-import*.csv
+
+# Deterministic website deployment output
+dist-site/

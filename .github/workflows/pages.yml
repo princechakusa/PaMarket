@@ -22,24 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Strip non-public files from the deploy
-        # The admin panel, backend source, build tooling, and internal docs
-        # must NOT be served on the public site. They stay in the repo (run
-        # admin.html locally, `node tools/...` from a checkout) but are
-        # removed from the GitHub Pages artifact so the public site can't
-        # serve them. None of these are referenced by any deployed page —
-        # confirmed by grepping *.html/js/*.js for src=/href= into any of
-        # these paths before adding them here.
-        run: |
-          rm -f www/admin.html
-          rm -rf supabase android qa-system
-          rm -f PRODUCTION_AUDIT_2026-07-03.md GO_LIVE_RUNBOOK.md TECHNICAL_BLUEPRINT.md
-          rm -rf docs tools scripts
-          rm -f build.sh serve.js package.json package-lock.json capacitor.config.json google-services.json
-          rm -f analyze-bundle.ps1 verify-architecture.ps1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build and validate allowlisted website artifact
+        run: npm run site:build
+      - name: Verify legacy deployment differences are classified
+        run: npm run site:compare
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist-site
       - id: deployment
         uses: actions/deploy-pages@v4

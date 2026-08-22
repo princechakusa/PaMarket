@@ -23,6 +23,9 @@
     "playwright": "^1.61.1"
   },
   "scripts": {
+    "site:architecture": "node tools/website-build/validate-architecture.js",
+    "site:build": "node tools/website-build/build-site.js",
+    "site:compare": "node tools/website-build/compare-artifact.js",
     "strip-admin": "node scripts/strip-admin.js",
     "sync": "npx cap sync && node scripts/strip-admin.js",
     "copy": "npx cap copy && node scripts/strip-admin.js"
