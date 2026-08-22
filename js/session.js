@@ -23,8 +23,9 @@
   })();
 
   var APP_URL = 'https://play.google.com/store/apps/details?id=com.pamarket.app';
-  var SB_URL = global.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
-  var SB_KEY = global.SUPABASE_ANON_KEY || 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
+  var sharedClient = global.PMSupabaseClient && global.PMSupabaseClient.get();
+  var SB_URL = sharedClient ? sharedClient.url : global.SUPABASE_URL;
+  var SB_KEY = sharedClient ? sharedClient.publishableKey : global.SUPABASE_ANON_KEY;
   var SESSION_KEY = 'pm_session';
   var REFRESH_AHEAD_SECONDS = 300;
   var REFRESH_CHECK_MS = 30000;

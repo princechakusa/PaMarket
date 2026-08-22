@@ -201,13 +201,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
 <body>
 
 <!-- HEADER:START -->
-<!-- ============================================================
-     PaMarket shared header — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the HEADER:START/END markers.
-     Styling lives in css/site.css. Do not edit the copies that
-     appear inside individual page files.
-     ============================================================ -->
+<!-- Shared header; source: partials/header.html. -->
 <div class="top-bar">
   <div class="top-bar-w">
     <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14" loading="eager" decoding="async">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
@@ -473,7 +467,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script>
+<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>

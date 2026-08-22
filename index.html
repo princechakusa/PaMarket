@@ -525,13 +525,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
 <body>
 
 <!-- HEADER:START -->
-<!-- ============================================================
-     PaMarket shared header — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the HEADER:START/END markers.
-     Styling lives in css/site.css. Do not edit the copies that
-     appear inside individual page files.
-     ============================================================ -->
+<!-- Shared header. -->
 <div class="top-bar">
   <div class="top-bar-w">
     <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14" loading="eager" decoding="async">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
@@ -1070,12 +1064,12 @@ window.doSearch = window.doSearch || function(){
 
 <div id="toasts"></div>
 
-<script src="js/supabase-config.js"></script>
+<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
 <script>
-// ── Listing card builder (real data from Supabase) ──
+// ── Listing card builder ──
 const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 const COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8FF','#FFEDD5'];
 const TCOLORS=['#1A3A8F','#B27D22','#1F7A4D','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
@@ -1091,7 +1085,7 @@ function lcard(listing,idx){
   const img=photo
     ?`<img class="lcard-img-inner" src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="lcard-img-inner" style="color:${tc};font-weight:800;font-size:13px;text-align:center;padding:12px;line-height:1.4">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
-  return`<a class="lcard" href="detail?id=${listing.id}">
+  return`<a class="lcard" href="${PMUrls.listingPath(listing)}">
     <div class="lcard-img" style="background:${bg}">
       ${b}
       ${img}

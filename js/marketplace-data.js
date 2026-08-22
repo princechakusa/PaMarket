@@ -2,8 +2,9 @@
 // Talks directly to Supabase PostgREST with the anon key — same pattern as delete-account.html.
 // No supabase-js needed for simple selects/filters.
 (function (global) {
-  var SB_URL = global.SUPABASE_URL || 'https://gxgytumhknmnwspxjzxw.supabase.co';
-  var SB_KEY = global.SUPABASE_ANON_KEY || 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
+  var sharedClient = global.PMSupabaseClient && global.PMSupabaseClient.get();
+  var SB_URL = sharedClient ? sharedClient.url : global.SUPABASE_URL;
+  var SB_KEY = sharedClient ? sharedClient.publishableKey : global.SUPABASE_ANON_KEY;
 
   function pgFetch(path, token) {
     return fetch(SB_URL + '/rest/v1/' + path, {
@@ -58,11 +59,6 @@
     qp.push('limit=' + limit);
     if (opts.offset) qp.push('offset=' + opts.offset);
     var base = pgFetch('listings?' + qp.join('&'));
-    // featuredFirst: paid boosts (featured_until in the future) rank above
-    // organic results on the first page — this is the placement the app's
-    // Play Billing boosts and the website's Paynow boosts sell. Only applied
-    // to the default-ordered first page: an explicit sort or a deeper page
-    // keeps pure chronology so pagination never duplicates rows.
     if (!opts.featuredFirst || opts.order || opts.offset) return base;
     var fqp = listingFilters(opts);
     fqp.push('featured_until=gt.' + encodeURIComponent(new Date().toISOString()));
@@ -995,11 +991,13 @@
   }
 
   function money(n, currency) {
+    if (global.PMFormat) return global.PMFormat.money(n, currency);
     var num = Number(n) || 0;
     return (currency === 'ZWG' ? 'ZWG ' : '$') + num.toLocaleString();
   }
 
   function timeAgo(iso) {
+    if (global.PMDates) return global.PMDates.timeAgo(iso);
     var d = new Date(iso);
     var diff = Math.max(0, (Date.now() - d.getTime()) / 1000);
     if (diff < 3600) return Math.max(1, Math.floor(diff / 60)) + 'm ago';

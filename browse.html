@@ -229,13 +229,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
 <body>
 
 <!-- HEADER:START -->
-<!-- ============================================================
-     PaMarket shared header — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the HEADER:START/END markers.
-     Styling lives in css/site.css. Do not edit the copies that
-     appear inside individual page files.
-     ============================================================ -->
+<!-- Shared header. -->
 <div class="top-bar">
   <div class="top-bar-w">
     <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14" loading="eager" decoding="async">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
@@ -578,7 +572,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script>
+<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -725,7 +719,7 @@ function gcard(listing,idx){
   const img=photo
     ?`<img src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="gcard-img-ph" style="color:${tc}">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
-  return`<a class="gcard" href="detail?id=${listing.id}">
+  return`<a class="gcard" href="${PMUrls.listingPath(listing)}">
     <button type="button" class="gcard-save" data-save-listing="${listing.id}" aria-label="Save ${listing.title.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFavourite(this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
     <div class="gcard-img" style="background:${bg}">${badge}${img}</div>
     <div class="gcard-body">
@@ -753,7 +747,7 @@ function updateItemListSchema(rows){
     itemListElement:rows.slice(0,20).map((r,i)=>({
       '@type':'ListItem',
       position:i+1,
-      url:'https://pamarketzw.com/detail?id='+r.id,
+      url:PMUrls.listingUrl(r),
       name:r.title
     }))
   });

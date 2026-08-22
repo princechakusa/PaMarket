@@ -1,15 +1,4 @@
-/* ============================================================================
- * listing-schema.js — single source of truth for a listing's structured data.
- *
- * Works in the browser (attaches to window.PMSchema) and in Node
- * (module.exports), so detail.html and the static pre-render generator
- * (tools/prerender.js) build IDENTICAL JSON-LD from the same code — no drift.
- *
- * All fields are truthful: review/aggregateRating only when real reviews exist,
- * brand/gtin/condition only from real attributes, shippingDetails only when a
- * seller entered a rate. hasMerchantReturnPolicy states PaMarket's real
- * in-person no-returns model. Nothing is fabricated.
- * ==========================================================================*/
+/* Shared browser/Node structured-data authority; keep prerender and live output identical. */
 (function (root, factory) {
   var mod = factory();
   if (typeof module !== 'undefined' && module.exports) module.exports = mod;
@@ -17,7 +6,8 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var SITE = 'https://pamarketzw.com';
+  var URLS = typeof require === 'function' ? require('./utils/urls.js') : (typeof self !== 'undefined' && self.PMUrls);
+  var SITE = URLS ? URLS.origin : 'https://pamarketzw.com';
 
   var CAT_LABELS = {
     property: 'Property', vehicles: 'Vehicles', electronics: 'Electronics',
@@ -28,6 +18,7 @@
 
   // URL-safe slug from a listing title (SEO keywords in the path).
   function slugify(text) {
+    if (URLS) return URLS.slugify(text);
     return String(text || 'listing')
       .toLowerCase()
       .normalize('NFKD').replace(/[̀-ͯ]/g, '')  // strip accents
@@ -43,9 +34,11 @@
   // (see listingFilePath) transparently at this extensionless path too, so
   // this is a real, working URL — not a virtual one.
   function listingPath(l) {
+    if (URLS) return URLS.listingPath(l);
     return 'l/' + slugify(l.title) + '-' + l.id;
   }
   function listingUrl(l) {
+    if (URLS) return URLS.listingUrl(l);
     return SITE + '/' + listingPath(l);
   }
   // Physical filename tools/prerender.js writes to disk. Must keep .html —
@@ -205,11 +198,12 @@
 
   // ── Rentals (rental_vehicle_listings) ─────────────────────────────────────
   function rentalTitle(v) {
+    if (URLS) return URLS.rentalTitle(v);
     var brand = (v.rental_brands && v.rental_brands.label) || '';
     return (((brand + ' ' + (v.model || '')).trim()) + (v.year ? ' ' + v.year : '')).trim() || 'Rental Vehicle';
   }
-  function rentalPath(v) { return 'r/' + slugify(rentalTitle(v)) + '-' + v.id; }
-  function rentalUrl(v) { return SITE + '/' + rentalPath(v); }
+  function rentalPath(v) { return URLS ? URLS.rentalPath(v) : 'r/' + slugify(rentalTitle(v)) + '-' + v.id; }
+  function rentalUrl(v) { return URLS ? URLS.rentalUrl(v) : SITE + '/' + rentalPath(v); }
   // Physical filename on disk — see listingFilePath's comment above.
   function rentalFilePath(v) { return rentalPath(v) + '.html'; }
 
@@ -253,8 +247,8 @@
   }
 
   // ── Businesses / shops (businesses) ───────────────────────────────────────
-  function businessPath(b) { return 'b/' + slugify(b.name) + '-' + b.id; }
-  function businessUrl(b) { return SITE + '/' + businessPath(b); }
+  function businessPath(b) { return URLS ? URLS.businessPath(b) : 'b/' + slugify(b.name) + '-' + b.id; }
+  function businessUrl(b) { return URLS ? URLS.businessUrl(b) : SITE + '/' + businessPath(b); }
   // Physical filename on disk — see listingFilePath's comment above.
   function businessFilePath(b) { return businessPath(b) + '.html'; }
 
