@@ -91,12 +91,11 @@ export default function BusinessStaffScreen() {
       return;
     }
     setIsInviting(true);
-    const { data: found } = await supabase
-      .from("profiles_public")
-      .select("id,name,phone,email")
-      .or(`phone.eq.${q},email.eq.${q}`)
-      .limit(1)
-      .maybeSingle();
+    const { data: matches } = await supabase.rpc("find_business_staff_candidate", {
+      p_business_id: id,
+      p_contact: q,
+    });
+    const found = Array.isArray(matches) ? matches[0] : null;
     setIsInviting(false);
     if (!found) {
       toast("No PaMarket user found with that phone/email");

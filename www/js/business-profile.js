@@ -51,12 +51,11 @@
     } catch (e) { console.warn('fetchBusinessStaff:', e); return staffOf(businessId); }
   };
 
-  async function cloudFindUserByContact(q) {
+  async function cloudFindUserByContact(businessId, q) {
     const sb = window.supabase;
     if (!sb) return null;
     try {
-      const { data } = await sb.from('profiles_public').select('id,name,phone,email')
-        .or(`phone.eq.${q},email.eq.${q}`).limit(1);
+      const { data } = await sb.rpc('find_business_staff_candidate', { p_business_id: businessId, p_contact: q });
       return (data && data[0]) || null;
     } catch (e) { return null; }
   }
@@ -1114,7 +1113,7 @@
       const el = document.getElementById('stContact'); const q = el ? el.value.trim() : '';
       if (!q) { toast('Enter a phone or email'); return; }
 
-      const found = await cloudFindUserByContact(q) || (H.state.users || []).find(u => u.phone === q || u.email === q);
+      const found = await cloudFindUserByContact(businessId, q) || (H.state.users || []).find(u => u.phone === q || u.email === q);
       if (!found) { toast('No PaMarket user found with that phone/email'); return; }
       if (found.id === b.ownerUserId) { toast('You are the owner'); return; }
       if (current.some(s => s.userId === found.id)) { toast('Already invited'); return; }
