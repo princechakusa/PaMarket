@@ -347,6 +347,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
     <button class="site-announcement-close" id="siteAnnouncementClose" type="button" aria-label="Dismiss announcement">&times;</button>
   </div>
 </div>
+<script src="js/supabase-config.js"></script>
 <script src="js/site-announcements.js" defer></script>
 
 <header id="hdr">
@@ -391,7 +392,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
     <div class="hdr-right">
       <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
       <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
+      <button class="ham" onclick="PMHeader.toggleMobile(this)" aria-label="Menu" aria-expanded="false">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -411,16 +412,14 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
   </nav>
 </header>
 <script>
-/* Self-contained header behaviour so the partial works on any page
-   regardless of what else the page loads. Guarded so pages that
-   already define these keep their own implementation. */
-window.toggleMob = window.toggleMob || function(){
+/* Self-contained header behaviour. The shell owns its mobile control;
+   page-specific search implementations remain compatible. */
+window.PMHeader = Object.freeze({toggleMobile:function(button){
   var n = document.getElementById('mobNav');
-  var h = document.querySelector('#hdr .ham');
   if (!n) return;
   var open = n.classList.toggle('open');
-  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-};
+  if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
+}});
 window.doSearch = window.doSearch || function(){
   var cat = document.getElementById('hCat');
   var q = document.getElementById('hQ');
