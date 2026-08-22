@@ -467,7 +467,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
+<script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -551,7 +551,7 @@ async function init(){
   const id=new URLSearchParams(location.search).get('id');
   if(!id){showNotFound();return}
   try{
-    const profile=await PM.fetchProfileById(id);
+    const profile=await PMProfiles.fetchProfileById(id);
     if(!profile){showNotFound();return}
     const viewer=PM.currentUserId&&PM.currentUserId();
     IS_OWNER=!!(viewer&&viewer===id);
@@ -568,7 +568,7 @@ async function init(){
     initReviewUI(id);
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('profileContent').classList.remove('hidden');
-    PM.fetchListings({sellerId:id,limit:100}).then(rows=>{
+    PMListings.fetchListings({sellerId:id,limit:100}).then(rows=>{
       const grid=document.getElementById('pfGrid');
       document.getElementById('pfActiveCount').textContent=rows.length;
       grid.innerHTML=rows.length

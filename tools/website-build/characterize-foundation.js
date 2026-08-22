@@ -11,6 +11,7 @@ const feedback=require('../../js/components/feedback.js');
 const schema=require('../../js/listing-schema.js');
 const shell=require('./shell.js');
 const {characterizeShell}=require('./characterize-shell.js');
+const {characterizeMarketplaceReads}=require('./characterize-marketplace-reads.js');
 
 const listing={id:'123',title:'Café Phone — New'};
 const business={id:'456',name:"Sam's Shop"};
@@ -55,6 +56,9 @@ assert.match(shellProbe,/PMHeader\.toggleMobile\(this\)/);
 assert.match(shellProbe,/href="terms">Terms of Service<\/a>/);
 assert.match(shellProbe,/href="privacy">Privacy Policy<\/a>/);
 assert.match(shellProbe,/href="cookie-policy">Cookie Policy<\/a>/);
+async function main(){
 const shellAssertions=characterizeShell();
-
-console.log(JSON.stringify({ok:true,tests:37+shellAssertions,shellAssertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
+const marketplaceReads=await characterizeMarketplaceReads();
+console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
+}
+main().catch(function(error){console.error(error);process.exit(1);});

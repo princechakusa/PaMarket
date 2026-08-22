@@ -34,81 +34,10 @@
 
   // ── General listings (public.listings) ──────────────────────────
   // opts: { category, q, province, city, limit, offset, order }
-  function listingFilters(opts) {
-    var qp = [
-      'status=eq.active',
-      'expires_at=gt.' + esc(new Date().toISOString())
-    ];
-    if (opts.category) qp.push('category=eq.' + esc(opts.category));
-    if (opts.province) qp.push('province=ilike.*' + esc(opts.province) + '*');
-    if (opts.city) qp.push('city=ilike.*' + esc(opts.city) + '*');
-    if (opts.q) qp.push('title=ilike.*' + esc(opts.q) + '*');
-    if (opts.businessId) qp.push('business_id=eq.' + esc(opts.businessId));
-    if (opts.sellerId) qp.push('seller_id=eq.' + esc(opts.sellerId));
-    if (opts.subcat) qp.push('attributes->>subcat=eq.' + esc(opts.subcat));
-    return qp;
-  }
-  var LISTING_SELECT = 'select=id,title,price,currency,category,province,city,suburb,photos,created_at,boost,featured_until,expires_at';
-
-  function fetchListings(opts) {
-    opts = opts || {};
-    var limit = opts.limit || 24;
-    var qp = listingFilters(opts);
-    qp.push(LISTING_SELECT);
-    qp.push('order=' + (opts.order || 'created_at.desc'));
-    qp.push('limit=' + limit);
-    if (opts.offset) qp.push('offset=' + opts.offset);
-    var base = pgFetch('listings?' + qp.join('&'));
-    if (!opts.featuredFirst || opts.order || opts.offset) return base;
-    var fqp = listingFilters(opts);
-    fqp.push('featured_until=gt.' + encodeURIComponent(new Date().toISOString()));
-    fqp.push(LISTING_SELECT);
-    fqp.push('order=featured_until.desc');
-    fqp.push('limit=' + limit);
-    return Promise.all([pgFetch('listings?' + fqp.join('&')).catch(function () { return []; }), base])
-      .then(function (results) {
-        var featured = results[0] || [], rest = results[1] || [];
-        var seen = {};
-        featured.forEach(function (l) { seen[l.id] = true; });
-        return featured.concat(rest.filter(function (l) { return !seen[l.id]; })).slice(0, limit);
-      });
-  }
-
-  function fetchListingById(id) {
-    return pgFetch(
-      'listings?id=eq.' + esc(id) + '&status=eq.active&expires_at=gt.' + esc(new Date().toISOString()) + '&select=*'
-    ).then(function (rows) {
-      return rows[0] || null;
-    });
-  }
-
-  function fetchSimilarListings(category, excludeId, limit) {
-    return pgFetch(
-      'listings?status=eq.active&expires_at=gt.' + esc(new Date().toISOString()) + '&category=eq.' +
-        esc(category) +
-        '&id=neq.' +
-        esc(excludeId) +
-        '&select=id,title,price,currency,category,province,city,photos,created_at&order=created_at.desc&limit=' +
-        (limit || 4)
-    );
-  }
-
-  function fetchListingCount(category) {
-    var qp = ['status=eq.active', 'expires_at=gt.' + esc(new Date().toISOString()), 'select=id'];
-    if (category) qp.push('category=eq.' + esc(category));
-    return fetch(SB_URL + '/rest/v1/listings?' + qp.join('&'), {
-      headers: {
-        apikey: SB_KEY,
-        Authorization: 'Bearer ' + SB_KEY,
-        Prefer: 'count=exact',
-        Range: '0-0',
-      },
-    }).then(function (res) {
-      var range = res.headers.get('content-range'); // "0-0/1234"
-      var total = range && range.indexOf('/') > -1 ? parseInt(range.split('/')[1], 10) : 0;
-      return total || 0;
-    });
-  }
+  function fetchListings(opts) { return global.PMListings.fetchListings(opts); }
+  function fetchListingById(id) { return global.PMListings.fetchListingById(id); }
+  function fetchSimilarListings(category, excludeId, limit) { return global.PMListings.fetchSimilarListings(category, excludeId, limit); }
+  function fetchListingCount(category) { return global.PMListings.fetchListingCount(category); }
 
   // Generic exact-count helper for real homepage/trust stats — table plus a
   // raw PostgREST filter string, e.g. fetchExactCount('businesses','status=eq.active').
@@ -129,38 +58,8 @@
   }
 
   // ── Rental vehicle listings ───────────────────────────────────────
-  function fetchRentalListings(opts) {
-    opts = opts || {};
-    var qp = ['status=eq.active', 'admin_status=eq.approved', 'deleted_at=is.null'];
-    var locationEmbed = opts.city ? 'rental_locations!inner(city,province)' : 'rental_locations(city,province)';
-    if (opts.city) qp.push('rental_locations.city=ilike.*' + esc(opts.city) + '*');
-    qp.push(
-      'select=id,model,year,daily_rate,weekly_rate,monthly_rate,pickup_suburb,company_id,is_available,' +
-        'rental_brands(label),rental_categories(label),' +
-        'rental_vehicle_media(url,is_cover,sort_order),' +
-        'rental_companies(trading_name),' +
-        locationEmbed
-    );
-    qp.push('order=' + (opts.order || 'created_at.desc'));
-    qp.push('limit=' + (opts.limit || 12));
-    if (opts.offset) qp.push('offset=' + opts.offset);
-    return pgFetch('rental_vehicle_listings?' + qp.join('&'));
-  }
-
-  function fetchRentalListingById(id) {
-    return pgFetch(
-      'rental_vehicle_listings?id=eq.' +
-        esc(id) +
-        '&status=eq.active&admin_status=eq.approved&deleted_at=is.null&select=*,' +
-        'rental_brands(label),rental_categories(label),rental_locations(city,province),' +
-        'rental_vehicle_media(url,is_cover,sort_order),rental_vehicle_specs(*),' +
-        'rental_vehicle_features(feature),rental_companies(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,' +
-        'year_established,deposit_policy,driver_available,cross_border,insurance_included,min_rental_days,avg_rating,review_count,' +
-        'businesses(owner_user_id))'
-    ).then(function (rows) {
-      return rows[0] || null;
-    });
-  }
+  function fetchRentalListings(opts) { return global.PMRentals.fetchRentalListings(opts); }
+  function fetchRentalListingById(id) { return global.PMRentals.fetchRentalListingById(id); }
 
   // ── Job listings (category = 'jobs' on public.listings) ──────────
   function jobFilters(opts) {
@@ -197,25 +96,10 @@
   }
 
   // ── Public user profiles (public.profiles_public) ─────────────────
-  function fetchProfileById(id) {
-    return pgFetch(
-      'profiles_public?id=eq.' + esc(id) + '&select=*'
-    ).then(function (rows) {
-      return rows[0] || null;
-    });
-  }
+  function fetchProfileById(id) { return global.PMProfiles.fetchProfileById(id); }
 
   // ── Business shops (public.businesses) ────────────────────────────
-  function fetchBusinesses(opts) {
-    opts = opts || {};
-    var qp = ['status=eq.active'];
-    if (opts.q) qp.push('name=ilike.*' + esc(opts.q) + '*');
-    qp.push('select=id,name,logo,cover,description,category,province,city,verification_level');
-    qp.push('order=' + (opts.order || 'created_at.desc'));
-    qp.push('limit=' + (opts.limit || 24));
-    if (opts.offset) qp.push('offset=' + opts.offset);
-    return pgFetch('businesses?' + qp.join('&'));
-  }
+  function fetchBusinesses(opts) { return global.PMBusinesses.fetchBusinesses(opts); }
 
   // Not-yet-active businesses (pending_activation/draft/suspended) are only
   // visible to their owner or a moderator — enforced by the businesses RLS
@@ -224,15 +108,7 @@
   // their own access token, so a signed-in viewer's session token is used
   // when available; anonymous visitors fall back to the anon key, which RLS
   // limits to active rows only.
-  function fetchBusinessById(id) {
-    var s = sharedSession();
-    return pgFetch(
-      'businesses?id=eq.' + esc(id) + '&select=*',
-      s && s.access_token
-    ).then(function (rows) {
-      return rows[0] || null;
-    });
-  }
+  function fetchBusinessById(id) { return global.PMBusinesses.fetchBusinessById(id); }
 
   // Reviews for a seller (a business's owner_user_id). Real user-generated
   // reviews only — used for the business profile rating + review list and its

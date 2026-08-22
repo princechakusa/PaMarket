@@ -415,7 +415,6 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -471,7 +470,7 @@ if(rtCityQ){
 }
 
 document.getElementById('rtGrid').innerHTML=skeletons(8);
-PM.fetchRentalListings({limit:24,city:rtCityQ||undefined}).then(rows=>{
+PMRentals.fetchRentalListings({limit:24,city:rtCityQ||undefined}).then(rows=>{
   const grid=document.getElementById('rtGrid');
   const count=document.getElementById('rtCount');
   if(!rows.length){

@@ -572,7 +572,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
+<script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -686,7 +686,7 @@ function renderCategoryHero(){
   eyebrow.textContent='';
   const countPromise=key==='shops'
     ? PM.fetchExactCount('businesses','status=eq.active&verification_level=gt.0')
-    : PM.fetchListingCount(key==='all'?'':key);
+    : PMListings.fetchListingCount(key==='all'?'':key);
   countPromise.then(count=>{
     eyebrow.textContent=Number(count).toLocaleString()+(key==='shops'?' verified storefront'+(count===1?'':'s'):' live listing'+(count===1?'':'s'));
   }).catch(()=>{eyebrow.textContent='';});
@@ -886,13 +886,13 @@ async function runQuery(append){
   try{
     let rows,cardFn;
     if(state.shops){
-      rows=await PM.fetchBusinesses({q:state.q||undefined,limit:PAGE_SIZE,offset:state.offset});
+      rows=await PMBusinesses.fetchBusinesses({q:state.q||undefined,limit:PAGE_SIZE,offset:state.offset});
       cardFn=bcard;
     }else{
       // Default "newest" sort gets paid boosts pinned first (featuredFirst);
       // an explicit sort choice (price etc.) is respected untouched.
       const defaultSort=state.sort==='created_at.desc';
-      rows=await PM.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,city:state.city||undefined,businessId:state.business||undefined,order:defaultSort?undefined:state.sort,featuredFirst:defaultSort,limit:PAGE_SIZE,offset:state.offset});
+      rows=await PMListings.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,city:state.city||undefined,businessId:state.business||undefined,order:defaultSort?undefined:state.sort,featuredFirst:defaultSort,limit:PAGE_SIZE,offset:state.offset});
       cardFn=gcard;
     }
     if(!append)grid.innerHTML='';
