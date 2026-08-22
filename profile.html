@@ -467,7 +467,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script>
+<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -573,9 +573,9 @@ async function init(){
       document.getElementById('pfActiveCount').textContent=rows.length;
       grid.innerHTML=rows.length
         ? rows.slice(0,12).map(gcard).join('')
-        : '<div class="empty-state">No active listings from this seller right now.</div>';
+        : PMFeedback.empty('No active listings from this seller right now.');
     }).catch(()=>{
-      document.getElementById('pfGrid').innerHTML='<div class="empty-state">Couldn\'t load listings right now.</div>';
+      document.getElementById('pfGrid').innerHTML=PMFeedback.error('Couldn\'t load listings right now.');
     });
     PM.fetchSellerReviews(id,10).then(r=>renderReviews(r,id)).catch(()=>{});
   }catch(e){

@@ -572,7 +572,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script>
+<script src="js/supabase-config.js"></script><script src="js/core/supabase-client.js"></script><script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -897,7 +897,7 @@ async function runQuery(append){
     }
     if(!append)grid.innerHTML='';
     if(!rows.length && !append){
-      grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">No '+noun+'s found'+(state.shops?' yet.':' for these filters.')+'<br><br><a href="browse">Clear filters and browse everything</a></div>';
+      grid.innerHTML=PMFeedback.empty('No '+noun+'s found'+(state.shops?' yet.':' for these filters.'),{style:'grid-column:1/-1',actionHref:'browse',actionLabel:'Clear filters and browse everything'});
       countEl.textContent='0 '+noun+'s found';
       return;
     }
@@ -908,7 +908,7 @@ async function runQuery(append){
     loadBtn.classList.toggle('hidden',rows.length<PAGE_SIZE);
     if(!state.shops && !append)updateItemListSchema(rows);
   }catch(e){
-    if(!append)grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">Couldn\'t load '+noun+'s right now. Please try again shortly.</div>';
+    if(!append)grid.innerHTML=PMFeedback.error('Couldn\'t load '+noun+'s right now. Please try again shortly.',{style:'grid-column:1/-1'});
     countEl.textContent='';
   }
 }

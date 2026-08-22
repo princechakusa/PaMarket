@@ -18,13 +18,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { PARTIALS, validateShellMarkers, inject } = require('./website-build/shell');
 
 const ROOT = path.join(__dirname, '..');
 
-const INCLUDES = [
-  { name: 'HEADER', file: path.join(ROOT, 'partials', 'header.html') },
-  { name: 'FOOTER', file: path.join(ROOT, 'partials', 'footer.html') },
-];
+const INCLUDES = Object.entries(PARTIALS).map(([name, file]) => ({ name, file }));
 
 // HTML pages at the repo root (the public website).
 function pageFiles() {
@@ -38,20 +36,9 @@ function loadPartial(file) {
   return fs.readFileSync(file, 'utf8').replace(/\s+$/, '');
 }
 
-function stamp(content, name, partial) {
-  const start = `<!-- ${name}:START -->`;
-  const end = `<!-- ${name}:END -->`;
-  const re = new RegExp(
-    escapeRe(start) + '[\\s\\S]*?' + escapeRe(end),
-    'g'
-  );
-  if (!re.test(content)) return { content, changed: false, present: false };
-  const replacement = start + '\n' + partial + '\n' + end;
-  return { content: content.replace(re, replacement), changed: true, present: true };
-}
-
-function escapeRe(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function stamp(content, name, partial, sourcePath) {
+  const next = inject(content, name, partial, sourcePath);
+  return { content: next, changed: next !== content, present: next !== content || content.includes(`<!-- ${name}:START -->`) };
 }
 
 function main() {
@@ -61,10 +48,11 @@ function main() {
 
   for (const file of pageFiles()) {
     let content = fs.readFileSync(file, 'utf8');
+    validateShellMarkers(content, file);
     const before = content;
     const applied = [];
     for (const p of partials) {
-      const res = stamp(content, p.name, p.html);
+      const res = stamp(content, p.name, p.html, file);
       content = res.content;
       if (res.present) applied.push(p.name);
     }

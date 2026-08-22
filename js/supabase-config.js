@@ -5,7 +5,7 @@
 var SUPABASE_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_cf3Z72lUE6PLCb2m42OFLA_znE8JK2r';
 (function (root, factory) {
-  var config = factory(root && root.PM_PUBLIC_CONFIG);
+  var config = root && root.PMConfig ? root.PMConfig : factory(root && root.PM_PUBLIC_CONFIG);
   if (typeof module !== 'undefined' && module.exports) module.exports = config;
   if (!root) return;
   root.PMConfig = config;

@@ -7,7 +7,10 @@ const format=require('../../js/utils/format.js');
 const dates=require('../../js/utils/dates.js');
 const validation=require('../../js/utils/validation.js');
 const escape=require('../../js/utils/escape.js');
+const feedback=require('../../js/components/feedback.js');
 const schema=require('../../js/listing-schema.js');
+const shell=require('./shell.js');
+const {characterizeShell}=require('./characterize-shell.js');
 
 const listing={id:'123',title:'Café Phone — New'};
 const business={id:'456',name:"Sam's Shop"};
@@ -43,5 +46,15 @@ assert.equal(validation.email('buyer@example.com'),true);
 assert.equal(validation.phone('+263 77 123 4567'),true);
 assert.equal(validation.publicUrl('javascript:alert(1)'),false);
 assert.equal(validation.numberInRange('5',1,10),true);
+assert.equal(feedback.empty('No items'),'<div class="empty-state">No items</div>');
+assert.equal(feedback.error("Couldn't load",{style:'grid-column:1/-1'}),'<div class="empty-state" style="grid-column:1/-1">Couldn&#39;t load</div>');
+assert.match(feedback.empty('No items',{actionHref:'browse',actionLabel:'Browse all'}),/href="browse">Browse all<\/a>/);
+const shellProbe=shell.assembleHtml('<!-- HEADER:START -->old<!-- HEADER:END --><!-- FOOTER:START -->old<!-- FOOTER:END -->');
+assert.match(shellProbe,/class="logo">Pa<em>Market<\/em>/);
+assert.match(shellProbe,/PMHeader\.toggleMobile\(this\)/);
+assert.match(shellProbe,/href="terms">Terms of Service<\/a>/);
+assert.match(shellProbe,/href="privacy">Privacy Policy<\/a>/);
+assert.match(shellProbe,/href="cookie-policy">Cookie Policy<\/a>/);
+const shellAssertions=characterizeShell();
 
-console.log(JSON.stringify({ok:true,tests:29,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only'},null,2));
+console.log(JSON.stringify({ok:true,tests:37+shellAssertions,shellAssertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
