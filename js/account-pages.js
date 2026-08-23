@@ -29,13 +29,13 @@
   }
   function loadFavourites() {
     if (gate()) return;
-    PM.listFavourites().then(function (rows) {
+    PMSavedContent.listFavourites().then(function (rows) {
       root.innerHTML = rows.length ? '<div class="account-grid">' + rows.map(listingCard).join('') + '</div>' :
         '<div class="account-empty"><h2>No favourites yet</h2><p>Save listings you want to compare or revisit.</p><a class="account-primary" href="browse">Browse Listings</a></div>';
       root.querySelectorAll('[data-unsave]').forEach(function (button) {
         button.addEventListener('click', function () {
           button.disabled = true;
-          PM.unsaveListing(button.getAttribute('data-unsave')).then(function () { button.closest('.account-card').remove(); if (!root.querySelector('.account-card')) loadFavourites(); }).catch(function () { button.disabled = false; });
+          PMSavedContent.unsaveListing(button.getAttribute('data-unsave')).then(function () { button.closest('.account-card').remove(); if (!root.querySelector('.account-card')) loadFavourites(); }).catch(function () { button.disabled = false; });
         });
       });
     }).catch(function () { root.innerHTML = '<div class="account-empty"><h2>Could not load favourites</h2><p>Please refresh and try again.</p></div>'; });
@@ -52,11 +52,11 @@
   }
   function loadSearches() {
     if (gate()) return;
-    PM.listSavedSearches().then(function (rows) {
+    PMSavedContent.listSavedSearches().then(function (rows) {
       root.innerHTML = rows.length ? '<div class="account-list">' + rows.map(function (row) {
         return '<article class="account-row" data-search="' + esc(row.id) + '"><div><h2>' + esc(row.name || row.query || row.category || 'Saved search') + '</h2><p>' + esc(filterSummary(row)) + '</p></div><div class="account-actions"><a class="account-primary" href="' + esc(filtersToUrl(row.filters || { q: row.query, category: row.category })) + '">View Results</a><button class="account-secondary" data-delete-search="' + esc(row.id) + '">Delete</button></div></article>';
       }).join('') + '</div>' : '<div class="account-empty"><h2>No saved searches</h2><p>Choose filters on Browse, then save the search here for later.</p><a class="account-primary" href="browse">Browse Listings</a></div>';
-      root.querySelectorAll('[data-delete-search]').forEach(function (button) { button.addEventListener('click', function () { if (!confirm('Delete this saved search?')) return; PM.deleteSavedSearch(button.getAttribute('data-delete-search')).then(loadSearches); }); });
+      root.querySelectorAll('[data-delete-search]').forEach(function (button) { button.addEventListener('click', function () { if (!confirm('Delete this saved search?')) return; PMSavedContent.deleteSavedSearch(button.getAttribute('data-delete-search')).then(loadSearches); }); });
     }).catch(function () { root.innerHTML = '<div class="account-empty"><h2>Could not load saved searches</h2><p>The saved-search database migration may still need to be deployed.</p></div>'; });
   }
   function notifRoute(n) {

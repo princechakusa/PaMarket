@@ -69,6 +69,8 @@ function createRuntime(search, overrides) {
       money(value) { return '$' + value; },
       fetchExactCount() { return Promise.resolve(1); },
       getSession() { return session; },
+    },
+    PMSavedContent: {
       saveSearch(name, filters) { saves.push({ name, filters }); return Promise.resolve(); },
       saveListing(id) { favourites.push({ action: 'save', id }); return Promise.resolve(); },
       unsaveListing(id) { favourites.push({ action: 'unsave', id }); return Promise.resolve(); },
@@ -110,7 +112,7 @@ async function characterizeBrowsePage() {
   let assertions = 0;
   const dependencyOrder = [
     'js/supabase-config.js', 'js/core/supabase-client.js', 'js/services/service-transport.js',
-    'js/services/listings.js', 'js/services/businesses.js', 'js/marketplace-data.js',
+    'js/services/saved-content.js', 'js/services/listings.js', 'js/services/businesses.js', 'js/marketplace-data.js',
   ].map(name => built.indexOf(name));
   assert.ok(dependencyOrder.every((at, index) => at >= 0 && (!index || at > dependencyOrder[index - 1]))); assertions++;
   assert.match(page, /PM\.fetchActiveAds\(\{placement:'browse',limit:8\}\)/); assertions++; assert.match(page, /PM\.trackAdEvent\(a\.id,'impression'\)/); assertions++;
@@ -174,6 +176,14 @@ async function characterizeBrowsePage() {
   unauthenticated.setSession(null);
   await unauthenticated.context.PMBrowsePage.saveCurrentSearch();
   assert.match(String(unauthenticated.context.location.href || unauthenticated.context.location), /auth\?return=/); assertions++;
+  const anonymousButton = new FakeElement('anonymous-favourite');
+  anonymousButton.setAttribute('data-save-listing', 'listing-1');
+  await unauthenticated.context.PMBrowsePage.toggleFavourite(anonymousButton);
+  assert.match(String(unauthenticated.context.location.href || unauthenticated.context.location), /auth\?return=/); assertions++;
+
+  assert.match(source, /PMSavedContent\.listFavouriteIds\(\)[\s\S]*classList\.toggle\('saved'/); assertions++;
+  assert.match(source, /PMSavedContent\.(?:saveListing|unsaveListing)/); assertions++;
+  assert.doesNotMatch(source, /PM\.(?:saveListing|unsaveListing|listFavouriteIds|saveSearch)/); assertions++;
 
   const empty = await loadRuntime('', { PMListings: { fetchListings: () => Promise.resolve([]), fetchListingCount: () => Promise.resolve(0) } });
   assert.match(empty.get('resultsGrid').innerHTML, /^EMPTY:/); assertions++;

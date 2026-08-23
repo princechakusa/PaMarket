@@ -326,7 +326,7 @@ async function saveCurrentSearch(){
   const name=prompt('Name this search',suggestion);
   if(name===null)return;
   const button=document.getElementById('saveSearchBtn');button.disabled=true;
-  try{await PM.saveSearch(name||suggestion,filters);button.textContent='Search saved';button.classList.add('saved');}
+  try{await PMSavedContent.saveSearch(name||suggestion,filters);button.textContent='Search saved';button.classList.add('saved');}
   catch(e){alert('Could not save this search. Please try again.');}
   finally{button.disabled=false;}
 }
@@ -335,14 +335,14 @@ async function toggleFavourite(button){
   const session=PM.getSession();
   if(!(session&&session.user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
   const id=button.getAttribute('data-save-listing');button.disabled=true;
-  try{if(button.classList.contains('saved')){await PM.unsaveListing(id);button.classList.remove('saved');button.setAttribute('aria-label','Save listing');}else{await PM.saveListing(id);button.classList.add('saved');button.setAttribute('aria-label','Remove from favourites');}}
+  try{if(button.classList.contains('saved')){await PMSavedContent.unsaveListing(id);button.classList.remove('saved');button.setAttribute('aria-label','Save listing');}else{await PMSavedContent.saveListing(id);button.classList.add('saved');button.setAttribute('aria-label','Remove from favourites');}}
   catch(e){alert('Could not update favourites. Please try again.');}
   finally{button.disabled=false;}
 }
 
 function syncFavouriteButtons(){
   if(!(PM.getSession&&PM.getSession()))return;
-  PM.listFavouriteIds().then(rows=>{const ids=new Set(rows.map(r=>String(r.listing_id)));document.querySelectorAll('[data-save-listing]').forEach(b=>b.classList.toggle('saved',ids.has(b.getAttribute('data-save-listing'))));}).catch(()=>{});
+  PMSavedContent.listFavouriteIds().then(rows=>{const ids=new Set(rows.map(r=>String(r.listing_id)));document.querySelectorAll('[data-save-listing]').forEach(b=>b.classList.toggle('saved',ids.has(b.getAttribute('data-save-listing'))));}).catch(()=>{});
 }
 
 function openDrawer(){

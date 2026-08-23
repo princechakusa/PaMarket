@@ -1180,20 +1180,17 @@ function renderListing(l,reviews){
 }
 
 function initFavouriteButton(listingId){
-  const button=document.getElementById('favouriteBtn');
-  const label=document.getElementById('favouriteLabel');
-  if(!button||button.dataset.ready)return;
-  button.dataset.ready='1';
-  let saved=false;
-  const session=PM.getSession();
-  if(session&&session.user)PM.isListingSaved(listingId).then(value=>{saved=value;label.textContent=saved?'Remove from Favourites':'Save to Favourites';}).catch(()=>{});
-  button.addEventListener('click',async()=>{
-    if(!(PM.getSession()&&PM.getSession().user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
-    button.disabled=true;
-    try{if(saved){await PM.unsaveListing(listingId);saved=false;}else{await PM.saveListing(listingId);saved=true;}label.textContent=saved?'Remove from Favourites':'Save to Favourites';}
-    catch(e){alert('Could not update favourites. Please try again.');}
-    finally{button.disabled=false;}
-  });
+const button=document.getElementById('favouriteBtn'),label=document.getElementById('favouriteLabel');
+if(!button||button.dataset.ready)return;button.dataset.ready='1';
+let saved=false,session=PM.getSession();
+if(session&&session.user)PMSavedContent.isListingSaved(listingId).then(value=>{saved=value;label.textContent=saved?'Remove from Favourites':'Save to Favourites';}).catch(()=>{});
+button.addEventListener('click',async()=>{
+if(!(PM.getSession()&&PM.getSession().user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
+button.disabled=true;
+try{if(saved){await PMSavedContent.unsaveListing(listingId);saved=false;}else{await PMSavedContent.saveListing(listingId);saved=true;}label.textContent=saved?'Remove from Favourites':'Save to Favourites';}
+catch(e){alert('Could not update favourites. Please try again.');}
+finally{button.disabled=false;}
+});
 }
 
 // Listing/breadcrumb JSON-LD now lives in js/listing-schema.js (PMSchema),

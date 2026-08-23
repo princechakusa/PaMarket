@@ -5,6 +5,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
 const SESSION_SOURCE = fs.readFileSync(path.join(ROOT, 'js', 'session.js'), 'utf8');
+const SAVED_CONTENT_SOURCE = fs.readFileSync(path.join(ROOT, 'js', 'services', 'saved-content.js'), 'utf8');
 const MARKET_SOURCE = fs.readFileSync(path.join(ROOT, 'js', 'marketplace-data.js'), 'utf8');
 
 function makeRuntime(session, responseFactory) {
@@ -41,8 +42,9 @@ function makeRuntime(session, responseFactory) {
     calls.push({ url, options });
     return responseFactory(url, options);
   };
+  window.fetch = fetch;
   const context = vm.createContext({
-    window, document, localStorage, fetch,
+    window, self: window, document, localStorage, fetch,
     Promise, Date, JSON, Object, Error, Number, Math,
     encodeURIComponent, decodeURIComponent, URLSearchParams,
     console,
@@ -98,6 +100,7 @@ async function testNearExpiryRefresh() {
   assert.ok(renewed.expires_at > original.expires_at);
   assert.strictEqual(runtime.reloads, 0);
 
+  vm.runInContext(SAVED_CONTENT_SOURCE, runtime.context, { filename: 'js/services/saved-content.js' });
   vm.runInContext(MARKET_SOURCE, runtime.context, { filename: 'js/marketplace-data.js' });
   assert.strictEqual(runtime.window.PM.getSession().access_token, 'new-access');
   await runtime.window.PM.listFavouriteIds();
