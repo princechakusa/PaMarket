@@ -19,6 +19,7 @@ const {characterizePaidAdsAuthority}=require('./characterize-paid-ads-authority.
 const {characterizeBrowsePage}=require('./characterize-browse-page.js');
 const {characterizeSavedContent}=require('./characterize-saved-content.js');
 const {characterizeSavedContentPages}=require('./characterize-saved-content-pages.js');
+const {characterizeSocialPreview}=require('./characterize-social-preview.js');
 
 const listing={id:'123',title:'Café Phone — New'};
 const business={id:'456',name:"Sam's Shop"};
@@ -73,6 +74,7 @@ const paidAdsAuthority=characterizePaidAdsAuthority();
 const browsePage=await characterizeBrowsePage();
 const savedContent=await characterizeSavedContent();
 const savedContentPages=await characterizeSavedContentPages();
-console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions+webP1.assertions+sitemapAuthority.assertions+sitemapProfiles.assertions+paidAdsAuthority.assertions+browsePage.assertions+savedContent.assertions+savedContentPages.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,webP1Assertions:webP1.assertions,sitemapAuthorityAssertions:sitemapAuthority.assertions,sitemapKeysetAssertions:sitemapProfiles.assertions,paidAdsAuthorityAssertions:paidAdsAuthority.assertions,browsePageAssertions:browsePage.assertions,savedContentAssertions:savedContent.assertions,savedContentPageAssertions:savedContentPages.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
+const socialPreview=characterizeSocialPreview();
+console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions+webP1.assertions+sitemapAuthority.assertions+sitemapProfiles.assertions+paidAdsAuthority.assertions+browsePage.assertions+savedContent.assertions+savedContentPages.assertions+socialPreview.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,webP1Assertions:webP1.assertions,sitemapAuthorityAssertions:sitemapAuthority.assertions,sitemapKeysetAssertions:sitemapProfiles.assertions,paidAdsAuthorityAssertions:paidAdsAuthority.assertions,browsePageAssertions:browsePage.assertions,savedContentAssertions:savedContent.assertions,savedContentPageAssertions:savedContentPages.assertions,socialPreviewAssertions:socialPreview.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
 }
 main().catch(function(error){console.error(error);process.exit(1);});
