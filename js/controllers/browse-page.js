@@ -6,6 +6,7 @@ const COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8
 const TCOLORS=['#1A3A8F','#B27D22','#1F7A4D','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
 const CAT_LABELS={property:'Property',vehicles:'Vehicles',electronics:'Electronics',furniture:'Furniture',fashion:'Fashion',services:'Services',agriculture:'Agriculture',rooms:'Rooms to Rent',pets:'Pets',kids:'Baby & Kids',jobs:'Jobs'};
 const PAGE_SIZE=20;
+const SUPPORTED_SORTS=new Set(['created_at.desc','price.asc','price.desc']);
 let state={cat:'',q:'',prov:'',city:'',sort:'created_at.desc',offset:0,shops:false};
 const ZW_CITIES=['Harare','Bulawayo','Mutare','Gweru','Masvingo','Chinhoyi','Kadoma','Kwekwe','Victoria Falls'];
 function hero(title,sub,image,alt,chips){return{title,sub,image,alt,chips};}
@@ -283,10 +284,12 @@ function syncFromUrl(){
   state.shops=p.get('shops')==='1';
   state.business=p.get('business')||'';
   state.sub=p.get('sub')||'';
+  state.sort=SUPPORTED_SORTS.has(p.get('sort'))?p.get('sort'):'created_at.desc';
   document.getElementById('fCat').value=state.cat;
   document.getElementById('fQ').value=state.q;
   document.getElementById('fProv').value=state.prov;
   document.getElementById('fCity').value=state.city;
+  document.getElementById('sortSelect').value=state.sort;
   if(state.shops){
     document.getElementById('filtersPanel').classList.add('hidden');
     document.getElementById('browseLayout').classList.add('no-filters');
@@ -298,13 +301,16 @@ function applyFilters(){
   state.q=document.getElementById('fQ').value.trim();
   state.prov=document.getElementById('fProv').value;
   state.city=document.getElementById('fCity').value;
-  state.sort=document.getElementById('sortSelect').value;
+  const selectedSort=document.getElementById('sortSelect').value;
+  state.sort=SUPPORTED_SORTS.has(selectedSort)?selectedSort:'created_at.desc';
+  document.getElementById('sortSelect').value=state.sort;
   state.offset=0;
   const u=new URLSearchParams();
   if(state.cat)u.set('cat',state.cat);
   if(state.q)u.set('q',state.q);
   if(state.prov)u.set('prov',state.prov);
   if(state.city)u.set('city',state.city);
+  if(state.sort!=='created_at.desc')u.set('sort',state.sort);
   history.replaceState(null,'','browse'+(u.toString()?'?'+u.toString():''));
   updateHero();highlightCatNav();runQuery(false);
 }

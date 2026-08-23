@@ -20,9 +20,10 @@
   }
   function listingCard(listing) {
     var loc = [listing.suburb, listing.city, listing.province].filter(Boolean).slice(0, 2).join(', ');
+    var listingPath = PMUrls.listingPath(listing);
     return '<article class="account-card" data-listing="' + esc(listing.id) + '">' +
-      '<a class="account-photo" href="detail?id=' + encodeURIComponent(listing.id) + '">' + photo(listing) + '</a>' +
-      '<div class="account-card-body"><a class="account-title" href="detail?id=' + encodeURIComponent(listing.id) + '">' + esc(listing.title) + '</a>' +
+      '<a class="account-photo" href="' + esc(listingPath) + '">' + photo(listing) + '</a>' +
+      '<div class="account-card-body"><a class="account-title" href="' + esc(listingPath) + '">' + esc(listing.title) + '</a>' +
       '<div class="account-price">' + esc(PM.money(listing.price, listing.currency)) + '</div>' +
       '<div class="account-meta">' + esc(loc || 'Zimbabwe') + '</div>' +
       '<button class="account-secondary" data-unsave="' + esc(listing.id) + '">Remove</button></div></article>';
@@ -53,10 +54,24 @@
   function loadSearches() {
     if (gate()) return;
     PMSavedContent.listSavedSearches().then(function (rows) {
-      root.innerHTML = rows.length ? '<div class="account-list">' + rows.map(function (row) {
+      root.innerHTML = rows.length ? '<div class="account-list"><div data-delete-search-error></div>' + rows.map(function (row) {
         return '<article class="account-row" data-search="' + esc(row.id) + '"><div><h2>' + esc(row.name || row.query || row.category || 'Saved search') + '</h2><p>' + esc(filterSummary(row)) + '</p></div><div class="account-actions"><a class="account-primary" href="' + esc(filtersToUrl(row.filters || { q: row.query, category: row.category })) + '">View Results</a><button class="account-secondary" data-delete-search="' + esc(row.id) + '">Delete</button></div></article>';
       }).join('') + '</div>' : '<div class="account-empty"><h2>No saved searches</h2><p>Choose filters on Browse, then save the search here for later.</p><a class="account-primary" href="browse">Browse Listings</a></div>';
-      root.querySelectorAll('[data-delete-search]').forEach(function (button) { button.addEventListener('click', function () { if (!confirm('Delete this saved search?')) return; PMSavedContent.deleteSavedSearch(button.getAttribute('data-delete-search')).then(loadSearches); }); });
+      root.querySelectorAll('[data-delete-search]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          if (!confirm('Delete this saved search?')) return;
+          var error = root.querySelector('[data-delete-search-error]');
+          if (error) { error.innerHTML = ''; error.removeAttribute('role'); }
+          button.disabled = true;
+          return PMSavedContent.deleteSavedSearch(button.getAttribute('data-delete-search')).then(loadSearches).catch(function () {
+            button.disabled = false;
+            if (error) {
+              error.setAttribute('role', 'alert');
+              error.innerHTML = PMFeedback.error('Could not delete this saved search. Please try again.', { style: 'margin-bottom:12px' });
+            }
+          });
+        });
+      });
     }).catch(function () { root.innerHTML = '<div class="account-empty"><h2>Could not load saved searches</h2><p>The saved-search database migration may still need to be deployed.</p></div>'; });
   }
   function notifRoute(n) {

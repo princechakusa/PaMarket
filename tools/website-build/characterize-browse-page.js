@@ -45,7 +45,7 @@ function createRuntime(search, overrides) {
     return elements.get(id);
   };
   get('sortSelect').value = 'created_at.desc';
-  const appended=[],historyUrls=[],listingCalls=[],businessCalls=[],saves=[],favourites=[];
+  const appended=[],historyUrls=[],historyPushes=[],listingCalls=[],businessCalls=[],saves=[],favourites=[];
   const listing = {
     id: 'listing-1', title: 'Phone', price: 25, currency: 'USD', category: 'electronics',
     city: 'Harare', province: 'Harare', photos: ['phone.jpg'], created_at: '2026-08-22T00:00:00Z',
@@ -59,7 +59,10 @@ function createRuntime(search, overrides) {
     setTimeout, clearTimeout,
     document,
     location: { search: search || '', pathname: '/browse' },
-    history: { replaceState(_state, _title, url) { historyUrls.push(url); } },
+    history: {
+      replaceState(_state, _title, url) { historyUrls.push(url); },
+      pushState(_state, _title, url) { historyPushes.push(url); },
+    },
     prompt: () => 'My search', alert() {},
     PMListings:{fetchListings(opts){listingCalls.push(opts);return Promise.resolve([listing]);},fetchListingCount(){return Promise.resolve(1);}},
     PMBusinesses:{fetchBusinesses(opts){businessCalls.push(opts);return Promise.resolve([business]);}},
@@ -81,7 +84,7 @@ function createRuntime(search, overrides) {
   context.IntersectionObserver=class{constructor(callback){context.intersectionCallback=callback;}observe(element){context.observedElement=element;}};
   Object.assign(context, overrides || {});
   vm.createContext(context);
-  return {context,elements,get,appended,historyUrls,listingCalls,businessCalls,saves,favourites,listing,business,setSession(value){session=value;}};
+  return {context,elements,get,appended,historyUrls,historyPushes,listingCalls,businessCalls,saves,favourites,listing,business,setSession(value){session=value;}};
 }
 function exposeInline(source) {
   return source + `\n;globalThis.PMBrowsePage=Object.freeze({
@@ -121,16 +124,21 @@ async function characterizeBrowsePage() {
     assert.match(source, new RegExp('\\b' + api.replace('$', '\\$') + '\\b')); assertions++;
   }
   assert.doesNotMatch(source, /(?:min|max)(?:Price)?\s*[:=]|[?&](?:min|max)_?price=/i); assertions++;
-  const parsed = await loadRuntime('?q=phone&cat=electronics&prov=Harare&city=Harare&shops=1&business=biz-1&sub=phones');
+  const parsed = await loadRuntime('?q=phone&cat=electronics&prov=Harare&city=Harare&shops=1&business=biz-1&sub=phones&sort=price.asc');
   const state = parsed.context.PMBrowsePage.getState();
   assert.equal(state.q, 'phone'); assertions++; assert.equal(state.cat, 'electronics'); assertions++;
   assert.equal(state.prov, 'Harare'); assertions++; assert.equal(state.city, 'Harare'); assertions++;
   assert.equal(state.shops, true); assertions++; assert.equal(state.business, 'biz-1'); assertions++;
   assert.equal(state.sub, 'phones'); assertions++; assert.equal(Object.prototype.hasOwnProperty.call(state, 'minPrice'), false); assertions++;
+  assert.equal(state.sort, 'price.asc'); assertions++; assert.equal(parsed.get('sortSelect').value, 'price.asc'); assertions++;
   assert.equal(parsed.businessCalls[0].q, 'phone'); assertions++; assert.equal(parsed.businessCalls[0].offset, 0); assertions++;
+  const restoredPrice = await loadRuntime('?cat=electronics&sort=price.asc');
+  assert.equal(restoredPrice.listingCalls[0].order, 'price.asc'); assertions++; assert.equal(restoredPrice.listingCalls[0].featuredFirst, false); assertions++;
   const defaults = await loadRuntime('?cat=electronics&city=Mutare');
   assert.equal(defaults.listingCalls[0].category, 'electronics'); assertions++; assert.equal(defaults.listingCalls[0].city, 'Mutare'); assertions++;
   assert.equal(defaults.listingCalls[0].featuredFirst, true); assertions++; assert.equal(defaults.listingCalls[0].order, undefined); assertions++;
+  assert.equal(defaults.context.PMBrowsePage.getState().sort, 'created_at.desc'); assertions++;
+  assert.equal(defaults.get('sortSelect').value, 'created_at.desc'); assertions++;
   assert.equal(defaults.listingCalls[0].limit, 20); assertions++; assert.equal(defaults.listingCalls[0].offset, 0); assertions++;
   assert.match(defaults.context.PMBrowsePage.renderListingCard(defaults.listing, 0), /href="\/l\/listing-1"/); assertions++;
   const shopCard = defaults.context.PMBrowsePage.renderBusinessCard(defaults.business, 0);
@@ -146,11 +154,25 @@ async function characterizeBrowsePage() {
   defaults.context.PMBrowsePage.applyFilters();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(defaults.listingCalls.at(-1).order, 'price.asc'); assertions++; assert.equal(defaults.listingCalls.at(-1).featuredFirst, false); assertions++;
-  assert.match(defaults.historyUrls.at(-1), /^browse\?cat=electronics&city=Mutare$/); assertions++;
-  defaults.get('sortSelect').value = 'created_at.asc';
+  assert.match(defaults.historyUrls.at(-1), /^browse\?cat=electronics&city=Mutare&sort=price\.asc$/); assertions++;
+  assert.equal(defaults.historyPushes.length, 0); assertions++;
+  defaults.get('sortSelect').value = 'price.desc';
   defaults.context.PMBrowsePage.applyFilters();
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(defaults.listingCalls.at(-1).order, 'created_at.asc'); assertions++;
+  assert.equal(defaults.listingCalls.at(-1).order, 'price.desc'); assertions++;
+  assert.match(defaults.historyUrls.at(-1), /[?&]sort=price\.desc(?:&|$)/); assertions++;
+
+  const descending = await loadRuntime('?sort=price.desc');
+  assert.equal(descending.context.PMBrowsePage.getState().sort, 'price.desc'); assertions++;
+  assert.equal(descending.get('sortSelect').value, 'price.desc'); assertions++;
+  assert.equal(descending.listingCalls[0].order, 'price.desc'); assertions++;
+  const invalidSort = await loadRuntime('?sort=created_at.asc');
+  assert.equal(invalidSort.context.PMBrowsePage.getState().sort, 'created_at.desc'); assertions++;
+  assert.equal(invalidSort.get('sortSelect').value, 'created_at.desc'); assertions++;
+  assert.equal(invalidSort.listingCalls[0].order, undefined); assertions++;
+  assert.equal(invalidSort.listingCalls[0].featuredFirst, true); assertions++;
+  invalidSort.context.PMBrowsePage.applyFilters(); await new Promise(resolve => setImmediate(resolve));
+  assert.doesNotMatch(invalidSort.historyUrls.at(-1), /[?&]sort=/); assertions++;
 
   await defaults.context.PMBrowsePage.loadMore();
   assert.equal(defaults.listingCalls.at(-1).offset, 20); assertions++; assert.ok(defaults.get('resultsGrid').innerHTML.includes('/l/listing-1')); assertions++;

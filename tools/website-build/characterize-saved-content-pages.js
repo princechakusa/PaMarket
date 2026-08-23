@@ -7,6 +7,7 @@ const vm = require('vm');
 const { ROOT } = require('./file-utils');
 const { characterizeBrowsePage } = require('./characterize-browse-page');
 const { assembleHtml } = require('./shell');
+const urls = require('../../js/utils/urls.js');
 
 const DETAIL_PATH = path.join(ROOT, 'detail.html');
 const ACCOUNT_PATH = path.join(ROOT, 'js', 'account-pages.js');
@@ -30,6 +31,16 @@ function button(attributes) {
     addEventListener(name, fn) { this.listeners[name] = fn; },
     getAttribute(name) { return this.attributes[name] || null; },
     closest() { return this.card || null; },
+  };
+}
+
+function fakeElement() {
+  return {
+    innerHTML: '', attributes: {}, removed: false,
+    setAttribute(name, value) { this.attributes[name] = String(value); },
+    getAttribute(name) { return this.attributes[name] || null; },
+    removeAttribute(name) { delete this.attributes[name]; },
+    remove() { this.removed = true; },
   };
 }
 
@@ -60,7 +71,7 @@ async function detailRuntime(options) {
 }
 
 function accountRuntime(page, options) {
-  const buttons = [], calls = [], cards = [];
+  const buttons = [], calls = [], cards = [], deleteError = fakeElement();
   const root = {
     _html: '',
     set innerHTML(value) { this._html = value; }, get innerHTML() { return this._html; },
@@ -76,14 +87,21 @@ function accountRuntime(page, options) {
       }
       return [];
     },
-    querySelector(selector) { return selector === '.account-card' && cards.length ? cards[0] : null; },
+    querySelector(selector) {
+      if (selector === '.account-card' && cards.length) return cards[0];
+      if (selector === '[data-delete-search-error]' && /data-delete-search-error/.test(this._html)) return deleteError;
+      return null;
+    },
   };
   let favouriteLoads = 0, searchLoads = 0;
   const savedContent = {
     listFavourites() { calls.push(['listFavourites']); return Promise.resolve((options.favouriteRows || [])[favouriteLoads++] || []); },
     unsaveListing(id) { calls.push(['unsaveListing', id]); return options.unsaveError ? Promise.reject(options.unsaveError) : Promise.resolve({ ok: true }); },
     listSavedSearches() { calls.push(['listSavedSearches']); return Promise.resolve((options.searchRows || [])[searchLoads++] || []); },
-    deleteSavedSearch(id) { calls.push(['deleteSavedSearch', id]); return Promise.resolve({ ok: true }); },
+    deleteSavedSearch(id) {
+      calls.push(['deleteSavedSearch', id]);
+      return options.deleteError ? Promise.reject(options.deleteError) : Promise.resolve({ ok: true });
+    },
   };
   if (options.listError) {
     savedContent.listFavourites = savedContent.listSavedSearches = function () { return Promise.reject(options.listError); };
@@ -94,11 +112,13 @@ function accountRuntime(page, options) {
     document: { body: { getAttribute() { return page; } }, getElementById(id) { return id === 'accountPage' ? root : null; } },
     PM: Object.assign({ getSession() { return options.session; }, money(value) { return '$' + value; } }, savedContent),
     PMSavedContent: savedContent,
+    PMUrls: { listingPath: urls.listingPath },
+    PMFeedback: { error(message) { return '<div class="empty-state">' + message + '</div>'; } },
   };
   context.window = context.self = context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(ACCOUNT_PATH, 'utf8'), context, { filename: 'account-pages.js' });
-  return { context, root, buttons, calls, cards };
+  return { context, root, buttons, calls, cards, deleteError };
 }
 
 async function characterizeSavedContentPages() {
@@ -126,7 +146,12 @@ async function characterizeSavedContentPages() {
   let account = accountRuntime('favourites', { session: null }); await settle();
   assert.match(account.root.innerHTML, /Sign in required/); assertions++;
   account = accountRuntime('favourites', { session: { user: { id: 'user-1' } }, favouriteRows: [[{ id: 'listing-1', title: 'Phone', price: 10, currency: 'USD', photos: [] }], []] }); await settle();
-  assert.match(account.root.innerHTML, /detail\?id=listing-1/); assertions++;
+  assert.equal((account.root.innerHTML.match(/href="l\/phone-listing-1"/g) || []).length, 2); assertions++;
+  assert.doesNotMatch(account.root.innerHTML, /detail\?id=/); assertions++;
+  assert.match(account.root.innerHTML, /class="account-photo"/); assertions++;
+  assert.match(account.root.innerHTML, /class="account-title"[^>]*>Phone</); assertions++;
+  assert.match(account.root.innerHTML, /class="account-price">\$10</); assertions++;
+  assert.match(account.root.innerHTML, /class="account-meta">Zimbabwe</); assertions++;
   assert.match(account.root.innerHTML, /data-unsave="listing-1"/); assertions++;
   account.buttons[0].listeners.click(); await settle();
   assert.ok(account.calls.some(call => call[0] === 'unsaveListing')); assertions++;
@@ -136,6 +161,8 @@ async function characterizeSavedContentPages() {
   account = accountRuntime('favourites', { session: { user: { id: 'user-1' } }, favouriteRows: [[{ id: 'listing-1', title: 'Phone', price: 10, currency: 'USD', photos: [] }]], unsaveError: new Error('fail') }); await settle();
   account.buttons[0].listeners.click(); await settle();
   assert.equal(account.buttons[0].disabled, false); assertions++;
+  account = accountRuntime('favourites', { session: { user: { id: 'user-1' } }, favouriteRows: [[{ id: 'listing-2', title: '', price: 5, currency: 'USD', photos: [] }]] }); await settle();
+  assert.equal((account.root.innerHTML.match(/href="l\/listing-listing-2"/g) || []).length, 2); assertions++;
 
   account = accountRuntime('saved-searches', { session: null }); await settle();
   assert.match(account.root.innerHTML, /Sign in required/); assertions++;
@@ -145,18 +172,34 @@ async function characterizeSavedContentPages() {
   account.buttons[0].listeners.click(); await settle();
   assert.ok(account.calls.some(call => call[0] === 'deleteSavedSearch')); assertions++;
   assert.match(account.root.innerHTML, /No saved searches/); assertions++;
+  for (const sort of ['created_at.desc', 'price.asc', 'price.desc']) {
+    const row = Object.assign({}, search, { filters: Object.assign({}, search.filters, { sort }) });
+    account = accountRuntime('saved-searches', { session: { user: { id: 'user-1' } }, searchRows: [[row]] }); await settle();
+    assert.match(account.root.innerHTML, new RegExp('(?:&amp;|&)sort=' + sort.replace('.', '\\.'))); assertions++;
+  }
+  const noSort = Object.assign({}, search, { filters: Object.assign({}, search.filters) }); delete noSort.filters.sort;
+  account = accountRuntime('saved-searches', { session: { user: { id: 'user-1' } }, searchRows: [[noSort]] }); await settle();
+  assert.doesNotMatch(account.root.innerHTML, /(?:&amp;|&)sort=/); assertions++;
   account = accountRuntime('saved-searches', { session: { user: { id: 'user-1' } }, searchRows: [[search]], confirm: false }); await settle();
   account.buttons[0].listeners.click(); await settle();
   assert.equal(account.calls.filter(call => call[0] === 'deleteSavedSearch').length, 0); assertions++;
+  account = accountRuntime('saved-searches', { session: { user: { id: 'user-1' } }, searchRows: [[search]], deleteError: new Error('fail') }); await settle();
+  const failedDeleteButton = account.buttons[0];
+  const failedDeletePromise = failedDeleteButton.listeners.click();
+  assert.equal(failedDeleteButton.disabled, true); assertions++;
+  await failedDeletePromise; await settle();
+  assert.equal(failedDeleteButton.disabled, false); assertions++;
+  assert.match(account.root.innerHTML, /Phones/); assertions++;
+  assert.match(account.deleteError.innerHTML, /Could not delete this saved search/); assertions++;
+  assert.equal(account.deleteError.getAttribute('role'), 'alert'); assertions++;
+  failedDeleteButton.listeners.click(); await settle();
+  assert.equal(account.calls.filter(call => call[0] === 'deleteSavedSearch').length, 2); assertions++;
+  assert.equal((account.root.innerHTML.match(/data-delete-search-error/g) || []).length, 1); assertions++;
   account = accountRuntime('saved-searches', { session: { user: { id: 'user-1' } }, listError: new Error('fail') }); await settle();
   assert.match(account.root.innerHTML, /Could not load saved searches/); assertions++;
 
   const accountSource = fs.readFileSync(ACCOUNT_PATH, 'utf8');
-  assert.ok(
-    accountSource.includes("PM.deleteSavedSearch(button.getAttribute('data-delete-search')).then(loadSearches);") ||
-      accountSource.includes("PMSavedContent.deleteSavedSearch(button.getAttribute('data-delete-search')).then(loadSearches);")
-  ); assertions++;
-  assert.doesNotMatch(accountSource, /deleteSavedSearch\([^;]+\.catch\(/); assertions++;
+  assert.match(accountSource, /PMSavedContent\.deleteSavedSearch\([\s\S]+\.then\(loadSearches\)\.catch\(/); assertions++;
   const directPattern = /(?:user_saves|saved_searches|rpc\/(?:save_listing|unsave_listing)|\.from\s*\(\s*['"](?:user_saves|saved_searches)|\.rpc\s*\(\s*['"](?:save_listing|unsave_listing))/;
   for (const file of [DETAIL_PATH, ACCOUNT_PATH, BROWSE_PATH]) {
     const source = fs.readFileSync(file, 'utf8');
@@ -170,9 +213,14 @@ async function characterizeSavedContentPages() {
     const order = ['js/supabase-config.js', 'js/core/supabase-client.js', 'js/services/service-transport.js', 'js/services/saved-content.js', 'js/marketplace-data.js'].map(name => built.indexOf(name));
     assert.ok(order.every((position, index) => position >= 0 && (!index || position > order[index - 1])), pageName + ' dependency order'); assertions++;
   }
+  const favouritesPage = fs.readFileSync(path.join(ROOT, 'favourites.html'), 'utf8');
+  assert.ok(favouritesPage.indexOf('js/utils/urls.js') >= 0 && favouritesPage.indexOf('js/utils/urls.js') < favouritesPage.indexOf('js/account-pages.js')); assertions++;
+  const searchesPage = fs.readFileSync(path.join(ROOT, 'saved-searches.html'), 'utf8');
+  const searchDependencies = ['js/utils/escape.js', 'js/components/feedback.js', 'js/account-pages.js'].map(name => searchesPage.indexOf(name));
+  assert.ok(searchDependencies.every((position, index) => position >= 0 && (!index || position > searchDependencies[index - 1]))); assertions++;
   const browse = await characterizeBrowsePage();
   assert.ok(browse.assertions >= 55); assertions++;
-  return { assertions, browseAssertions: browse.assertions, knownParity: ['saved-search sort remains ignored', 'favourite cards retain detail?id=', 'saved-search delete has no rejection handler'] };
+  return { assertions, browseAssertions: browse.assertions, stage3H: ['saved-search sort restored', 'favourite cards use canonical paths', 'saved-search delete rejection handled'] };
 }
 
 if (require.main === module) {
