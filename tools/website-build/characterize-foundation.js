@@ -12,6 +12,10 @@ const schema=require('../../js/listing-schema.js');
 const shell=require('./shell.js');
 const {characterizeShell}=require('./characterize-shell.js');
 const {characterizeMarketplaceReads}=require('./characterize-marketplace-reads.js');
+const {characterizeWebP1}=require('./characterize-web-p1.js');
+const {characterizeSitemapProfileAuthority}=require('./characterize-sitemap-profile-authority.js');
+const {characterizeSitemapKeysetAuthority}=require('./characterize-sitemap-keyset-authority.js');
+const {characterizePaidAdsAuthority}=require('./characterize-paid-ads-authority.js');
 
 const listing={id:'123',title:'Café Phone — New'};
 const business={id:'456',name:"Sam's Shop"};
@@ -59,6 +63,10 @@ assert.match(shellProbe,/href="cookie-policy">Cookie Policy<\/a>/);
 async function main(){
 const shellAssertions=characterizeShell();
 const marketplaceReads=await characterizeMarketplaceReads();
-console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
+const webP1=await characterizeWebP1();
+const sitemapAuthority=characterizeSitemapProfileAuthority();
+const sitemapProfiles=await characterizeSitemapKeysetAuthority();
+const paidAdsAuthority=characterizePaidAdsAuthority();
+console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions+webP1.assertions+sitemapAuthority.assertions+sitemapProfiles.assertions+paidAdsAuthority.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,webP1Assertions:webP1.assertions,sitemapAuthorityAssertions:sitemapAuthority.assertions,sitemapKeysetAssertions:sitemapProfiles.assertions,paidAdsAuthorityAssertions:paidAdsAuthority.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
 }
 main().catch(function(error){console.error(error);process.exit(1);});

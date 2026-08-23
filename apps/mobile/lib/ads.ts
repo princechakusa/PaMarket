@@ -51,12 +51,8 @@ export function adsForCategory(ads: PaidAd[], cat?: string | null): PaidAd[] {
 }
 
 export async function trackAdImpression(id: string) {
-  const { data } = await supabase.from("paid_ads").select("impressions").eq("id", id).maybeSingle();
-  if (!data) return;
-  await supabase
-    .from("paid_ads")
-    .update({ impressions: (data.impressions || 0) + 1 })
-    .eq("id", id);
+  if (!id) return;
+  await supabase.rpc("track_ad_impression", { p_ad_id: id });
 }
 
 // Mirrors www/js/app.js H._setupRealtimeAds: keeps the ads feed live so new
@@ -80,10 +76,6 @@ export function subscribeToAds(onChange: (ads: PaidAd[]) => void) {
 }
 
 export async function trackAdClick(id: string) {
-  const { data } = await supabase.from("paid_ads").select("clicks").eq("id", id).maybeSingle();
-  if (!data) return;
-  await supabase
-    .from("paid_ads")
-    .update({ clicks: (data.clicks || 0) + 1 })
-    .eq("id", id);
+  if (!id) return;
+  await supabase.rpc("track_ad_click", { p_ad_id: id });
 }

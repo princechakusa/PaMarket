@@ -1183,7 +1183,7 @@ function rentalCard(v,idx){
   const img=cover
     ?`<img class="lcard-img-inner" src="${cover.url}" alt="${title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="lcard-img-inner" style="color:${tc};font-weight:800;font-size:13px;text-align:center;padding:12px">${title||'Rental Vehicle'}</div>`;
-  return `<a class="lcard" href="rental-detail?id=${v.id}">
+  return `<a class="lcard" href="${PMUrls.rentalPath(v)}">
     <div class="lcard-img" style="background:${bg}">
       ${v.is_available?'<div class="lcard-badge badge-new">AVAILABLE</div>':''}
       ${img}
@@ -1236,7 +1236,7 @@ function renderAds(ads){
   var band=document.getElementById('adsBand'), wrap=document.getElementById('adCards');
   if(!wrap||!ads||!ads.length){if(band)band.style.display='none';return;}
   wrap.innerHTML=ads.map(function(a){
-    var img=a.image_url?'<img src="'+adEsc(a.image_url)+'" alt="'+adEsc(a.title||'Sponsored')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover">':'<div style="padding:16px;font-weight:700;color:#1A3A8F">'+adEsc(a.title||'Sponsored')+'</div>';
+    var img=a.image_url?'<img src="'+adEsc(a.image_url)+'" alt="'+adEsc(a.headline||'Sponsored')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover">':'<div style="padding:16px;font-weight:700;color:#1A3A8F">'+adEsc(a.headline||'Sponsored')+'</div>';
     return '<a class="ad-card" href="'+(a.link_url?adEsc(a.link_url):'#')+'" target="_blank" rel="noopener nofollow" data-ad-id="'+adEsc(a.id)+'" onclick="PM.trackAdEvent(this.getAttribute(\'data-ad-id\'),\'click\')" style="flex:0 0 auto;width:280px;height:140px;border-radius:14px;overflow:hidden;position:relative;display:block;background:#EEF2FB;border:1px solid var(--line)"><span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:6px;text-transform:uppercase;z-index:2">Sponsored</span>'+img+'</a>';
   }).join('');
   if(band)band.style.display='';

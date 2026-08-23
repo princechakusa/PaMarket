@@ -83,6 +83,63 @@ async function fetchAllRows(cfg, table, select, filter) {
   return rows;
 }
 
+// Keyset semantics: every page advances strictly by immutable UUID. Rows added
+// at/below the cursor wait for the next run; later rows may join this run; rows
+// made ineligible before their page is fetched may be absent. This avoids
+// offset-boundary shifts without claiming a cross-request database snapshot.
+async function fetchAllKeysetRpcRows(cfg, functionName) {
+  const headers = {
+    apikey: cfg.key,
+    Authorization: 'Bearer ' + cfg.key,
+    'Content-Type': 'application/json',
+  };
+  const pageSize = 1000;
+  let afterId = null;
+  const rows = [];
+  const seenIds = new Set();
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  for (;;) {
+    const res = await fetch(cfg.url + '/rest/v1/rpc/' + functionName, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ p_after_id: afterId, p_limit: pageSize }),
+    });
+    if (!res.ok) {
+      throw new Error('Sitemap authority failed: ' + res.status + ' ' + (await res.text()).slice(0, 200));
+    }
+    const page = await res.json();
+    if (!Array.isArray(page) || page.length > pageSize) {
+      throw new Error('Sitemap authority returned an invalid profile page');
+    }
+    const previousCursor = afterId;
+    let pageLastId = null;
+    for (let index = 0; index < page.length; index++) {
+      const row = page[index];
+      const keys = row && typeof row === 'object' && !Array.isArray(row) ? Object.keys(row).sort() : [];
+      if (keys.length !== 2 || keys[0] !== 'id' || keys[1] !== 'updated_at' ||
+          typeof row.id !== 'string' || !uuidPattern.test(row.id) ||
+          typeof row.updated_at !== 'string' || !Number.isFinite(Date.parse(row.updated_at))) {
+        throw new Error('Sitemap authority returned a malformed profile row');
+      }
+      if (seenIds.has(row.id)) {
+        throw new Error('Sitemap authority returned a duplicate profile ID: ' + row.id);
+      }
+      if (index === 0 && previousCursor !== null && row.id <= previousCursor) {
+        throw new Error('Sitemap authority cursor did not advance');
+      }
+      if (pageLastId !== null && row.id <= pageLastId) {
+        throw new Error('Sitemap authority returned profiles out of order');
+      }
+      seenIds.add(row.id);
+      rows.push(row);
+      pageLastId = row.id;
+    }
+    if (pageLastId !== null) afterId = pageLastId;
+    if (page.length < pageSize) break;
+  }
+  return rows;
+}
+
 async function fetchActiveListingIds(cfg) {
   // title + category needed to build the pre-rendered /l/<slug>-<id>.html URL.
   return fetchAllRows(cfg, 'listings', 'id,title,category,created_at', 'status=eq.active&order=created_at.desc');
@@ -94,7 +151,7 @@ async function fetchActiveRentalIds(cfg) {
 }
 
 async function fetchPublicProfileIds(cfg) {
-  return fetchAllRows(cfg, 'profiles_public', 'id,created_at', '');
+  return fetchAllKeysetRpcRows(cfg, 'list_public_indexable_profiles_page');
 }
 
 async function fetchActiveBusinessIds(cfg) {
@@ -117,6 +174,11 @@ function urlEntry(loc, lastmod, changefreq, priority) {
   if (priority) entry += '    <priority>' + priority + '</priority>\n';
   entry += '  </url>\n';
   return entry;
+}
+
+function profileUrlEntry(profile, today) {
+  const lastmod = profile.updated_at ? profile.updated_at.slice(0, 10) : today;
+  return urlEntry('/profile?id=' + profile.id, lastmod, 'monthly', '0.4');
 }
 
 async function main() {
@@ -149,8 +211,7 @@ async function main() {
   }
 
   for (const p of profiles) {
-    const lastmod = p.created_at ? p.created_at.slice(0, 10) : today;
-    xml += urlEntry('/profile?id=' + p.id, lastmod, 'monthly', '0.4');
+    xml += profileUrlEntry(p, today);
   }
 
   for (const b of businesses) {
@@ -176,7 +237,11 @@ async function main() {
   );
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
+
+module.exports = { fetchAllKeysetRpcRows, fetchPublicProfileIds, profileUrlEntry };

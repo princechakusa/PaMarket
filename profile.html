@@ -467,7 +467,7 @@ window.doSearch = window.doSearch || function(){
   </div>
 </a>
 
-<script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
+<script src="js/utils/urls.js"></script><script src="js/utils/format.js"></script><script src="js/utils/dates.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
@@ -494,7 +494,7 @@ function gcard(listing,idx){
       `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`+
       (isFeatured?'Extend':'Boost')+`</button>`
     :'';
-  return`<a class="gcard" href="detail?id=${listing.id}">
+  return`<a class="gcard" href="${PMUrls.listingPath(listing)}">
     ${featBadge}${boostBtn}
     <div class="gcard-img" style="background:${bg}">${img}</div>
     <div class="gcard-body">

@@ -4510,7 +4510,9 @@ async function toggleAd(id, active) {
   if(!requirePerm('ads.manage')) return;
   try {
     var on = active==='true'||active===true;
-    await updRow('paid_ads', id, {active:on});
+    var r = await sb.rpc('admin_set_paid_ad_active',{p_ad_id:id,p_active:on});
+    if(r.error) throw r.error;
+    if(!r.data || !r.data.length) throw new Error('Update matched 0 rows');
     var a=DATA.ads.find(function(x){return x.id===id;}); if(a) a.active=on;
     auditLog(on?'activate_ad':'pause_ad','paid_ads',id,{active:!on},{active:on},null);
     renderAds(); toast(on?'Ad activated':'Ad paused','info');
@@ -4524,7 +4526,7 @@ async function deactivateExpiredAds() {
   if(!ok) return;
   var done=0;
   for(var i=0;i<expired.length;i++){
-    try { await updRow('paid_ads', expired[i].id, {active:false}); expired[i].active=false; done++;
+    try { var r=await sb.rpc('admin_set_paid_ad_active',{p_ad_id:expired[i].id,p_active:false}); if(r.error) throw r.error; expired[i].active=false; done++;
       auditLog('expire_ad','paid_ads',expired[i].id,{active:true},{active:false},'past ends_at'); } catch(e){}
   }
   renderAds(); toast(done+' expired ad(s) deactivated');
@@ -4537,7 +4539,8 @@ async function deleteAd(id) {
   if(!(await mutationGuard('delete_ad'))) return;
   try {
     var a=DATA.ads.find(function(x){return x.id===id;});
-    await sb.from('paid_ads').delete().eq('id',id);
+    var r=await sb.rpc('admin_delete_paid_ad',{p_ad_id:id});
+    if(r.error) throw r.error;
     DATA.ads=DATA.ads.filter(function(x){return x.id!==id;});
     auditLog('delete_ad','paid_ads',id,{headline:a&&a.headline,business:a&&a.business_name},null,null);
     renderAds(); toast('Ad deleted');
@@ -4775,15 +4778,11 @@ async function saveNewAd() {
     if(startValue && endValue && new Date(endValue)<=new Date(startValue)){ toast('End date must be after the start date','error'); return; }
     var isScheduled = startValue && new Date(startValue)>new Date();
     var rec = {
-      id: crypto.randomUUID ? crypto.randomUUID() : Date.now()+'',
       business_name: biz,
       advertiser_id: advertId||null,
       headline: head,
-      // The public website (pamarketzw.com) renders paid_ads by `title` and
-      // filters by `placement`, so persist both — otherwise ads created here
-      // show on the website with no headline and can't be targeted to Home.
-      title: head,
-      placement: placement,
+      // The live schema exposes headline + target_section to public clients.
+      target_section: placement,
       tagline: (document.getElementById('adTag')||{}).value.trim(),
       image_url: (imageField||{}).value||null,
       bg_color: bgColor,
@@ -4795,11 +4794,19 @@ async function saveNewAd() {
       ends_at: endValue,
       price_paid: parseFloat((document.getElementById('adPrice')||{}).value)||0,
       status: isScheduled ? 'scheduled' : 'active',
-      active: !isScheduled, impressions: 0, clicks: 0,
-      created_at: new Date().toISOString()
+      active: !isScheduled, impressions: 0, clicks: 0
     };
-    var r = await sb.from('paid_ads').insert(rec);
+    var r = await sb.rpc('admin_create_paid_ad',{
+      p_business_name:rec.business_name,p_advertiser_id:rec.advertiser_id,
+      p_headline:rec.headline,p_tagline:rec.tagline,p_image_url:rec.image_url,
+      p_bg_color:rec.bg_color,p_type:rec.type,p_target_section:rec.target_section,
+      p_target_cat:rec.target_cat,p_listing_id:rec.listing_id,p_link_url:rec.link_url,
+      p_starts_at:rec.starts_at,p_ends_at:rec.ends_at,p_price_paid:rec.price_paid
+    });
     if(r.error) throw r.error;
+    var created=r.data&&r.data[0];
+    if(!created||!created.id) throw new Error('Ad creation returned no row');
+    rec=Object.assign(rec,created);
     DATA.ads.unshift(rec);
     auditLog('create_ad','paid_ads',rec.id,null,{headline:rec.headline,business:rec.business_name,type:rec.type,price:rec.price_paid},null);
     closeModal(); renderAds(); toast('Ad created');
@@ -8316,7 +8323,7 @@ async function retryScheduledNotification(id){
 }
 async function pauseScheduledAd(id){
   if(!requirePerm('ads.manage')&&!requirePerm('*')) return;
-  var r=await sb.from('paid_ads').update({status:'paused',active:false}).eq('id',id).eq('status','scheduled');
+  var r=await sb.rpc('admin_pause_scheduled_paid_ad',{p_ad_id:id});
   if(r.error){toast('Error: '+r.error.message,'error');return;} auditLog('pause_scheduled_ad','paid_ads',id,null,{status:'paused'},null); toast('Scheduled ad paused'); loadAutomation().then(renderAutomation);
 }
 async function logJobRun(job, ok, detail, rows){
@@ -8334,8 +8341,9 @@ async function runUnbanExpired(){
 async function runExpireAdsAuto(){
   if(!requirePerm('ads.manage')&&!requirePerm('*')) return;
   try {
-    var r = await sb.from('paid_ads').update({active:false}).eq('active',true).lt('ends_at',new Date().toISOString()).select('id');
-    var n=(r.data||[]).length; auditLog('run_expire_ads','paid_ads',null,null,{count:n},'manual'); logJobRun('expire_ads',true,'manual',n);
+    var r = await sb.rpc('admin_expire_due_paid_ads');
+    if(r.error) throw r.error;
+    var n=Number(r.data||0); auditLog('run_expire_ads','paid_ads',null,null,{count:n},'manual'); logJobRun('expire_ads',true,'manual',n);
     toast(n+' expired ad(s) deactivated');
   } catch(e){ toast('Error: '+e.message,'error'); logJobRun('expire_ads',false,e.message); }
 }

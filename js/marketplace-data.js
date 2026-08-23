@@ -41,8 +41,8 @@
 
   // Generic exact-count helper for real homepage/trust stats — table plus a
   // raw PostgREST filter string, e.g. fetchExactCount('businesses','status=eq.active').
-  function fetchExactCount(table, filter) {
-    var qp = [filter, 'select=id'].filter(Boolean);
+  function fetchExactCount(table, filter, column) {
+    var qp = [filter, 'select=' + (column || 'id'), 'limit=0'].filter(Boolean);
     return fetch(SB_URL + '/rest/v1/' + table + '?' + qp.join('&'), {
       headers: {
         apikey: SB_KEY,
@@ -133,8 +133,8 @@
   function fetchActiveAds(opts) {
     opts = opts || {};
     var qp = ['active=eq.true'];
-    if (opts.placement) qp.push('placement=eq.' + esc(opts.placement));
-    qp.push('select=id,title,image_url,link_url,placement,starts_at,ends_at');
+    if (opts.placement) qp.push('target_section=eq.' + esc(opts.placement));
+    qp.push('select=id,headline,image_url,link_url,target_section,starts_at,ends_at');
     qp.push('order=created_at.desc');
     qp.push('limit=' + (opts.limit || 10));
     return pgFetch('paid_ads?' + qp.join('&')).then(function (rows) {

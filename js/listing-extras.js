@@ -28,7 +28,7 @@
     var img = r.photo
       ? '<img src="' + escHtml(r.photo) + '" alt="' + escHtml(r.title) + '" loading="lazy">'
       : '<div class="gcard-img-ph" style="color:' + tc + '">' + escHtml(String(r.title || '').split(' ').slice(0, 3).join(' ')) + '</div>';
-    return '<a class="gcard" href="detail?id=' + escHtml(r.id) + '">' +
+    return '<a class="gcard" href="' + escHtml(global.PMSchema.listingPath(r)) + '">' +
       '<div class="gcard-img" style="background:' + bg + '">' + img + '</div>' +
       '<div class="gcard-body">' +
       '<div class="gcard-price">' + money(r.price, r.currency) + '</div>' +

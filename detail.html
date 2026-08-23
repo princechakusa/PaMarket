@@ -717,7 +717,7 @@ function simCard(l,idx){
   const loc=[l.city,l.province].filter(Boolean).join(', ')||'Zimbabwe';
   const img=photo?`<img src="${photo}" alt="${l.title.replace(/"/g,'&quot;')}" loading="lazy">`
     :`<div class="gcard-img-ph" style="color:${tc}">${l.title.split(' ').slice(0,3).join('<br>')}</div>`;
-  return`<a class="gcard" href="detail?id=${l.id}">
+  return`<a class="gcard" href="${PMSchema.listingPath(l)}">
     <div class="gcard-img" style="background:${bg}">${img}</div>
     <div class="gcard-body">
       <div class="gcard-price">${PM.money(l.price,l.currency)}</div>
@@ -727,7 +727,7 @@ function simCard(l,idx){
   </a>`;
 }
 
-// Flip the page to noindex,nofollow so search engines don't index an
+// Flip to noindex,nofollow so search engines don't index an
 // unavailable/moderated listing. (Backend RLS is the real gate; this is the
 // SEO signal so old indexed URLs get dropped and never re-indexed.)
 function setNoIndex(){

@@ -300,7 +300,7 @@ window.doSearch = window.doSearch || function(){
   </a>
 </div>
 
-<script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
+<script src="js/utils/urls.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/listing-schema.js"></script>
@@ -321,7 +321,7 @@ function prodCard(l){
   var media = photo
     ? '<img class="pm-card-img-el" src="'+esc(photo)+'" alt="'+esc(l.title)+'" loading="lazy" decoding="async">'
     : '<div class="pm-card-ph" style="color:var(--navy)">'+esc(l.title.split(' ').slice(0,3).join(' '))+'</div>';
-  return '<a class="pm-card" href="detail?id='+esc(l.id)+'">'+
+  return '<a class="pm-card" href="'+esc(PMUrls.listingPath(l))+'">'+
     '<div class="pm-card-img" style="background:var(--paper)">'+media+'</div>'+
     '<div class="pm-card-body">'+
       '<div class="pm-card-price">'+esc(PM.money(l.price,l.currency))+'</div>'+
@@ -540,7 +540,7 @@ function init(){
     Promise.all([
       PM.fetchListings({ businessId: id, limit: 12 }).catch(function(){ return []; }),
       PM.fetchSellerReviews(b.owner_user_id, 20),
-      PM.fetchExactCount('business_followers', 'business_id=eq.' + id).catch(function(){ return 0; }),
+      PM.fetchExactCount('business_followers', 'business_id=eq.' + id, 'user_id').catch(function(){ return 0; }),
       PM.fetchExactCount('listings', 'business_id=eq.' + id + '&status=eq.active').catch(function(){ return 0; }),
       PM.fetchBusinesses({ limit: 6 }).catch(function(){ return []; })
     ]).then(function(res){

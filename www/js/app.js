@@ -1676,12 +1676,12 @@ window.H = {
   },
 
   trackAdImpression(id) {
-    if(!id||!window.supabase||typeof window.supabase.from!=='function') return;
+    if(!id||!window.supabase||typeof window.supabase.rpc!=='function') return;
     const a = (H.state.paidAds||[]).find(x=>String(x.id)===String(id));
     if(!a) { console.warn('[Ads] trackAdImpression: ad '+id+' not found in paidAds'); return; }
     a.impressions = (a.impressions||0)+1;
     console.log('[Ads] impression recorded: '+id+' ('+a.headline+') total='+a.impressions);
-    window.supabase.from('paid_ads').update({impressions:a.impressions}).eq('id',id)
+    window.supabase.rpc('track_ad_impression',{p_ad_id:id})
       .then(function(r){ if(r&&r.error) console.error('[Ads] impression DB write failed:', r.error.message); });
   },
 
@@ -1690,8 +1690,8 @@ window.H = {
     if(!a) { console.warn('[Ads] trackAdClick: ad '+id+' not found in paidAds'); return; }
     a.clicks=(a.clicks||0)+1;
     console.log('[Ads] click recorded: '+id+' ('+a.headline+') total='+a.clicks+' linkUrl='+a.linkUrl);
-    if(window.supabase&&typeof window.supabase.from==='function'){
-      window.supabase.from('paid_ads').update({clicks:a.clicks}).eq('id',id)
+    if(window.supabase&&typeof window.supabase.rpc==='function'){
+      window.supabase.rpc('track_ad_click',{p_ad_id:id})
         .then(function(r){ if(r&&r.error) console.error('[Ads] click DB write failed:', r.error.message); });
     }
     H._showAdDetail(a);
