@@ -4,7 +4,6 @@
   "debt": {
     "account-settings.html": {"bytes":82666,"lines":838,"inlineJs":39569,"inlineCss":11393},
     "auth.html": {"bytes":42169,"lines":852,"inlineJs":29716,"inlineCss":9269},
-    "browse.html": {"bytes":62491,"lines":1050,"inlineJs":30665,"inlineCss":6616},
     "business.html": {"bytes":37978,"lines":581,"inlineJs":16305,"inlineCss":4604},
     "chats.html": {"bytes":33915,"lines":337,"inlineJs":883,"inlineCss":14337},
     "dashboard.html": {"bytes":33617,"lines":521,"inlineJs":9959,"inlineCss":7103},

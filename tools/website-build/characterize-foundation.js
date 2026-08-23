@@ -16,6 +16,7 @@ const {characterizeWebP1}=require('./characterize-web-p1.js');
 const {characterizeSitemapProfileAuthority}=require('./characterize-sitemap-profile-authority.js');
 const {characterizeSitemapKeysetAuthority}=require('./characterize-sitemap-keyset-authority.js');
 const {characterizePaidAdsAuthority}=require('./characterize-paid-ads-authority.js');
+const {characterizeBrowsePage}=require('./characterize-browse-page.js');
 
 const listing={id:'123',title:'Café Phone — New'};
 const business={id:'456',name:"Sam's Shop"};
@@ -67,6 +68,7 @@ const webP1=await characterizeWebP1();
 const sitemapAuthority=characterizeSitemapProfileAuthority();
 const sitemapProfiles=await characterizeSitemapKeysetAuthority();
 const paidAdsAuthority=characterizePaidAdsAuthority();
-console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions+webP1.assertions+sitemapAuthority.assertions+sitemapProfiles.assertions+paidAdsAuthority.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,webP1Assertions:webP1.assertions,sitemapAuthorityAssertions:sitemapAuthority.assertions,sitemapKeysetAssertions:sitemapProfiles.assertions,paidAdsAuthorityAssertions:paidAdsAuthority.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
+const browsePage=await characterizeBrowsePage();
+console.log(JSON.stringify({ok:true,tests:37+shellAssertions+marketplaceReads.assertions+webP1.assertions+sitemapAuthority.assertions+sitemapProfiles.assertions+paidAdsAuthority.assertions+browsePage.assertions,shellAssertions,marketplaceReadAssertions:marketplaceReads.assertions,webP1Assertions:webP1.assertions,sitemapAuthorityAssertions:sitemapAuthority.assertions,sitemapKeysetAssertions:sitemapProfiles.assertions,paidAdsAuthorityAssertions:paidAdsAuthority.assertions,browsePageAssertions:browsePage.assertions,canonicalRoutes:['/l/<slug-id>','/b/<slug-id>','/r/<slug-id>'],config:'public-only',shell:'build-time'},null,2));
 }
 main().catch(function(error){console.error(error);process.exit(1);});
