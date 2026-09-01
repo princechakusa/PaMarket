@@ -123,10 +123,8 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 .foot-bottom-links a{color:#4A6490;transition:color .15s}.foot-bottom-links a:hover{color:#fff}
 .play-badge{height:54px;display:block;transition:opacity .15s}
 .play-badge:hover{opacity:.85}
-.play-badge-sm{height:40px;display:block;transition:opacity .15s}
-.play-badge-sm:hover{opacity:.85}
-.appstore-badge-sm{height:40px;width:auto;display:block;transition:opacity .15s}
-.appstore-badge-sm:hover{opacity:.85}
+.play-badge-sm,.appstore-badge-sm{height:40px;width:120px;object-fit:contain;display:block;transition:opacity .15s}
+.play-badge-sm:hover,.appstore-badge-sm:hover{opacity:.85}
 
 /* ── WhatsApp float ───────────────────────────────────────── */
 .wa{position:fixed;right:22px;bottom:22px;z-index:99}
