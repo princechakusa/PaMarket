@@ -112,7 +112,7 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 .foot-contact{margin-top:20px;font-size:13px;display:flex;flex-direction:column;gap:8px}
 .foot-contact a{color:#6A8AC8;transition:color .15s}
 .foot-contact a:hover{color:#fff}
-.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.foot-store{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;align-items:center}
 .foot-store-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;transition:background .15s;text-decoration:none}
 .foot-store-btn:hover{background:rgba(255,255,255,.14)}
 .foot-col h5{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:16px}
@@ -125,6 +125,8 @@ footer{background:var(--navy-deep);color:#6A8AC8}
 .play-badge:hover{opacity:.85}
 .play-badge-sm{height:40px;display:block;transition:opacity .15s}
 .play-badge-sm:hover{opacity:.85}
+.appstore-badge-sm{height:40px;width:auto;display:block;transition:opacity .15s}
+.appstore-badge-sm:hover{opacity:.85}
 
 /* ── WhatsApp float ───────────────────────────────────────── */
 .wa{position:fixed;right:22px;bottom:22px;z-index:99}
