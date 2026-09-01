@@ -2133,8 +2133,14 @@ async function doBizVerify(id, level) {
   try {
     var b = DATA.businesses.find(function(x){return x.id===id;});
     var prev = b ? (b.verification_level||0) : null;
-    await updRow('businesses', id, {verification_level:level, verification_pending:false});
-    if(b) { b.verification_level = level; b.verification_pending = false; }
+    // businesses has no verification_pending column (that flag only exists
+    // on profiles, for user identity verification) -- "pending" for a
+    // business lives in business_verifications.status instead. This used
+    // to also try writing verification_pending here, which PostgREST
+    // rejected outright ("Could not find the 'verification_pending' column
+    // of 'businesses'"), so the level change never saved.
+    await updRow('businesses', id, {verification_level:level});
+    if(b) { b.verification_level = level; }
     auditLog('set_business_verification','businesses',id,{level:prev},{level:level},null);
     // Notify the owner — in-app AND phone push — on a genuine approval/
     // upgrade (level increased), not on a downgrade or reset to Unverified.
