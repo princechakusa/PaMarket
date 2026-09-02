@@ -26,7 +26,7 @@
      completeness but browsers ignore it in a <meta> tag (only the HTTP
      header form is honoured) — see the frame-busting script below for the
      actual clickjacking defense on this host. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co https://*.supabase.co https://api.qrserver.com https://*.r2.cloudflarestorage.com https://pub-*.r2.dev https://*.pamarketzw.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://gxgytumhknmnwspxjzxw.supabase.co https://*.supabase.co https://api.qrserver.com https://*.r2.cloudflarestorage.com https://pub-*.r2.dev https://*.pamarketzw.com; frame-src https://www.youtube.com https://player.vimeo.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script>
