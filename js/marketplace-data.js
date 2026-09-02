@@ -1,3 +1,65 @@
+// Broken listing-photo fallback.
+// Some listing photos (mostly iPhone HEIC files uploaded from the app) are
+// stored with a .jpg name but real HEIC bytes, which Chrome / Firefox /
+// Android WebView cannot decode. Instead of the browser's broken-image glyph
+// and a dead gallery, this: (a) drops any failed <img> to a neutral tile, and
+// (b) when the failed image is the detail-gallery main photo, swaps in the
+// next thumbnail that still loads. The real fix is server-side conversion of
+// those files; this only keeps the page usable in the meantime. Loads on every
+// page that already pulls in the marketplace data layer (detail, browse,
+// prerendered /l /b /r pages, profile, dashboard, …).
+(function () {
+  if (window.__pmImgFallback) return;
+  window.__pmImgFallback = true;
+
+  function nextGalleryPhoto(img) {
+    var main = img.closest && img.closest('.gallery-main');
+    if (!main) return false;
+    var gallery = main.parentElement;
+    var thumbs = gallery ? gallery.querySelectorAll('.gallery-thumbs img') : [];
+    var tried = (img.getAttribute('data-tried') || '').split('|');
+    tried.push(img.currentSrc || img.src);
+    for (var i = 0; i < thumbs.length; i++) {
+      var cand = thumbs[i].getAttribute('src');
+      if (cand && tried.indexOf(cand) === -1 && !thumbs[i].dataset.imgBroken) {
+        img.setAttribute('data-tried', tried.join('|'));
+        img.classList.remove('img-broken');
+        img.removeAttribute('data-img-broken');
+        img.src = cand;
+        return true;
+      }
+    }
+    // Nothing left that loads — leave a readable placeholder in the frame.
+    main.innerHTML = '<div class="gallery-main-ph">Photos could not be displayed on this device</div>';
+    return true;
+  }
+
+  function markBroken(img) {
+    if (!img || img.dataset.imgBroken) return;
+    if (nextGalleryPhoto(img)) return;
+    img.dataset.imgBroken = '1';
+    img.classList.add('img-broken');
+  }
+
+  // `error` does not bubble, so listen in the capture phase.
+  document.addEventListener(
+    'error',
+    function (e) {
+      var t = e.target;
+      if (t && t.tagName === 'IMG') markBroken(t);
+    },
+    true
+  );
+
+  // Images that already failed before this script ran.
+  document.addEventListener('DOMContentLoaded', function () {
+    var imgs = document.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      if (imgs[i].complete && imgs[i].naturalWidth === 0 && imgs[i].getAttribute('src')) markBroken(imgs[i]);
+    }
+  });
+})();
+
 // Public, read-only PaMarket marketplace data layer.
 // Talks directly to Supabase PostgREST with the anon key — same pattern as delete-account.html.
 // No supabase-js needed for simple selects/filters.

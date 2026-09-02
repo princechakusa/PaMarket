@@ -30,6 +30,9 @@ body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',s
 h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;height:auto;display:block}
+/* Broken/undecodable listing photo (see js/marketplace-data.js image fallback) —
+   show a plain neutral tile instead of the browser's broken-image glyph. */
+img.img-broken{font-size:0;color:transparent;min-height:60px;background:var(--paper,#F7F4EE);object-fit:contain}
 button{font-family:inherit;cursor:pointer}
 .hidden{display:none!important}
 /* Shared page container */
