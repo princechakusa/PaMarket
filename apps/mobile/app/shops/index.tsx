@@ -106,7 +106,15 @@ export default function ShopsDirectoryScreen() {
     if (!error) {
       const page = (data as Business[]) ?? [];
       pageRef.current = nextPage;
-      setShops((prev) => [...prev, ...page]);
+      // Same offset-pagination-under-concurrent-inserts guard as
+      // app/(tabs)/search.tsx's loadMore — a new/newly-verified shop
+      // between page loads shifts the sorted ordering, so the next page can
+      // re-include an id already on screen. Duplicate ids in the FlatList's
+      // data (its keyExtractor) crash Fabric's view mounting on Android.
+      setShops((prev) => {
+        const existingIds = new Set(prev.map((s) => s.id));
+        return [...prev, ...page.filter((s) => !existingIds.has(s.id))];
+      });
       setHasMore(page.length === PAGE_SIZE);
       loadProductCounts(page);
     }

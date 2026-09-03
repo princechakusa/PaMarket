@@ -265,7 +265,20 @@ export default function SearchScreen() {
     if (!queryError) {
       const page = (data as Listing[]) ?? [];
       pageRef.current = nextPage;
-      setListings((prev) => [...prev, ...page]);
+      // Offset pagination (.range()) is not stable under concurrent inserts —
+      // a new listing posted by anyone between page loads shifts the whole
+      // created_at-sorted ordering down, so the next page can re-include an
+      // id already in `prev`. Appending that unfiltered fed the FlatList two
+      // array entries with the same `id` (its keyExtractor), which crashed
+      // Fabric's view mounting on Android in production (Sentry:
+      // "addViewAt: failed to insert view... " / "child already has a
+      // parent" — two elements with an identical key confuse the native
+      // view reconciliation). Filtering out ids already on screen is the
+      // fix; the underlying query is unchanged.
+      setListings((prev) => {
+        const existingIds = new Set(prev.map((l) => l.id));
+        return [...prev, ...page.filter((l) => !existingIds.has(l.id))];
+      });
       setHasMore(page.length === PAGE_SIZE);
     }
     setIsLoadingMore(false);

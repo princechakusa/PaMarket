@@ -159,7 +159,14 @@ export default function HireTalentScreen() {
     if (!error) {
       const page = (data as unknown as CandidateProfileRow[]) ?? [];
       pageRef.current = nextPage;
-      setCandidates((prev) => [...prev, ...page]);
+      // Same offset-pagination-under-concurrent-inserts guard as
+      // app/(tabs)/search.tsx's loadMore — see that file for the full
+      // explanation. Duplicate ids in the FlatList's data (its
+      // keyExtractor) crash Fabric's view mounting on Android.
+      setCandidates((prev) => {
+        const existingIds = new Set(prev.map((c) => c.id));
+        return [...prev, ...page.filter((c) => !existingIds.has(c.id))];
+      });
       setHasMore(page.length === PAGE_SIZE);
       loadUnlocked(page);
     }

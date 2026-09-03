@@ -129,7 +129,14 @@ export default function JobsListScreen() {
     if (!error) {
       const page = (data as JobListing[]) ?? [];
       pageRef.current = nextPage;
-      setJobs((prev) => [...prev, ...page]);
+      // Same offset-pagination-under-concurrent-inserts guard as
+      // app/(tabs)/search.tsx's loadMore — see that file for the full
+      // explanation. Duplicate ids in the FlatList's data (its
+      // keyExtractor) crash Fabric's view mounting on Android.
+      setJobs((prev) => {
+        const existingIds = new Set(prev.map((j) => j.id));
+        return [...prev, ...page.filter((j) => !existingIds.has(j.id))];
+      });
       setHasMore(page.length === PAGE_SIZE);
     }
     setIsLoadingMore(false);
