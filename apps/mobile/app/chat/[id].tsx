@@ -42,6 +42,7 @@ import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Avatar, ErrorState, GlassBackButton, ListSkeleton, toast } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { notifyPositiveAction } from "../../lib/store-review";
 
 const EDIT_WINDOW_MS = 7 * 60 * 1000;
 
@@ -654,6 +655,8 @@ export default function ChatScreen() {
       );
       return;
     }
+
+    notifyPositiveAction();
 
     if (rentalListingId && !rentalLeadCapturedRef.current) {
       rentalLeadCapturedRef.current = true;

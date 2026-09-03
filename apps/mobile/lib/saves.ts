@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { publicListingExpiryFilter } from "./listings";
+import { notifyPositiveAction } from "./store-review";
 
 // Real backend-backed saved listings (table: user_saves — see
 // supabase/schema/user_saves.sql). Replaces the earlier client-only stub so
@@ -52,6 +53,11 @@ export async function unsaveListing(userId: string, listingId: string) {
 }
 
 export async function toggleSave(userId: string, listingId: string, currentlySaved: boolean) {
-  if (currentlySaved) await unsaveListing(userId, listingId);
-  else await saveListing(userId, listingId);
+  if (currentlySaved) {
+    await unsaveListing(userId, listingId);
+  } else {
+    await saveListing(userId, listingId);
+    // Only the save direction counts as a positive signal, not un-saving.
+    notifyPositiveAction();
+  }
 }

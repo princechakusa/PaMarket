@@ -11,7 +11,6 @@ import { AuthProvider, useAuth } from "../lib/auth";
 import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
-import { RatingPromptModal } from "../components/RatingPromptModal";
 import { initTelemetry } from "../lib/telemetry";
 import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications, saveRotatedPushToken } from "../lib/push";
@@ -313,7 +312,6 @@ function RootLayout() {
           <ThemedStatusBar />
           <ToastHost />
           <AnnouncementModal />
-          <RatingPromptModal />
           <RootNavigator />
         </AuthProvider>
       </ThemeProvider>

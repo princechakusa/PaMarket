@@ -40,6 +40,7 @@ import {
 } from "../../lib/messages";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
+import { notifyListingViewed } from "../../lib/store-review";
 import { REPORT_REASONS, friendlyError } from "../../lib/safety";
 import { StarRow } from "../../components/StarRow";
 import { ListingCard } from "../../components/ListingCard";
@@ -342,6 +343,7 @@ export default function ListingDetailScreen() {
     }
     const found = listingData as Listing;
     setListing(found);
+    notifyListingViewed();
 
     const sellerId = found.seller_id;
     const [profileRes, ratingSummaryRes, similarRes] = await Promise.all([

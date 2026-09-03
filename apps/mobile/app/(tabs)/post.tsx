@@ -20,6 +20,7 @@ import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { friendlyError } from "../../lib/safety";
+import { notifyPositiveAction } from "../../lib/store-review";
 import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
 import { formatPrice } from "../../lib/listings";
 import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "../../lib/listing-form";
@@ -321,6 +322,7 @@ export default function PostScreen() {
       if (insertError) throw insertError;
 
       setSubmitStatus("Ad posted successfully.");
+      notifyPositiveAction();
       setState(INITIAL_STATE);
       if (params.businessId) router.replace({ pathname: "/business-listings/[id]", params: { id: params.businessId } });
       else router.replace("/(tabs)");
