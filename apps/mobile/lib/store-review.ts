@@ -1,18 +1,14 @@
-// Native app-store review prompt — replaces the old custom star-rating
-// modal (components/RatingPromptModal.tsx + the old lib/rating-prompt.ts),
-// which just deep-linked straight to the store page and fired on a timer at
-// app launch. This uses the real native review sheet: Google Play's In-App
-// Review API on Android, Apple's StoreKit SKStoreReviewController on iOS —
-// via expo-store-review, which wraps both. Falls back to the store listing
-// URL only when the native sheet genuinely isn't available (old Android,
-// TestFlight build, web).
+// Native app-store review prompt. Triggers the real native review sheet:
+// Google Play's In-App Review API on Android, Apple's StoreKit
+// SKStoreReviewController on iOS — via expo-store-review, which wraps both.
+// Falls back to the store listing URL only when the native sheet genuinely
+// isn't available (old Android, TestFlight build, web).
 //
-// Storage: plain expo-file-system JSON, NOT expo-secure-store. This app has
-// had prior SecureStore/Keychain issues, and none of this data (a
-// timestamp, two small counters) is sensitive — a review-state read/write
-// failure must never be able to block launch, a listing view, a save, a
-// post, or sending a message. Every read/write here is try/caught and
-// resolves to a safe default on failure (see readState/writeState).
+// Storage: plain expo-file-system JSON. None of this data (a timestamp, two
+// small counters) is sensitive — a review-state read/write failure must
+// never be able to block launch, a listing view, a save, a post, or sending
+// a message. Every read/write here is try/caught and resolves to a safe
+// default on failure (see readState/writeState).
 //
 // Design:
 // - Never triggered on app launch/login/signup/payment/error screens — it's
