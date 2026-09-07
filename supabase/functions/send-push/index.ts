@@ -125,12 +125,12 @@ function uint8ToB64url(arr: Uint8Array): string {
   return btoa(String.fromCharCode(...arr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-async function buildVapidHeader(endpoint: string, vapidPublic: string, vapidPrivate: string): Promise<string> {
+async function buildVapidHeader(endpoint: string, vapidPublic: string, vapidPrivate: string, contactEmail: string): Promise<string> {
   const audience = new URL(endpoint).origin;
   const now = Math.floor(Date.now() / 1000);
   const expiry = now + 12 * 3600;
   const header = { typ: 'JWT', alg: 'ES256' };
-  const claims = { aud: audience, exp: expiry, sub: 'mailto:admin@pamarket.co.zw' };
+  const claims = { aud: audience, exp: expiry, sub: 'mailto:' + contactEmail };
   const enc = (o: object) => uint8ToB64url(new TextEncoder().encode(JSON.stringify(o)));
   const unsignedToken = enc(header) + '.' + enc(claims);
   const privKey = await crypto.subtle.importKey(
@@ -206,7 +206,7 @@ async function encryptWebPush(plaintext: string, subKeys: { p256dh: string; auth
   return { ciphertext, salt, serverPublicKey: serverPublicKeyRaw };
 }
 
-async function sendWebPush(subscription: { endpoint: string; keys: { p256dh: string; auth: string } }, payload: string, vapidPublic: string, vapidPrivate: string): Promise<boolean> {
+async function sendWebPush(subscription: { endpoint: string; keys: { p256dh: string; auth: string } }, payload: string, vapidPublic: string, vapidPrivate: string, vapidContactEmail: string): Promise<boolean> {
   try {
     const { ciphertext, salt, serverPublicKey } = await encryptWebPush(payload, subscription.keys);
 
@@ -223,7 +223,7 @@ async function sendWebPush(subscription: { endpoint: string; keys: { p256dh: str
     body.set(header);
     body.set(new Uint8Array(ciphertext), header.length);
 
-    const authorization = await buildVapidHeader(subscription.endpoint, vapidPublic, vapidPrivate);
+    const authorization = await buildVapidHeader(subscription.endpoint, vapidPublic, vapidPrivate, vapidContactEmail);
 
     const res = await fetch(subscription.endpoint, {
       method: 'POST',
@@ -471,6 +471,11 @@ Deno.serve(async (req) => {
     // ── Web Push (VAPID push_subscription) ─────────────────
     const vapidPublic  = Deno.env.get('VAPID_PUBLIC_KEY');
     const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY');
+    // Contact identity required by the Web Push protocol (RFC 8292) so a
+    // push service can reach the app owner if needed -- not a secret, but
+    // still sourced from config rather than hardcoded, same as the two
+    // keys above, so updating it never needs a code change/redeploy.
+    const vapidContactEmail = Deno.env.get('VAPID_CONTACT_EMAIL') || 'admin@pamarketzw.com';
     const withWebPush  = profiles.filter((p) => p['push_subscription']);
     let webPushSent = 0, webPushFailed = 0;
 
@@ -481,7 +486,7 @@ Deno.serve(async (req) => {
           const sub = typeof p['push_subscription'] === 'string'
             ? JSON.parse(p['push_subscription'])
             : p['push_subscription'];
-          const ok = await sendWebPush(sub, pushPayload, vapidPublic, vapidPrivate);
+          const ok = await sendWebPush(sub, pushPayload, vapidPublic, vapidPrivate, vapidContactEmail);
           if (ok) {
             webPushSent++;
             deliveredUserIds.add(p['id'] as string);
