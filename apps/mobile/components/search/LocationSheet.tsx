@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Svg, { Circle, Line, Path } from "react-native-svg";
-import { PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -51,12 +51,16 @@ export function LocationSheet({
   const styles = useThemedStyles(buildStyles);
   const themeColor = useThemedStyles((c) => c);
   const [query, setQuery] = useState("");
+  // Stage 5: bundled provinces/cities shown immediately, silently
+  // upgraded in the background — the already-selected location (if any)
+  // stays searchable even if since deactivated.
+  const { provinces, citiesByProvince } = useTaxonomy({ city: selected });
 
   const rows = useMemo<Row[]>(() => {
     const q = query.trim().toLowerCase();
     const out: Row[] = [];
-    for (const province of PROVINCES) {
-      const cities = CITIES_BY_PROVINCE[province] ?? [];
+    for (const province of provinces) {
+      const cities = citiesByProvince[province] ?? [];
       const matchingCities = q ? cities.filter((c) => c.toLowerCase().includes(q)) : cities;
       const provinceMatches = !q || province.toLowerCase().includes(q);
       if (!matchingCities.length && !provinceMatches) continue;
@@ -65,7 +69,7 @@ export function LocationSheet({
       for (const city of list) out.push({ kind: "city", label: city, province });
     }
     return out;
-  }, [query]);
+  }, [query, provinces, citiesByProvince]);
 
   function pick(location: string) {
     onSelect(location);

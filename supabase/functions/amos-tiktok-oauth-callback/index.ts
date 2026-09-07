@@ -20,7 +20,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // rather than an attacker hitting this URL directly with a guessed or
 // replayed code.
 
-const CALLBACK_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co/functions/v1/amos-tiktok-oauth-callback'
+// Derived from the project's own SUPABASE_URL (always provided to Edge
+// Functions automatically) rather than a hardcoded literal — resolves to
+// the exact same URL for this project, so nothing changes for TikTok's
+// registered redirect_uri (see the comment above: it must still match
+// amos-tiktok-oauth-start's CALLBACK_URL exactly, character for character).
+// Falls back to the project's known URL in the (never-expected) case
+// SUPABASE_URL isn't set — Supabase's runtime always provides it, but this
+// keeps behaviour identical to before rather than producing a broken
+// "undefined/..." URL if that assumption is ever wrong.
+const CALLBACK_URL = `${Deno.env.get('SUPABASE_URL') || 'https://gxgytumhknmnwspxjzxw.supabase.co'}/functions/v1/amos-tiktok-oauth-callback`
 
 Deno.serve(async (req) => {
   const url = new URL(req.url)

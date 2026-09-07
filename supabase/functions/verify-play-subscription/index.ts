@@ -37,30 +37,17 @@
 import { SUBSCRIPTION_PRODUCTS, RECRUITER_SUBSCRIPTION_PRODUCTS, getProductStatus } from '../_shared/billing-products.ts';
 import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts';
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  // capacitor.config.json sets androidScheme:"https" with no custom hostname,
-  // so the Android app's WebView actually serves the app from
-  // https://localhost (iOS: capacitor://localhost) — this function is called
-  // directly from the app (billing.js) to verify Play subscriptions, so
-  // without these origins listed here every verification request was
-  // rejected by CORS before this function's logic ever ran, surfacing only
-  // as a generic network failure in-app.
-  'https://localhost',
-  'capacitor://localhost',
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
-]);
-
+// Migrated to the shared allowlist (Stage 6). Native WebView origins
+// (https://localhost, capacitor://localhost) preserved via
+// allowNativeAppOrigins — capacitor.config.json sets androidScheme:"https"
+// with no custom hostname, so the app's WebView actually serves from
+// https://localhost (iOS: capacitor://localhost); without these,
+// verification was rejected by CORS before this function's logic ever ran.
+// Local dev origins are now only included when the ALLOW_DEV_CORS_ORIGINS
+// secret is explicitly set to "true".
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts';
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? '';
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com';
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Vary': 'Origin',
-  };
+  return sharedCorsHeaders(req, { allowNativeAppOrigins: true });
 }
 
 let _tokenCache: { value: string; exp: number } | null = null;

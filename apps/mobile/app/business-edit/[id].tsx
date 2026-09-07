@@ -18,7 +18,7 @@ import { useAuth } from "../../lib/auth";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { toast } from "../../components/ui/Toast";
 import { ProvinceCityFields } from "../../components/ui";
-import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
+import { useTaxonomy, withSelectedValue } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import type { ColorPalette } from "../../lib/theme";
@@ -51,6 +51,14 @@ export default function BusinessEditScreen() {
   const [cover, setCover] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  // Stage 5: keeps this business's existing category selections/province/
+  // city valid even if since deactivated — editing must never fail
+  // validation over a value the record itself already has.
+  const { categories: baseTaxCategories, provinces, citiesByProvince } = useTaxonomy({ province, city });
+  const taxCategories = categories.reduce(
+    (list, id) => withSelectedValue(list, id, (v) => ({ id: v, name: v })),
+    baseTaxCategories
+  );
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -112,12 +120,12 @@ export default function BusinessEditScreen() {
   async function save() {
     if (!id) return;
     if (!name.trim()) { toast("Business name is required"); return; }
-    if (!categories.length || categories.some((category) => !CATEGORIES.some((valid) => valid.id === category))) {
+    if (!categories.length || categories.some((category) => !taxCategories.some((valid) => valid.id === category))) {
       toast("Select at least one valid business category");
       return;
     }
-    if (!PROVINCES.includes(province)) { toast("Select a valid Province"); return; }
-    if (!(CITIES_BY_PROVINCE[province] ?? []).includes(city)) {
+    if (!provinces.includes(province)) { toast("Select a valid Province"); return; }
+    if (!(citiesByProvince[province] ?? []).includes(city)) {
       toast("Select a valid City / Town for that Province");
       return;
     }
@@ -218,7 +226,7 @@ export default function BusinessEditScreen() {
 
         <Field label="Categories" styles={styles}>
           <View style={styles.chipsWrap}>
-            {CATEGORIES.map((c) => {
+            {taxCategories.map((c) => {
               const active = categories.includes(c.id);
               return (
                 <Pressable key={c.id} style={[styles.chip, active && styles.chipActive]} onPress={() => toggleCategory(c.id)}>
@@ -240,8 +248,8 @@ export default function BusinessEditScreen() {
         </Field>
 
         <ProvinceCityFields
-          provinces={PROVINCES}
-          citiesByProvince={CITIES_BY_PROVINCE}
+          provinces={provinces}
+          citiesByProvince={citiesByProvince}
           province={province}
           city={city}
           onChange={(next) => {

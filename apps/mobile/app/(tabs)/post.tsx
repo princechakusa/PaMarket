@@ -21,7 +21,7 @@ import { supabase } from "../../lib/supabase";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { friendlyError } from "../../lib/safety";
 import { notifyPositiveAction } from "../../lib/store-review";
-import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import { formatPrice } from "../../lib/listings";
 import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "../../lib/listing-form";
 import { CategoryPicker } from "../../components/post/CategoryPicker";
@@ -113,6 +113,16 @@ export default function PostScreen() {
   // a non-blocking reminder, and is refreshed whenever the persistent Post
   // tab regains focus so an Edit Profile save appears without an app restart.
   const [hasPhone, setHasPhone] = useState<boolean | null>(null);
+  // Stage 5: bundled CATEGORIES/PROVINCES/CITIES_BY_PROVINCE shown
+  // immediately, silently upgraded in the background — never blocks
+  // posting. The already-selected category/province/city (if any, e.g.
+  // returning to an earlier wizard step) always stays valid even if it's
+  // since been deactivated.
+  const { categories, provinces, citiesByProvince } = useTaxonomy({
+    categoryId: state.category,
+    province: state.province,
+    city: state.city,
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -258,8 +268,8 @@ export default function PostScreen() {
       if (showCondition && !state.condition) return setError("Select the item condition");
     } else if (state.step === 2) {
       if (!state.price || Number(state.price) <= 0) return setError("Enter a valid price");
-      if (!PROVINCES.includes(state.province)) return setError("Select a valid Province");
-      if (!(CITIES_BY_PROVINCE[state.province] ?? []).includes(state.city)) {
+      if (!provinces.includes(state.province)) return setError("Select a valid Province");
+      if (!(citiesByProvince[state.province] ?? []).includes(state.city)) {
         return setError("Select a valid City / Town for that Province");
       }
     } else if (state.step === 3) {
@@ -334,7 +344,7 @@ export default function PostScreen() {
     }
   }
 
-  const categoryName = CATEGORIES.find((c) => c.id === state.category)?.name ?? "Other";
+  const categoryName = categories.find((c) => c.id === state.category)?.name ?? "Other";
 
   function handleHeaderBack() {
     if (state.step > 1) {
@@ -381,6 +391,7 @@ export default function PostScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {state.step === 1 && !state.category ? (
           <CategoryPicker
+            categories={categories}
             onSelect={(id) => {
               // Jobs is its own dedicated employer flow (job credits/boosts,
               // recruiter entitlements, company verification) — it was never
@@ -484,8 +495,8 @@ export default function PostScreen() {
             </View>
 
             <ProvinceCityFields
-              provinces={PROVINCES}
-              citiesByProvince={CITIES_BY_PROVINCE}
+              provinces={provinces}
+              citiesByProvince={citiesByProvince}
               province={state.province}
               city={state.city}
               onChange={({ province, city }) => update({ province, city })}

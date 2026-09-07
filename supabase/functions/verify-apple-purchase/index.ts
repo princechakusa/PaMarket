@@ -49,26 +49,15 @@ import {
 import { verifyTransactionJWS } from "../_shared/apple-iap.ts";
 import { checkAmosRateLimit } from "../_shared/amos-rate-limit.ts";
 
-const ALLOWED_ORIGINS = new Set([
-  "https://pamarketzw.com",
-  "https://www.pamarketzw.com",
-  "https://localhost",
-  "capacitor://localhost",
-  "http://127.0.0.1:5500",
-  "http://localhost:5500",
-]);
-
+// Migrated to the shared allowlist (Stage 6). Native WebView origins
+// (https://localhost, capacitor://localhost) preserved via
+// allowNativeAppOrigins — removing them previously broke purchase
+// verification with a generic network failure (see the equivalent comment
+// in verify-play-purchase). Local dev origins are now only included when
+// the ALLOW_DEV_CORS_ORIGINS secret is explicitly set to "true".
+import { corsHeaders as sharedCorsHeaders } from "../_shared/cors.ts";
 function corsHeaders(req: Request) {
-  const origin = req.headers.get("origin") ?? "";
-  const allowed = ALLOWED_ORIGINS.has(origin)
-    ? origin
-    : "https://pamarketzw.com";
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
-    Vary: "Origin",
-  };
+  return sharedCorsHeaders(req, { allowNativeAppOrigins: true });
 }
 
 Deno.serve(async (req) => {

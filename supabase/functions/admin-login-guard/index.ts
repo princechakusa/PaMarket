@@ -21,22 +21,8 @@
 // Requires admin_login_attempts.ip (text) and table admin_ip_blocks — see
 // supabase/schema/admin_login_guard.sql.
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'https://admin.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev',
-]);
-
-function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? '';
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com';
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Vary': 'Origin',
-  };
-}
+// Migrated to the shared allowlist (Stage 6).
+import { corsHeaders } from '../_shared/cors.ts';
 
 const MAX_FAILS_PER_IP    = 8;   // across any email, from one IP
 const MAX_FAILS_PER_EMAIL = 5;   // across any IP, against one admin email

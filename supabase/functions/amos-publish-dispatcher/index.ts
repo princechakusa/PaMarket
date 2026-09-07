@@ -37,21 +37,14 @@ import { buildPublisherRegistry } from '../_shared/amos-publishers/registry.ts'
 //   2. Manual path — admin session JWT, verified server-side, rate
 //      limited, audited to admin_audit_logs, heartbeat to job_runs.
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'https://admin.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev',
-])
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts'
 
+// Migrated to the shared allowlist (Stage 6) — still adds this function's
+// own x-automation-secret header on top of the shared defaults, and keeps
+// the same local corsHeaders(req) call signature every call site below
+// already uses.
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com'
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-automation-secret',
-    'Vary': 'Origin',
-  }
+  return sharedCorsHeaders(req, { extraHeaders: ['x-automation-secret'] })
 }
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])

@@ -35,7 +35,7 @@ import {
   type JobSeekerCv,
 } from "../../lib/jobs";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
-import { CITIES_BY_PROVINCE, PROVINCES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import {
   ALLOWED_CV_MIME_TYPES,
   CV_VALIDATION_ERROR,
@@ -124,6 +124,9 @@ export default function CvProfileScreen() {
   const [exp, setExp] = useState("");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
+  // Stage 5: bundled provinces/cities shown immediately, silently upgraded
+  // in the background — never blocks saving a CV profile.
+  const { provinces, citiesByProvince } = useTaxonomy({ province, city });
   const [bio, setBio] = useState("");
   const [expectedSalary, setExpectedSalary] = useState("");
   const [currency, setCurrency] = useState("USD");
@@ -300,11 +303,11 @@ export default function CvProfileScreen() {
   async function performSave(publish: boolean) {
     if (!session?.user) return;
     const hasAnyLocation = !!province.trim() || !!city.trim();
-    if (hasAnyLocation && !PROVINCES.includes(province)) {
+    if (hasAnyLocation && !provinces.includes(province)) {
       toast("Select a valid Province for your existing location");
       return;
     }
-    if (hasAnyLocation && !(CITIES_BY_PROVINCE[province] ?? []).includes(city)) {
+    if (hasAnyLocation && !(citiesByProvince[province] ?? []).includes(city)) {
       toast("Select a valid City / Town for that Province");
       return;
     }
@@ -649,8 +652,8 @@ export default function CvProfileScreen() {
             </View>
             <View style={styles.spacedLabel}>
               <ProvinceCityFields
-                provinces={PROVINCES}
-                citiesByProvince={CITIES_BY_PROVINCE}
+                provinces={provinces}
+                citiesByProvince={citiesByProvince}
                 province={province}
                 city={city}
                 onChange={(next) => {

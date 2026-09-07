@@ -626,7 +626,7 @@ export const CONTENT_MODERATION_POLICY: LegalDoc = {
     },
     {
       heading: "5. Transparency",
-      body: "PaMarket publishes moderation statistics quarterly to give users insight into the health of our marketplace. These include number of listings removed per category, number of accounts banned, and fraud reports processed. Statistics are published on our website at pamarket.app. Questions? Email support@pamarketzw.com",
+      body: "PaMarket publishes moderation statistics quarterly to give users insight into the health of our marketplace. These include number of listings removed per category, number of accounts banned, and fraud reports processed. Statistics are published on our website at pamarketzw.com. Questions? Email support@pamarketzw.com",
     },
   ],
 };

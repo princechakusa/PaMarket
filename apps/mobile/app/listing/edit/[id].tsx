@@ -14,7 +14,7 @@ import { useAuth } from "../../../lib/auth";
 import { supabase } from "../../../lib/supabase";
 import { uploadImageUriToR2 } from "../../../lib/uploadToR2";
 import { friendlyError } from "../../../lib/safety";
-import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../../../lib/constants";
+import { useTaxonomy } from "../../../lib/taxonomy";
 import type { Listing } from "../../../lib/listings";
 import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "../../../lib/listing-form";
 import { AttrFields, type AttrValues } from "../../../components/post/AttrFields";
@@ -52,6 +52,14 @@ export default function EditListingScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Stage 5: keeps this old listing's existing category/province/city
+  // valid even if it's since been deactivated or renamed — editing must
+  // never fail validation over a value the record itself already has.
+  const { categories, provinces, citiesByProvince } = useTaxonomy({
+    categoryId: state?.category,
+    province: state?.province,
+    city: state?.city,
+  });
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -151,8 +159,8 @@ export default function EditListingScreen() {
     if (!state.price || Number(state.price) <= 0) return setError("Enter a valid price");
     if (!state.photos.length) return setError("Add at least one photo");
     if (categoryHasCondition(state.category) && !state.condition) return setError("Select the item condition");
-    if (!PROVINCES.includes(state.province)) return setError("Select a valid Province");
-    if (!(CITIES_BY_PROVINCE[state.province] ?? []).includes(state.city)) {
+    if (!provinces.includes(state.province)) return setError("Select a valid Province");
+    if (!(citiesByProvince[state.province] ?? []).includes(state.city)) {
       return setError("Select a valid City / Town for that Province");
     }
 
@@ -215,7 +223,7 @@ export default function EditListingScreen() {
   }
 
   const showCondition = categoryHasCondition(state.category);
-  const categoryName = CATEGORIES.find((c) => c.id === state.category)?.name ?? "Other";
+  const categoryName = categories.find((c) => c.id === state.category)?.name ?? "Other";
 
   return (
     <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -284,8 +292,8 @@ export default function EditListingScreen() {
           </View>
 
           <ProvinceCityFields
-            provinces={PROVINCES}
-            citiesByProvince={CITIES_BY_PROVINCE}
+            provinces={provinces}
+            citiesByProvince={citiesByProvince}
             province={state.province}
             city={state.city}
             onChange={({ province, city }) => update({ province, city })}

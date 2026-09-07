@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { CATEGORIES } from "../../lib/constants";
+import { CATEGORIES, type Category } from "../../lib/constants";
 import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -32,11 +32,19 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
 export function CategoryGrid({
   onSelectCategory,
   onSeeAll,
+  categories,
 }: {
   onSelectCategory: (id: string) => void;
   onSeeAll: () => void;
+  // Stage 4: optional silently-upgraded list from lib/taxonomy.ts (see
+  // app/(tabs)/index.tsx). Defaults to the bundled CATEGORIES, unchanged,
+  // if the caller doesn't pass one — every other CategoryGrid caller is
+  // untouched. Every icon is keyed by category id, so an id this grid
+  // doesn't have an icon for is dropped rather than rendering blank.
+  categories?: Category[];
 }) {
   const styles = useThemedStyles(buildStyles);
+  const list = (categories ?? CATEGORIES).filter((c) => CAT_ICONS[c.id]);
   return (
     <View style={styles.section}>
       <View style={styles.head}>
@@ -46,7 +54,7 @@ export function CategoryGrid({
         </Pressable>
       </View>
       <View style={styles.grid}>
-        {CATEGORIES.map((c) => (
+        {list.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelectCategory(c.id)}>
             <View style={styles.iconChip}>
               <Image source={CAT_ICONS[c.id]} style={styles.icon} />

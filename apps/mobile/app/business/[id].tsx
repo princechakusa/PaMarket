@@ -14,7 +14,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { CATEGORIES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import { recordShopLead, type LeadType } from "../../lib/business-leads";
@@ -104,10 +104,11 @@ export default function BusinessShopScreen() {
   const isOwner = session?.user?.id === business?.owner_user_id;
   const avgRating = useMemo(() => averageRating(reviews.map((r) => ({ reviewer_id: "", rating: r.rating, created_at: "" }))), [reviews]);
 
+  const { categories } = useTaxonomy();
   const categoryChips = useMemo(() => {
     const cats = new Set(products.map((p) => p.category).filter(Boolean) as string[]);
-    return Array.from(cats).map((id) => ({ id, name: CATEGORIES.find((c) => c.id === id)?.name ?? id }));
-  }, [products]);
+    return Array.from(cats).map((id) => ({ id, name: categories.find((c) => c.id === id)?.name ?? id }));
+  }, [products, categories]);
 
   const filteredProducts = activeCategory ? products.filter((p) => p.category === activeCategory) : products;
 

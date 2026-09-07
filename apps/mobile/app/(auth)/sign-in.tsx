@@ -22,6 +22,7 @@ import { GlassBackButton } from "../../components/ui";
 import { AppleIcon, GoogleIcon, SocialButton, SocialDivider } from "../../components/SocialAuthButtons";
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
+import { useLegalDocUpgrade } from "../../lib/content";
 import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
@@ -41,6 +42,11 @@ export default function SignInScreen() {
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
+  // Stage 2: silently upgraded to the published content_pages wording in
+  // the background — falls back to the bundled TERMS/PRIVACY on any
+  // failure, and never blocks or delays sign-in.
+  const termsDoc = useLegalDocUpgrade("terms", TERMS);
+  const privacyDoc = useLegalDocUpgrade("privacy", PRIVACY);
 
   // Returns to whatever screen the user was on before being gated to sign
   // in (e.g. "Create a Shop" while signed out) instead of always dumping
@@ -213,11 +219,11 @@ export default function SignInScreen() {
               their account exists. */}
           <Text style={styles.consentText}>
             By continuing, you agree to our{" "}
-            <Text style={styles.consentLink} onPress={() => setLegalDoc(TERMS)}>
+            <Text style={styles.consentLink} onPress={() => setLegalDoc(termsDoc)}>
               Terms &amp; Conditions
             </Text>{" "}
             and{" "}
-            <Text style={styles.consentLink} onPress={() => setLegalDoc(PRIVACY)}>
+            <Text style={styles.consentLink} onPress={() => setLegalDoc(privacyDoc)}>
               Privacy Policy
             </Text>
             .

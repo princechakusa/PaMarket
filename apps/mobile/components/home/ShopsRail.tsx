@@ -2,7 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
-import { CATEGORIES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import type { Listing } from "../../lib/listings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -20,6 +20,7 @@ export function ShopsRail({
   onSeeAll: () => void;
 }) {
   const styles = useThemedStyles(buildStyles);
+  const { categories } = useTaxonomy();
   if (!businesses.length) return null;
 
   return (
@@ -44,7 +45,7 @@ export function ShopsRail({
           // leaking that person's unrelated personal listings into the shop.
           const products = listings.filter((l) => l.status === "active" && l.business_id === business.id);
           const categoryNames = (business.category ? [business.category] : [])
-            .map((id) => CATEGORIES.find((c) => c.id === id)?.name)
+            .map((id) => categories.find((c) => c.id === id)?.name)
             .filter(Boolean)
             .join(" / ");
           const niche = categoryNames || "Local Shop";

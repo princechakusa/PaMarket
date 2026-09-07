@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { CATEGORIES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import type { BrowseFilters, Condition } from "../../lib/listings";
 import { Button, Chip } from "../ui";
 import { LocationSheet } from "./LocationSheet";
@@ -65,6 +65,10 @@ export function FilterPanel({
   const themeColor = useThemedStyles((c) => c);
   const [locationSheetVisible, setLocationSheetVisible] = useState(false);
   const activeCount = useMemo(() => countActiveFilters(filters), [filters]);
+  // Stage 5: bundled categories shown immediately, silently upgraded in
+  // the background — a filter panel is never submission-blocking, so this
+  // is purely a freshness upgrade.
+  const { categories } = useTaxonomy();
 
   function toggleCategory(id: string) {
     const next = filters.categories.includes(id)
@@ -99,7 +103,7 @@ export function FilterPanel({
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <Text style={styles.sectionTitle}>Categories</Text>
             <View style={styles.chipWrap}>
-              {CATEGORIES.filter((c) => c.id !== "jobs").map((c) => (
+              {categories.filter((c) => c.id !== "jobs").map((c) => (
                 <Chip
                   key={c.id}
                   label={c.name}

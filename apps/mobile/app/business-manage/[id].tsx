@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { toast } from "../../components/ui/Toast";
-import { CATEGORIES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import type { ColorPalette } from "../../lib/theme";
@@ -25,6 +25,7 @@ export default function BusinessManageScreen() {
   const [activeListings, setActiveListings] = useState(0);
   const [totalViews, setTotalViews] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const { categories } = useTaxonomy();
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -140,7 +141,7 @@ export default function BusinessManageScreen() {
   const catLabel = (business.category ?? "")
     .split("|")
     .filter(Boolean)
-    .map((cid) => CATEGORIES.find((c) => c.id === cid)?.name ?? cid)
+    .map((cid) => categories.find((c) => c.id === cid)?.name ?? cid)
     .join(" / ");
   const typeLabel = { individual: "Individual", company: "Registered Company", agency: "Agency" }[business.biz_type ?? ""] ?? business.biz_type;
   const verified = (business.verification_level ?? 0) >= 2;

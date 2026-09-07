@@ -502,6 +502,22 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9z"/></svg>
           Blog Videos
         </button>
+        <button class="nav-item" data-tab="legalContent" onclick="showTab('legalContent')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          Legal &amp; Policies
+        </button>
+        <button class="nav-item" data-tab="faqContent" onclick="showTab('faqContent')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Help &amp; FAQ
+        </button>
+        <button class="nav-item" data-tab="contactSettings" onclick="showTab('contactSettings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Contact &amp; Social Links
+        </button>
+        <button class="nav-item" data-tab="taxonomy" onclick="showTab('taxonomy')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+          Marketplace Taxonomy
+        </button>
         <button class="nav-item" data-tab="chats" onclick="showTab('chats')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           User Chats
@@ -745,7 +761,8 @@ try {
 // ── State ─────────────────────────────────────────────────
 var DATA = {
   users:[], listings:[], verifications:[], reports:[], contactRequests:[],
-  ads:[], blogVideos:[], settings:{}, notifHistory:[], chats:[],
+  ads:[], blogVideos:[], settings:{}, notifHistory:[], chats:[], contentPages:[],
+  categories:[], provinces:[], cities:[],
   businesses:[], businessSubs:[], businessLeads:[], bizUpgradeRequests:[]
 };
 var _bizFilter = 'all';
@@ -796,6 +813,11 @@ var ROLE_PERMS = {
   moderator:   ['listings.moderate','reviews.moderate','reports.manage','verifications.manage','rentals.moderate','users.warn','users.view','chats.view','notifications.send'],
   support:     ['reports.manage','contacts.manage','users.view','notifications.send','chats.view'],
   finance:     ['ads.manage','businesses.billing','analytics.view','users.view']
+  // content.manage (legal docs, FAQ, contact/social settings) is
+  // deliberately NOT granted to moderator/support/finance — only
+  // super_admin/admin (both '*') can publish or delete public legal
+  // content, per the content-management stage's security requirements.
+  // taxonomy.manage (categories/provinces/cities) follows the same rule.
 };
 function can(perm){ var p=ROLE_PERMS[ADMIN_ROLE]||[]; return p.indexOf('*')!==-1 || p.indexOf(perm)!==-1; }
 function requirePerm(perm){ if(!can(perm)){ toast('Your role ('+ADMIN_ROLE+') does not allow this action ('+perm+')','error'); return false; } return true; }
@@ -1386,6 +1408,7 @@ var TAB_TITLES = {
   overview:'Overview', listings:'Listings', users:'Users', verifications:'Verifications',
   notifications:'Send Notification', reports:'Reports', moderation:'Moderation Center', contacts:'Contact Requests',
   ads:'Ads & Boosts', videos:'Blog Videos', chats:'User Chats', analytics:'Analytics', settings:'Settings',
+  legalContent:'Legal & Policies', faqContent:'Help & FAQ', contactSettings:'Contact & Social Links', taxonomy:'Marketplace Taxonomy',
   businesses:'Business Platform', maintenance:'Maintenance',
   jobsAdmin:'Jobs', servicesAdmin:'Services', propertyAdmin:'Property', vehiclesAdmin:'Vehicle Sales',
   reviewsCenter:'Reviews Center', auditCenter:'Audit Center', opsCenter:'Operations Center',
@@ -1413,6 +1436,10 @@ var TAB_LOADERS = {
   contacts:      function(){ return loadContactRequests(); },
   ads:           function(){ return Promise.allSettled([loadAds(), DATA.users.length?Promise.resolve():loadUsers()]); },
   videos:        function(){ return loadBlogVideos(); },
+  legalContent:  function(){ return loadContentPages(); },
+  faqContent:    function(){ return loadContentPages(); },
+  contactSettings: function(){ return loadSettings(); },
+  taxonomy: function(){ return loadTaxonomy(); },
   chats:         function(){ return loadChats(); },
   businesses:    function(){ return loadBusinesses(); },
   jobsAdmin:     function(){ return loadVertical('jobs'); },
@@ -1454,6 +1481,7 @@ function renderTab() {
     overview: renderOverview, listings: renderListings, users: renderUsers,
     verifications: renderVerifications, notifications: renderNotifications,
     reports: renderReports, moderation: renderModeration, contacts: renderContactRequests, ads: renderAds, videos: renderVideos,
+    legalContent: renderLegalContent, faqContent: renderFaqContent, contactSettings: renderContactSettings, taxonomy: renderTaxonomy,
     chats: renderChats, analytics: renderAnalytics, settings: renderSettings,
     businesses: renderBusinesses, maintenance: renderMaintenance,
     jobsAdmin: function(){ renderVertical('jobs'); },
@@ -4426,6 +4454,781 @@ async function deleteBlogVideo(id) {
     auditLog('delete_blog_video','blog_videos',id,video||null,null,null);
     renderVideos();toast('Video deleted','info');
   } catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ════════════════════════════════════════════════════════════
+// CONTENT MANAGEMENT — Legal & Policies / Help & FAQ / Contact & Social
+// Links. Stage 1 of the hardcoded-content migration: admin-editable
+// public.content_pages (legal/faq) and public.app_settings.content
+// (contact/social/store links). Every write goes through auditLog(),
+// matching the rest of this file; every legal/FAQ write is gated behind
+// requirePerm('content.manage') so only super_admin/admin ('*') can touch
+// public legal text, per the stage's security requirements.
+// ════════════════════════════════════════════════════════════
+var _contentPagesMissing = false;
+
+async function loadContentPages() {
+  try {
+    var r = await sb.from('content_pages').select('*').order('content_type').order('title');
+    _contentPagesMissing = !!(r.error && r.error.code === '42P01');
+    if(!r.error && r.data){
+      DATA.contentPages = r.data;
+      await ensureProfiles(r.data.map(function(p){ return p.updated_by; }).filter(Boolean));
+    } else DATA.contentPages = [];
+    if(r.error && !_contentPagesMissing) toast('Content load error: '+r.error.message,'error');
+  } catch(e){ DATA.contentPages=[]; _contentPagesMissing=false; toast('Content load error: '+e.message,'error'); }
+}
+
+function isSafeHttpUrl(url){
+  if(!url) return false;
+  try { var u=new URL(url); return u.protocol==='https:'||u.protocol==='http:'; } catch(e){ return false; }
+}
+function isSafeWhatsapp(v){ return /^\+?[0-9][0-9\s-]{6,17}$/.test(String(v||'').trim()); }
+function isSafeEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim()); }
+
+function contentStatusBadge(row){
+  return '<span class="badge badge-'+(row.status==='published'?'active':'pending')+'">'+(row.status==='published'?'Published':'Draft')+'</span>';
+}
+
+// Rows created by the Stage 2 reconciliation migration to hold an
+// alternate wording for an already-existing slug (metadata.variantOf +
+// metadata.source) — these never appear as their own list row; they show
+// up as "N versions to compare" on their canonical row instead.
+function contentVariantsOf(slug){
+  return DATA.contentPages.filter(function(r){ return r.metadata && r.metadata.variantOf===slug; });
+}
+function sourceLabel(source){
+  return { 'mobile-app':'Mobile app', 'website-root':'Website', 'website-www':'Legacy www/ shell' }[source] || (source||'Unknown source');
+}
+
+function renderContentTable(rows, kindLabel){
+  if(_contentPagesMissing){
+    return '<div class="empty-msg">Migration required: the content_pages table does not exist yet.</div>';
+  }
+  var canonicalRows = rows.filter(function(r){ return !(r.metadata && r.metadata.variantOf); });
+  if(!canonicalRows.length) return '<div class="empty-msg">No '+kindLabel+' yet.</div>';
+  var html='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Source</th><th>Status</th><th>Version</th><th>Updated</th><th>Updated By</th><th>Actions</th></tr></thead><tbody>';
+  canonicalRows.forEach(function(row){
+    var variants = contentVariantsOf(row.slug);
+    var proposedFrom = row.metadata && row.metadata.proposedFrom;
+    html+='<tr><td><div style="font-weight:700;color:var(--text)">'+esc(row.title)+'</div>'
+      +(row.short_description?'<div style="font-size:11px;color:var(--sub);margin-top:3px;max-width:340px">'+esc(row.short_description)+'</div>':'')
+      +'<div style="font-size:10px;color:var(--sub);margin-top:2px">/'+esc(row.slug)+'</div></td>'
+      +'<td><span class="badge badge-info">'+esc(sourceLabel(row.metadata&&row.metadata.source))+'</span></td>'
+      +'<td>'+contentStatusBadge(row)
+      +(proposedFrom?'<div style="margin-top:4px"><span class="badge" style="background:var(--gold,#E8A33D);color:#1a1200;font-size:10px">Proposed: '+esc(sourceLabel(proposedFrom))+'</span></div>':'')
+      +(row.status==='published'&&row.published_at?'<div style="font-size:10px;color:var(--sub);margin-top:3px">since '+fmtDateTime(row.published_at)+'</div>':'')
+      +'</td>'
+      +'<td>v'+Number(row.version||1)+'</td>'
+      +'<td>'+fmtDateTime(row.updated_at)+'</td>'
+      +'<td>'+(row.updated_by?esc(userLabel(row.updated_by)):'—')+'</td>'
+      +'<td><div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="ab ab-view" onclick="previewContentPage(\''+row.id+'\')">Preview</button>'
+      +'<button class="ab ab-view" onclick="openContentEditor(\''+row.id+'\')">Edit</button>'
+      +'<button class="ab '+(row.status==='published'?'ab-reject':'ab-approve')+'" onclick="toggleContentPublished(\''+row.id+'\','+(row.status!=='published')+')">'+(row.status==='published'?'Unpublish':'Publish')+'</button>'
+      +'<button class="ab ab-view" onclick="openContentHistory(\''+row.id+'\')">History</button>'
+      +(variants.length?'<button class="ab ab-view" style="border-color:var(--gold,#E8A33D);color:var(--gold,#E8A33D)" onclick="openContentCompare(\''+row.slug+'\')">Compare ('+variants.length+')</button>':'')
+      +'<button class="ab ab-delete" onclick="deleteContentPage(\''+row.id+'\')">Delete</button>'
+      +'</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderLegalContent() {
+  var rows = DATA.contentPages.filter(function(r){ return r.content_type==='legal'; });
+  var html='<div class="sec-head"><div><div class="sec-title">Legal &amp; Policies</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Terms, Privacy, Community Guidelines, and 16 other legal documents — shown on the website and (for migrated docs) in the app. Rows with a "Compare" button have more than one wording on file (mobile app vs. website vs. legacy www/ shell) — nothing is published from them automatically.</div></div>'
+    +(requirePermSilent('content.manage')?'<button class="btn-send" onclick="openContentEditor(null,\'legal\')" style="padding:8px 16px;font-size:13px">+ New Legal Page</button>':'')+'</div>';
+  html+=renderContentTable(rows,'legal pages');
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+function renderFaqContent() {
+  var rows = DATA.contentPages.filter(function(r){ return r.content_type==='faq'; });
+  var html='<div class="sec-head"><div><div class="sec-title">Help &amp; FAQ</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Questions and answers shown on the website Help page and the app Help screen.</div></div>'
+    +(requirePermSilent('content.manage')?'<button class="btn-send" onclick="openContentEditor(null,\'faq\')" style="padding:8px 16px;font-size:13px">+ New FAQ Page</button>':'')+'</div>';
+  html+=renderContentTable(rows,'FAQ pages');
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+// ── Side-by-side reconciliation compare ─────────────────────
+function openContentCompare(canonicalSlug){
+  var canonical = DATA.contentPages.find(function(r){ return r.slug===canonicalSlug; });
+  var variants = contentVariantsOf(canonicalSlug);
+  if(!canonical) return;
+  var proposedFrom = canonical.metadata && canonical.metadata.proposedFrom;
+  var candidates = [{ id:canonical.id, slug:canonical.slug, title:canonical.title, source:(canonical.metadata&&canonical.metadata.source), body:canonical.body, isCanonical:true, status:canonical.status, updatedBy:canonical.updated_by, publishedAt:canonical.published_at }]
+    .concat(variants.map(function(v){ return { id:v.id, slug:v.slug, title:v.title, source:(v.metadata&&v.metadata.source), body:v.body, isCanonical:false, status:v.status, updatedBy:v.updated_by, publishedAt:null }; }));
+  var html='<div class="modal-title">Compare Versions: '+esc(canonical.title)+'<button class="modal-close" onclick="closeModal()">&times;</button></div>';
+  html+='<div style="font-size:12px;color:var(--sub);margin-bottom:6px">The <strong>currently published</strong> wording (shown on the live site/app right now) is never changed just by comparing. "Mark as proposed" copies a version into the official ('+esc(canonical.slug)+') record as a DRAFT — nothing goes public until you separately click Publish on it.</div>';
+  if(canonical.status==='published'){
+    html+='<div style="font-size:11px;color:var(--sub);margin-bottom:14px">Currently public since '+fmtDateTime(canonical.published_at)+(canonical.updated_by?' · last touched by '+esc(userLabel(canonical.updated_by)):'')+'.</div>';
+  } else {
+    html+='<div style="font-size:11px;color:var(--red);margin-bottom:14px">This document has no published version right now — nothing is showing on the live site/app for it.</div>';
+  }
+  if(proposedFrom){
+    html+='<div style="background:rgba(232,163,61,.12);border:1px solid var(--gold,#E8A33D);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:12px"><strong>Proposed:</strong> the current draft was marked from the <strong>'+esc(sourceLabel(proposedFrom))+'</strong> version and is waiting for review/Publish.</div>';
+  }
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
+  candidates.forEach(function(c){
+    var bodyText = contentBodyPreviewText(c.body);
+    var isProposedSource = !c.isCanonical && proposedFrom===c.source;
+    html+='<div style="border:1px solid '+(isProposedSource?'var(--gold,#E8A33D)':'var(--border)')+';border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><span class="badge badge-info">'+esc(sourceLabel(c.source))+'</span>'
+      +(c.isCanonical?'<span class="badge badge-'+(c.status==='published'?'active':'pending')+'">'+(c.status==='published'?'Currently public':'Official record — draft')+'</span>':contentStatusBadge(c))
+      +(isProposedSource?'<span class="badge" style="background:var(--gold,#E8A33D);color:#1a1200">Proposed</span>':'')+'</div>'
+      +'<div style="font-size:10px;color:var(--sub)">'+(c.updatedBy?'By '+esc(userLabel(c.updatedBy)):'No admin edits yet')+(c.publishedAt?' · published '+fmtDateTime(c.publishedAt):'')+'</div>'
+      +'<div style="font-size:12px;color:var(--sub);max-height:220px;overflow-y:auto;white-space:pre-wrap;line-height:1.6">'+esc(bodyText.slice(0,1200))+(bodyText.length>1200?'…':'')+'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="ab ab-view" onclick="previewContentPage(\''+c.id+'\')">Preview</button>'
+      +(c.isCanonical?'<button class="ab ab-view" onclick="closeModal();openContentEditor(\''+c.id+'\')">Edit</button>'
+        +'<button class="ab ab-view" onclick="closeModal();openContentHistory(\''+c.id+'\')">History</button>'
+        +'<button class="ab '+(c.status==='published'?'ab-reject':'ab-approve')+'" onclick="toggleContentPublished(\''+c.id+'\','+(c.status!=='published')+');closeModal()">'+(c.status==='published'?'Unpublish':'Publish')+'</button>'
+        :'<button class="btn-send" style="padding:8px 12px;font-size:12px" onclick="useContentVariant(\''+canonical.id+'\',\''+c.id+'\')">Mark as proposed</button>')
+      +'</div>'
+      +'</div>';
+  });
+  html+='</div><button class="filter-btn" onclick="closeModal()" style="margin-top:14px">Close</button>';
+  openModal(html);
+}
+
+function contentBodyPreviewText(body){
+  if(!body) return '';
+  if(body.items) return body.items.map(function(it){ return (it.group?'['+it.group+'] ':'')+it.q+'\n'+it.a; }).join('\n\n');
+  if(body.sections) return body.sections.map(function(s){ return (s.heading?s.heading+'\n':'')+s.body; }).join('\n\n');
+  return '';
+}
+
+async function useContentVariant(canonicalId, variantId){
+  if(!requirePerm('content.manage')) return;
+  var variant = DATA.contentPages.find(function(r){ return r.id===variantId; });
+  var canonical = DATA.contentPages.find(function(r){ return r.id===canonicalId; });
+  if(!variant || !canonical) return;
+  var variantSource = variant.metadata&&variant.metadata.source;
+  var ok = await confirm2(
+    'Mark this as the proposed official version?',
+    'This copies "'+sourceLabel(variantSource)+'" wording into the "'+canonical.slug+'" record as a new DRAFT, marked Proposed (the currently published wording stays live and is saved to version history — it is not lost). It still needs its own Publish afterwards — nothing goes public automatically.',
+    'Mark as Proposed', 'red'
+  );
+  if(!ok) return;
+  try {
+    if(!_adminUid){ var user=(await sb.auth.getUser()).data.user; _adminUid=user&&user.id; }
+    var newMeta = Object.assign({}, canonical.metadata||{}, { proposedFrom: variantSource });
+    var patch = { title:variant.title, short_description:variant.short_description, body:variant.body, status:'draft', metadata:newMeta, updated_by:_adminUid||null };
+    var result = await sb.from('content_pages').update(patch).eq('id',canonicalId).select('*').single();
+    if(result.error) throw result.error;
+    DATA.contentPages = DATA.contentPages.map(function(r){ return r.id===canonicalId?result.data:r; });
+    auditLog('mark_proposed_content_version','content_pages',canonicalId,{status:canonical.status,body:canonical.body},{proposed_from:variant.slug,source:variantSource},null);
+    closeModal();
+    if(result.data.content_type==='faq') renderFaqContent(); else renderLegalContent();
+    toast('Marked as proposed — review and Publish when ready','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function requirePermSilent(perm){ return can(perm); }
+
+// ── Legal / FAQ editor ──────────────────────────────────────
+function sectionRowHtml(idx, heading, body){
+  return '<div class="content-section-row" data-idx="'+idx+'" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:11px;font-weight:700;color:var(--sub)">Section '+(idx+1)+'</span><button type="button" class="ab ab-delete" onclick="this.closest(\'.content-section-row\').remove()">Remove</button></div>'
+    +'<input class="form-input cs-heading" placeholder="Heading (optional — leave blank for an intro paragraph)" value="'+esc(heading||'')+'" style="margin-bottom:8px">'
+    +'<textarea class="form-textarea cs-body" placeholder="Section text" style="min-height:90px">'+esc(body||'')+'</textarea>'
+    +'</div>';
+}
+function faqRowHtml(idx, group, q, a){
+  return '<div class="content-faq-row" data-idx="'+idx+'" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:11px;font-weight:700;color:var(--sub)">Question '+(idx+1)+'</span><button type="button" class="ab ab-delete" onclick="this.closest(\'.content-faq-row\').remove()">Remove</button></div>'
+    +'<input class="form-input cf-group" placeholder="Group (e.g. Getting started)" value="'+esc(group||'')+'" style="margin-bottom:8px">'
+    +'<input class="form-input cf-q" placeholder="Question" value="'+esc(q||'')+'" style="margin-bottom:8px">'
+    +'<textarea class="form-textarea cf-a" placeholder="Answer" style="min-height:70px">'+esc(a||'')+'</textarea>'
+    +'</div>';
+}
+function addContentSectionRow(){
+  var wrap=document.getElementById('contentSectionsWrap');
+  var idx=wrap.querySelectorAll('.content-section-row').length;
+  wrap.insertAdjacentHTML('beforeend', sectionRowHtml(idx,'',''));
+}
+function addFaqRow(){
+  var wrap=document.getElementById('contentSectionsWrap');
+  var idx=wrap.querySelectorAll('.content-faq-row').length;
+  wrap.insertAdjacentHTML('beforeend', faqRowHtml(idx,'','',''));
+}
+
+function openContentEditor(id, forcedType){
+  if(!requirePerm('content.manage')) return;
+  var row = id?DATA.contentPages.find(function(r){return r.id===id;}):null;
+  var type = row?row.content_type:(forcedType||'legal');
+  var title=row?row.title:'';
+  var slug=row?row.slug:'';
+  var shortDesc=row?(row.short_description||''):'';
+  var effectiveDate=row&&row.effective_date?row.effective_date:'';
+  var rowsHtml='';
+  if(type==='faq'){
+    var items=(row&&row.body&&row.body.items)||[];
+    rowsHtml = items.length?items.map(function(it,i){return faqRowHtml(i,it.group,it.q,it.a);}).join(''):faqRowHtml(0,'','','');
+  } else {
+    var sections=(row&&row.body&&row.body.sections)||[];
+    rowsHtml = sections.length?sections.map(function(s,i){return sectionRowHtml(i,s.heading,s.body);}).join(''):sectionRowHtml(0,'','');
+  }
+  openModal('<div class="modal-title">'+(row?'Edit':'New')+' '+(type==='faq'?'FAQ Page':'Legal Page')+'<button class="modal-close" onclick="closeModal()">&times;</button></div>'
+    +'<div class="form-row"><label class="form-label">Title <span style="color:var(--red)">*</span></label><input class="form-input" id="ctTitle" maxlength="120" value="'+esc(title)+'"></div>'
+    +'<div class="form-row"><label class="form-label">Slug <span style="color:var(--red)">*</span></label><input class="form-input" id="ctSlug" '+(row?'readonly style="opacity:.6"':'')+' value="'+esc(slug)+'" placeholder="e.g. terms"><div style="font-size:11px;color:var(--sub);margin-top:4px">Lowercase letters, digits and hyphens only. Cannot be changed after creation.</div></div>'
+    +'<div class="form-row"><label class="form-label">Short description</label><input class="form-input" id="ctShortDesc" maxlength="200" value="'+esc(shortDesc)+'"></div>'
+    +(type==='legal'?'<div class="form-row"><label class="form-label">Effective date</label><input class="form-input" id="ctEffectiveDate" type="date" value="'+esc(effectiveDate)+'"></div>':'')
+    +'<div class="form-row"><label class="form-label">'+(type==='faq'?'Questions':'Sections')+'</label><div id="contentSectionsWrap">'+rowsHtml+'</div>'
+    +'<button type="button" class="filter-btn" onclick="'+(type==='faq'?'addFaqRow()':'addContentSectionRow()')+'">+ Add '+(type==='faq'?'Question':'Section')+'</button></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-top:6px"><button class="btn-send" id="saveContentBtn" onclick="saveContentPage(\''+(row?row.id:'')+'\',\''+type+'\')">Save as Draft</button>'
+    +(row&&row.status!=='published'?'<button class="ab ab-approve" onclick="saveContentPage(\''+(row?row.id:'')+'\',\''+type+'\',true)" style="padding:9px 16px">Save &amp; Publish</button>':'')
+    +'<button class="filter-btn" onclick="closeModal()">Cancel</button></div>');
+}
+
+function collectContentBody(type){
+  if(type==='faq'){
+    var items=[];
+    document.querySelectorAll('.content-faq-row').forEach(function(el){
+      var group=el.querySelector('.cf-group').value.trim();
+      var q=el.querySelector('.cf-q').value.trim();
+      var a=el.querySelector('.cf-a').value.trim();
+      if(group||q||a) items.push({group:group,q:q,a:a});
+    });
+    return {items:items};
+  }
+  var sections=[];
+  document.querySelectorAll('.content-section-row').forEach(function(el){
+    var heading=el.querySelector('.cs-heading').value.trim();
+    var body=el.querySelector('.cs-body').value.trim();
+    if(heading||body) sections.push({heading:heading,body:body});
+  });
+  return {sections:sections};
+}
+
+function contentBodyIsEmpty(type, body){
+  if(type==='faq') return !body.items || !body.items.length || body.items.every(function(it){return !it.q||!it.a;});
+  return !body.sections || !body.sections.length || body.sections.every(function(s){return !s.body;});
+}
+
+async function saveContentPage(id, type, publish){
+  if(!requirePerm('content.manage')) return;
+  var title=(document.getElementById('ctTitle').value||'').trim();
+  var slugInput=document.getElementById('ctSlug');
+  var slug=(slugInput.value||'').trim().toLowerCase();
+  var shortDesc=(document.getElementById('ctShortDesc').value||'').trim();
+  var effEl=document.getElementById('ctEffectiveDate');
+  var effectiveDate = effEl && effEl.value ? effEl.value : null;
+  var body=collectContentBody(type);
+  if(!title){ toast('Enter a title','error'); return; }
+  if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){ toast('Slug must be lowercase letters, digits and hyphens only (e.g. "terms")','error'); return; }
+  if(publish && contentBodyIsEmpty(type, body)){ toast('Cannot publish an empty '+(type==='faq'?'FAQ page':'legal document')+' — add at least one '+(type==='faq'?'question with an answer':'section with text'),'error'); return; }
+  var btn=document.getElementById('saveContentBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+  try {
+    var before = id?DATA.contentPages.find(function(r){return r.id===id;}):null;
+    if(!_adminUid){ var user=(await sb.auth.getUser()).data.user; _adminUid=user&&user.id; }
+    var rec={ title:title, short_description:shortDesc||null, body:body, effective_date:effectiveDate, updated_by:_adminUid||null };
+    if(publish){ rec.status='published'; rec.published_at=new Date().toISOString(); }
+    var result;
+    if(id){
+      result = await sb.from('content_pages').update(rec).eq('id',id).select('*').single();
+    } else {
+      rec.slug=slug; rec.content_type=type; rec.status=publish?'published':'draft';
+      if(!rec.published_at && publish) rec.published_at=new Date().toISOString();
+      result = await sb.from('content_pages').insert(rec).select('*').single();
+    }
+    if(result.error) throw result.error;
+    if(id) DATA.contentPages=DATA.contentPages.map(function(r){return r.id===id?result.data:r;});
+    else DATA.contentPages.push(result.data);
+    auditLog(id?(publish?'publish_content_page':'update_content_page'):'create_content_page','content_pages',result.data.id,before||null,rec,null);
+    closeModal();
+    if(type==='faq') renderFaqContent(); else renderLegalContent();
+    toast(publish?'Published':'Draft saved');
+  } catch(e){ toast('Error: '+e.message,'error'); if(btn){btn.disabled=false;btn.textContent='Save as Draft';} }
+}
+
+async function toggleContentPublished(id, publish){
+  if(!requirePerm('content.manage')) return;
+  var row=DATA.contentPages.find(function(r){return r.id===id;});
+  if(publish && row && contentBodyIsEmpty(row.content_type, row.body||{})){
+    toast('Cannot publish an empty page — edit it and add content first','error'); return;
+  }
+  try {
+    var patch={status:publish?'published':'draft'};
+    if(publish){
+      patch.published_at=new Date().toISOString();
+      // A "Proposed" badge only makes sense while the proposal is still a
+      // draft awaiting a decision — clear it once actually published.
+      if(row && row.metadata && row.metadata.proposedFrom){
+        var clearedMeta=Object.assign({},row.metadata); delete clearedMeta.proposedFrom;
+        patch.metadata=clearedMeta;
+      }
+    }
+    var result=await sb.from('content_pages').update(patch).eq('id',id).select('*').single();
+    if(result.error) throw result.error;
+    DATA.contentPages=DATA.contentPages.map(function(r){return r.id===id?result.data:r;});
+    auditLog(publish?'publish_content_page':'unpublish_content_page','content_pages',id,{status:row?row.status:null},patch,null);
+    if(result.data.content_type==='faq') renderFaqContent(); else renderLegalContent();
+    toast(publish?'Published':'Unpublished','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteContentPage(id){
+  if(!requirePerm('content.manage')) return;
+  var row=DATA.contentPages.find(function(r){return r.id===id;});
+  var ok=await confirm2('Delete '+(row?row.title:'this page'),'This removes it permanently, including from the live website/app once cache expires. This cannot be undone.','Delete','red');
+  if(!ok) return;
+  if(!(await mutationGuard('delete_content_page'))) return;
+  try {
+    var result=await sb.from('content_pages').delete().eq('id',id);
+    if(result.error) throw result.error;
+    DATA.contentPages=DATA.contentPages.filter(function(r){return r.id!==id;});
+    auditLog('delete_content_page','content_pages',id,row||null,null,null);
+    if(row&&row.content_type==='faq') renderFaqContent(); else renderLegalContent();
+    toast('Deleted','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function previewContentPage(id){
+  var row=DATA.contentPages.find(function(r){return r.id===id;});
+  if(!row) return;
+  var html='<div class="modal-title">Preview: '+esc(row.title)+'<button class="modal-close" onclick="closeModal()">&times;</button></div>';
+  html+='<div style="max-height:60vh;overflow-y:auto;padding-right:4px">';
+  if(row.content_type==='faq'){
+    (row.body.items||[]).forEach(function(it){
+      html+='<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase">'+esc(it.group||'')+'</div><div style="font-weight:700;color:var(--text);margin:4px 0">'+esc(it.q)+'</div><div style="font-size:13px;color:var(--sub);line-height:1.6">'+esc(it.a)+'</div></div>';
+    });
+  } else {
+    (row.body.sections||[]).forEach(function(s){
+      html+='<div style="margin-bottom:14px">'+(s.heading?'<div style="font-weight:700;color:var(--text);margin-bottom:4px">'+esc(s.heading)+'</div>':'')+'<div style="font-size:13px;color:var(--sub);line-height:1.6;white-space:pre-wrap">'+esc(s.body)+'</div></div>';
+    });
+  }
+  html+='</div><button class="filter-btn" onclick="closeModal()" style="margin-top:12px">Close</button>';
+  openModal(html);
+}
+
+async function openContentHistory(id){
+  var row=DATA.contentPages.find(function(r){return r.id===id;});
+  if(!row) return;
+  var html='<div class="modal-title">Version History: '+esc(row.title)+'<button class="modal-close" onclick="closeModal()">&times;</button></div>';
+  html+='<div id="contentHistoryList" style="max-height:55vh;overflow-y:auto">Loading…</div>';
+  html+='<button class="filter-btn" onclick="closeModal()" style="margin-top:12px">Close</button>';
+  openModal(html);
+  try {
+    var r=await sb.from('content_page_versions').select('*').eq('content_page_id',id).order('version',{ascending:false});
+    var list=document.getElementById('contentHistoryList');
+    if(!list) return;
+    if(r.error){ list.innerHTML='<div class="empty-msg">Could not load history: '+esc(r.error.message)+'</div>'; return; }
+    await ensureProfiles((r.data||[]).map(function(v){return v.updated_by;}).filter(Boolean));
+    if(!r.data || !r.data.length){ list.innerHTML='<div class="empty-msg">No earlier versions yet — this is the first saved version.</div>'; return; }
+    list.innerHTML=r.data.map(function(v){
+      return '<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:12px">v'+v.version+' — '+esc(v.title)+'</span><button class="ab ab-view" onclick="restoreContentVersion(\''+id+'\',\''+v.id+'\')">Restore this version</button></div>'
+        +'<div style="font-size:11px;color:var(--sub);margin-top:4px">'+fmtDateTime(v.created_at)+' by '+(v.updated_by?esc(userLabel(v.updated_by)):'—')+' · status was '+esc(v.status)+'</div>'
+        +'</div>';
+    }).join('');
+  } catch(e){ var list=document.getElementById('contentHistoryList'); if(list) list.innerHTML='<div class="empty-msg">Could not load history.</div>'; }
+}
+
+async function restoreContentVersion(pageId, versionId){
+  if(!requirePerm('content.manage')) return;
+  var ok=await confirm2('Restore this version','The page will be reverted to this earlier version and saved as a new draft. It will not be published automatically.','Restore','red');
+  if(!ok) return;
+  try {
+    var vr=await sb.from('content_page_versions').select('*').eq('id',versionId).single();
+    if(vr.error) throw vr.error;
+    var v=vr.data;
+    var before=DATA.contentPages.find(function(r){return r.id===pageId;});
+    if(!_adminUid){ var user=(await sb.auth.getUser()).data.user; _adminUid=user&&user.id; }
+    var patch={ title:v.title, short_description:v.short_description, body:v.body, effective_date:v.effective_date, status:'draft', updated_by:_adminUid||null };
+    var result=await sb.from('content_pages').update(patch).eq('id',pageId).select('*').single();
+    if(result.error) throw result.error;
+    DATA.contentPages=DATA.contentPages.map(function(r){return r.id===pageId?result.data:r;});
+    auditLog('restore_content_page_version','content_pages',pageId,before||null,{restored_version:v.version},null);
+    closeModal();
+    if(result.data.content_type==='faq') renderFaqContent(); else renderLegalContent();
+    toast('Restored v'+v.version+' as a new draft — review and publish when ready','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Contact & Social Links (app_settings.content) ───────────
+function renderContactSettings(){
+  var c = (DATA.settings && DATA.settings.content) || {};
+  var canEdit = requirePermSilent('content.manage');
+  var html='<div class="sec-head"><div><div class="sec-title">Contact &amp; Social Links</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Shown in the website footer and (for migrated fields) the app. Changing these does not require a new app build for the website; the mobile app picks them up on next launch where wired.</div></div></div>';
+  html+='<div style="max-width:560px">';
+  html+='<div class="form-row"><label class="form-label">Support email</label><input class="form-input" id="csSupportEmail" value="'+esc(c.supportEmail||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  html+='<div class="form-row"><label class="form-label">WhatsApp number</label><input class="form-input" id="csWhatsapp" value="'+esc(c.whatsappNumber||'')+'" '+(canEdit?'':'disabled')+'><div style="font-size:11px;color:var(--sub);margin-top:4px">Include country code, e.g. +263771234567. Confirm with the business owner before changing this from its current value.</div></div>';
+  html+='<div class="form-row"><label class="form-label">TikTok URL</label><input class="form-input" id="csTiktok" value="'+esc((c.socialLinks&&c.socialLinks.tiktok)||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  html+='<div class="form-row"><label class="form-label">Facebook URL</label><input class="form-input" id="csFacebook" value="'+esc((c.socialLinks&&c.socialLinks.facebook)||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  html+='<div class="form-row"><label class="form-label">Instagram URL</label><input class="form-input" id="csInstagram" value="'+esc((c.socialLinks&&c.socialLinks.instagram)||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  html+='<div class="form-row"><label class="form-label">Apple App Store URL</label><input class="form-input" id="csAppStore" value="'+esc(c.appStoreUrl||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  html+='<div class="form-row"><label class="form-label">Google Play URL</label><input class="form-input" id="csPlayStore" value="'+esc(c.playStoreUrl||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  html+='<div class="form-row"><label class="form-label">Official website URL</label><input class="form-input" id="csWebsite" value="'+esc(c.websiteUrl||'')+'" '+(canEdit?'':'disabled')+'></div>';
+  if(canEdit) html+='<button class="btn-send" id="saveContactSettingsBtn" onclick="saveContactSettings()">Save Changes</button>';
+  html+='</div>';
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+async function saveContactSettings(){
+  if(!requirePerm('content.manage')) return;
+  var supportEmail=document.getElementById('csSupportEmail').value.trim();
+  var whatsapp=document.getElementById('csWhatsapp').value.trim();
+  var tiktok=document.getElementById('csTiktok').value.trim();
+  var facebook=document.getElementById('csFacebook').value.trim();
+  var instagram=document.getElementById('csInstagram').value.trim();
+  var appStore=document.getElementById('csAppStore').value.trim();
+  var playStore=document.getElementById('csPlayStore').value.trim();
+  var website=document.getElementById('csWebsite').value.trim();
+  if(supportEmail && !isSafeEmail(supportEmail)){ toast('Enter a valid support email','error'); return; }
+  if(whatsapp && !isSafeWhatsapp(whatsapp)){ toast('Enter a valid WhatsApp number (digits, spaces, optional leading +)','error'); return; }
+  var urlFields=[['TikTok',tiktok],['Facebook',facebook],['Instagram',instagram],['Apple App Store',appStore],['Google Play',playStore],['Official website',website]];
+  for(var i=0;i<urlFields.length;i++){
+    var val=urlFields[i][1];
+    if(val && !isSafeHttpUrl(val)){ toast('Enter a valid https:// URL for '+urlFields[i][0],'error'); return; }
+  }
+  var btn=document.getElementById('saveContactSettingsBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+  try {
+    var before = DATA.settings && DATA.settings.content ? DATA.settings.content : null;
+    var content = {
+      supportEmail: supportEmail||null, whatsappNumber: whatsapp||null,
+      socialLinks: { tiktok: tiktok||null, facebook: facebook||null, instagram: instagram||null },
+      appStoreUrl: appStore||null, playStoreUrl: playStore||null, websiteUrl: website||null
+    };
+    var newSettings = Object.assign({}, DATA.settings||{}, { content: content });
+    var result = await sb.from('app_settings').update({ settings: newSettings }).eq('id',1).select('settings').single();
+    if(result.error) throw result.error;
+    DATA.settings = result.data.settings;
+    auditLog('update_contact_settings','app_settings',1,before,content,null);
+    toast('Contact & social links updated');
+    if(btn){ btn.disabled=false; btn.textContent='Save Changes'; }
+  } catch(e){ toast('Error: '+e.message,'error'); if(btn){btn.disabled=false;btn.textContent='Save Changes';} }
+}
+
+// ════════════════════════════════════════════════════════════
+// MARKETPLACE TAXONOMY — Categories / Provinces / Cities. Stage 4 of the
+// centralization work. listings.category/province/city stay plain TEXT
+// (unchanged) — these tables are a read/reference + admin-editable label
+// layer, not a foreign key target, so nothing here can strand a listing.
+// Every write goes through auditLog(), gated behind
+// requirePerm('taxonomy.manage') (super_admin/admin only).
+// ════════════════════════════════════════════════════════════
+var _taxTab = 'categories';
+var _taxSearch = '';
+var _taxUsage = { category:{}, province:{}, city:{} };
+var _taxMissing = false;
+
+async function loadTaxonomy() {
+  try {
+    var r = await Promise.all([
+      sb.from('categories').select('*').order('sort_order'),
+      sb.from('provinces').select('*').order('sort_order'),
+      sb.from('cities').select('*').order('sort_order'),
+    ]);
+    _taxMissing = r.some(function(x){ return x.error && x.error.code==='42P01'; });
+    DATA.categories = (!r[0].error && r[0].data) || [];
+    DATA.provinces = (!r[1].error && r[1].data) || [];
+    DATA.cities = (!r[2].error && r[2].data) || [];
+    var byIds = [].concat(DATA.categories.map(function(c){return c.updated_by;}), DATA.provinces.map(function(p){return p.updated_by;}), DATA.cities.map(function(c){return c.updated_by;})).filter(Boolean);
+    await ensureProfiles(byIds);
+    // Usage counts: one grouped query per column rather than N+1 per-record
+    // counts (319 cities would otherwise mean 319 round trips).
+    var counts = await Promise.all([
+      sb.from('listings').select('category').not('category','is',null),
+      sb.from('listings').select('province').not('province','is',null),
+      sb.from('listings').select('city').not('city','is',null),
+    ]);
+    function tally(rows, field){ var m={}; (rows||[]).forEach(function(r){ var k=r[field]; if(k) m[k]=(m[k]||0)+1; }); return m; }
+    _taxUsage.category = tally(counts[0].data, 'category');
+    _taxUsage.province = tally(counts[1].data, 'province');
+    _taxUsage.city = tally(counts[2].data, 'city');
+  } catch(e){ DATA.categories=[]; DATA.provinces=[]; DATA.cities=[]; toast('Taxonomy load error: '+e.message,'error'); }
+}
+
+function renderTaxonomy(){
+  if(_taxMissing){
+    document.getElementById('mainContent').innerHTML='<div class="empty-msg">Migration required: the categories/provinces/cities tables do not exist yet.</div>';
+    return;
+  }
+  var canEdit = can('taxonomy.manage');
+  var html='<div class="sec-head"><div><div class="sec-title">Marketplace Taxonomy</div><div style="font-size:12px;color:var(--sub);margin-top:3px">Categories, provinces and cities shown across the website and app. Listings keep storing their category/province/city as plain text — editing a label here does not move or hide any existing listing.</div></div></div>';
+  html+='<div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">';
+  [['categories','Categories'],['provinces','Provinces'],['cities','Cities']].forEach(function(t){
+    html+='<button class="filter-btn'+(_taxTab===t[0]?' on':'')+'" onclick="_taxTab=\''+t[0]+'\';renderTaxonomy()">'+t[1]+'</button>';
+  });
+  html+='<input class="form-input" placeholder="Search..." value="'+esc(_taxSearch)+'" style="max-width:220px;margin-left:auto" oninput="_taxSearch=this.value;renderTaxonomy()">';
+  if(canEdit){
+    var addLabel = _taxTab==='categories'?'+ New Category':_taxTab==='provinces'?'+ New Province':'+ Add City';
+    html+='<button class="btn-send" onclick="openTaxEditor(\''+_taxTab+'\',null)" style="padding:8px 16px;font-size:13px">'+addLabel+'</button>';
+  }
+  html+='</div>';
+  html += _taxTab==='categories' ? renderTaxCategories(canEdit) : _taxTab==='provinces' ? renderTaxProvinces(canEdit) : renderTaxCities(canEdit);
+  document.getElementById('mainContent').innerHTML=html;
+}
+
+function taxMatchesSearch(row){
+  if(!_taxSearch.trim()) return true;
+  var q=_taxSearch.trim().toLowerCase();
+  return (row.name||'').toLowerCase().indexOf(q)!==-1 || (row.legacy_key||row.code||row.slug||'').toLowerCase().indexOf(q)!==-1;
+}
+
+function renderTaxCategories(canEdit){
+  var rows = DATA.categories.filter(taxMatchesSearch);
+  if(!rows.length) return '<div class="empty-msg">No categories match.</div>';
+  var html='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Legacy Key</th><th>Color</th><th>Sort</th><th>Status</th><th>Listings</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(function(row){
+    var n = _taxUsage.category[row.legacy_key]||0;
+    html+='<tr><td><div style="font-weight:700;color:var(--text)">'+esc(row.name)+'</div>'+(row.description?'<div style="font-size:11px;color:var(--sub);margin-top:2px">'+esc(row.description)+'</div>':'')+'</td>'
+      +'<td><code style="font-size:11px">'+esc(row.legacy_key)+'</code></td>'
+      +'<td>'+(row.color?'<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:'+esc(row.color)+';display:inline-block;border:1px solid var(--border)"></span>'+esc(row.color)+'</span>':'—')+'</td>'
+      +'<td>'+Number(row.sort_order||0)+'</td>'
+      +'<td><span class="badge badge-'+(row.is_active?'active':'pending')+'">'+(row.is_active?'Active':'Inactive')+'</span></td>'
+      +'<td>'+n+'</td>'
+      +'<td><div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +(canEdit?'<button class="ab ab-view" onclick="openTaxEditor(\'categories\',\''+row.id+'\')">Edit</button>'
+        +'<button class="ab '+(row.is_active?'ab-reject':'ab-approve')+'" onclick="toggleTaxActive(\'categories\',\''+row.id+'\','+(!row.is_active)+')">'+(row.is_active?'Deactivate':'Activate')+'</button>'
+        +(n>0?'<span style="font-size:11px;color:var(--sub)" title="Cannot delete — in use">Locked</span>':'<button class="ab ab-delete" onclick="deleteTaxRecord(\'categories\',\''+row.id+'\')">Delete</button>')
+        :'')
+      +'</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderTaxProvinces(canEdit){
+  var rows = DATA.provinces.filter(taxMatchesSearch);
+  if(!rows.length) return '<div class="empty-msg">No provinces match.</div>';
+  var html='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Code</th><th>Sort</th><th>Status</th><th>Listings</th><th>Cities</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(function(row){
+    var n = _taxUsage.province[row.name]||0;
+    var cityCount = DATA.cities.filter(function(c){return c.province_id===row.id;}).length;
+    html+='<tr><td style="font-weight:700;color:var(--text)">'+esc(row.name)+'</td>'
+      +'<td><code style="font-size:11px">'+esc(row.code)+'</code></td>'
+      +'<td>'+Number(row.sort_order||0)+'</td>'
+      +'<td><span class="badge badge-'+(row.is_active?'active':'pending')+'">'+(row.is_active?'Active':'Inactive')+'</span></td>'
+      +'<td>'+n+'</td>'
+      +'<td>'+cityCount+'</td>'
+      +'<td><div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +(canEdit?'<button class="ab ab-view" onclick="openTaxEditor(\'provinces\',\''+row.id+'\')">Edit</button>'
+        +'<button class="ab '+(row.is_active?'ab-reject':'ab-approve')+'" onclick="toggleTaxActive(\'provinces\',\''+row.id+'\','+(!row.is_active)+')">'+(row.is_active?'Deactivate':'Activate')+'</button>'
+        +((n>0||cityCount>0)?'<span style="font-size:11px;color:var(--sub)" title="Cannot delete — in use">Locked</span>':'<button class="ab ab-delete" onclick="deleteTaxRecord(\'provinces\',\''+row.id+'\')">Delete</button>')
+        :'')
+      +'</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderTaxCities(canEdit){
+  var rows = DATA.cities.filter(taxMatchesSearch);
+  var provById = {}; DATA.provinces.forEach(function(p){ provById[p.id]=p; });
+  if(!rows.length) return '<div class="empty-msg">No cities match.</div>';
+  if(rows.length>150 && !_taxSearch.trim()) rows = rows.slice(0,150);
+  var html='<div style="font-size:11px;color:var(--sub);margin-bottom:8px">'+DATA.cities.filter(taxMatchesSearch).length+' matching cities'+(rows.length<DATA.cities.filter(taxMatchesSearch).length?' (showing first 150 — search to narrow)':'')+'</div>';
+  html+='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Province</th><th>Slug</th><th>Sort</th><th>Status</th><th>Listings</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(function(row){
+    var n = _taxUsage.city[row.name]||0;
+    var prov = provById[row.province_id];
+    html+='<tr><td style="font-weight:700;color:var(--text)">'+esc(row.name)+'</td>'
+      +'<td>'+(prov?esc(prov.name):'—')+'</td>'
+      +'<td><code style="font-size:11px">'+esc(row.slug)+'</code></td>'
+      +'<td>'+Number(row.sort_order||0)+'</td>'
+      +'<td><span class="badge badge-'+(row.is_active?'active':'pending')+'">'+(row.is_active?'Active':'Inactive')+'</span></td>'
+      +'<td>'+n+'</td>'
+      +'<td><div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +(canEdit?'<button class="ab ab-view" onclick="openTaxEditor(\'cities\',\''+row.id+'\')">Edit</button>'
+        +'<button class="ab '+(row.is_active?'ab-reject':'ab-approve')+'" onclick="toggleTaxActive(\'cities\',\''+row.id+'\','+(!row.is_active)+')">'+(row.is_active?'Deactivate':'Activate')+'</button>'
+        +(n>0?'<span style="font-size:11px;color:var(--sub)" title="Cannot delete — in use">Locked</span>':'<button class="ab ab-delete" onclick="deleteTaxRecord(\'cities\',\''+row.id+'\')">Delete</button>')
+        :'')
+      +'</div></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function taxTableOf(kind){ return kind==='categories'?DATA.categories:kind==='provinces'?DATA.provinces:DATA.cities; }
+
+function taxSlugify(s){
+  return String(s||'').toLowerCase().trim().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
+function openTaxEditor(kind, id){
+  if(!requirePerm('taxonomy.manage')) return;
+  var row = id?taxTableOf(kind).find(function(r){return r.id===id;}):null;
+  var name = row?row.name:'';
+  var description = row&&kind==='categories'?(row.description||''):'';
+  var color = row&&kind==='categories'?(row.color||''):'';
+  var icon = row&&kind==='categories'?(row.icon||''):'';
+  var sortOrder = row?Number(row.sort_order||0):(taxTableOf(kind).length);
+  var provinceOptions = kind==='cities'?DATA.provinces.map(function(p){return '<option value="'+p.id+'"'+(row&&row.province_id===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join(''):'';
+  var kindLabel = kind==='categories'?'Category':kind==='provinces'?'Province':'City';
+  var html = '<div class="modal-title">'+(row?'Edit':'New')+' '+kindLabel+'<button class="modal-close" onclick="closeModal()">&times;</button></div>';
+  if(row){
+    html += '<div style="font-size:11px;color:var(--sub);margin-bottom:12px">Legacy key/code/slug (<code>'+esc(row.legacy_key||row.code||row.slug)+'</code>) cannot be changed here — existing listings reference it as plain text.</div>';
+  } else if(kind!=='cities'){
+    html += '<div style="font-size:11px;color:var(--sub);margin-bottom:12px">The stable key below is generated from the name and cannot be changed after saving. Existing installed mobile apps will not know about this new '+kindLabel.toLowerCase()+' until a new app build ships or the app next fetches the live list — the website picks it up immediately once published.</div>';
+  }
+  html += '<div class="form-row"><label class="form-label">Display name <span style="color:var(--red)">*</span></label><input class="form-input" id="taxName" maxlength="80" value="'+esc(name)+'" '+(row?'':'oninput="taxSyncKeyField(\''+kind+'\')"')+'></div>';
+  if(!row && kind!=='cities'){
+    var keyLabel = kind==='categories'?'Legacy key':'Code';
+    html += '<div class="form-row"><label class="form-label">'+keyLabel+' <span style="color:var(--red)">*</span></label><input class="form-input" id="taxKey" maxlength="60" placeholder="auto-generated from name" oninput="this.dataset.touched=\'1\'"><div style="font-size:11px;color:var(--sub);margin-top:4px">Lowercase letters, digits and hyphens only. Auto-filled from the name — edit before saving if needed, permanent afterwards.</div></div>';
+    if(kind==='categories'){
+      html += '<div class="form-row"><label class="form-label">Slug <span style="color:var(--red)">*</span></label><input class="form-input" id="taxSlug" maxlength="60" placeholder="auto-generated from name" oninput="this.dataset.touched=\'1\'"></div>';
+    }
+    html += '<div class="form-row"><label class="form-label">Country code</label><input class="form-input" id="taxCountryCode" maxlength="4" value="ZW" disabled style="opacity:.6"></div>';
+  }
+  if(kind==='categories'){
+    html += '<div class="form-row"><label class="form-label">Description</label><input class="form-input" id="taxDescription" maxlength="200" value="'+esc(description)+'"></div>';
+    html += '<div class="form-row"><label class="form-label">Color (hex)</label><input class="form-input" id="taxColor" maxlength="9" placeholder="#1E88E5" value="'+esc(color)+'"></div>';
+    html += '<div class="form-row"><label class="form-label">Icon reference</label><input class="form-input" id="taxIcon" maxlength="120" placeholder="optional — e.g. cat_new.png" value="'+esc(icon)+'"><div style="font-size:11px;color:var(--sub);margin-top:4px">The mobile app shows a generic fallback icon for any category without a matching bundled icon — a real icon needs an app build to ship.</div></div>';
+  }
+  if(kind==='cities'){
+    html += '<div class="form-row"><label class="form-label">Province <span style="color:var(--red)">*</span></label><select class="form-input" id="taxProvinceId">'+(row?'':'<option value="">Choose…</option>')+provinceOptions+'</select></div>';
+    if(!row) html += '<div class="form-row"><label class="form-label">Slug <span style="color:var(--red)">*</span></label><input class="form-input" id="taxSlug" maxlength="80" placeholder="e.g. new-suburb"><div style="font-size:11px;color:var(--sub);margin-top:4px">Lowercase letters, digits and hyphens only. This becomes the stable key — cannot be changed later.</div></div>';
+  }
+  html += '<div class="form-row"><label class="form-label">Sort order</label><input class="form-input" id="taxSortOrder" type="number" step="1" value="'+sortOrder+'"></div>';
+  // "Set new records active by default only after validation" — new
+  // categories start unchecked, requiring a deliberate second step
+  // (Activate) once the admin has reviewed the saved record. Provinces and
+  // cities keep the existing default-active behaviour.
+  var defaultActive = row ? row.is_active : kind!=='categories';
+  html += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px"><input type="checkbox" id="taxIsActive" '+(defaultActive?'checked':'')+' style="accent-color:var(--accent)"> Active (shown to new users)</label>';
+  if(!row && kind==='categories') html += '<div style="font-size:11px;color:var(--sub);margin-top:-10px;margin-bottom:16px">New categories start inactive — review it, then use Activate once you\'re happy with it.</div>';
+  html += '<div style="display:flex;gap:10px"><button class="btn-send" id="saveTaxBtn" onclick="saveTaxRecord(\''+kind+'\',\''+(row?row.id:'')+'\')">Save</button><button class="filter-btn" onclick="closeModal()">Cancel</button></div>';
+  openModal(html);
+}
+
+function taxSyncKeyField(kind){
+  var nameEl=document.getElementById('taxName'), keyEl=document.getElementById('taxKey'), slugEl=document.getElementById('taxSlug');
+  if(!nameEl) return;
+  var slug=taxSlugify(nameEl.value);
+  if(keyEl && !keyEl.dataset.touched) keyEl.value=slug;
+  if(slugEl && kind==='categories' && !slugEl.dataset.touched) slugEl.value=slug;
+}
+
+async function saveTaxRecord(kind, id){
+  if(!requirePerm('taxonomy.manage')) return;
+  var name = (document.getElementById('taxName').value||'').trim();
+  var sortOrder = Number((document.getElementById('taxSortOrder').value||'0').trim());
+  var isActive = !!document.getElementById('taxIsActive').checked;
+  if(!name){ toast('Enter a display name','error'); return; }
+  if(!Number.isInteger(sortOrder)){ toast('Sort order must be a whole number','error'); return; }
+  var patch = { name:name, sort_order:sortOrder, is_active:isActive };
+  if(kind==='categories'){
+    patch.description = (document.getElementById('taxDescription').value||'').trim()||null;
+    var color = (document.getElementById('taxColor').value||'').trim();
+    if(color && !/^#[0-9a-fA-F]{3,8}$/.test(color)){ toast('Color must be a hex value like #1E88E5','error'); return; }
+    patch.color = color||null;
+    var iconEl = document.getElementById('taxIcon');
+    if(iconEl) patch.icon = (iconEl.value||'').trim()||null;
+  }
+  var insertExtra = {};
+  if(!id && kind!=='cities'){
+    var keyVal = (document.getElementById('taxKey').value||'').trim().toLowerCase();
+    if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(keyVal)){ toast((kind==='categories'?'Legacy key':'Code')+' must be lowercase letters, digits and hyphens only','error'); return; }
+    // Client-side duplicate check up front (friendlier than waiting for the
+    // DB's unique-constraint error) — the unique constraint from the Stage
+    // 4 migration is still the real guard against a race between two admins.
+    var dupeField = kind==='categories'?'legacy_key':'code';
+    if(taxTableOf(kind).some(function(r){ return r[dupeField]===keyVal; })){
+      toast('That '+(kind==='categories'?'legacy key':'code')+' already exists — choose a different name.','error');
+      return;
+    }
+    insertExtra[dupeField] = keyVal;
+    insertExtra.country_code = 'ZW';
+    if(kind==='provinces'){
+      // Zimbabwe has exactly 10 provinces, already seeded — warn loudly
+      // before letting an admin create an 11th with a similar name (e.g.
+      // "Harare Province" vs "Harare"), since that's very likely a mistake
+      // rather than a genuine new province.
+      var normalizedName = name.trim().toLowerCase();
+      var closeMatch = DATA.provinces.find(function(r){ return r.name.toLowerCase()===normalizedName; });
+      if(closeMatch){ toast('A province named "'+closeMatch.name+'" already exists.','error'); return; }
+      var confirmNew = await confirm2('Create a new province?', 'Zimbabwe has exactly 10 provinces, already set up. Only continue if "'+name+'" is a genuinely new, real province — not a rename or duplicate of an existing one.', 'Yes, Create It', 'red');
+      if(!confirmNew) return;
+    }
+    if(kind==='categories'){
+      var slugVal = (document.getElementById('taxSlug').value||'').trim().toLowerCase() || keyVal;
+      if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slugVal)){ toast('Slug must be lowercase letters, digits and hyphens only','error'); return; }
+      if(DATA.categories.some(function(r){ return r.slug===slugVal; })){ toast('That slug already exists — choose a different one.','error'); return; }
+      insertExtra.slug = slugVal;
+    }
+  }
+  if(kind==='cities'){
+    var provinceId = document.getElementById('taxProvinceId').value;
+    if(!provinceId){ toast('Choose a province','error'); return; }
+    patch.province_id = provinceId;
+    if(!id){
+      var citySlug = (document.getElementById('taxSlug').value||'').trim().toLowerCase();
+      if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(citySlug)){ toast('Slug must be lowercase letters, digits and hyphens only','error'); return; }
+      // Prevent duplicate city names under the same province before hitting
+      // the DB's unique(province_id, slug) constraint.
+      if(DATA.cities.some(function(r){ return r.province_id===provinceId && r.slug===citySlug; })){
+        toast('A city with that slug already exists under this province.','error');
+        return;
+      }
+      insertExtra.slug = citySlug;
+      insertExtra.country_code = 'ZW';
+    }
+  }
+  var btn=document.getElementById('saveTaxBtn'); if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+  try {
+    if(!_adminUid){ var user=(await sb.auth.getUser()).data.user; _adminUid=user&&user.id; }
+    patch.updated_by=_adminUid||null;
+    var before = id?taxTableOf(kind).find(function(r){return r.id===id;}):null;
+    var result;
+    if(id){
+      result = await sb.from(kind).update(patch).eq('id',id).select('*').single();
+    } else {
+      var rec = Object.assign({}, patch, insertExtra);
+      result = await sb.from(kind).insert(rec).select('*').single();
+    }
+    if(result.error) throw result.error;
+    DATA[kind] = id ? taxTableOf(kind).map(function(r){return r.id===id?result.data:r;}) : taxTableOf(kind).concat([result.data]);
+    auditLog(id?'update_'+kind.slice(0,-1):'create_'+kind.slice(0,-1), kind, result.data.id, before||null, Object.assign({},patch,insertExtra), null);
+    closeModal(); renderTaxonomy();
+    toast(id?'Updated':'Added');
+  } catch(e){
+    var msg = e.message||'';
+    if(/duplicate key|unique constraint/i.test(msg)) msg = 'That key, slug or code already exists.';
+    toast('Error: '+msg,'error');
+    if(btn){btn.disabled=false;btn.textContent='Save';}
+  }
+}
+
+async function toggleTaxActive(kind, id, active){
+  if(!requirePerm('taxonomy.manage')) return;
+  var row = taxTableOf(kind).find(function(r){return r.id===id;});
+  try {
+    if(!_adminUid){ var user=(await sb.auth.getUser()).data.user; _adminUid=user&&user.id; }
+    var result = await sb.from(kind).update({ is_active:active, updated_by:_adminUid||null }).eq('id',id).select('*').single();
+    if(result.error) throw result.error;
+    DATA[kind] = taxTableOf(kind).map(function(r){return r.id===id?result.data:r;});
+    auditLog(active?'activate_'+kind.slice(0,-1):'deactivate_'+kind.slice(0,-1), kind, id, {is_active:row?row.is_active:null}, {is_active:active}, null);
+    renderTaxonomy();
+    toast(active?'Activated':'Deactivated — hidden from new listing forms, existing listings unaffected','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteTaxRecord(kind, id){
+  if(!requirePerm('taxonomy.manage')) return;
+  var row = taxTableOf(kind).find(function(r){return r.id===id;});
+  var key = row&&(row.legacy_key||row.name);
+  var inUse = kind==='categories'?_taxUsage.category[row&&row.legacy_key]:kind==='provinces'?_taxUsage.province[row&&row.name]:_taxUsage.city[row&&row.name];
+  if(inUse){ toast('Cannot delete — '+inUse+' listing(s) still use this. Deactivate instead.','error'); return; }
+  if(kind==='provinces'){
+    var cityCount = DATA.cities.filter(function(c){return c.province_id===id;}).length;
+    if(cityCount){ toast('Cannot delete — '+cityCount+' cit'+(cityCount===1?'y':'ies')+' still belong to this province.','error'); return; }
+  }
+  var ok = await confirm2('Delete '+(row?row.name:'this record'), 'This permanently removes it. Only possible because no listings currently reference it.', 'Delete', 'red');
+  if(!ok) return;
+  if(!(await mutationGuard('delete_'+kind.slice(0,-1)))) return;
+  try {
+    var result = await sb.from(kind).delete().eq('id',id);
+    if(result.error) throw result.error;
+    DATA[kind] = taxTableOf(kind).filter(function(r){return r.id!==id;});
+    auditLog('delete_'+kind.slice(0,-1), kind, id, row||null, null, null);
+    renderTaxonomy();
+    toast('Deleted','info');
+  } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 function renderAds() {

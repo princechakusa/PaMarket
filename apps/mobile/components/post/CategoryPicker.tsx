@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { CATEGORIES } from "../../lib/constants";
+import { CATEGORIES, type Category } from "../../lib/constants";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -17,17 +17,31 @@ const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
   kids: require("../../assets/cats/cat_kids.png"),
   other: require("../../assets/cats/cat_other.png"),
 };
+// Stage 5: any category id without a bundled icon (e.g. one an admin adds
+// after this build shipped) falls back to the existing generic "Other"
+// icon rather than rendering blank/broken.
+const FALLBACK_ICON = CAT_ICONS.other;
 
-export function CategoryPicker({ onSelect }: { onSelect: (id: string) => void }) {
+export function CategoryPicker({
+  onSelect,
+  categories,
+}: {
+  onSelect: (id: string) => void;
+  // Stage 5: optional silently-upgraded list from lib/taxonomy.ts's
+  // useTaxonomy() (see app/(tabs)/post.tsx). Defaults to the bundled
+  // CATEGORIES, unchanged, if the caller doesn't pass one.
+  categories?: Category[];
+}) {
   const styles = useThemedStyles(buildStyles);
+  const list = categories ?? CATEGORIES;
   return (
     <View>
       <Text style={styles.label}>What are you posting?</Text>
       <View style={styles.grid}>
-        {CATEGORIES.map((c) => (
+        {list.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelect(c.id)}>
             <View style={styles.iconChip}>
-              <Image source={CAT_ICONS[c.id]} style={styles.icon} />
+              <Image source={CAT_ICONS[c.id] ?? FALLBACK_ICON} style={styles.icon} />
             </View>
             <Text style={styles.itemLabel} numberOfLines={2}>
               {c.name}

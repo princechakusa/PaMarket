@@ -3,45 +3,26 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from 'npm:@aws-sdk/clien
 import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner'
 import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 
-// Allowed request origins — tightened from wildcard (*)
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',      // public website (image upload when posting)
-  'https://www.pamarketzw.com',
-  'https://admin.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev',
-  'https://pamarket.app',
-  'https://www.pamarket.app',
-  'com.pamarket.app',       // Capacitor deep-link scheme, sent by some WebViews
-  // capacitor.config.json sets androidScheme:"https" with no custom hostname,
-  // so Capacitor's local WebView server actually serves the app from
-  // https://localhost — NOT com.pamarket.app. A request from that real origin
-  // was falling through to FALLBACK_ORIGIN below, whose Access-Control-Allow-
-  // Origin (the website's) didn't match the WebView's actual origin, so the
-  // browser/WebView silently rejected the response as a CORS violation —
-  // surfacing in-app only as a generic "Failed to fetch", never reaching this
-  // function's own logic (confirmed: it happened on the very first network
-  // call, before any response could be read).
-  'https://localhost',
-  'capacitor://localhost', // iOS Capacitor WebView origin (same root cause)
-  'http://127.0.0.1:5500',  // Local dev (Live Server)
-  'http://localhost:5500',
-  'http://localhost:3000',
-])
-
-// The fallback ACAO when an origin isn't in the set. The website is the
-// primary browser client, so fall back to its origin rather than any app
-// scheme — but every real client this function serves must be listed above;
-// this fallback existing is not a substitute for an accurate allowlist.
-const FALLBACK_ORIGIN = 'https://pamarketzw.com'
-
+// Migrated to the shared allowlist (Stage 6).
+//   - 'com.pamarket.app' removed: it's the Android package identifier, not
+//     a valid Origin header value — capacitor.config.json sets
+//     androidScheme:"https" with no custom hostname, so Capacitor's WebView
+//     actually serves the app from https://localhost (kept below via
+//     allowNativeAppOrigins), never from a "com.pamarket.app" origin. That
+//     entry could never match a real request; removing it changes nothing.
+//   - 'https://pamarket.app' / 'https://www.pamarket.app' kept unchanged:
+//     no confirmed live caller was found for this domain (Stage 6 audit),
+//     but per instructions this is not removed without explicit approval
+//     — see the Stage 6 report.
+//   - Local dev origins (127.0.0.1:5500, localhost:5500, localhost:3000)
+//     are now only included when the ALLOW_DEV_CORS_ORIGINS secret is
+//     explicitly set to "true" — see supabase/functions/_shared/cors.ts.
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts'
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : FALLBACK_ORIGIN
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Vary': 'Origin',
-  }
+  return sharedCorsHeaders(req, {
+    allowNativeAppOrigins: true,
+    extraOrigins: ['https://pamarket.app', 'https://www.pamarket.app'],
+  })
 }
 
 // Allowlist for content types users may upload

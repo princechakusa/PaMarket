@@ -4,7 +4,10 @@ const document=root.document;
 const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 const COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8FF','#FFEDD5'];
 const TCOLORS=['#1A3A8F','#B27D22','#1F7A4D','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
-const CAT_LABELS={property:'Property',vehicles:'Vehicles',electronics:'Electronics',furniture:'Furniture',fashion:'Fashion',services:'Services',agriculture:'Agriculture',rooms:'Rooms to Rent',pets:'Pets',kids:'Baby & Kids',jobs:'Jobs'};
+// Stage 4 fix: was missing 'other' (confirmed drift vs js/listing-schema.js's
+// CAT_LABELS, the canonical copy) — a listing in the 'other' category fell
+// back to its raw key instead of a real label anywhere this map was used.
+const CAT_LABELS={property:'Property',vehicles:'Vehicles',electronics:'Electronics',furniture:'Furniture',fashion:'Fashion',services:'Services',agriculture:'Agriculture',rooms:'Rooms to Rent',pets:'Pets',kids:'Baby & Kids',jobs:'Jobs',other:'Other'};
 const PAGE_SIZE=20;
 const SUPPORTED_SORTS=new Set(['created_at.desc','price.asc','price.desc']);
 let state={cat:'',q:'',prov:'',city:'',sort:'created_at.desc',offset:0,shops:false};

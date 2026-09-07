@@ -32,26 +32,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'https://admin.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev',
-  'https://pamarket.app',
-  'https://www.pamarket.app',
-  'com.pamarket.app',
-  'https://localhost',
-  'capacitor://localhost',
-])
-
+// Migrated to the shared allowlist (Stage 6).
+//   - 'com.pamarket.app' removed: it's the Android package identifier, not
+//     a valid Origin header value — it could never match a real request
+//     (see the audit note in get-r2-upload-url below), so dropping it
+//     changes nothing functionally.
+//   - 'https://pamarket.app' / 'https://www.pamarket.app' kept unchanged:
+//     no confirmed live caller was found for this domain (Stage 6 audit),
+//     but per instructions this is not removed without explicit approval
+//     — see the Stage 6 report.
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts'
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com'
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Vary': 'Origin',
-  }
+  return sharedCorsHeaders(req, {
+    allowNativeAppOrigins: true,
+    extraOrigins: ['https://pamarket.app', 'https://www.pamarket.app'],
+  })
 }
 
 // Short-lived by design — this is a sensitive personal document. 5 minutes

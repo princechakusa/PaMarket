@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { openExternalUrl } from "../lib/open-url";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { TERMS, PRIVACY, type LegalDoc } from "../lib/legal";
+import { fetchFaqEntries, fetchPublicSettings, useLegalDocUpgrade } from "../lib/content";
 import { LegalDocSheet } from "../components/LegalDocSheet";
 import { color, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -100,15 +101,51 @@ export default function HelpScreen() {
   const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("All");
+  // Seeded with the static, always-available list; silently replaced with
+  // the admin-published one if content_pages has it (stage 1 of the
+  // hardcoded-content migration — same {group,q,a} shape, so the rendering
+  // below never changes regardless of which source is active.
+  const [faqs, setFaqs] = useState<Faq[]>(HELP_FAQS);
+  // Stage 2: WhatsApp/email links silently upgrade from the centralized
+  // app_settings.content (Stage 1) — both currently equal these hardcoded
+  // values, so there's nothing to notice today; this just means an admin
+  // changing them later takes effect without a new app build.
+  const [whatsappUrl, setWhatsappUrl] = useState(WHATSAPP_URL);
+  const [emailUrl, setEmailUrl] = useState(EMAIL_URL);
+  const termsDoc = useLegalDocUpgrade("terms", TERMS);
+  const privacyDoc = useLegalDocUpgrade("privacy", PRIVACY);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchFaqEntries()
+      .then((entries) => {
+        if (!cancelled && entries && entries.length) setFaqs(entries);
+      })
+      .catch(() => {
+        // Fetch/cache both failed — HELP_FAQS already showing stays.
+      });
+    fetchPublicSettings()
+      .then((settings) => {
+        if (cancelled || !settings) return;
+        if (settings.whatsappNumber) setWhatsappUrl(`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, "")}`);
+        if (settings.supportEmail) setEmailUrl(`mailto:${settings.supportEmail}`);
+      })
+      .catch(() => {
+        // Failed — the hardcoded WHATSAPP_URL/EMAIL_URL above stay as-is.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return HELP_FAQS.filter((faq) => {
+    return faqs.filter((faq) => {
       const matchesGroup = group === "All" || faq.group === group;
       const matchesQuery = !q || (faq.q + " " + faq.a).toLowerCase().includes(q);
       return matchesGroup && matchesQuery;
     });
-  }, [query, group]);
+  }, [faqs, query, group]);
 
   const groupedFiltered = useMemo(() => {
     return HELP_GROUPS.map((g) => ({
@@ -193,16 +230,16 @@ export default function HelpScreen() {
       )}
 
       <View style={styles.group}>
-        <Row label="Terms of Service" onPress={() => setLegalDoc(TERMS)} styles={styles} />
-        <Row label="Privacy Policy" onPress={() => setLegalDoc(PRIVACY)} styles={styles} />
+        <Row label="Terms of Service" onPress={() => setLegalDoc(termsDoc)} styles={styles} />
+        <Row label="Privacy Policy" onPress={() => setLegalDoc(privacyDoc)} styles={styles} />
       </View>
 
       <View style={styles.contactDock}>
-        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(WHATSAPP_URL, "WhatsApp isn't installed on this device.")}>
+        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(whatsappUrl, "WhatsApp isn't installed on this device.")}>
           <Text style={styles.contactLabel}>WhatsApp</Text>
           <Text style={styles.contactValue}>Usually replies in minutes</Text>
         </Pressable>
-        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(EMAIL_URL, "No mail app is set up on this device.")}>
+        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(emailUrl, "No mail app is set up on this device.")}>
           <Text style={styles.contactLabel}>Email</Text>
           <Text style={styles.contactValue}>Send details</Text>
         </Pressable>

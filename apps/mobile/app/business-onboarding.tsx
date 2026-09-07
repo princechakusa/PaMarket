@@ -16,7 +16,7 @@ import { useAuth } from "../lib/auth";
 import { GlassBackButton, ProvinceCityFields } from "../components/ui";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
-import { CATEGORIES, PROVINCES, CITIES_BY_PROVINCE } from "../lib/constants";
+import { useTaxonomy, withSelectedValue } from "../lib/taxonomy";
 import type { Business } from "../lib/businesses";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -91,6 +91,17 @@ export default function BusinessOnboardingScreen() {
   const tones = useThemedStyles(buildTones);
   const [step, setStep] = useState<Step>("details");
   const [draft, setDraft] = useState<Draft>(blankDraft(undefined, session?.user?.email ?? undefined));
+  // Stage 5: bundled categories/provinces/cities shown immediately,
+  // silently upgraded in the background — never blocks onboarding. Every
+  // already-selected category (a business can have several) stays valid.
+  const { categories: baseCategories, provinces, citiesByProvince } = useTaxonomy({
+    province: draft.province,
+    city: draft.city,
+  });
+  const categories = draft.categories.reduce(
+    (list, id) => withSelectedValue(list, id, (v) => ({ id: v, name: v })),
+    baseCategories
+  );
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [existingStatus, setExistingStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -193,13 +204,13 @@ export default function BusinessOnboardingScreen() {
       if (!draft.name.trim()) { toast("Enter a business name"); return; }
       if (!draft.phone.trim()) { toast("A contact phone is required"); return; }
       if (!/^(\+263|0)[0-9]{9}$/.test(draft.phone.trim())) { toast("Enter a valid Zimbabwe phone (e.g. 0771234567)"); return; }
-      if (!PROVINCES.includes(draft.province) || !(CITIES_BY_PROVINCE[draft.province] ?? []).includes(draft.city)) {
+      if (!provinces.includes(draft.province) || !(citiesByProvince[draft.province] ?? []).includes(draft.city)) {
         toast("Select a valid Province and City");
         return;
       }
       setStep("category");
     } else if (step === "category") {
-      if (!draft.categories.length || draft.categories.some((id) => !CATEGORIES.some((category) => category.id === id))) {
+      if (!draft.categories.length || draft.categories.some((id) => !categories.some((category) => category.id === id))) {
         toast("Pick at least one valid category");
         return;
       }
@@ -233,9 +244,9 @@ export default function BusinessOnboardingScreen() {
 
   async function activate() {
     if (!session?.user) return;
-    if (!draft.name || !draft.phone || !PROVINCES.includes(draft.province)
-      || !(CITIES_BY_PROVINCE[draft.province] ?? []).includes(draft.city)) { setStep("details"); return; }
-    if (!draft.categories.length || draft.categories.some((id) => !CATEGORIES.some((category) => category.id === id))) {
+    if (!draft.name || !draft.phone || !provinces.includes(draft.province)
+      || !(citiesByProvince[draft.province] ?? []).includes(draft.city)) { setStep("details"); return; }
+    if (!draft.categories.length || draft.categories.some((id) => !categories.some((category) => category.id === id))) {
       setStep("category");
       return;
     }
@@ -318,8 +329,8 @@ export default function BusinessOnboardingScreen() {
               <TextInput style={styles.input} value={draft.email} onChangeText={(v) => update("email", v)} keyboardType="email-address" autoCapitalize="none" placeholder="you@business.com" placeholderTextColor={tones.textMuted} />
             </Field>
             <ProvinceCityFields
-              provinces={PROVINCES}
-              citiesByProvince={CITIES_BY_PROVINCE}
+              provinces={provinces}
+              citiesByProvince={citiesByProvince}
               province={draft.province}
               city={draft.city}
               onChange={({ province, city }) => {
@@ -341,7 +352,7 @@ export default function BusinessOnboardingScreen() {
             <Text style={styles.intro}>Select all categories that match your business. You can pick more than one.</Text>
             <Text style={styles.selCount}>{draft.categories.length ? `${draft.categories.length} selected` : "None selected yet"}</Text>
             <View style={styles.catGrid}>
-              {CATEGORIES.map((c) => {
+              {categories.map((c) => {
                 const active = draft.categories.includes(c.id);
                 return (
                   <Pressable key={c.id} style={[styles.catButton, active && styles.catButtonActive]} onPress={() => toggleCategory(c.id)}>
@@ -360,7 +371,7 @@ export default function BusinessOnboardingScreen() {
             <View style={styles.reviewCard}>
               <ReviewRow label="Name" value={draft.name || "—"} styles={styles} />
               <ReviewRow label="Type" value={BIZ_TYPES.find((t) => t.id === draft.bizType)?.label ?? draft.bizType} styles={styles} />
-              <ReviewRow label="Categories" value={draft.categories.map((id) => CATEGORIES.find((c) => c.id === id)?.name ?? id).join(", ") || "—"} styles={styles} />
+              <ReviewRow label="Categories" value={draft.categories.map((id) => categories.find((c) => c.id === id)?.name ?? id).join(", ") || "—"} styles={styles} />
               <ReviewRow label="Phone" value={draft.phone || "—"} styles={styles} />
               <ReviewRow label="Location" value={[draft.suburb, draft.city, draft.province].filter(Boolean).join(", ") || "—"} styles={styles} />
               <ReviewRow label="Plan" value="Free" last styles={styles} />

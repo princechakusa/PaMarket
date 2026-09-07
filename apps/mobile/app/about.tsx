@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { openExternalUrl, openPhone, openWhatsApp } from "../lib/open-url";
 import Constants from "expo-constants";
@@ -7,16 +8,25 @@ import { DARK_COLORS, LIGHT_COLORS, font, space, type ColorPalette } from "../li
 import { useThemedStyles, useThemePreference } from "../lib/theme-provider";
 import { Card } from "../components/ui";
 import { BrandSymbol, BrandWordmark } from "../components/BrandLogo";
+import { fetchPublicSettings } from "../lib/content";
 
 const SUPPORT_EMAIL = "support@pamarketzw.com";
 const SUPPORT_PHONE = "+971589772645";
 // openWhatsApp builds the wa.me URL itself, so this is just the number.
 const WHATSAPP_DIGITS = "971589772645";
 
-const SOCIALS: { name: string; url: string }[] = [
-  { name: "TikTok", url: "https://www.tiktok.com/@pamarketzw" },
+// Stage 2: TikTok and Instagram silently upgrade from the centralized
+// app_settings.content.socialLinks (Stage 1) in the background — both
+// already match these hardcoded URLs, so there's nothing to notice.
+// Facebook is deliberately NOT connected: app_settings currently stores a
+// different Facebook URL (a share-link redirect) than this hardcoded one
+// (a profile.php link), and which is correct hasn't been confirmed — see
+// the content-migration report. YouTube isn't in app_settings at all yet,
+// so it stays static.
+const SOCIALS: { name: string; url: string; settingsKey?: "tiktok" | "instagram" }[] = [
+  { name: "TikTok", url: "https://www.tiktok.com/@pamarketzw", settingsKey: "tiktok" },
   { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61591000371129" },
-  { name: "Instagram", url: "https://www.instagram.com/pamarketzim/" },
+  { name: "Instagram", url: "https://www.instagram.com/pamarketzim/", settingsKey: "instagram" },
   { name: "YouTube", url: "https://www.youtube.com/@PaMarketZim" },
 ];
 
@@ -54,6 +64,27 @@ export default function AboutScreen() {
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
+
+  const [supportEmail, setSupportEmail] = useState(SUPPORT_EMAIL);
+  const [socialUrls, setSocialUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicSettings()
+      .then((settings) => {
+        if (cancelled || !settings) return;
+        if (settings.supportEmail) setSupportEmail(settings.supportEmail);
+        const overrides: Record<string, string> = {};
+        if (settings.socialLinks?.tiktok) overrides.tiktok = settings.socialLinks.tiktok;
+        if (settings.socialLinks?.instagram) overrides.instagram = settings.socialLinks.instagram;
+        setSocialUrls(overrides);
+      })
+      .catch(() => {
+        // Failed — the hardcoded values above stay exactly as they are.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: space.lg, paddingBottom: space.huge }}>
@@ -93,7 +124,7 @@ export default function AboutScreen() {
       <Card padded={false} style={styles.group}>
         <LinkRow label="Help Centre" onPress={() => router.push("/help")} color={color} styles={styles} />
         <View style={styles.divider} />
-        <LinkRow label="Email us" onPress={() => openExternalUrl(`mailto:${SUPPORT_EMAIL}`, "No mail app is set up on this device.")} color={color} styles={styles} />
+        <LinkRow label="Email us" onPress={() => openExternalUrl(`mailto:${supportEmail}`, "No mail app is set up on this device.")} color={color} styles={styles} />
         <View style={styles.divider} />
         <LinkRow label="WhatsApp" onPress={() => openWhatsApp(WHATSAPP_DIGITS)} color={color} styles={styles} />
         <View style={styles.divider} />
@@ -105,7 +136,12 @@ export default function AboutScreen() {
         {SOCIALS.map((s, i) => (
           <View key={s.name}>
             {i > 0 ? <View style={styles.divider} /> : null}
-            <LinkRow label={s.name} onPress={() => openExternalUrl(s.url)} color={color} styles={styles} />
+            <LinkRow
+              label={s.name}
+              onPress={() => openExternalUrl((s.settingsKey && socialUrls[s.settingsKey]) || s.url)}
+              color={color}
+              styles={styles}
+            />
           </View>
         ))}
       </Card>

@@ -21,21 +21,13 @@
 
 import { PAYNOW_PRODUCTS, paynowPollStatus } from '../_shared/paynow.ts';
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
-]);
-
+// Migrated to the shared allowlist (Stage 6). The local dev origins this
+// used to always allow (http://127.0.0.1:5500, http://localhost:5500) are
+// now only included when the ALLOW_DEV_CORS_ORIGINS secret is explicitly
+// set to "true" — see supabase/functions/_shared/cors.ts.
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts';
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? '';
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com';
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Vary': 'Origin',
-  };
+  return sharedCorsHeaders(req);
 }
 
 Deno.serve(async (req) => {

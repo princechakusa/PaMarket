@@ -22,30 +22,23 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // window.location, so the session JWT is never exposed in a URL,
 // browser history entry, or Referer header.
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'https://admin.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev',
-])
-
-function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com'
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
-    'Vary': 'Origin',
-  }
-}
+// Migrated to the shared allowlist (Stage 6).
+import { corsHeaders } from '../_shared/cors.ts'
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
 const TIKTOK_SCOPES = 'user.info.basic,video.upload'
 const STATE_TTL_MS = 10 * 60 * 1000 // 10 minutes — plenty for an admin to complete the TikTok login screen
 
 // Must exactly match the clean (no query params) redirect URI registered
-// in TikTok's Login Kit settings.
-const CALLBACK_URL = 'https://gxgytumhknmnwspxjzxw.supabase.co/functions/v1/amos-tiktok-oauth-callback'
+// in TikTok's Login Kit settings. Derived from SUPABASE_URL rather than a
+// hardcoded literal — resolves to the identical URL for this project, so
+// TikTok's registered redirect_uri still matches exactly (must stay byte-
+// for-byte identical to amos-tiktok-oauth-callback's CALLBACK_URL).
+// Falls back to the project's known URL in the (never-expected) case
+// SUPABASE_URL isn't set — Supabase's runtime always provides it, but this
+// keeps behaviour identical to before rather than producing a broken
+// "undefined/..." URL if that assumption is ever wrong.
+const CALLBACK_URL = `${Deno.env.get('SUPABASE_URL') || 'https://gxgytumhknmnwspxjzxw.supabase.co'}/functions/v1/amos-tiktok-oauth-callback`
 
 Deno.serve(async (req) => {
   const cors = corsHeaders(req)

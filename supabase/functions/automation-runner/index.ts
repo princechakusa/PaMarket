@@ -4,21 +4,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // called from a browser page, but a wildcard origin is still inconsistent
 // with every other function in this project and worth closing for
 // defense-in-depth (found during a pre-launch security audit).
-const ALLOWED_ORIGINS = new Set([
-  'https://pamarketzw.com',
-  'https://www.pamarketzw.com',
-  'https://admin.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev',
-])
-
+// Migrated to the shared allowlist (Stage 6).
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts'
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com'
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-automation-secret',
-    'Vary': 'Origin',
-  }
+  return sharedCorsHeaders(req, { extraHeaders: ['x-automation-secret'] })
 }
 
 Deno.serve(async (req) => {

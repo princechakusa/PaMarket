@@ -48,6 +48,8 @@ const STATIC_PAGES = [
   { loc: '/cookie-policy', changefreq: 'yearly', priority: '0.3' },
   { loc: '/community-guidelines', changefreq: 'yearly', priority: '0.3' },
   { loc: '/delete-account', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/refund-policy', changefreq: 'yearly', priority: '0.3' },
+  { loc: '/safety', changefreq: 'yearly', priority: '0.3' },
   { loc: '/blog', changefreq: 'weekly', priority: '0.7' },
 ];
 

@@ -14,7 +14,7 @@ import {
   candidateSkillsList,
   type CandidateProfileRow,
 } from "../../lib/jobs";
-import { CITIES_BY_PROVINCE } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import {
   Avatar,
   Badge,
@@ -173,9 +173,10 @@ export default function HireTalentScreen() {
     setIsLoadingMore(false);
   }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError, loadUnlocked]);
 
+  const { citiesByProvince } = useTaxonomy();
   const cityOptions = useMemo(() => {
-    return Array.from(new Set(Object.values(CITIES_BY_PROVINCE).flat())).sort();
-  }, []);
+    return Array.from(new Set(Object.values(citiesByProvince).flat())).sort();
+  }, [citiesByProvince]);
 
   const activeFilterCount =
     (sectorFilter !== "all" ? 1 : 0) +

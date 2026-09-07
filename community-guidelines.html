@@ -187,18 +187,27 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
     <button class="site-announcement-close" id="siteAnnouncementClose" type="button" aria-label="Dismiss announcement">&times;</button>
   </div>
 </div>
+<script src="js/supabase-config.js"></script>
+<script src="js/core/supabase-client.js"></script>
+<script src="js/services/service-transport.js"></script>
+<script src="js/services/saved-content.js"></script>
+<script src="js/services/listings.js"></script>
+<script src="js/services/profiles.js"></script>
+<script src="js/services/businesses.js"></script>
+<script src="js/services/rentals.js"></script>
 <script src="js/site-announcements.js" defer></script>
+<script src="js/taxonomy.js" defer></script>
 
 <header id="hdr">
   <div class="hdr-w">
     <a href="/" class="logo">Pa<em>Market</em></a>
     <div class="search-bar">
-      <select class="search-cat" id="hCat" aria-label="Category">
+      <select class="search-cat" id="hCat" data-taxonomy="category" aria-label="Category">
         <option value="">All Categories</option>
         <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
         <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
         <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
-        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option><option value="other">Other</option>
       </select>
       <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
       <button class="search-btn" onclick="doSearch()" aria-label="Search">
@@ -231,7 +240,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
     <div class="hdr-right">
       <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
       <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="toggleMob()" aria-label="Menu" aria-expanded="false">
+      <button class="ham" onclick="PMHeader.toggleMobile(this)" aria-label="Menu" aria-expanded="false">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
     </div>
@@ -251,16 +260,14 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
   </nav>
 </header>
 <script>
-/* Self-contained header behaviour so the partial works on any page
-   regardless of what else the page loads. Guarded so pages that
-   already define these keep their own implementation. */
-window.toggleMob = window.toggleMob || function(){
+/* Self-contained header behaviour. The shell owns its mobile control;
+   page-specific search implementations remain compatible. */
+window.PMHeader = Object.freeze({toggleMobile:function(button){
   var n = document.getElementById('mobNav');
-  var h = document.querySelector('#hdr .ham');
   if (!n) return;
   var open = n.classList.toggle('open');
-  if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
-};
+  if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
+}});
 window.doSearch = window.doSearch || function(){
   var cat = document.getElementById('hCat');
   var q = document.getElementById('hQ');
@@ -294,6 +301,30 @@ window.doSearch = window.doSearch || function(){
 <div class="doc-content"><h1>Community Guidelines</h1><p><strong>Last updated: June 2026</strong></p><p>PaMarket is a community marketplace built on trust. These guidelines set the standards of behaviour we expect from every user - buyers, sellers, business owners, job seekers, and employers. Violating these guidelines may result in your listing being removed, your account being suspended, or a permanent ban. Serious violations may be reported to law enforcement authorities in Zimbabwe.</p><h3>1. Listing Honesty</h3><p>Every listing must be honest and complete:</p><ul><li>Only list items you physically have in your possession and have the legal right to sell.</li><li>Your title, description, and photos must accurately represent the actual condition, age, brand, model, and any known defects of the item.</li><li>Do not use manufacturer stock photos or images downloaded from the internet. Take real photos of the actual item under good lighting.</li><li>Clearly disclose any damage, scratches, faults, missing parts, or prior repairs in the description.</li><li>Remove or update your listing immediately when the item is sold, rented, or no longer available.</li><li>Do not repost the same item repeatedly to push it to the top of search results.</li></ul><h3>2. Prohibited Items and Services</h3><p>The following are never permitted on PaMarket, regardless of context or claimed purpose:</p><ul><li><strong>Stolen goods</strong> of any kind.</li><li><strong>Counterfeit goods:</strong> fake branded clothing, replica watches, pirated software, unauthorised copies of any product.</li><li><strong>Drugs and narcotics:</strong> any illegal substance, controlled drug, or drug paraphernalia.</li><li><strong>Weapons:</strong> unlicensed firearms, illegal knives, ammunition, explosives, or weapons parts.</li><li><strong>Wildlife:</strong> live wild animals, ivory, rhino horn, skins, or any product protected under the Zimbabwe Parks and Wildlife Act or CITES.</li><li><strong>Adult content:</strong> pornographic images, videos, or services of any kind.</li><li><strong>Unlicensed alcohol and tobacco</strong> sold without a valid government retail licence.</li><li><strong>Prescription medicine</strong> sold without a valid pharmacist licence.</li><li><strong>Financial scams:</strong> pyramid schemes, chain letters, MLM recruitment, Ponzi schemes, advance fee fraud (419), investment opportunities with guaranteed returns.</li><li><strong>Counterfeit currency</strong> or any instrument used to commit fraud.</li><li><strong>Rental or property listings for properties that do not exist</strong> or that the poster has no right to let.</li><li><strong>Human trafficking</strong> or any offer of persons for sale, labour exploitation, or sexual services.</li><li><strong>Personal data</strong> of third parties, including phone number lists, email databases, or identity documents.</li><li><strong>Hazardous materials</strong> including toxic chemicals, flammable gases, or radioactive items.</li></ul><h3>3. Listing Quality Standards</h3><ul><li><strong>Title:</strong> be specific. Include brand, model, year, size, or condition where relevant. "2019 Samsung Galaxy S10 128GB - Excellent Condition" is better than "Samsung phone for sale".</li><li><strong>Description:</strong> write at least 3-4 sentences. Include why you are selling, the history of the item, any accessories included, and your preferred contact method.</li><li><strong>Price:</strong> set a realistic market price in USD. Check similar listings to calibrate. "Price negotiable" is acceptable as a note but every listing must have a price.</li><li><strong>Photos:</strong> upload at least 2 clear photos. Show multiple angles, include any damage, and photograph serial numbers on electronics. A listing with 5+ photos gets significantly more enquiries.</li><li><strong>Category:</strong> choose the most specific correct category. If your item fits multiple categories, choose the primary one.</li><li><strong>Location:</strong> select the actual province and suburb where the item is located. Do not list in a different area to attract more views.</li></ul><h3>4. Pricing Standards</h3><ul><li>All prices on PaMarket must be in United States Dollars (USD). This is a platform-wide rule.</li><li>Do not list items at deliberately misleading prices to attract clicks, then refuse to sell at that price.</li><li>If your price changes, update your listing immediately.</li><li>Do not attempt to collect payment in cryptocurrency, mobile money from a stranger before meeting, or any form that removes buyer protection, unless both parties have agreed in full knowledge of the risks.</li></ul><h3>5. Respectful Communication</h3><ul><li>Treat every user with courtesy, even if a negotiation does not go your way.</li><li>Do not send bulk or unsolicited messages. Do not use PaMarket messaging to advertise to strangers.</li><li>Do not threaten, bully, harass, intimidate, or discriminate against any user on the basis of race, ethnicity, gender, religion, sexual orientation, disability, or any other characteristic.</li><li>Do not share your bank account number, national ID, passport, or PIN through the chat. PaMarket will never ask for this information through chat.</li><li>If someone is rude, threatening, or suspicious, use the Block and Report functions. Do not engage or retaliate.</li></ul><h3>6. Business Shop Standards</h3><ul><li>Your Business Shop must represent a real, lawfully operating business registered or operating in Zimbabwe.</li><li>Your business name, description, logo, contact details, and product listings must all be accurate.</li><li>Do not impersonate another business, brand, or organisation. Do not use another company's logo, name, or trademarks without written permission.</li><li>If your business changes address, phone number, or closes, update or remove your Business Shop immediately.</li><li>Featured listings in your Shop must represent products you actually stock and are ready to sell.</li><li>Do not use your Business Shop to promote pyramid schemes, MLM downlines, or financial products without appropriate licensing.</li></ul><h3>7. Hire Talent Standards - Employers</h3><ul><li>Job postings must be for genuine, existing vacancies at a real organisation. Fake job listings are fraud.</li><li><strong>Never charge candidates any fee to apply, register, train, or be placed.</strong> This is illegal under Zimbabwean labour law and is grounds for immediate permanent account suspension and referral to the Zimbabwe Republic Police.</li><li>Job descriptions must be accurate regarding the role, responsibilities, remuneration, and required qualifications.</li><li>Do not post the same job multiple times to appear at the top of search results.</li><li>Mark your job as filled as soon as the vacancy is no longer open.</li></ul><h3>8. Hire Talent Standards - Job Seekers</h3><ul><li>Your candidate profile must be accurate. Do not misrepresent your qualifications, experience, or skills.</li><li>Do not create multiple profiles to increase visibility.</li><li>Never pay any fee to apply for a job, attend an interview, or receive a job offer. Genuine employers do not charge candidates. If asked for money, report the listing immediately.</li></ul><h3>9. Fraud and Scam Awareness</h3><p>PaMarket is a free platform and we cannot screen every user. Protect yourself:</p><ul><li><strong>Advance fee fraud:</strong> if a buyer asks you to send an item before receiving payment, or offers to overpay by cheque and asks you to refund the difference - this is a scam. Decline and report.</li><li><strong>Fake rental deposits:</strong> never pay a deposit for a property before physically viewing it and verifying the landlord owns or manages it.</li><li><strong>Too-good-to-be-true prices:</strong> a brand new iPhone for USD 50 is not a bargain, it is stolen or non-existent. Walk away.</li><li><strong>Urgency pressure:</strong> scammers create false urgency ("I leave the country today, pay now"). Take your time. Legitimate sellers will wait.</li><li><strong>Impersonation:</strong> if someone claims to be a PaMarket employee or admin asking for your password or payment, this is a scam. PaMarket will never contact you through chat asking for payment or credentials.</li></ul><h3>10. Safe Transactions</h3><ul><li>Always meet in a busy, public location during daylight hours. Shopping malls, filling station forecourts, and bank lobbies are recommended.</li><li>Bring a friend or family member when meeting a stranger for a high-value transaction.</li><li>Never invite a stranger to your home or travel alone to a stranger's home for a first meeting.</li><li>Inspect and verify goods before handing over any money.</li><li>For vehicle sales, insist on a test drive and verify the log book matches the seller's ID before paying.</li><li>For electronics, test the device fully before payment. Power it on, check IMEI against the box, verify the screen, camera, and ports work.</li><li>Trust your instincts. If something feels wrong, walk away.</li></ul><h3>11. Reporting Violations</h3><p>If you see content that violates these guidelines:</p><ul><li>Tap the "..." or Report icon on the listing, profile, or message and select a reason.</li><li>For urgent safety or fraud concerns, email info@pamarketzw.com directly with as much detail as possible.</li><li>For criminal matters (stolen goods, fraud, weapons), contact the Zimbabwe Republic Police and share the listing URL with them.</li></ul><p>All reports are reviewed by our moderation team. We may not be able to share the outcome of every report with the reporter, but we act on all valid reports.</p><h3>12. How We Enforce These Guidelines</h3><p>We apply a graduated enforcement approach based on the severity and frequency of violations:</p><ul><li><strong>Warning:</strong> first minor violation (e.g. mislabelled category, missing price). Listing is removed or corrected and you receive an in-app warning.</li><li><strong>Temporary suspension (7-30 days):</strong> repeated minor violations or first moderate violation (e.g. misleading description, duplicate listings, disrespectful messaging).</li><li><strong>Permanent ban:</strong> serious violations including fraud, listing illegal items, charging job seekers fees, sharing prohibited content, or any criminal activity. Permanent bans are not reversed. All listings and data are removed.</li><li><strong>Law enforcement referral:</strong> where there is evidence of criminal activity (fraud, stolen goods, drugs, weapons, human trafficking), we will cooperate fully with the Zimbabwe Republic Police, POTRAZ, and other competent authorities, including providing user data under valid legal process.</li></ul><h3>13. Appeals</h3><p>If you believe your listing was removed or your account was actioned in error, you may appeal by emailing info@pamarketzw.com within 14 days of the action, stating your account details and the reason you believe the action was incorrect. We will review your appeal and respond within 14 business days. Appeals against permanent bans for serious violations (fraud, illegal content, criminal activity) will not be considered.</p><h3>14. Contact</h3><p>PaMarket Zimbabwe<br>Email: info@pamarketzw.com<br>WhatsApp: +971 589 772 645</p></div>
 </div>
 
+<script src="js/site-content.js" defer></script>
+<script defer>
+// Overlays the admin-managed "community-guidelines" content page if/when the
+// admin publishes an approved version. The static text above is the
+// fallback if this request fails, or if the published wording is
+// unchanged from what is already here.
+(function () {
+  function init() {
+    if (!window.PMContent) return;
+    window.PMContent.fetchContentPage('community-guidelines').then(function (row) {
+      var sections = row && row.body && row.body.sections;
+      if (!sections || !sections.length) return;
+      var el = document.querySelector(".doc-content");
+      if (!el) return;
+      var html = '<h1>' + window.PMContent.escapeHtml(row.title) + '</h1>';
+      html += window.PMContent.renderSections(sections);
+      el.innerHTML = html;
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
 <!-- FOOTER:START -->
 <!-- ============================================================
      PaMarket shared footer — SINGLE SOURCE OF TRUTH.
@@ -307,21 +338,21 @@ window.doSearch = window.doSearch || function(){
       <div class="foot-logo">Pa<em>Market</em></div>
       <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
       <div class="foot-contact">
-        <a href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
-        <a href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
+        <a id="footWhatsapp" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
+        <a id="footEmail" href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
       </div>
       <nav class="foot-social" aria-label="PaMarket on social media" style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;align-items:center">
-        <a href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
-        <a href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
+        <a id="footFacebook" href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
+        <a id="footInstagram" href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
         <a href="https://x.com/pamarketzw" target="_blank" rel="me noopener" aria-label="PaMarket on X (Twitter)" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg></a>
-        <a href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+        <a id="footTiktok" href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
         <a href="https://www.linkedin.com/company/pamarket-zim/" target="_blank" rel="me noopener" aria-label="PaMarket on LinkedIn" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
       </nav>
       <div class="foot-store">
-        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
+        <a id="footPlayStore" href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
           <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm" loading="lazy" decoding="async">
         </a>
-        <a href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" aria-label="Download PaMarket on the Apple App Store">
+        <a id="footAppStore" href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" aria-label="Download PaMarket on the Apple App Store">
           <img src="img/app-store-badge.svg" alt="Download on the App Store" class="appstore-badge-sm" width="120" height="40" loading="lazy" decoding="async">
         </a>
       </div>
@@ -346,6 +377,7 @@ window.doSearch = window.doSearch || function(){
       <a href="contact">Contact Us</a>
       <a href="advertise">Advertise</a>
       <a href="community-guidelines">Community Guidelines</a>
+      <a href="safety">Safety &amp; Fraud Prevention</a>
       <a href="about">About PaMarket</a>
     </div>
     <div class="foot-col">
@@ -353,6 +385,8 @@ window.doSearch = window.doSearch || function(){
       <a href="terms">Terms of Service</a>
       <a href="privacy">Privacy Policy</a>
       <a href="cookie-policy">Cookie Policy</a>
+      <a href="refund-policy">Refund &amp; Cancellation</a>
+      <a href="delete-account">Delete My Account</a>
       <a href="#" data-cookie-settings>Cookie Settings</a>
       <a href="post-ad">Post a Free Ad</a>
       <a href="auth">Sign In</a>
@@ -372,6 +406,41 @@ window.doSearch = window.doSearch || function(){
   </div>
 </footer>
 <script src="js/cookie-consent.js" defer></script>
+<script src="js/site-content.js" defer></script>
+<script defer>
+// Overlays admin-managed contact/social/store links onto the footer above.
+// Every element already has its current hardcoded value as href/text, so a
+// failed or slow request just leaves the page exactly as it renders today —
+// this only ever upgrades what's already correct and visible.
+(function () {
+  function apply(content) {
+    if (!content) return;
+    var map = [
+      ['footWhatsapp', content.whatsappNumber ? 'https://wa.me/' + String(content.whatsappNumber).replace(/[^0-9]/g, '') : null, content.whatsappNumber ? 'WhatsApp: ' + content.whatsappNumber : null],
+      ['footEmail', content.supportEmail ? 'mailto:' + content.supportEmail : null, content.supportEmail],
+      ['footFacebook', content.socialLinks && content.socialLinks.facebook, null],
+      ['footInstagram', content.socialLinks && content.socialLinks.instagram, null],
+      ['footTiktok', content.socialLinks && content.socialLinks.tiktok, null],
+      ['footPlayStore', content.playStoreUrl, null],
+      ['footAppStore', content.appStoreUrl, null],
+    ];
+    map.forEach(function (row) {
+      var id = row[0], href = row[1], text = row[2];
+      var el = document.getElementById(id);
+      if (!el) return;
+      var safe = window.PMContent ? window.PMContent.safeHref(href) : '';
+      if (safe) el.setAttribute('href', safe);
+      if (text) el.textContent = text;
+    });
+  }
+  function init() {
+    if (!window.PMContent) return;
+    window.PMContent.fetchSiteSettings().then(apply);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 <!-- FOOTER:END -->
 
 <script>

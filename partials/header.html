@@ -34,17 +34,18 @@
 <script src="js/services/businesses.js"></script>
 <script src="js/services/rentals.js"></script>
 <script src="js/site-announcements.js" defer></script>
+<script src="js/taxonomy.js" defer></script>
 
 <header id="hdr">
   <div class="hdr-w">
     <a href="/" class="logo">Pa<em>Market</em></a>
     <div class="search-bar">
-      <select class="search-cat" id="hCat" aria-label="Category">
+      <select class="search-cat" id="hCat" data-taxonomy="category" aria-label="Category">
         <option value="">All Categories</option>
         <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
         <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
         <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
-        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option>
+        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option><option value="other">Other</option>
       </select>
       <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
       <button class="search-btn" onclick="doSearch()" aria-label="Search">

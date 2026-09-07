@@ -2,26 +2,161 @@
   "version": 1,
   "policy": "Existing review-level debt may not grow; new review-level debt fails.",
   "debt": {
-    "account-settings.html": {"bytes":82986,"lines":841,"inlineJs":39569,"inlineCss":11393},
-    "auth.html": {"bytes":42169,"lines":852,"inlineJs":29716,"inlineCss":9269},
-    "business.html": {"bytes":37999,"lines":581,"inlineJs":16305,"inlineCss":4604},
-    "chats.html": {"bytes":34235,"lines":340,"inlineJs":883,"inlineCss":14337},
-    "css/site.css": {"bytes":24891,"lines":301,"inlineJs":0,"inlineCss":0},
-    "dashboard.html": {"bytes":33937,"lines":524,"inlineJs":9959,"inlineCss":7103},
-    "detail.html": {"bytes":82944,"lines":1288,"inlineJs":34466,"inlineCss":18873},
-    "help.html": {"bytes":44970,"lines":694,"inlineJs":11782,"inlineCss":3734},
-    "index.html": {"bytes":92679,"lines":1353,"inlineJs":26594,"inlineCss":26531},
-    "js/blog-data.js": {"bytes":118480,"lines":1004,"inlineJs":0,"inlineCss":0},
-    "js/chats.js": {"bytes":60796,"lines":984,"inlineJs":0,"inlineCss":0},
-    "js/cookie-consent.js": {"bytes":17050,"lines":337,"inlineJs":0,"inlineCss":0},
-    "js/listing-schema.js": {"bytes":19612,"lines":337,"inlineJs":0,"inlineCss":0},
-    "js/marketplace-data.js": {"bytes":55603,"lines":1080,"inlineJs":0,"inlineCss":0},
-    "js/nav-dropdowns.js": {"bytes":18999,"lines":367,"inlineJs":0,"inlineCss":0},
-    "open-shop.html": {"bytes":47954,"lines":360,"inlineJs":17011,"inlineCss":11371},
-    "post-ad.html": {"bytes":45603,"lines":809,"inlineJs":13728,"inlineCss":8477},
-    "post-job.html": {"bytes":42921,"lines":684,"inlineJs":12020,"inlineCss":6132},
-    "profile.html": {"bytes":52553,"lines":834,"inlineJs":18316,"inlineCss":10563},
-    "rental-detail.html": {"bytes":35962,"lines":631,"inlineJs":10592,"inlineCss":4430},
-    "rental-fleet.html": {"bytes":13535,"lines":44,"inlineJs":0,"inlineCss":10512}
+    "account-settings.html": {
+      "bytes": 85434,
+      "lines": 886,
+      "inlineJs": 41119,
+      "inlineCss": 11393
+    },
+    "auth.html": {
+      "bytes": 42169,
+      "lines": 852,
+      "inlineJs": 29716,
+      "inlineCss": 9269
+    },
+    "business.html": {
+      "bytes": 40824,
+      "lines": 629,
+      "inlineJs": 17847,
+      "inlineCss": 4604
+    },
+    "chats.html": {
+      "bytes": 36683,
+      "lines": 385,
+      "inlineJs": 2433,
+      "inlineCss": 14337
+    },
+    "css/site.css": {
+      "bytes": 24891,
+      "lines": 301,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "dashboard.html": {
+      "bytes": 36385,
+      "lines": 569,
+      "inlineJs": 11509,
+      "inlineCss": 7103
+    },
+    "detail.html": {
+      "bytes": 85392,
+      "lines": 1332,
+      "inlineJs": 35996,
+      "inlineCss": 18873
+    },
+    "help.html": {
+      "bytes": 51596,
+      "lines": 826,
+      "inlineJs": 17348,
+      "inlineCss": 3734
+    },
+    "index.html": {
+      "bytes": 95534,
+      "lines": 1404,
+      "inlineJs": 28144,
+      "inlineCss": 26531
+    },
+    "js/blog-data.js": {
+      "bytes": 118480,
+      "lines": 1004,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "js/chats.js": {
+      "bytes": 60796,
+      "lines": 984,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "js/cookie-consent.js": {
+      "bytes": 17050,
+      "lines": 337,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "js/listing-schema.js": {
+      "bytes": 19354,
+      "lines": 331,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "js/marketplace-data.js": {
+      "bytes": 49743,
+      "lines": 950,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "js/nav-dropdowns.js": {
+      "bytes": 18999,
+      "lines": 367,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
+    "open-shop.html": {
+      "bytes": 50402,
+      "lines": 405,
+      "inlineJs": 18561,
+      "inlineCss": 11371
+    },
+    "post-ad.html": {
+      "bytes": 48101,
+      "lines": 854,
+      "inlineJs": 15278,
+      "inlineCss": 8477
+    },
+    "post-job.html": {
+      "bytes": 45392,
+      "lines": 729,
+      "inlineJs": 13549,
+      "inlineCss": 6132
+    },
+    "profile.html": {
+      "bytes": 55378,
+      "lines": 882,
+      "inlineJs": 19863,
+      "inlineCss": 10563
+    },
+    "rental-detail.html": {
+      "bytes": 38410,
+      "lines": 676,
+      "inlineJs": 12142,
+      "inlineCss": 4430
+    },
+    "rental-fleet.html": {
+      "bytes": 13535,
+      "lines": 44,
+      "inlineJs": 0,
+      "inlineCss": 10512
+    },
+    "blog-post.html": {
+      "bytes": 32331,
+      "lines": 581,
+      "inlineJs": 8884,
+      "inlineCss": 4013
+    },
+    "delete-account.html": {
+      "bytes": 29796,
+      "lines": 585,
+      "inlineJs": 8868,
+      "inlineCss": 2332
+    },
+    "jobs.html": {
+      "bytes": 40366,
+      "lines": 676,
+      "inlineJs": 9069,
+      "inlineCss": 5683
+    },
+    "plans.html": {
+      "bytes": 47554,
+      "lines": 708,
+      "inlineJs": 3996,
+      "inlineCss": 5830
+    },
+    "rentals.html": {
+      "bytes": 33601,
+      "lines": 557,
+      "inlineJs": 8670,
+      "inlineCss": 4178
+    }
   }
 }

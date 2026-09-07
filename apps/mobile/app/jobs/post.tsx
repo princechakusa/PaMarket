@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { CITIES_BY_PROVINCE, PROVINCES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import {
   color,
   font,
@@ -157,6 +157,9 @@ export default function PostJobScreen() {
   const [category, setCategory] = useState("");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
+  // Stage 5: bundled provinces/cities shown immediately, silently upgraded
+  // in the background — never blocks job posting.
+  const { provinces, citiesByProvince } = useTaxonomy({ province, city });
   const [jobType, setJobType] = useState<string>(JOB_TYPES[0]);
   const [experience, setExperience] = useState("");
   const [salary, setSalary] = useState("");
@@ -634,8 +637,8 @@ export default function PostJobScreen() {
             </View>
 
             <ProvinceCityFields
-              provinces={PROVINCES}
-              citiesByProvince={CITIES_BY_PROVINCE}
+              provinces={provinces}
+              citiesByProvince={citiesByProvince}
               province={province}
               city={city}
               onChange={(next) => {

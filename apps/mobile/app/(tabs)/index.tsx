@@ -12,7 +12,8 @@ import {
   publicListingExpiryFilter,
   type Listing,
 } from "../../lib/listings";
-import { CATEGORIES } from "../../lib/constants";
+import { CATEGORIES, type Category } from "../../lib/constants";
+import { fetchCategories } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { fetchActiveAds, type PaidAd } from "../../lib/ads";
 import { subscribeToFeedChanges } from "../../lib/realtime-feed";
@@ -132,6 +133,22 @@ export default function HomeScreen() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  // Stage 4: shows the bundled CATEGORIES immediately (no loading state),
+  // then silently upgrades to the admin-managed list in the background if
+  // reachable — same pattern as the Stage 1/2 legal-doc upgrade hooks.
+  // Never blocks the feed: a failed/slow fetch just leaves CATEGORIES.
+  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCategories()
+      .then((fetched) => {
+        if (!cancelled && fetched && fetched.length) setCategories(fetched);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Persist the selected city across app restarts, same SecureStore pattern
   // as lib/theme-provider.tsx's theme preference.
@@ -323,13 +340,13 @@ export default function HomeScreen() {
   }, [filtered, cityFilter]);
 
   const categorySections = useMemo(() => {
-    return CATEGORIES.filter((c) => c.id !== "jobs")
+    return categories.filter((c) => c.id !== "jobs")
       .map((cat) => ({
         ...cat,
         items: filtered.filter((l) => l.category === cat.id).slice(0, 6),
       }))
       .filter((section) => section.items.length > 0);
-  }, [filtered]);
+  }, [filtered, categories]);
 
   const hasAnyContent = filtered.length > 0 || businesses.length > 0;
 
@@ -416,6 +433,7 @@ export default function HomeScreen() {
             <CategoryGrid
               onSelectCategory={openCategory}
               onSeeAll={() => router.push("/(tabs)/search")}
+              categories={categories}
             />
 
             <AdCarousel ads={ads} />

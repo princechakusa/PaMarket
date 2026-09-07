@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { businessInitials, type Business } from "../../lib/businesses";
-import { CATEGORIES } from "../../lib/constants";
+import { useTaxonomy } from "../../lib/taxonomy";
 import { Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { publicListingExpiryFilter } from "../../lib/listings";
@@ -121,10 +121,11 @@ export default function ShopsDirectoryScreen() {
     setIsLoadingMore(false);
   }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError, loadProductCounts]);
 
-  const categoryOptions = useMemo(() => ["all", ...CATEGORIES.filter((c) => c.id !== "jobs").map((c) => c.id)], []);
+  const { categories } = useTaxonomy();
+  const categoryOptions = useMemo(() => ["all", ...categories.filter((c) => c.id !== "jobs").map((c) => c.id)], [categories]);
   const categoryLabel = useCallback(
-    (id: string) => (id === "all" ? "All" : CATEGORIES.find((c) => c.id === id)?.name ?? id),
-    []
+    (id: string) => (id === "all" ? "All" : categories.find((c) => c.id === id)?.name ?? id),
+    [categories]
   );
 
   return (
@@ -202,7 +203,7 @@ export default function ShopsDirectoryScreen() {
             />
           }
           renderItem={({ item }) => {
-            const catLabel = CATEGORIES.find((c) => c.id === item.category)?.name ?? "";
+            const catLabel = categories.find((c) => c.id === item.category)?.name ?? "";
             const loc = [item.city, item.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
             const metaParts = [catLabel, loc].filter(Boolean);
             const verified = (item.verification_level ?? 0) >= 2;

@@ -17,15 +17,14 @@ import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 //
 // Same dual-auth + rate-limit pattern as every other amos-* function.
 
-const ALLOWED_ORIGINS = new Set(['https://pamarketzw.com', 'https://www.pamarketzw.com', 'https://admin.pamarketzw.com', 'https://pamarket.chakusaprince.workers.dev'])
+import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts'
+
+// Migrated to the shared allowlist (Stage 6) — still adds this function's
+// own x-automation-secret header on top of the shared defaults, and keeps
+// the same local corsHeaders(req) call signature every call site below
+// already uses.
 function corsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? ''
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://pamarketzw.com'
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-automation-secret',
-    'Vary': 'Origin',
-  }
+  return sharedCorsHeaders(req, { extraHeaders: ['x-automation-secret'] })
 }
 
 const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
