@@ -350,6 +350,34 @@ export function resolveNotifRoute(n: {
   return SAFE_FALLBACK;
 }
 
+// Turns a route TEMPLATE ("/listing/[id]") + params into the concrete path
+// ("/listing/abc123") expo-router's usePathname() would report once there,
+// so a resolved destination can be compared against where the user already
+// is.
+function interpolatePath(pathname: string, params?: Record<string, string>): string {
+  if (!params) return pathname;
+  return pathname.replace(/\[(\w+)\]/g, (match, key) => params[key] ?? match);
+}
+
+export function resolvedPath(route: ExpoRoute): string {
+  return interpolatePath(route.pathname, route.params);
+}
+
+// Single place both the push-notification tap handler (app/_layout.tsx) and
+// the in-app Notifications list (app/notifications.tsx) go through to
+// actually navigate, so they behave identically and can't drift apart:
+// never pushes a second copy of the screen the user is already looking at.
+// Returns whether it actually navigated, for the caller's own dev logging.
+export function navigateToNotifRoute(
+  router: { push: (route: any) => void },
+  route: ExpoRoute,
+  currentPathname?: string | null
+): boolean {
+  if (currentPathname && resolvedPath(route) === currentPathname) return false;
+  router.push(route.params ? ({ pathname: route.pathname as any, params: route.params } as any) : (route.pathname as any));
+  return true;
+}
+
 export function dayLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();

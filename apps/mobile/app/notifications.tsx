@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import {
   clearAllNotifs,
@@ -9,6 +9,7 @@ import {
   fetchNotifications,
   markAllNotifsRead,
   markNotifRead,
+  navigateToNotifRoute,
   notifDotColor,
   resolveNotifRoute,
   subscribeToNotifications,
@@ -30,6 +31,7 @@ export default function NotificationsScreen() {
   const tones = useThemedStyles(buildTones);
   const { session } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [notifs, setNotifs] = useState<NotificationRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +73,18 @@ export default function NotificationsScreen() {
     }
     try {
       const route = resolveNotifRoute(n);
-      router.push(route.params ? { pathname: route.pathname as any, params: route.params } : (route.pathname as any));
+      const navigated = navigateToNotifRoute(router, route, pathname);
+      if (__DEV__) {
+        console.log("[notif-nav]", {
+          source: "in-app-list",
+          notificationId: n.id,
+          type: n.type,
+          currentPathname: pathname,
+          destination: route.pathname,
+          params: route.params ?? null,
+          navigated,
+        });
+      }
     } catch (e) {
       console.warn("notification tap navigation failed:", e);
       toast("Could not open this notification.", 4000, true);

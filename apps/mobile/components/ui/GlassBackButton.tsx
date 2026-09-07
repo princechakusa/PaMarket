@@ -92,6 +92,12 @@ export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Ba
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     if (onPress) onPress();
     else if (router.canGoBack()) router.back();
+    // No history to pop — most often a screen a notification opened
+    // straight into on cold start, with nothing pushed before it. Route to
+    // Home rather than leaving the button a dead tap (or, if this ever ran
+    // from an Android hardware-back path instead, letting the OS's default
+    // "nothing left to pop" behavior close the app).
+    else router.replace("/(tabs)");
   }
 
   if (flat) {

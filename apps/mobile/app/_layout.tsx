@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import messaging from "@react-native-firebase/messaging";
@@ -14,7 +14,7 @@ import { AnnouncementModal } from "../components/AnnouncementModal";
 import { initTelemetry } from "../lib/telemetry";
 import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications, saveRotatedPushToken } from "../lib/push";
-import { resolveNotifRoute } from "../lib/notifications";
+import { navigateToNotifRoute, resolveNotifRoute } from "../lib/notifications";
 import TwoFactorVerifyScreen from "./two-factor-verify";
 
 // Nothing was ever calling SplashScreen.hideAsync() — the native splash's
@@ -41,24 +41,38 @@ setTimeout(() => {
   SplashScreen.hideAsync().catch(() => {});
 }, 8000);
 
-// Navigate using the same deep-link mapper the in-app notifications list
-// uses, so a push tap (cold start or backgrounded) and an in-app tap always
-// land on the same real route — never "page not found". Wrapped in try/catch
-// because a malformed/unexpected notification payload must never crash the
-// app — worst case is staying on the current screen instead of navigating.
-function navigateFromNotificationData(router: ReturnType<typeof useRouter>, data: Record<string, unknown>) {
-  try {
-    const route = resolveNotifRoute(data as any);
-    router.push(route.params ? ({ pathname: route.pathname as any, params: route.params } as any) : (route.pathname as any));
-  } catch (e) {
-    console.warn("push notification navigation failed:", e);
-  }
+// A single tap can reach this handler more than once — e.g. iOS registers
+// both expo-notifications' and Firebase's response listeners simultaneously
+// (see the iOS-only block below for why), so a delegate race can fire both
+// for the one real tap. Keyed on notificationId when the payload carries one
+// (dispatch-notification-push always includes it), falling back to a
+// composite of whatever identifying fields are present — good enough to
+// recognize "the same event fired twice in a row" without needing every
+// payload shape to agree on one field.
+const NOTIF_DEDUPE_WINDOW_MS = 1500;
+
+function notifEventKey(data: Record<string, unknown>): string {
+  if (data["notificationId"] != null) return String(data["notificationId"]);
+  return (
+    [data["type"], data["conversationId"], data["listingId"], data["jobId"], data["businessId"], data["profileId"], data["deepLink"]]
+      .filter((v) => v != null)
+      .map(String)
+      .join("|") || "unknown"
+  );
 }
 
 function usePushNotifications() {
   const { session } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const registeredForRef = useRef<string | null>(null);
+  // Callbacks below are registered once (empty dep array) but must always
+  // read the CURRENT pathname at tap time, not whatever it was when the
+  // effect first ran — a plain closure over `pathname` would go stale the
+  // moment the user navigated anywhere after mount.
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+  const lastHandledRef = useRef<{ key: string; at: number } | null>(null);
 
   useEffect(() => {
     const userId = session?.user?.id;
@@ -104,6 +118,42 @@ function usePushNotifications() {
   }, []);
 
   useEffect(() => {
+    // Wrapped in try/catch because a malformed/unexpected notification
+    // payload must never crash the app — worst case is staying on the
+    // current screen instead of navigating. `source` is only for the dev
+    // log below (which listener/lifecycle path this tap came through).
+    function handleNotificationTap(data: Record<string, unknown>, source: string) {
+      try {
+        const key = notifEventKey(data);
+        const now = Date.now();
+        const last = lastHandledRef.current;
+        if (last && last.key === key && now - last.at < NOTIF_DEDUPE_WINDOW_MS) {
+          if (__DEV__) console.log("[notif-nav] duplicate event skipped", { source, key });
+          return;
+        }
+        lastHandledRef.current = { key, at: now };
+
+        const route = resolveNotifRoute(data as any);
+        const navigated = navigateToNotifRoute(router, route, pathnameRef.current);
+
+        if (__DEV__) {
+          console.log("[notif-nav]", {
+            source,
+            appState: AppState.currentState,
+            notificationId: data["notificationId"],
+            type: data["type"],
+            recordId: data["listingId"] ?? data["conversationId"] ?? data["jobId"] ?? data["businessId"] ?? data["profileId"] ?? null,
+            currentPathname: pathnameRef.current,
+            destination: route.pathname,
+            params: route.params ?? null,
+            navigated,
+          });
+        }
+      } catch (e) {
+        console.warn("push notification navigation failed:", e);
+      }
+    }
+
     // Cold start: app opened by tapping a push notification. The root
     // navigator may not have finished mounting yet at this point — calling
     // router.push() synchronously here is a known source of "navigate
@@ -111,13 +161,13 @@ function usePushNotifications() {
     // lets the navigator finish mounting first.
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification.request.content.data;
-      if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
+      if (data) setTimeout(() => handleNotificationTap(data, "expo-cold-start"), 0);
     }).catch(() => {});
 
     // Warm/background: app already running, user taps a push notification.
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
-      if (data) navigateFromNotificationData(router, data);
+      if (data) handleNotificationTap(data, "expo-response");
     });
 
     // iOS-only: @react-native-firebase/messaging and expo-notifications both
@@ -127,18 +177,20 @@ function usePushNotifications() {
     // native FCM tokens, not Expo's push service). RNFB's own tap-detection
     // APIs work independently of that delegate, so they're the reliable
     // path on iOS. Android's intent-based handling isn't affected by this
-    // conflict, so the listener above already covers it there.
+    // conflict, so the listener above already covers it there. Both being
+    // registered at once is exactly why the dedupe guard above exists — if
+    // a given tap ever reaches both, it must still only navigate once.
     let unsubscribeOnOpen: (() => void) | undefined;
     if (Platform.OS === "ios") {
       messaging()
         .getInitialNotification()
         .then((remoteMessage) => {
           const data = remoteMessage?.data;
-          if (data) setTimeout(() => navigateFromNotificationData(router, data), 0);
+          if (data) setTimeout(() => handleNotificationTap(data, "firebase-cold-start"), 0);
         })
         .catch(() => {});
       unsubscribeOnOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
-        if (remoteMessage?.data) navigateFromNotificationData(router, remoteMessage.data);
+        if (remoteMessage?.data) handleNotificationTap(remoteMessage.data, "firebase-opened-app");
       });
     }
 
@@ -199,6 +251,18 @@ function RootNavigator() {
         headerStyle: { backgroundColor: headerColors.bg },
         headerTintColor: headerColors.text,
         headerTitleStyle: { color: headerColors.text },
+        // iOS's native back button normally shows the PREVIOUS screen's own
+        // title, derived automatically when nothing else is set. That
+        // derivation isn't reliable crossing from this outer Stack into the
+        // nested (tabs) Tabs navigator — most visibly when a notification
+        // tap constructs the stack fresh (cold start/background) rather
+        // than the user having navigated there normally — and could fall
+        // back to a raw, humanized route/file name (e.g. "index", the
+        // literal filename behind the Home tab) instead of a real label.
+        // A fixed, always-safe default removes that dependency entirely;
+        // any screen that wants a different back label sets its own
+        // headerBackTitle explicitly.
+        headerBackTitle: "Back",
       }}
     >
       {/* The tabs group is a single stack node covering all 5 tabs (Home,
