@@ -23,6 +23,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
 import { formatPrice, isFeatured, publicListingExpiryFilter, type Listing } from "../../lib/listings";
+import { listingUrl } from "../../lib/site-urls";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { useStoreProducts } from "../../lib/use-store-products";
@@ -486,7 +487,7 @@ export default function ListingDetailScreen() {
 
   async function shareListing() {
     if (!listing) return;
-    const link = `https://pamarket.co.zw/listing/${listing.id}`;
+    const link = listingUrl(listing);
     await Share.share({
       message: `${listing.title} — ${formatPrice(listing)}\n${link}`,
       url: link,
