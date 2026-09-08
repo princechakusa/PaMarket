@@ -78,10 +78,16 @@
       };
     }
     const e = _edit;
+    // H._taxEnsure guarantees this business's already-saved province/city
+    // stays selectable here even if it's since been deactivated or renamed
+    // in the admin taxonomy — an edit form must never silently blank out a
+    // real stored value (see app.js's H._hydrateTaxonomy).
+    const provList = H._taxEnsure ? H._taxEnsure(H.PROVINCES, e.province) : H.PROVINCES;
+    const cityList = H._taxEnsure ? H._taxEnsure(H.CITIES_BY_PROV[e.province] || [], e.city) : (H.CITIES_BY_PROV[e.province] || []);
     const provOpts = ['<option value="">Select province</option>']
-      .concat(H.PROVINCES.map(p => `<option value="${p}" ${e.province === p ? 'selected' : ''}>${p}</option>`)).join('');
+      .concat(provList.map(p => `<option value="${p}" ${e.province === p ? 'selected' : ''}>${p}</option>`)).join('');
     const cityOpts = ['<option value="">Select city / town</option>']
-      .concat((H.CITIES_BY_PROV[e.province] || []).map(c => `<option value="${c}" ${e.city === c ? 'selected' : ''}>${c}</option>`)).join('');
+      .concat(cityList.map(c => `<option value="${c}" ${e.city === c ? 'selected' : ''}>${c}</option>`)).join('');
     const typeBtn = (id, label) => `<button type="button" onclick="H._bizProfile.setType('${id}')"
       style="flex:1;padding:10px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;
       border:1.5px solid ${e.bizType === id ? '#1A3A8F' : 'var(--border,#E8ECF4)'};
@@ -121,7 +127,14 @@
         ${field('Business name', `<input class="fi" id="epName" maxlength="60" value="${escHtml(e.name)}">`)}
         ${field('Business type', `<div style="display:flex;gap:8px">${typeBtn('individual','Individual')}${typeBtn('company','Company')}${typeBtn('agency','Agency')}</div>`)}
         ${field('Description', `<textarea class="fi" id="epDesc" rows="3" maxlength="300">${escHtml(e.description)}</textarea>`)}
-        ${field('Categories', `<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">Select all categories that apply to your business.</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${(H.CATEGORIES || []).map(c => `<button type="button" onclick="H._bizProfile.toggleCategory('${c.id}')" style="display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:12px;cursor:pointer;font-family:inherit;text-align:left;border:1.5px solid ${(e.categories||[]).includes(c.id) ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${(e.categories||[]).includes(c.id) ? '#EEF2FB' : 'var(--card,#fff)'};color:${(e.categories||[]).includes(c.id) ? '#1A3A8F' : 'var(--text)'}"><span style="flex-shrink:0;color:#1A3A8F">${c.icon}</span><span style="font-size:12.5px;font-weight:700">${escHtml(c.name)}</span>${(e.categories||[]).includes(c.id) ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1A3A8F" stroke-width="3" style="margin-left:auto;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`).join('')}</div>`)}
+        ${(() => {
+          // Fold in any of this business's already-selected category ids
+          // that are missing from the live active set (deactivated/renamed)
+          // — same guarantee as the province/city fields above.
+          let catList = H.CATEGORIES || [];
+          (e.categories || []).forEach(id => { if (H._taxEnsureCat) catList = H._taxEnsureCat(catList, id); });
+          return field('Categories', `<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px">Select all categories that apply to your business.</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${catList.map(c => `<button type="button" onclick="H._bizProfile.toggleCategory('${c.id}')" style="display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:12px;cursor:pointer;font-family:inherit;text-align:left;border:1.5px solid ${(e.categories||[]).includes(c.id) ? '#1A3A8F' : 'var(--border,#E8ECF4)'};background:${(e.categories||[]).includes(c.id) ? '#EEF2FB' : 'var(--card,#fff)'};color:${(e.categories||[]).includes(c.id) ? '#1A3A8F' : 'var(--text)'}"><span style="flex-shrink:0;color:#1A3A8F">${c.icon}</span><span style="font-size:12.5px;font-weight:700">${escHtml(c.name)}</span>${(e.categories||[]).includes(c.id) ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1A3A8F" stroke-width="3" style="margin-left:auto;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</button>`).join('')}</div>`);
+        })()}
         ${field('Contact phone', `<input class="fi" id="epPhone" type="tel" value="${escHtml(e.phone)}">`)}
         ${field('WhatsApp', `<input class="fi" id="epWa" type="tel" value="${escHtml(e.whatsapp)}">`)}
         ${field('Email', `<input class="fi" id="epEmail" type="email" value="${escHtml(e.email)}">`)}

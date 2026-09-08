@@ -7,8 +7,11 @@
 'use strict';
 (function (H) {
   const pages = H.pages;
-  
-  const { CATEGORIES, PROVINCES, CITIES_BY_PROV } = H;
+
+  // H.CATEGORIES/H.PROVINCES/H.CITIES_BY_PROV are read live at each use
+  // below (never destructured into a module-level const) so this form
+  // always reflects H._hydrateTaxonomy()'s live admin-managed values once
+  // they land, not just whatever was bundled at page-load time.
 
   let postState = {};
 
@@ -24,8 +27,8 @@
       if (draftAge < 10080) { // 7 days
         postState = Object.assign({
           step: 1, cat: null, title: '', desc: '', price: '',
-          currency: 'USD', prov: PROVINCES[0],
-          city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
+          currency: 'USD', prov: H.PROVINCES[0],
+          city: H.CITIES_BY_PROV[H.PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
           businessId: null
         }, savedDraft);
         H._postBizTarget = null;
@@ -47,8 +50,8 @@
     }
     postState = {
       step: 1, cat: null, title: '', desc: '', price: '',
-      currency: 'USD', prov: PROVINCES[0],
-      city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
+      currency: 'USD', prov: H.PROVINCES[0],
+      city: H.CITIES_BY_PROV[H.PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
       businessId: H._postBizTarget || null   // set by "Create new business product"
     };
     H._postBizTarget = null;                  // consume once
@@ -120,7 +123,7 @@
         <div class="fg">
           <div class="fl">What are you posting?</div>
           <div class="cat-3">
-            ${CATEGORIES.map(c => `
+            ${H.CATEGORIES.map(c => `
               <div class="cat-opt" onclick="H._post.setCat('${c.id}')">
                 <div style="font-size:22px">${c.icon}</div>
                 <div class="cat-opt-label">${c.name}</div>
@@ -129,7 +132,7 @@
         </div>`;
       }
       // Screen 1b — the chosen category's own form (title, description, details).
-      const cat = CATEGORIES.find(c => c.id === s.cat) || { name: 'Listing', icon: '' };
+      const cat = H.CATEGORIES.find(c => c.id === s.cat) || { name: 'Listing', icon: '' };
       return `
         <div class="post-cat-bar">
           <div class="post-cat-bar-l"><span class="post-cat-ic">${cat.icon}</span><span>${H.escHtml(cat.name)}</span></div>
@@ -161,12 +164,12 @@
       </div>
       <div class="fg"><div class="fl">Province</div>
         <select class="fi" id="provinceSel" onchange="H._post.onProv(this.value)">
-          ${PROVINCES.map(p => `<option ${s.prov === p ? 'selected' : ''}>${p}</option>`).join('')}
+          ${H.PROVINCES.map(p => `<option ${s.prov === p ? 'selected' : ''}>${p}</option>`).join('')}
         </select>
       </div>
       <div class="fg"><div class="fl">City / Town</div>
         <select class="fi" id="citySel">
-          ${(CITIES_BY_PROV[s.prov] || []).map(c => `<option ${s.city === c ? 'selected' : ''}>${c}</option>`).join('')}
+          ${(H.CITIES_BY_PROV[s.prov] || []).map(c => `<option ${s.city === c ? 'selected' : ''}>${c}</option>`).join('')}
         </select>
       </div>
       <div class="fg"><div class="fl">Suburb / Area (optional)</div>
@@ -213,7 +216,7 @@
         <div class="preview-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ad Preview</div>
         <div class="preview-title">${H.escHtml(s.title || 'Untitled')}</div>
         <div class="preview-price">${H.escHtml(H.fmtPrice(s.price, s.currency))}</div>
-        <div class="preview-meta"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(s.suburb || s.city)}, ${H.escHtml(s.prov)} · ${(CATEGORIES.find(c => c.id === s.cat) || {}).name || 'Other'} · ${s.photos.length} photo${s.photos.length === 1 ? '' : 's'}</div>
+        <div class="preview-meta"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${H.escHtml(s.suburb || s.city)}, ${H.escHtml(s.prov)} · ${(H.CATEGORIES.find(c => c.id === s.cat) || {}).name || 'Other'} · ${s.photos.length} photo${s.photos.length === 1 ? '' : 's'}</div>
       </div>
       <div class="tip-box">
         <div class="tip-title"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Listing Rules</div>
@@ -317,8 +320,8 @@
       try { localStorage.removeItem('pamarket_draft'); } catch (_) {}
       postState = {
         step: 1, cat: null, title: '', desc: '', price: '',
-        currency: 'USD', prov: PROVINCES[0],
-        city: CITIES_BY_PROV[PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
+        currency: 'USD', prov: H.PROVINCES[0],
+        city: H.CITIES_BY_PROV[H.PROVINCES[0]][0], suburb: '', photos: [], attrs: {}, variations: [],
         businessId: null
       };
       H.renderPage('Post');
@@ -340,7 +343,7 @@
     },
     toggleChip(btn) { if (btn) btn.classList.toggle('on'); },
     setCur(c)    { postState.currency = c; refreshBody(); },
-    onProv(p)    { postState.prov = p; postState.city = CITIES_BY_PROV[p][0]; refreshBody(); },
+    onProv(p)    { postState.prov = p; postState.city = H.CITIES_BY_PROV[p][0]; refreshBody(); },
     removePhoto(i) { postState.photos.splice(i, 1); document.getElementById('photoGrid').innerHTML = renderPhotoGrid(); },
     setCover(i) {
       if (i > 0 && i < postState.photos.length) {

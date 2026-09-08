@@ -3294,8 +3294,82 @@ window.H = {
       window.addEventListener('beforeunload',()=>H.stopCam());
       document.addEventListener('keydown',e=>{if(e.key==='Escape')H.closeModal();});
       H.boot();
+      H._hydrateTaxonomy();
     });
   }
+};
+
+// ── Taxonomy centralization (Stage 15) ──────────────────────────────────────
+// Mirrors apps/mobile/lib/taxonomy.ts's pattern exactly: the hardcoded
+// CATEGORIES/PROVINCES/CITIES_BY_PROV above render immediately (no loading
+// state, nothing can ever be blank), then this silently swaps in the live
+// admin-managed categories/provinces/cities tables in the background if
+// reachable. A failed/empty fetch leaves the hardcoded values in place
+// untouched — every consumer already reads H.CATEGORIES/H.PROVINCES/
+// H.CITIES_BY_PROV live at call time (not a cached destructure), so this
+// reassignment is picked up the moment it lands, with one known exception
+// (post.js's own module-level destructure, fixed separately in that file).
+//
+// Category icons are NOT stored in the categories table (by design — see
+// lib/taxonomy.ts) — H._TAX_ICONS below is captured from the hardcoded set
+// once, before this ever runs, so a live category's icon is looked up by id
+// and a brand-new admin-added category (no matching hardcoded id) falls
+// back to the "other" glyph rather than rendering nothing.
+H._TAX_ICONS = {};
+H.CATEGORIES.forEach(function (c) { H._TAX_ICONS[c.id] = c.icon; });
+const _TAX_DEFAULT_ICON = (H.CATEGORIES.filter(function (c) { return c.id === 'other'; })[0] || {}).icon || '';
+
+H._hydrateTaxonomy = async function () {
+  if (!window.supabase || typeof window.supabase.from !== 'function') return;
+  try {
+    const [catRes, provRes, cityRes] = await Promise.all([
+      window.supabase.from('categories').select('legacy_key,name,sort_order').eq('is_active', true).order('sort_order', { ascending: true }),
+      window.supabase.from('provinces').select('name,sort_order').eq('is_active', true).order('sort_order', { ascending: true }),
+      window.supabase.from('cities').select('name,sort_order,provinces(name)').eq('is_active', true).order('sort_order', { ascending: true })
+    ]);
+
+    if (!catRes.error && catRes.data && catRes.data.length) {
+      H.CATEGORIES = catRes.data.map(function (r) {
+        return { id: r.legacy_key, name: r.name, icon: H._TAX_ICONS[r.legacy_key] || _TAX_DEFAULT_ICON };
+      });
+    }
+    if (!provRes.error && provRes.data && provRes.data.length) {
+      H.PROVINCES = provRes.data.map(function (r) { return r.name; });
+    }
+    if (!cityRes.error && cityRes.data && cityRes.data.length) {
+      const mapped = {};
+      cityRes.data.forEach(function (r) {
+        const prov = Array.isArray(r.provinces) ? r.provinces[0] : r.provinces;
+        const provName = prov && prov.name;
+        if (!provName) return;
+        if (!mapped[provName]) mapped[provName] = [];
+        mapped[provName].push(r.name);
+      });
+      if (Object.keys(mapped).length) H.CITIES_BY_PROV = mapped;
+    }
+  } catch (e) {
+    // Network failure, RLS hiccup, whatever — the hardcoded values already
+    // assigned above are the fallback, and stay exactly as they were.
+    console.warn('[taxonomy] live fetch failed, using bundled defaults:', e && e.message);
+  }
+};
+
+// Same guarantee as mobile's withSelectedValue(): a value already stored on
+// an existing record (a listing, job, or business) must remain selectable
+// in a picker even if it has since been deactivated, renamed away, or was
+// never a canonical value at all (e.g. numeric account/id-shaped, RLS
+// mishap) — an edit form must never silently lose or blank out a real
+// stored value. Only ever ADDS the value if missing; never removes or
+// reorders the list it's given.
+H._taxEnsure = function (list, value) {
+  if (!value) return list || [];
+  const l = list || [];
+  return l.indexOf(value) === -1 ? l.concat([value]) : l;
+};
+H._taxEnsureCat = function (list, id) {
+  if (!id) return list || [];
+  const l = list || [];
+  return l.some(function (c) { return c.id === id; }) ? l : l.concat([{ id: id, name: id, icon: H._TAX_ICONS[id] || _TAX_DEFAULT_ICON }]);
 };
 
 ['navTo','openInner','goBack','toast','closeModal','closeSheet'].forEach(fn=>{

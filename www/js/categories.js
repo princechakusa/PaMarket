@@ -448,8 +448,24 @@
   };
 
   // ── UI builder helpers ────────────────────────────────────────────────────
-  var ZW_CITIES = ['Harare', 'Bulawayo', 'Mutare', 'Gweru', 'Kwekwe', 'Kadoma', 'Masvingo', 'Chinhoyi', 'Bindura', 'Marondera', 'Hwange', 'Victoria Falls', 'Zvishavane'];
-  H._ZW_CITIES = ZW_CITIES;
+  // Fallback used only if H.CITIES_BY_PROV is ever completely empty (it
+  // never is in practice — app.js seeds it with the same static 10-province
+  // set this file used to duplicate here). H._ZW_CITIES is a live getter
+  // (Stage 15) rather than a fixed snapshot: it flattens whatever
+  // H.CITIES_BY_PROV currently holds — the bundled defaults immediately,
+  // then the full live `cities` table (currently 319 rows across Zimbabwe,
+  // not just these 13 major towns) once H._hydrateTaxonomy() lands. jobs.js
+  // already reads H._ZW_CITIES fresh at each call site, so this needs no
+  // changes there to pick it up.
+  var ZW_CITIES_FALLBACK = ['Harare', 'Bulawayo', 'Mutare', 'Gweru', 'Kwekwe', 'Kadoma', 'Masvingo', 'Chinhoyi', 'Bindura', 'Marondera', 'Hwange', 'Victoria Falls', 'Zvishavane'];
+  function _flattenCities() {
+    var byProv = H.CITIES_BY_PROV;
+    if (!byProv) return ZW_CITIES_FALLBACK;
+    var all = [];
+    Object.keys(byProv).forEach(function (p) { all = all.concat(byProv[p] || []); });
+    return all.length ? all : ZW_CITIES_FALLBACK;
+  }
+  Object.defineProperty(H, '_ZW_CITIES', { get: _flattenCities, configurable: true });
 
   H._sel = function (id, key, label, opts) {
     var html = '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">' + label + '</div>';
@@ -526,7 +542,7 @@
   };
 
   H._citysel = function (id) {
-    return H._sel(id, 'city', 'Location', [['all', 'All Zimbabwe']].concat(ZW_CITIES.map(function (c) { return [c, c]; })));
+    return H._sel(id, 'city', 'Location', [['all', 'All Zimbabwe']].concat(H._ZW_CITIES.map(function (c) { return [c, c]; })));
   };
 
   H._sortsel = function (id) {
