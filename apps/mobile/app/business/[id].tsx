@@ -24,6 +24,7 @@ import { StarRow } from "../../components/StarRow";
 import { space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Card, GlassBackButton, VerifiedBadge } from "../../components/ui";
+import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
@@ -225,6 +226,7 @@ export default function BusinessShopScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>
             {business.name}
           </Text>
+          {!isOwner ? <CartBadgeButton tone="light" style={{ marginRight: 4 }} /> : null}
           {isVerified ? (
             <View style={styles.verifiedPill}>
               <Text style={styles.verifiedPillText}>Verified</Text>
@@ -405,6 +407,7 @@ export default function BusinessShopScreen() {
 
       {!isOwner ? (
         <View style={styles.ctaBar}>
+          {Platform.OS === "ios" ? <CartBadgeButton tone="dark" style={styles.ctaCartButton} /> : null}
           <Pressable style={styles.ctaButton} onPress={messageShop}>
             <Text style={styles.ctaButtonText}>Message This Shop</Text>
           </Pressable>
@@ -697,12 +700,19 @@ function buildStyles(color: ColorPalette) {
       marginTop: 2,
     },
     ctaBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
       padding: 12,
       borderTopWidth: 1,
       borderTopColor: color.divider,
       backgroundColor: color.surface,
     },
+    ctaCartButton: {
+      backgroundColor: color.surfaceAlt,
+    },
     ctaButton: {
+      flex: 1,
       backgroundColor: color.gold,
       borderRadius: 12,
       paddingVertical: 14,

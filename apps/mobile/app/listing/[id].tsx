@@ -45,6 +45,9 @@ import { notifyListingViewed } from "../../lib/store-review";
 import { REPORT_REASONS, friendlyError } from "../../lib/safety";
 import { StarRow } from "../../components/StarRow";
 import { ListingCard } from "../../components/ListingCard";
+import { AddToCartBar } from "../../components/cart/AddToCartBar";
+import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
+import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
 import {
   Button,
   Card,
@@ -71,7 +74,7 @@ import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes,is_orderable";
 
 const CONDITION_LABELS: Record<string, string> = {
   new: "New",
@@ -295,6 +298,7 @@ export default function ListingDetailScreen() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
+  const [orderableShop, setOrderableShop] = useState<{ id: string; name: string } | null>(null);
   const {
     prices: boostPrices,
     availableProductIds: availableBoostIds,
@@ -377,6 +381,25 @@ export default function ListingDetailScreen() {
     setRatingSummary(ratingSummaryRes);
     if (!similarRes.error && similarRes.data)
       setSimilar(similarRes.data as Listing[]);
+
+    // Only fetched when this listing is opted into ordering — the "Add to
+    // Cart" bar additionally needs to know the shop is currently
+    // active+verified, which isn't part of LISTING_COLUMNS. The server
+    // re-checks both of these again at order time regardless.
+    if (isListingOrderable(found)) {
+      const { data: bizData } = await supabase
+        .from("businesses")
+        .select("id,name,status,verification_level")
+        .eq("id", found.business_id)
+        .maybeSingle();
+      if (bizData && isShopAcceptingOrders(bizData as { status: string; verification_level?: number | null })) {
+        setOrderableShop({ id: bizData.id, name: bizData.name });
+      } else {
+        setOrderableShop(null);
+      }
+    } else {
+      setOrderableShop(null);
+    }
 
     supabase.rpc("increment_listing_view", { listing_id: found.id }).then(
       () => {},
@@ -837,6 +860,7 @@ export default function ListingDetailScreen() {
               <GlassBackButton onPress={() => router.back()} tone="light" />
             ) : null}
             <View style={{ flex: 1 }} />
+            {!isOwner ? <CartBadgeButton tone="light" /> : null}
             <Pressable
               style={styles.iconButton}
               onPress={shareListing}
@@ -1197,6 +1221,9 @@ export default function ListingDetailScreen() {
           { paddingBottom: Math.max(insets.bottom, 12) },
         ]}
       >
+        {!isOwner && orderableShop ? (
+          <AddToCartBar listingId={listing.id} business={orderableShop} />
+        ) : null}
         {isOwner ? (
           <Button
             label="Edit listing"

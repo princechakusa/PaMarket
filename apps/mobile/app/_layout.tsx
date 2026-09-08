@@ -8,6 +8,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { AuthProvider, useAuth } from "../lib/auth";
+import { CartProvider } from "../lib/cart-context";
 import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
@@ -327,6 +328,11 @@ function RootNavigator() {
       <Stack.Screen name="rental-fleet/profile" options={{ headerShown: true, title: "Company Profile" }} />
       <Stack.Screen name="reviews/[id]" options={{ headerShown: Platform.OS === "ios", title: "Reviews" }} />
       <Stack.Screen name="shops/index" options={{ headerShown: Platform.OS === "ios", title: "Shops" }} />
+      <Stack.Screen name="shop-cart" options={{ headerShown: Platform.OS === "ios", title: "Your Cart" }} />
+      <Stack.Screen name="shop-checkout" options={{ headerShown: Platform.OS === "ios", title: "Order Request" }} />
+      <Stack.Screen name="shop-order/[id]" options={{ headerShown: Platform.OS === "ios", title: "Order" }} />
+      <Stack.Screen name="business-orders/[id]" options={{ headerShown: Platform.OS === "ios", title: "Orders" }} />
+      <Stack.Screen name="owner-order/[id]" options={{ headerShown: Platform.OS === "ios", title: "Order" }} />
       <Stack.Screen name="two-factor-setup" options={{ headerShown: true, title: "Two-Factor Authentication" }} />
       <Stack.Screen name="change-password" options={{ headerShown: true, title: "Change Password" }} />
       <Stack.Screen name="delete-account" options={{ headerShown: true, title: "Delete Account" }} />
@@ -373,10 +379,12 @@ function RootLayout() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <ThemedStatusBar />
-          <ToastHost />
-          <AnnouncementModal />
-          <RootNavigator />
+          <CartProvider>
+            <ThemedStatusBar />
+            <ToastHost />
+            <AnnouncementModal />
+            <RootNavigator />
+          </CartProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

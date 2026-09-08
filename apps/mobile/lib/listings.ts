@@ -24,6 +24,7 @@ export type Listing = {
   updated_at?: string | null;
   attributes?: Record<string, unknown> | null;
   condition?: string | null;
+  is_orderable?: boolean | null;
 };
 
 // Keep public feed queries aligned with the database RLS rule. The database

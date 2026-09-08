@@ -33,3 +33,11 @@ export async function loadCache<T>(key: string): Promise<T | null> {
     return null;
   }
 }
+
+export async function clearCache(key: string): Promise<void> {
+  try {
+    await FileSystem.deleteAsync(pathFor(key), { idempotent: true });
+  } catch {
+    // Best-effort — same as above.
+  }
+}
