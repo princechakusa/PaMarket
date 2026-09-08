@@ -114,6 +114,8 @@ const TYPE_DOT_COLOR: Record<string, string> = {
   verification_nudge: "#1A3A8F",
   message_noreply_reminder: "#1A3A8F",
   rental_lead: "#1A3A8F",
+  shop_order_new: "#CA8A04",
+  shop_order_status: "#1D4ED8",
 };
 
 export function notifDotColor(type: string): string {
@@ -196,6 +198,11 @@ function parseDeepLinkString(raw?: string | null): ExpoRoute | null {
       return { pathname: "/jobs/[id]", params: { id } };
     case "review":
       return { pathname: "/reviews/[id]", params: { id } };
+    case "ownerorder":
+      return { pathname: "/owner-order/[id]", params: { id } };
+    case "shoporder":
+    case "customerorder":
+      return { pathname: "/shop-order/[id]", params: { id } };
     default:
       return parseLegacyWebRoute(s);
   }
@@ -262,6 +269,25 @@ export function resolveNotifRoute(n: {
   const listingId: string | undefined = meta.listingId || undefined;
   const businessId: string | undefined = meta.businessId || undefined;
   const profileId: string | undefined = meta.profileId || meta.sellerId || undefined;
+  const orderId: string | undefined = meta.orderId || undefined;
+
+  // 0. Shop orders — owner gets the management screen, customer gets their
+  // own read-only detail screen. Both screens re-verify authorization from
+  // the database themselves (see app/owner-order/[id].tsx and
+  // app/shop-order/[id].tsx) — this notification's meta is only ever used
+  // for routing, never trusted as proof of access.
+  if (type === "shop_order_new") {
+    if (orderId) return { pathname: "/owner-order/[id]", params: { id: orderId } };
+    const parsed = parseDeepLinkString(meta.deepLink);
+    if (parsed) return parsed;
+    return SAFE_FALLBACK;
+  }
+  if (type === "shop_order_status") {
+    if (orderId) return { pathname: "/shop-order/[id]", params: { id: orderId } };
+    const parsed = parseDeepLinkString(meta.deepLink);
+    if (parsed) return parsed;
+    return SAFE_FALLBACK;
+  }
 
   // 1. Chat / message
   if (type === "message" || type === "chat_scam_warning" || type === "message_noreply_reminder") {
