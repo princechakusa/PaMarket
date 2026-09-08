@@ -98,7 +98,10 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     token: pushToken,
     notification: { title, body },
     data,
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default' } },
+    // icon/color explicit here too, matching send-push/index.ts — see that
+    // file's comment for why (defense-in-depth alongside the
+    // AndroidManifest.xml defaults some OEM skins are known to ignore).
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', icon: 'notification_icon', color: '#F5A623' } },
     apns: { payload: { aps: { sound: 'default' } } },
   };
   const url = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';

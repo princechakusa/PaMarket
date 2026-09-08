@@ -73,7 +73,15 @@ async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, 
     token: pushToken,
     notification: { title: title, body: body },
     data: fcmData,
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', image: imageUrl || undefined } },
+    // icon/color are explicit here as defense-in-depth alongside the
+    // AndroidManifest.xml defaults (com.google.firebase.messaging.
+    // default_notification_icon/_color, both already correctly wired to
+    // notification_icon / #F5A623) — some OEM notification-shade skins
+    // are known to ignore the manifest default and only honor a value
+    // set directly on the FCM message itself. 'notification_icon' is the
+    // drawable resource name (no extension) baked into the app by the
+    // expo-notifications config plugin from assets/notification-icon.png.
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', image: imageUrl || undefined, icon: 'notification_icon', color: '#F5A623' } },
     // aps.sound was previously only set implicitly via the top-level
     // `notification` block, which iOS does NOT read for sound — APNs only
     // plays a sound when it's explicitly set inside `aps`. Android reads

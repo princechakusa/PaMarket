@@ -55,7 +55,9 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     token: pushToken,
     notification: { title, body },
     data,
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', tag: data['conversationId'] || undefined } },
+    // icon/color explicit here too, matching send-push/index.ts and
+    // dispatch-notification-push/index.ts — see send-push's comment for why.
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', tag: data['conversationId'] || undefined, icon: 'notification_icon', color: '#F5A623' } },
     // iOS reads sound only from aps, never from the top-level `notification`
     // block — this was missing entirely, so message pushes arrived silent
     // on iOS even though Android's sound (set above) always worked.
