@@ -9,6 +9,11 @@ import { Sentry } from "../lib/sentry";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { CartProvider } from "../lib/cart-context";
+import { installGlobalErrorHandlers, logClientError } from "../lib/error-log";
+
+// Registered once at module load, same as Sentry.init in lib/sentry.ts —
+// must run before any screen mounts, not inside a component effect.
+installGlobalErrorHandlers();
 import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme-provider";
 import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
@@ -152,6 +157,7 @@ function usePushNotifications() {
         }
       } catch (e) {
         console.warn("push notification navigation failed:", e);
+        logClientError({ error: e, screen: "global", component: "push-notification-navigation", metadata: { notifType: data["type"] } });
       }
     }
 

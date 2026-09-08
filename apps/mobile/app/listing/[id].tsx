@@ -48,6 +48,7 @@ import { ListingCard } from "../../components/ListingCard";
 import { AddToCartBar } from "../../components/cart/AddToCartBar";
 import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
 import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
+import { logClientError } from "../../lib/error-log";
 import {
   Button,
   Card,
@@ -340,6 +341,7 @@ export default function ListingDetailScreen() {
 
     if (listingError) {
       setError(listingError.message);
+      logClientError({ error: listingError, screen: "listing/[id]", component: "load" });
       return;
     }
     if (!listingData) {

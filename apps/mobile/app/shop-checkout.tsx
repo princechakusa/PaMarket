@@ -18,6 +18,7 @@ import { Button, CountedTextArea, ErrorState, FieldLabel, GlassBackButton, toast
 import { font, radius, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
+import { logClientError } from "../lib/error-log";
 
 const NOTE_LIMIT = 300;
 
@@ -102,6 +103,7 @@ export default function ShopCheckoutScreen() {
       // for a genuine retry (network failure, rate limit, etc).
       setSubmitting(false);
       toast(result.message, 4500, true);
+      logClientError({ error: result.message, screen: "shop-checkout", component: "createShopOrder", severity: "warning", metadata: { code: result.code } });
       return;
     }
 

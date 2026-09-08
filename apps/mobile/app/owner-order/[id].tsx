@@ -26,6 +26,7 @@ import {
   type ShopOrderStatusHistoryRow,
 } from "../../lib/shop-orders";
 import { contactCustomerByPhone, contactCustomerByWhatsApp, normalizedPhoneDigits } from "../../lib/order-whatsapp";
+import { logClientError } from "../../lib/error-log";
 import { StatusChangeModal } from "../../components/orders/StatusChangeModal";
 import { Button, Card, EmptyState, ErrorState, GlassBackButton, toast } from "../../components/ui";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -93,6 +94,7 @@ export default function OwnerOrderDetailScreen() {
     } catch (e) {
       setState("error");
       setErrorMessage((e as Error)?.message === "timeout" ? "This is taking longer than expected." : "Couldn't load this order.");
+      logClientError({ error: e, screen: "owner-order/[id]", component: "load" });
     }
   }, [id, session?.user?.id]);
 
@@ -110,6 +112,7 @@ export default function OwnerOrderDetailScreen() {
     setPendingAction(null);
     if (!result.ok) {
       toast(result.message, 4500, true);
+      logClientError({ error: result.message, screen: "owner-order/[id]", component: "updateShopOrderStatus", severity: "warning", metadata: { code: result.code, to: pendingAction.to } });
     } else {
       toast(`Order marked ${orderStatusMeta(result.status).label}.`);
     }

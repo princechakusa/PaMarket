@@ -557,6 +557,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           Audit Center
         </button>
+        <button class="nav-item" data-tab="errorsCenter" onclick="showTab('errorsCenter')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Errors
+          <span class="nav-badge" id="badge-errors" style="display:none">0</span>
+        </button>
         <button class="nav-item" data-tab="opsCenter" onclick="showTab('opsCenter')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Operations
@@ -1411,7 +1416,7 @@ var TAB_TITLES = {
   legalContent:'Legal & Policies', faqContent:'Help & FAQ', contactSettings:'Contact & Social Links', taxonomy:'Marketplace Taxonomy',
   businesses:'Business Platform', maintenance:'Maintenance',
   jobsAdmin:'Jobs', servicesAdmin:'Services', propertyAdmin:'Property', vehiclesAdmin:'Vehicle Sales',
-  reviewsCenter:'Reviews Center', auditCenter:'Audit Center', opsCenter:'Operations Center',
+  reviewsCenter:'Reviews Center', auditCenter:'Audit Center', errorsCenter:'Errors', opsCenter:'Operations Center',
   modInbox:'Moderation Inbox', supportCenter:'Support Center', financeCenter:'Finance Center',
   playBilling:'Play Billing',
   securityCenter:'Security Center', automationCenter:'Automation Center',
@@ -1448,6 +1453,7 @@ var TAB_LOADERS = {
   vehiclesAdmin: function(){ return loadVertical('vehicles'); },
   reviewsCenter: function(){ return loadReviewsCenter(); },
   auditCenter:   function(){ return loadAuditCenter(); },
+  errorsCenter:  function(){ return loadErrorsCenter(); },
   opsCenter:     function(){ return loadOps(); },
   modInbox:      function(){ return loadModInbox(); },
   supportCenter: function(){ return loadSupport(); },
@@ -1488,7 +1494,7 @@ function renderTab() {
     servicesAdmin: function(){ renderVertical('services'); },
     propertyAdmin: function(){ renderVertical('property'); },
     vehiclesAdmin: function(){ renderVertical('vehicles'); },
-    reviewsCenter: renderReviewsCenter, auditCenter: renderAuditCenter, opsCenter: renderOps,
+    reviewsCenter: renderReviewsCenter, auditCenter: renderAuditCenter, errorsCenter: renderErrorsCenter, opsCenter: renderOps,
     modInbox: renderModInbox, supportCenter: renderSupport, financeCenter: renderFinance,
     playBilling: renderPlayBilling,
     securityCenter: renderSecurity, automationCenter: renderAutomation,
@@ -7979,6 +7985,236 @@ function acExport() {
   if(rows.length===1){ toast('Nothing to export','info'); return; }
   downloadCSV('pamarket-audit-'+AC.source+'-'+new Date().toISOString().slice(0,10)+'.csv', rows);
   toast('Exported '+(rows.length-1)+' audit entries');
+}
+
+// ════════════════════════════════════════════════════════════
+// ERRORS CENTER — app_error_events (Stage 6). A lightweight, PaMarket-
+// owned summary of client-reported crashes/errors, fed by the
+// log_client_error() RPC (see supabase/migrations/20260912120000_
+// app_error_events.sql). Sentry remains the deep-diagnostic tool for
+// stack traces/breadcrumbs/replay — sentry_event_id below is only ever a
+// cross-reference string, never a live API call. RLS restricts SELECT to
+// is_admin_team() and UPDATE (status/notes) to is_admin() specifically —
+// this section's own writes are ordinary RLS-gated `.update()` calls
+// followed by auditLog(), same as every other admin.html moderation
+// action, not a bespoke RPC.
+var EC = { rows:null, page:0, pageSize:50, total:null, search:'', severity:'', status:'', platform:'', appVersion:'', screen:'', fingerprint:'', overview:null };
+var EC_PAGE_SIZE = 50;
+
+function ecQueryBase() {
+  var q = sb.from('app_error_events').select('*', {count:'exact'});
+  if(EC.severity) q = q.eq('severity', EC.severity);
+  if(EC.status) q = q.eq('status', EC.status);
+  if(EC.platform) q = q.eq('platform', EC.platform);
+  if(EC.appVersion) q = q.eq('app_version', EC.appVersion);
+  if(EC.screen) q = q.eq('screen', EC.screen);
+  if(EC.fingerprint) q = q.eq('fingerprint', EC.fingerprint);
+  if(EC.search){
+    var s = EC.search.replace(/[%_]/g,'');
+    q = q.or('message.ilike.%'+s+'%,error_type.ilike.%'+s+'%,screen.ilike.%'+s+'%');
+  }
+  return q;
+}
+
+async function loadErrorsCenter() {
+  try {
+    var since24h = new Date(Date.now()-24*3600e3).toISOString();
+    var listRes = await ecQueryBase().order('last_seen_at',{ascending:false}).range(EC.page*EC_PAGE_SIZE, EC.page*EC_PAGE_SIZE+EC_PAGE_SIZE-1);
+    if(listRes.error){ EC.rows='missing'; return; }
+    EC.rows = listRes.data||[];
+    EC.total = listRes.count==null ? null : listRes.count;
+
+    // Overview cards — bounded, indexed counts, not a full-table scan.
+    var overview = await Promise.allSettled([
+      sb.from('app_error_events').select('id',{count:'exact',head:true}),
+      sb.from('app_error_events').select('id',{count:'exact',head:true}).eq('severity','fatal'),
+      sb.from('app_error_events').select('id',{count:'exact',head:true}).gte('first_seen_at', since24h),
+      sb.from('app_error_events').select('id',{count:'exact',head:true}).neq('status','resolved'),
+      sb.from('app_error_events').select('affected_users_count,platform,screen,app_version').order('last_seen_at',{ascending:false}).limit(500),
+      sb.from('app_error_events').select('id,error_type,message,severity,screen,last_seen_at').order('last_seen_at',{ascending:false}).limit(10)
+    ]);
+    var val = function(r,def){ return (r.status==='fulfilled' && !r.value.error) ? r.value : def; };
+    var totalR = val(overview[0], {count:0}), fatalR = val(overview[1], {count:0}), newR = val(overview[2], {count:0}), unresolvedR = val(overview[3], {count:0});
+    var sampleR = val(overview[4], {data:[]}), timelineR = val(overview[5], {data:[]});
+    var sample = sampleR.data||[];
+    var affectedUsers = sample.reduce(function(sum,r){ return sum+(r.affected_users_count||0); }, 0);
+    var platformCounts = {}, screenCounts = {}, versionCounts = {};
+    sample.forEach(function(r){
+      if(r.platform) platformCounts[r.platform] = (platformCounts[r.platform]||0)+1;
+      if(r.screen) screenCounts[r.screen] = (screenCounts[r.screen]||0)+1;
+      if(r.app_version) versionCounts[r.app_version] = (versionCounts[r.app_version]||0)+1;
+    });
+    EC.overview = {
+      total: totalR.count||0, fatal: fatalR.count||0, newLast24h: newR.count||0, unresolved: unresolvedR.count||0,
+      affectedUsers: affectedUsers, platformCounts: platformCounts, screenCounts: screenCounts, versionCounts: versionCounts,
+      timeline: timelineR.data||[]
+    };
+    var badge = document.getElementById('badge-errors');
+    if(badge){ if(EC.overview.unresolved>0){ badge.style.display='inline-block'; badge.textContent = EC.overview.unresolved>99?'99+':String(EC.overview.unresolved); } else badge.style.display='none'; }
+  } catch(e){ EC.rows='missing'; }
+}
+function ecGo(page){ EC.page=page; renderErrorsCenter(); loadErrorsCenter().then(renderErrorsCenter); }
+function ecRefresh(){ EC.page=0; EC.rows=null; renderErrorsCenter(); loadErrorsCenter().then(renderErrorsCenter); }
+function ecSearch(v){ EC.search=v; EC.page=0; debounce('ecSearch', ecRefresh, 300); }
+function ecSetFilter(key, val){ EC[key]=val; EC.page=0; ecRefresh(); }
+
+function topEntries(obj, n) {
+  return Object.keys(obj).map(function(k){ return [k, obj[k]]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0, n||5);
+}
+
+function renderErrorsCenter() {
+  // No extra client-side read gate — matches every other admin.html
+  // section (e.g. Audit Center): reaching this tab already required
+  // passing the ADMIN_ROLES login check, and the real read boundary is
+  // app_error_events' own RLS policy (is_admin_team()), same population.
+  // Only the mutating actions below (status/notes) are further restricted
+  // to is_admin() via requirePerm('errors.manage').
+  var html = '<div class="sec-head"><div class="sec-title">Errors</div><div class="sec-actions">'
+    + '<button class="filter-btn" onclick="ecExport()">Export CSV</button>'
+    + '<button class="btn-refresh" onclick="ecRefresh()">Refresh</button>'
+    + '</div></div>';
+
+  if(EC.overview){
+    var ov = EC.overview;
+    html += '<div class="stats-grid">'
+      + statCard('Total Errors','accent', fmtCnt(ov.total), 'distinct fingerprints', null)
+      + statCard('Fatal','red', fmtCnt(ov.fatal), 'crash-level', null)
+      + statCard('New (24h)','amber', fmtCnt(ov.newLast24h), 'first seen today', null)
+      + statCard('Unresolved','amber', fmtCnt(ov.unresolved), 'open + investigating', null)
+      + statCard('Affected Users','blue', fmtCnt(ov.affectedUsers), 'sampled, last 500 events', null)
+      + '</div>';
+    var platformLine = topEntries(ov.platformCounts).map(function(e){ return esc(e[0])+' ('+e[1]+')'; }).join(', ') || '—';
+    var screenLine = topEntries(ov.screenCounts, 6).map(function(e){ return esc(e[0])+' ('+e[1]+')'; }).join(', ') || '—';
+    var versionLine = topEntries(ov.versionCounts).map(function(e){ return esc(e[0])+' ('+e[1]+')'; }).join(', ') || '—';
+    html += '<div style="font-size:12px;color:var(--sub);line-height:2;margin-bottom:12px">'
+      + '<div><b>Platform breakdown:</b> '+platformLine+'</div>'
+      + '<div><b>Top screens:</b> '+screenLine+'</div>'
+      + '<div><b>App versions:</b> '+versionLine+'</div>'
+      + '</div>';
+    if(ov.timeline.length){
+      html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:6px">Recent Timeline</div>'
+        + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px;font-size:12px">'
+        + ov.timeline.map(function(t){
+            return '<div style="display:flex;gap:8px;color:var(--sub)"><span style="color:'+(t.severity==='fatal'?'var(--red)':t.severity==='warning'?'var(--amber)':'var(--sub)')+';font-weight:700;min-width:60px">'+esc(t.severity)+'</span>'
+              + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.error_type)+': '+esc(t.message)+'</span>'
+              + '<span style="white-space:nowrap">'+fmtDateTime(t.last_seen_at)+'</span></div>';
+          }).join('')
+        + '</div>';
+    }
+  }
+
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+    + '<input id="ecSearchBox" class="search-input" placeholder="Search message, type, screen…" value="'+esc(EC.search)+'" oninput="ecSearch(this.value)" style="min-width:220px;flex:1">'
+    + '<select class="form-select" style="width:auto;padding:7px 10px;font-size:12px" onchange="ecSetFilter(\'severity\',this.value)"><option value="">All severities</option>'
+      + ['fatal','error','warning'].map(function(s){ return '<option value="'+s+'"'+(EC.severity===s?' selected':'')+'>'+s+'</option>'; }).join('')
+    + '</select>'
+    + '<select class="form-select" style="width:auto;padding:7px 10px;font-size:12px" onchange="ecSetFilter(\'status\',this.value)"><option value="">All statuses</option>'
+      + ['open','investigating','resolved'].map(function(s){ return '<option value="'+s+'"'+(EC.status===s?' selected':'')+'>'+s+'</option>'; }).join('')
+    + '</select>'
+    + '<select class="form-select" style="width:auto;padding:7px 10px;font-size:12px" onchange="ecSetFilter(\'platform\',this.value)"><option value="">All platforms</option>'
+      + ['ios','android','web'].map(function(s){ return '<option value="'+s+'"'+(EC.platform===s?' selected':'')+'>'+s+'</option>'; }).join('')
+    + '</select>'
+    + '<input class="search-input" style="width:120px" placeholder="App version" value="'+esc(EC.appVersion)+'" onchange="ecSetFilter(\'appVersion\',this.value)">'
+    + '<input class="search-input" style="width:160px" placeholder="Screen" value="'+esc(EC.screen)+'" onchange="ecSetFilter(\'screen\',this.value)">'
+    + '</div>';
+
+  if(EC.rows===null){ html += '<div class="loading-msg">Loading errors…</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+  if(EC.rows==='missing'){ html += '<div class="empty-msg">Could not load error events. Please refresh and try again.</div>'; document.getElementById('mainContent').innerHTML=html; return; }
+
+  html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Error</th><th>Severity</th><th>Occurrences</th><th>Users</th><th>Platform</th><th>Version</th><th>Screen</th><th>First seen</th><th>Last seen</th><th>Status</th><th></th></tr></thead><tbody>';
+  if(!EC.rows.length) html += '<tr><td colspan="11"><div class="empty-msg">No errors match these filters.</div></td></tr>';
+  EC.rows.forEach(function(r, i){
+    html += '<tr>'
+      + '<td style="font-weight:700;font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.message)+'">'+esc(r.error_type)+': '+esc(r.message)+'</td>'
+      + '<td><span class="filter-btn'+(r.severity==='fatal'?' on':'')+'" style="pointer-events:none;padding:2px 8px;font-size:10px">'+esc(r.severity)+'</span></td>'
+      + '<td style="font-size:12px">'+fmtCnt(r.occurrence_count)+'</td>'
+      + '<td style="font-size:12px">'+fmtCnt(r.affected_users_count)+'</td>'
+      + '<td style="font-size:12px;color:var(--sub)">'+esc(r.platform||'—')+'</td>'
+      + '<td style="font-size:12px;color:var(--sub)">'+esc(r.app_version||'—')+'</td>'
+      + '<td style="font-size:11px;color:var(--sub);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.screen||'—')+'</td>'
+      + '<td style="font-size:11px;color:var(--sub);white-space:nowrap">'+fmtDateTime(r.first_seen_at)+'</td>'
+      + '<td style="font-size:11px;color:var(--sub);white-space:nowrap">'+fmtDateTime(r.last_seen_at)+'</td>'
+      + '<td style="font-size:11px;font-weight:700;color:'+(r.status==='resolved'?'var(--green)':r.status==='investigating'?'var(--amber)':'var(--red)')+'">'+esc(r.status)+'</td>'
+      + '<td><button class="ab ab-view" onclick="ecDetail('+i+')">Detail</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += pagerHtml(EC.page, EC_PAGE_SIZE, EC.total, EC.rows.length, 'ecGo');
+  document.getElementById('mainContent').innerHTML = html;
+  window._ecRows = EC.rows;
+}
+
+async function ecSetStatus(id, status) {
+  if(!requirePerm('errors.manage')) return;
+  var row = (window._ecRows||[]).find(function(r){ return r.id===id; });
+  var before = row ? {status:row.status} : null;
+  try {
+    await updRow('app_error_events', id, {status:status});
+  } catch(e){ toast('Could not update this error — it may already be gone, or your role may not allow this.', 'error'); return; }
+  await auditLog(status==='resolved'?'resolve_error':status==='investigating'?'investigate_error':'reopen_error', 'app_error_events', id, before, {status:status}, null);
+  toast('Marked as '+status);
+  ecRefresh();
+}
+async function ecAddNote(id) {
+  if(!requirePerm('errors.manage')) return;
+  var note = (document.getElementById('ecNoteInput')||{}).value || '';
+  if(!note.trim()){ toast('Enter a note first','info'); return; }
+  var row = (window._ecRows||[]).find(function(r){ return r.id===id; });
+  var before = row ? {admin_notes:row.admin_notes||null} : null;
+  try {
+    await updRow('app_error_events', id, {admin_notes:note.trim()});
+  } catch(e){ toast('Could not save this note — it may already be gone, or your role may not allow this.', 'error'); return; }
+  await auditLog('note_error', 'app_error_events', id, before, {admin_notes:note.trim()}, null);
+  toast('Note saved');
+  ecRefresh();
+  closeModal();
+}
+function ecDetail(i) {
+  var r = (window._ecRows||[])[i]; if(!r) return;
+  var actions = '';
+  if(r.status!=='investigating') actions += '<button class="filter-btn" onclick="ecSetStatus(\''+r.id+'\',\'investigating\')">Mark Investigating</button>';
+  if(r.status!=='resolved') actions += '<button class="filter-btn on" onclick="ecSetStatus(\''+r.id+'\',\'resolved\')">Mark Resolved</button>';
+  if(r.status==='resolved') actions += '<button class="filter-btn" onclick="ecSetStatus(\''+r.id+'\',\'open\')">Reopen</button>';
+  var html = '<div class="modal-title">'+esc(r.error_type)+'<button class="modal-close" onclick="closeModal()">×</button></div>'
+    + '<div style="font-size:12px;color:var(--sub);margin-bottom:10px;word-break:break-all">'+esc(r.message)+'</div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:14px">'+actions+'</div>'
+    + '<div style="font-size:12px;color:var(--sub);line-height:1.9;margin-bottom:12px">'
+    + '<div><b>Fingerprint:</b> <span style="font-family:monospace;font-size:11px">'+esc(r.fingerprint)+'</span></div>'
+    + '<div><b>Severity:</b> '+esc(r.severity)+' &nbsp; <b>Status:</b> '+esc(r.status)+' &nbsp; <b>Source:</b> '+esc(r.source)+'</div>'
+    + '<div><b>Screen / Component:</b> '+esc(r.screen||'—')+' / '+esc(r.component||'—')+'</div>'
+    + '<div><b>App version / build:</b> '+esc(r.app_version||'—')+' / '+esc(r.build_number||'—')+'</div>'
+    + '<div><b>Platform / OS / Device:</b> '+esc(r.platform||'—')+' / '+esc(r.os_version||'—')+' / '+esc(r.device_model||'—')+'</div>'
+    + '<div><b>Environment:</b> '+esc(r.environment)+'</div>'
+    + '<div><b>First seen:</b> '+fmtDateTime(r.first_seen_at)+' &nbsp; <b>Last seen:</b> '+fmtDateTime(r.last_seen_at)+'</div>'
+    + '<div><b>Occurrences:</b> '+fmtCnt(r.occurrence_count)+' &nbsp; <b>Affected users:</b> '+fmtCnt(r.affected_users_count)+'</div>'
+    + (r.resolved_at ? '<div><b>Resolved:</b> '+fmtDateTime(r.resolved_at)+' by '+esc(userLabel(r.resolved_by)||r.resolved_by||'—')+'</div>' : '')
+    + (r.sentry_event_id ? '<div><b>Sentry reference:</b> <span style="font-family:monospace;font-size:11px">'+esc(r.sentry_event_id)+'</span> — look this event up directly in the Sentry dashboard for source-mapped stack traces and breadcrumbs.</div>' : '')
+    + '</div>';
+  if(r.metadata && Object.keys(r.metadata).length){
+    html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:4px">Metadata</div>'
+      + '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:11px;overflow:auto;max-height:120px;color:var(--sub)">'+esc(JSON.stringify(r.metadata,null,2))+'</pre>';
+  }
+  if(r.stack){
+    html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:10px 0 4px">Stack Trace</div>'
+      + '<pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:10.5px;overflow:auto;max-height:220px;color:var(--sub);white-space:pre-wrap;word-break:break-word">'+esc(r.stack)+'</pre>';
+  }
+  html += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:10px 0 4px">Admin Notes</div>'
+    + (r.admin_notes ? '<div style="font-size:12px;color:var(--text);margin-bottom:8px;white-space:pre-wrap">'+esc(r.admin_notes)+'</div>' : '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">No notes yet.</div>')
+    + '<textarea id="ecNoteInput" class="form-select" style="width:100%;min-height:60px;font-size:12px;padding:8px" placeholder="Add an internal note…"></textarea>'
+    + '<div style="margin-top:8px"><button class="filter-btn" onclick="ecAddNote(\''+r.id+'\')">Save Note</button></div>';
+  openModal(html);
+}
+function ecExport() {
+  // A SAFE diagnostic summary — deliberately excludes the raw stack trace
+  // (large, noisy in a spreadsheet) and admin notes (may reference
+  // internal follow-up not meant for wider distribution); everything else
+  // here is already what the list view shows on-screen.
+  var rows = [['Error Type','Message','Severity','Status','Occurrences','Affected Users','Platform','App Version','Screen','First Seen','Last Seen','Fingerprint']];
+  (window._ecRows||[]).forEach(function(r){
+    rows.push([r.error_type, r.message, r.severity, r.status, r.occurrence_count, r.affected_users_count, r.platform||'', r.app_version||'', r.screen||'', r.first_seen_at||'', r.last_seen_at||'', r.fingerprint]);
+  });
+  if(rows.length===1){ toast('Nothing to export','info'); return; }
+  downloadCSV('pamarket-errors-'+new Date().toISOString().slice(0,10)+'.csv', rows);
+  toast('Exported '+(rows.length-1)+' error summaries');
 }
 
 // ════════════════════════════════════════════════════════════

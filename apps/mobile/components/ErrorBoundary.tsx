@@ -1,7 +1,7 @@
 import { Component, type ReactNode } from "react";
 import { Appearance, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
-import { Sentry } from "../lib/sentry";
+import { logClientError } from "../lib/error-log";
 
 // Nothing in this app previously caught a render-time error anywhere —
 // any single unhandled exception in any screen crashed the entire app
@@ -34,7 +34,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: { componentStack?: string | null }) {
     console.error("[ErrorBoundary] caught:", error, info?.componentStack);
-    Sentry.captureException(error, { contexts: { react: { componentStack: info?.componentStack } } });
+    // Reports to both Sentry (unchanged, still the primary crash reporter)
+    // and app_error_events (the admin panel's lightweight summary) — see
+    // lib/error-log.ts. Never blocks recovery below either way.
+    logClientError({
+      error,
+      screen: "ErrorBoundary",
+      component: "root",
+      severity: "fatal",
+      metadata: { componentStack: info?.componentStack ?? undefined },
+    });
   }
 
   handleRestart = () => {

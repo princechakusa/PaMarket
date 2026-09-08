@@ -1,5 +1,6 @@
 import { Linking } from "react-native";
 import { toast } from "../components/ui/Toast";
+import { logClientError } from "./error-log";
 
 /**
  * Opens an external URL without letting a missing handler crash the app.
@@ -22,6 +23,15 @@ export async function openExternalUrl(
   } catch (e) {
     console.warn("[open-url] failed:", url, (e as Error)?.message || e);
     toast(friendlyFailure, 4000, true);
+    // Only the scheme (wa.me/tel/mailto/https) is logged, never the full
+    // URL — a wa.me link can carry a pre-filled message as a query param.
+    let scheme = "unknown";
+    try {
+      scheme = url.split(":")[0];
+    } catch {
+      // ignore — scheme stays "unknown"
+    }
+    logClientError({ error: e, screen: "global", component: "open-url", severity: "warning", metadata: { scheme } });
     return false;
   }
 }

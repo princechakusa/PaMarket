@@ -16,6 +16,7 @@ import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
+import { logClientError } from "../../lib/error-log";
 import { BrandSymbol, BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
 import { GlassBackButton } from "../../components/ui";
@@ -122,6 +123,9 @@ export default function SignInScreen() {
         );
       } else {
         setError(signInError.message);
+        // Never logs the email/password themselves — only Supabase's own
+        // error object/message (e.g. "Invalid login credentials").
+        logClientError({ error: signInError, screen: "(auth)/sign-in", component: "password", severity: "warning" });
       }
       return;
     }
@@ -135,6 +139,7 @@ export default function SignInScreen() {
       await signInWithOAuthProvider("google");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Google sign-in failed");
+      logClientError({ error: e, screen: "(auth)/sign-in", component: "google-oauth" });
     } finally {
       setIsGoogleLoading(false);
     }
@@ -147,6 +152,7 @@ export default function SignInScreen() {
       await signInWithApple();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Apple sign-in failed");
+      logClientError({ error: e, screen: "(auth)/sign-in", component: "apple-oauth" });
     } finally {
       setIsAppleLoading(false);
     }

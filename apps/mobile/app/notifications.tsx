@@ -17,6 +17,7 @@ import {
 } from "../lib/notifications";
 import { toast } from "../components/ui/Toast";
 import { EmptyState } from "../components/ui/EmptyState";
+import { logClientError } from "../lib/error-log";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
@@ -87,6 +88,7 @@ export default function NotificationsScreen() {
       }
     } catch (e) {
       console.warn("notification tap navigation failed:", e);
+      logClientError({ error: e, screen: "notifications", component: "onPress", metadata: { notifType: n.type } });
       toast("Could not open this notification.", 4000, true);
     }
   }

@@ -22,6 +22,7 @@ import {
   type ShopOrderStatusHistoryRow,
 } from "../../lib/shop-orders";
 import { buildWhatsAppOrderMessage, resolveShopWhatsAppNumber, shareOrderToWhatsApp } from "../../lib/order-whatsapp";
+import { logClientError } from "../../lib/error-log";
 import { Button, Card, ErrorState, GlassBackButton } from "../../components/ui";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -61,6 +62,7 @@ export default function ShopOrderDetailScreen() {
       }
       if (result.error) {
         setError(result.error);
+        logClientError({ error: result.error, screen: "shop-order/[id]", component: "load" });
         return;
       }
       setOrder(result.order);
@@ -69,6 +71,7 @@ export default function ShopOrderDetailScreen() {
       setHistory(result.history);
     } catch (e) {
       setError((e as Error)?.message === "timeout" ? "This is taking longer than expected." : "Couldn't load this order.");
+      logClientError({ error: e, screen: "shop-order/[id]", component: "load" });
     }
   }, [id]);
 

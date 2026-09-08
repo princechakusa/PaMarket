@@ -10,6 +10,7 @@ import { supabase } from "./supabase";
 import { useCart } from "./cart-context";
 import { isListingOrderable } from "./cart";
 import type { Listing } from "./listings";
+import { logClientError } from "./error-log";
 import type { ResolvedCartLine } from "../components/cart/CartLineItem";
 
 const FETCH_TIMEOUT_MS = 12000;
@@ -55,6 +56,7 @@ export function useResolvedCart() {
       setLines(resolved);
     } catch (e) {
       setError((e as Error)?.message === "timeout" ? "This is taking longer than expected." : "Couldn't load your cart. Please try again.");
+      logClientError({ error: e, screen: "shop-cart", component: "useResolvedCart" });
     }
   }, [cart.items, cart.businessId]);
 
