@@ -12,8 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useCart } from "../lib/cart-context";
 import { useResolvedCart } from "../lib/use-resolved-cart";
-import { MAX_ITEMS_PER_ORDER } from "../lib/cart";
-import { formatMoney } from "../lib/shop-orders";
+import { MAX_ITEMS_PER_ORDER, cartUnitCount } from "../lib/cart";
 import { CartLineItem } from "../components/cart/CartLineItem";
 import { Button, ConfirmModal, EmptyState, ErrorState, GlassBackButton } from "../components/ui";
 import { font, space, type ColorPalette } from "../lib/theme";
@@ -25,7 +24,8 @@ export default function ShopCartScreen() {
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
   const { cart, setQuantity, removeItem, clear } = useCart();
-  const { lines, isLoading, error, reload, hasUnavailable, estimatedTotal, currency } = useResolvedCart();
+  const { lines, isLoading, error, reload, hasUnavailable } = useResolvedCart();
+  const itemCount = cartUnitCount(cart);
 
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
@@ -135,8 +135,9 @@ export default function ShopCartScreen() {
           <Text style={styles.unavailableNote}>Remove unavailable items to continue.</Text>
         ) : (
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Estimated total</Text>
-            <Text style={styles.totalValue}>{formatMoney(estimatedTotal, currency)}</Text>
+            <Text style={styles.totalLabel}>
+              {itemCount} item{itemCount === 1 ? "" : "s"} in this order request
+            </Text>
           </View>
         )}
         <View style={styles.buttonRow}>
@@ -144,7 +145,7 @@ export default function ShopCartScreen() {
             <Button label="Continue Browsing" variant="secondary" onPress={() => router.back()} />
           </View>
           <View style={{ flex: 1 }}>
-            <Button label="Continue to Order" onPress={goToCheckout} disabled={hasUnavailable || !lines.length} />
+            <Button label="Continue to Order Request" onPress={goToCheckout} disabled={hasUnavailable || !lines.length} />
           </View>
         </View>
       </View>
@@ -193,9 +194,8 @@ function buildStyles(color: ColorPalette) {
     },
     limitNote: { ...font.caption, color: color.warning, textAlign: "center" },
     unavailableNote: { ...font.caption, color: color.danger, textAlign: "center" },
-    totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-    totalLabel: { ...font.body, color: color.textSub },
-    totalValue: { ...font.h3, color: color.brand },
+    totalRow: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+    totalLabel: { ...font.body, color: color.textSub, fontWeight: "600" },
     buttonRow: { flexDirection: "row", gap: space.md },
   });
 }

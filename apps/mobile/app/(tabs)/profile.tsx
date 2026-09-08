@@ -448,7 +448,8 @@ export default function AccountScreen() {
           <MenuRow label="My Listings" badge={activeCount || undefined} onPress={() => router.push("/my-listings")}  color={color} styles={styles} />
           <MenuRow label="Browse Rentals" onPress={() => router.push("/rentals")}  color={color} styles={styles} />
           <MenuRow label="Saved & Favourites" badge={savedCount || undefined} onPress={() => router.push("/favourites")}  color={color} styles={styles} />
-          <MenuRow label="Saved Searches" last onPress={() => router.push("/saved-searches")}  color={color} styles={styles} />
+          <MenuRow label="Saved Searches" onPress={() => router.push("/saved-searches")}  color={color} styles={styles} />
+          <MenuRow label="Order Requests" last onPress={() => router.push("/my-orders")}  color={color} styles={styles} />
         </Card>
       </View>
 

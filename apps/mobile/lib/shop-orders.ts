@@ -310,6 +310,34 @@ export type OwnerOrderListRow = {
   created_at: string;
 };
 
+export type MyOrderListRow = {
+  id: string;
+  business_id: string;
+  item_count: number;
+  fulfillment_method: FulfillmentMethod;
+  status: OrderStatus;
+  created_at: string;
+};
+
+// The customer's own "My Orders" list — deliberately omits price/currency
+// even though the underlying row carries them (see shop_orders.total):
+// this is the same customer-facing surface Part C's no-money rule covers,
+// not a new exception to it. The "shop_orders: customer or owner or admin
+// read" RLS policy is what actually scopes this to the caller's own orders;
+// filtering by customer_id here is a query narrowing, not the security
+// boundary itself.
+export async function fetchMyShopOrders(customerId: string): Promise<{ orders: MyOrderListRow[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from("shop_orders")
+    .select("id,business_id,item_count,fulfillment_method,status,created_at")
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) return { orders: [], error: friendlyError(error).message };
+  return { orders: (data as MyOrderListRow[]) ?? [], error: null };
+}
+
 // List query for the owner inbox — the "shop_orders: customer or owner or
 // admin read" RLS policy is what actually restricts this to the caller's
 // own business; business_id is passed only to scope the query, never

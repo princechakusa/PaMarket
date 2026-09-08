@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import type { Business } from "../../lib/businesses";
 import { formatPrice, type Listing } from "../../lib/listings";
+import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
 import { planEntitlements } from "../../lib/plan-entitlements";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -13,7 +14,18 @@ import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,views,business_id,created_at";
+  "id,seller_id,seller_name,title,description,price,currency,category,province,city,suburb,photos,status,views,business_id,is_orderable,created_at";
+
+// Property/vehicle/job listings never belong to a shop's product catalog —
+// rentals are a separate domain entirely (rental_* tables, never `listings`)
+// so there is no separate exclusion needed for them here. Mirrors the
+// category exclusion already applied when enabling is_orderable in bulk
+// (see supabase/migrations/20260908163001_enable_orderable_for_eligible_shop_products.sql).
+const NON_SHOP_CATEGORIES = new Set(["property", "vehicles", "jobs"]);
+
+function isValidShopProduct(listing: Pick<Listing, "category" | "business_id">): boolean {
+  return !!listing.business_id && !NON_SHOP_CATEGORIES.has(listing.category ?? "");
+}
 
 type Styles = ReturnType<typeof buildStyles>;
 
@@ -85,6 +97,32 @@ export default function BusinessListingsScreen() {
     await supabase.from("listings").update({ business_id: null }).eq("id", listingId);
     setListings((prev) => prev.filter((l) => l.id !== listingId));
     toast("Removed from business");
+  }
+
+  // Turning ordering ON is gated client-side against the exact same rule
+  // create_shop_order re-checks server-side at order time (active listing,
+  // positive price, business active + verified) — this is a UX guard only;
+  // the RPC remains the real authority and would reject an order against an
+  // ineligible listing regardless of what this flag says. Turning it OFF is
+  // always allowed (disabling a product from ordering can never be unsafe).
+  async function setOrderable(listing: Listing, next: boolean) {
+    if (next) {
+      if (!business || !isShopAcceptingOrders(business)) {
+        toast("Your shop must be active and verified before enabling ordering.", 4000, true);
+        return;
+      }
+      if (!isListingOrderable({ ...listing, is_orderable: true })) {
+        toast("This product needs an active status and a price greater than 0 first.", 4000, true);
+        return;
+      }
+    }
+    const { error } = await supabase.from("listings").update({ is_orderable: next }).eq("id", listing.id);
+    if (error) {
+      toast("Couldn't update this setting. Please try again.", 3500, true);
+      return;
+    }
+    setListings((prev) => prev.map((l) => (l.id === listing.id ? { ...l, is_orderable: next } : l)));
+    toast(next ? "Customers can now order this product." : "Ordering turned off for this product.");
   }
 
   function confirmUnassign(listingId: string) {
@@ -189,6 +227,19 @@ export default function BusinessListingsScreen() {
                 <Text style={styles.removeButtonText}>Remove</Text>
               </Pressable>
             </View>
+            {isValidShopProduct(l) ? (
+              <View style={styles.orderableRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.orderableLabel}>Available for customer orders</Text>
+                  <Text style={styles.orderableHint}>Allow customers to add this product to an order request and send it to your shop.</Text>
+                </View>
+                <Switch
+                  value={!!l.is_orderable}
+                  onValueChange={(next) => setOrderable(l, next)}
+                  trackColor={{ true: tones.brand }}
+                />
+              </View>
+            ) : null}
           </View>
         ))
       ) : (
@@ -270,5 +321,16 @@ function buildStyles(color: ColorPalette) {
     },
     removeButtonText: { fontSize: 12, fontWeight: "700", color: color.danger },
     emptyText: { textAlign: "center", color: color.textMuted, fontSize: 13, paddingVertical: 24 },
+    orderableRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginTop: 10,
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: color.border,
+    },
+    orderableLabel: { fontSize: 13, fontWeight: "700", color: color.text },
+    orderableHint: { fontSize: 11.5, color: color.textMuted, marginTop: 2 },
   });
 }

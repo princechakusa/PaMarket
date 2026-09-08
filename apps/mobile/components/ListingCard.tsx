@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Image } from "expo-image";
 import Svg, { Path, Polyline } from "react-native-svg";
+import { SmartImage } from "./ui/SmartImage";
 import type { Listing } from "../lib/listings";
 import { formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
@@ -49,11 +49,7 @@ export function ListingCard({ listing, onPress, width, saved, onToggleSave, veri
       onPress={onPress}
     >
       <View style={[styles.photoWrap, compact && styles.photoWrapCompact]}>
-        {photo ? (
-          <Image source={{ uri: photo }} style={styles.photo} contentFit="cover" transition={150} cachePolicy="memory-disk" />
-        ) : (
-          <View style={[styles.photo, styles.placeholder]} />
-        )}
+        <SmartImage uri={photo} style={styles.photo} screen="ListingCard" />
 
         {featured ? (
           <View style={[styles.ribbon, styles.ribbonGold, compact && styles.ribbonCompact]}>
@@ -114,7 +110,6 @@ function buildStyles(color: ColorPalette) {
     photoWrap: { width: "100%", aspectRatio: 1.18, position: "relative", backgroundColor: color.surfaceAlt },
     photoWrapCompact: { aspectRatio: 1.4 },
     photo: { width: "100%", height: "100%" },
-    placeholder: { backgroundColor: color.skeleton },
     ribbon: {
       position: "absolute",
       top: space.sm,

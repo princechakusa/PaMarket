@@ -1683,7 +1683,7 @@ var _listingCat = '', _listingProv = '', _listingPriceMin = '', _listingPriceMax
 var _lstSelected = {};
 var MK_CATEGORIES = ['electronics','vehicles','property','furniture','fashion','jobs','agriculture','services','rooms','pets','kids','other'];
 function _listingQuery(withCount) {
-  var q = sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description,business_id,featuredUntil:featured_until', withCount?{count:'exact'}:undefined)
+  var q = sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description,business_id,isOrderable:is_orderable,featuredUntil:featured_until', withCount?{count:'exact'}:undefined)
     .order('created_at',{ascending:false});
   if(_listingFilter!=='all') q = q.eq('status',_listingFilter);
   if(_listingCat)  q = q.eq('category',_listingCat);
@@ -2734,7 +2734,7 @@ async function viewListing(id) {
   var l = (DATA.listings||[]).find(function(x){ return x.id===id; });
   if(!l){
     // Not on the current page (e.g. opened from Overview) — fetch it.
-    var r = await sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description').eq('id',id).single();
+    var r = await sb.from('listings').select('id,title,price,currency,cat:category,prov:province,city,photos,status,sellerId:seller_id,sellerName:seller_name,createdAt:created_at,views,desc:description,business_id,isOrderable:is_orderable').eq('id',id).single();
     if(r.error||!r.data){ toast('Listing not found','error'); return; }
     l = r.data;
   }
@@ -2749,6 +2749,16 @@ async function viewListing(id) {
     + '<span class="badge badge-info">'+fmtCnt(l.views||0)+' views</span>'
     + '<span class="badge badge-'+(l.status||'pending')+'">'+esc(l.status||'—')+'</span>'
     + '</div>'
+    + (l.business_id && ['property','vehicles','jobs'].indexOf(l.cat)===-1
+        ? '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:10px 12px;border:1px solid var(--border);border-radius:10px">'
+          + '<div><div style="font-size:13px;font-weight:700">Available for customer orders</div>'
+          + '<div style="font-size:11.5px;color:var(--sub);margin-top:2px">Allow customers to add this product to an order request and send it to your shop.</div></div>'
+          + '<label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0">'
+          + '<input type="checkbox" id="orderableToggle_'+esc(l.id)+'" '+(l.isOrderable?'checked':'')+' onchange="adminSetOrderable(\''+esc(l.id)+'\',this.checked)" style="opacity:0;width:0;height:0">'
+          + '<span style="position:absolute;inset:0;background:'+(l.isOrderable?'var(--accent)':'var(--border)')+';border-radius:24px;transition:.15s"></span>'
+          + '<span style="position:absolute;top:3px;left:'+(l.isOrderable?'21px':'3px')+';width:18px;height:18px;background:#fff;border-radius:50%;transition:.15s"></span>'
+          + '</label></div>'
+        : '')
     + '<div id="dupCheck" style="font-size:12px;color:var(--sub);margin-top:10px">Checking for duplicates…</div>'
     + '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'
     + '<button class="ab ab-view" style="padding:8px 13px" onclick="sellerHistory(\''+esc(l.sellerId||'')+'\',\''+esc((l.sellerName||'').replace(/'/g,''))+'\')">Seller history</button>'
@@ -2788,6 +2798,36 @@ async function listingTimeline(id) {
     }).join('');
     openModal('<div class="modal-title">Moderation Timeline<button class="modal-close" onclick="closeModal()">×</button></div>'+body);
   } catch(e){ openModal('<div class="modal-title">Moderation Timeline<button class="modal-close" onclick="closeModal()">×</button></div><div class="empty-msg">'+esc(e.message)+'</div>'); }
+}
+
+// Admin control for listings.is_orderable — mirrors the same eligibility
+// rule the mobile owner-side toggle and create_shop_order both enforce
+// (active listing, positive price, active+verified business). Enabling
+// re-validates against the database every time rather than trusting the
+// checkbox's own before-state; disabling is always allowed. Reuses the
+// existing 'listings.moderate' permission and the unified admin_audit_logs
+// trail — no new permission or table.
+async function adminSetOrderable(id, next) {
+  var el = document.getElementById('orderableToggle_'+id);
+  if(!requirePerm('listings.moderate')){ if(el) el.checked=!next; return; }
+  var l = (DATA.listings||[]).find(function(x){ return x.id===id; });
+  if(next){
+    var r = await sb.from('listings').select('status,price,business_id').eq('id',id).single();
+    var biz = r.data && r.data.business_id ? await sb.from('businesses').select('status,verification_level').eq('id',r.data.business_id).single() : null;
+    var eligible = r.data && r.data.status==='active' && r.data.price>0 && r.data.business_id
+      && biz && biz.data && biz.data.status==='active' && (biz.data.verification_level||0)>=2;
+    if(!eligible){
+      toast('This listing is not eligible for ordering (needs an active price, and an active, verified business).','error');
+      if(el) el.checked=false;
+      return;
+    }
+  }
+  var prevVal = l ? !!l.isOrderable : !next;
+  var upd = await sb.from('listings').update({is_orderable:next}).eq('id',id);
+  if(upd.error){ toast('Error: '+upd.error.message,'error'); if(el) el.checked=prevVal; return; }
+  if(l) l.isOrderable = next;
+  auditLog('set_listing_orderable','listings',id,{is_orderable:prevVal},{is_orderable:next},null);
+  toast(next?'Customers can now order this product.':'Ordering turned off for this product.');
 }
 
 async function approveListing(id) {

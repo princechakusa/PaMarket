@@ -61,18 +61,34 @@ function getImageSize(uri: string): Promise<{ width: number; height: number }> {
 export async function uploadImageUriToR2(uri: string, key: string): Promise<string> {
   let uploadUri = uri;
   try {
+    // Always re-encode through the manipulator — never only when resizing
+    // is needed. This used to run only when the image exceeded
+    // MAX_DIMENSION, which meant an already-small-enough HEIC photo (the
+    // iPhone default format) skipped conversion entirely and got uploaded
+    // as raw HEIC bytes labeled "image/jpeg". HEIC only decodes on Apple
+    // devices, so that listing's photo rendered blank on Android and on
+    // the web — see project_heic_listing_photos memory. Re-encoding through
+    // expo-image-manipulator with SaveFormat.JPEG guarantees genuine JPEG
+    // bytes leave this device regardless of the source format (HEIC, PNG,
+    // WebP, or anything else the picker could hand back), closing that gap
+    // for every new upload from here on. Existing HEIC objects already in
+    // R2 are unaffected by this change and still need a separate backfill.
     const { width, height } = await getImageSize(uri);
-    if (Math.max(width, height) > MAX_DIMENSION) {
-      // Only one dimension is passed so the manipulator preserves aspect
-      // ratio itself — passing both would stretch non-square images.
-      const resizeParam = width >= height ? { width: MAX_DIMENSION } : { height: MAX_DIMENSION };
-      const rendered = await ImageManipulator.manipulate(uri).resize(resizeParam).renderAsync();
-      const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
-      uploadUri = saved.uri;
-    }
+    const needsResize = Math.max(width, height) > MAX_DIMENSION;
+    // Only one dimension is passed when resizing so the manipulator
+    // preserves aspect ratio itself — passing both would stretch
+    // non-square images. With no resize needed, an empty transform list
+    // still forces the JPEG re-encode.
+    const resizeParam = width >= height ? { width: MAX_DIMENSION } : { height: MAX_DIMENSION };
+    const pipeline = needsResize ? ImageManipulator.manipulate(uri).resize(resizeParam) : ImageManipulator.manipulate(uri);
+    const rendered = await pipeline.renderAsync();
+    const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
+    uploadUri = saved.uri;
   } catch {
-    // If resizing fails for any reason, fall back to uploading the original —
-    // never block the user's upload on an optimization.
+    // If re-encoding fails for any reason, fall back to uploading the
+    // original — never block the user's upload entirely on this safety
+    // step. This is the one remaining path a non-JPEG file could still
+    // reach R2 through, and it's now the exception rather than the rule.
   }
   const response = await fetch(uploadUri);
   const blob = await response.blob();

@@ -1,3 +1,4 @@
+export { SmartImage } from "./SmartImage";
 export { GlassBackButton } from "./GlassBackButton";
 export { GlassHeader } from "./GlassHeader";
 export { Card } from "./Card";

@@ -10,11 +10,13 @@
 // an order or a notification; it only composes text and opens a URL via
 // the existing lib/open-url.ts utility (the same one every other
 // contact-seller/contact-shop action in the app already uses).
-import { Share } from "react-native";
+import { Platform, Share } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
 import { openWhatsApp, openPhone } from "./open-url";
 import { toast } from "../components/ui/Toast";
 import { orderWebUrl } from "./site-urls";
-import { FULFILLMENT_LABELS, formatMoney, type FulfillmentMethod, type OrderStatus } from "./shop-orders";
+import { logClientError } from "./error-log";
+import { FULFILLMENT_LABELS, type FulfillmentMethod } from "./shop-orders";
 
 // Businesses keep phone and whatsapp as distinct optional fields (see
 // app/business/[id].tsx: call uses business.phone, WhatsApp uses
@@ -34,31 +36,30 @@ export type OrderWhatsAppInput = {
   orderId: string;
   shopName: string;
   itemLines: { title: string; quantity: number }[];
-  total: number;
-  currency: string;
   fulfillmentMethod: FulfillmentMethod;
   deliveryAddress?: string | null;
   customerNote?: string | null;
 };
 
-// Exactly the fields the spec calls for — no customer name/phone (the
-// WhatsApp chat itself already identifies the sender to the shop), no
-// passwords/tokens, no raw ids beyond what the link itself needs, and the
-// total is always the value the caller already read back from the server
-// (create_shop_order's response or the order row itself), never
-// recomputed here.
+// Deliberately excludes price, subtotal, and total — this is an order
+// request awaiting shop confirmation, not a receipt or invoice, and must
+// never read like an in-app purchase. No customer name/phone either (the
+// WhatsApp chat itself already identifies the sender to the shop), and no
+// passwords/tokens/service-role data. The link only ever carries the order
+// id (never an auth token) — orderWebUrl's own destination is responsible
+// for authenticating the visitor before showing anything.
 export function buildWhatsAppOrderMessage(input: OrderWhatsAppInput): string {
   const reference = input.orderId.slice(0, 8).toUpperCase();
   const lines: string[] = [];
-  lines.push(`PaMarket order request — ${input.shopName}`);
-  lines.push(`Order #${reference}`);
+  lines.push(`PaMarket — Order Request`);
+  lines.push(`Shop: ${input.shopName}`);
+  lines.push(`Reference: #${reference}`);
   lines.push("");
-  lines.push("Items:");
+  lines.push("Items requested:");
   for (const item of input.itemLines) {
     lines.push(`- ${item.quantity} x ${item.title}`);
   }
   lines.push("");
-  lines.push(`Total: ${formatMoney(input.total, input.currency)}`);
   lines.push(`Fulfillment: ${FULFILLMENT_LABELS[input.fulfillmentMethod]}`);
   if (input.fulfillmentMethod === "delivery" && input.deliveryAddress) {
     lines.push(`Delivery address: ${input.deliveryAddress}`);
@@ -67,10 +68,47 @@ export function buildWhatsAppOrderMessage(input: OrderWhatsAppInput): string {
     lines.push(`Note: ${input.customerNote}`);
   }
   lines.push("");
-  lines.push(`Open and confirm this order in PaMarket: ${orderWebUrl(input.orderId)}`);
+  lines.push(`View and confirm this order request: ${orderWebUrl(input.orderId)}`);
   lines.push("");
-  lines.push("This order is still pending — the official record is inside PaMarket and stays pending until you confirm it there. This message is not a payment and no payment has been made.");
+  lines.push("This is an order request awaiting shop confirmation in PaMarket — not a payment, and no payment has been made.");
   return lines.join("\n");
+}
+
+export type OrderImageShareResult = "shared" | "text_only" | "unsupported_platform" | "download_failed";
+
+// Best-effort single-photo attachment. React Native's built-in Share API
+// can attach a local file via `url` on iOS, but has no cross-platform way
+// to attach a file on Android without an additional native module
+// (expo-sharing is not currently installed in this app) — so on Android
+// this always falls back to the text-only message, honestly, rather than
+// presenting a button that silently does nothing. The photo is downloaded
+// to a throwaway cache file (never written to permanent storage) purely so
+// the OS share sheet has something local to attach; nothing here uploads,
+// modifies, or persists the image anywhere.
+export async function shareOrderWithImage(
+  phoneDigits: string | null,
+  message: string,
+  imageUrl: string | null
+): Promise<OrderImageShareResult> {
+  if (Platform.OS !== "ios" || !imageUrl) {
+    await shareOrderToWhatsApp(phoneDigits, message);
+    return Platform.OS !== "ios" ? "unsupported_platform" : "text_only";
+  }
+  try {
+    const localUri = `${FileSystem.cacheDirectory}pamarket-order-photo-${Date.now()}.jpg`;
+    const download = await FileSystem.downloadAsync(imageUrl, localUri);
+    if (download.status !== 200) throw new Error(`download status ${download.status}`);
+    // Share.share's `url` field is what lets iOS attach a local file — the
+    // customer still sees the OS share sheet (with a preview of the photo)
+    // and picks WhatsApp themselves; nothing is sent automatically.
+    await Share.share({ message, url: localUri });
+    FileSystem.deleteAsync(localUri, { idempotent: true }).catch(() => {});
+    return "shared";
+  } catch (e) {
+    logClientError({ error: e, screen: "shop-order/[id]", component: "shareOrderWithImage", severity: "warning" });
+    await shareOrderToWhatsApp(phoneDigits, message);
+    return "download_failed";
+  }
 }
 
 // Tries WhatsApp first (the safe existing utility, which already shows a

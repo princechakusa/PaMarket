@@ -10,6 +10,7 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { useTaxonomy } from "../../lib/taxonomy";
 import { Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton, VerifiedBadge } from "../../components/ui";
+import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { publicListingExpiryFilter } from "../../lib/listings";
 
@@ -47,7 +48,17 @@ export default function ShopsDirectoryScreen() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const pageRef = useRef(0);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Shops" });
+  // The cart badge is intentionally on this screen (not just the storefront
+  // and product pages) — a customer who has items sitting in their cart but
+  // wanders back to the shops directory should never lose sight of it, and
+  // someone who doesn't yet know shopping/cart exists in the app is more
+  // likely to notice it here than only deep inside a specific shop.
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: "Shops",
+    headerRight: () => <CartBadgeButton tone="light" />,
+  });
 
   const buildQuery = useCallback(
     (from: number, to: number) => {
@@ -135,7 +146,7 @@ export default function ShopsDirectoryScreen() {
           <View style={styles.headerRow}>
             <GlassBackButton onPress={() => router.back()} tone="light" flat />
             <Text style={styles.headerTitle}>Shops</Text>
-            <View style={{ width: 38 }} />
+            <CartBadgeButton tone="light" />
           </View>
         ) : null}
         <View style={styles.searchBar}>

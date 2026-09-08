@@ -25,14 +25,21 @@ function corsHeaders(req: Request) {
   })
 }
 
-// Allowlist for content types users may upload
+// Allowlist for content types users may upload.
+// image/heic and image/heif were removed deliberately (Stage 12): HEIC is
+// the iPhone camera default, decodes fine on Apple devices, but renders
+// blank on Android and in every desktop/mobile browser — see
+// project_heic_listing_photos memory. The mobile app's own upload path
+// (lib/uploadToR2.ts) now always re-encodes every picked photo to JPEG
+// before it ever reaches this function, so no legitimate caller should ever
+// request image/heic here; removing it from the allowlist is defense in
+// depth against a future or overlooked upload path reintroducing the same
+// bug, not a change either the app or the website currently depends on.
 const ALLOWED_CONTENT_TYPES = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
   'image/gif',
-  'image/heic',
-  'image/heif',
   'application/pdf', // CVs only
 ])
 

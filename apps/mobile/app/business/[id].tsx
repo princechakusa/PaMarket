@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
+import Svg, { Line } from "react-native-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
@@ -20,15 +21,18 @@ import { businessInitials } from "../../lib/businesses";
 import { recordShopLead, type LeadType } from "../../lib/business-leads";
 import { formatPrice, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { averageRating } from "../../lib/sellers";
+import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
+import { SmartImage } from "../../components/ui/SmartImage";
 import { StarRow } from "../../components/StarRow";
 import { space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { Card, GlassBackButton, VerifiedBadge } from "../../components/ui";
 import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
+import { QuickAddSheet } from "../../components/cart/QuickAddSheet";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,is_orderable,created_at,updated_at";
 
 export default function BusinessShopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,6 +50,7 @@ export default function BusinessShopScreen() {
   const [followerCount, setFollowerCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
+  const [quickAddProduct, setQuickAddProduct] = useState<Listing | null>(null);
 
   useIOSNativeHeader({
     backgroundColor: tones.brand,
@@ -383,25 +388,47 @@ export default function BusinessShopScreen() {
         <Text style={styles.resultCount}>Showing {filteredProducts.length} items</Text>
 
         <View style={styles.productGrid}>
-          {filteredProducts.map((product) => (
-            <Pressable
-              key={product.id}
-              style={styles.productCard}
-              onPress={() => router.push({ pathname: "/listing/[id]", params: { id: product.id } })}
-            >
-              <View style={styles.productPhotoWrap}>
-                {product.photos?.[0] ? (
-                  <Image source={{ uri: product.photos[0] }} style={styles.productPhoto} contentFit="cover" cachePolicy="memory-disk" />
-                ) : (
-                  <View style={[styles.productPhoto, styles.productPhotoPlaceholder]} />
-                )}
-              </View>
-              <Text style={styles.productPrice}>{formatPrice(product)}</Text>
-              <Text style={styles.productTitle} numberOfLines={2}>
-                {product.title}
-              </Text>
-            </Pressable>
-          ))}
+          {filteredProducts.map((product) => {
+            // Long-press add-to-cart only ever applies to a product that's
+            // genuinely orderable right now (listing-level flags AND the
+            // shop itself active+verified) — never to property/vehicle/job
+            // listings (which never carry is_orderable=true in the first
+            // place) or to a shop that has since lost its verified status.
+            const orderable = isListingOrderable(product) && !!business && isShopAcceptingOrders(business);
+            return (
+              <Pressable
+                key={product.id}
+                style={styles.productCard}
+                onPress={() => router.push({ pathname: "/listing/[id]", params: { id: product.id } })}
+                onLongPress={orderable ? () => setQuickAddProduct(product) : undefined}
+                delayLongPress={350}
+              >
+                <View style={styles.productPhotoWrap}>
+                  <SmartImage uri={product.photos?.[0]} style={styles.productPhoto} screen="business/[id]" />
+                  {orderable ? (
+                    // The tap-to-open accessible alternative to the long
+                    // press above — VoiceOver/TalkBack and anyone who
+                    // doesn't discover the gesture can still reach the same
+                    // QuickAddSheet this way. Its own Pressable intercepts
+                    // the tap before it reaches the card's onPress.
+                    <Pressable
+                      style={styles.quickAddBadge}
+                      onPress={() => setQuickAddProduct(product)}
+                      hitSlop={8}
+                      accessibilityLabel={`Add ${product.title} to order request`}
+                      accessibilityRole="button"
+                    >
+                      <QuickAddIcon />
+                    </Pressable>
+                  ) : null}
+                </View>
+                <Text style={styles.productPrice}>{formatPrice(product)}</Text>
+                <Text style={styles.productTitle} numberOfLines={2}>
+                  {product.title}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -422,7 +449,27 @@ export default function BusinessShopScreen() {
           </Pressable>
         </View>
       )}
+
+      {business ? (
+        <QuickAddSheet
+          visible={!!quickAddProduct}
+          listingId={quickAddProduct?.id ?? ""}
+          title={quickAddProduct?.title ?? ""}
+          photo={quickAddProduct?.photos?.[0] ?? null}
+          business={{ id: business.id, name: business.name }}
+          onClose={() => setQuickAddProduct(null)}
+        />
+      ) : null}
     </View>
+  );
+}
+
+function QuickAddIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.5}>
+      <Line x1={12} y1={5} x2={12} y2={19} />
+      <Line x1={5} y1={12} x2={19} y2={12} />
+    </Svg>
   );
 }
 
@@ -681,6 +728,18 @@ function buildStyles(color: ColorPalette) {
       borderRadius: 12,
       overflow: "hidden",
       marginBottom: 6,
+      position: "relative",
+    },
+    quickAddBadge: {
+      position: "absolute",
+      top: 6,
+      right: 6,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: "rgba(17,24,39,0.55)",
+      alignItems: "center",
+      justifyContent: "center",
     },
     productPhoto: {
       width: "100%",

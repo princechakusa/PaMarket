@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Request — PaMarket Zimbabwe</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; }
+    .header { background: #1A3A8F; color: #fff; padding: 32px 24px 28px; }
+    .header h1 { font-size: 22px; font-weight: 800; }
+    .header p { font-size: 13px; opacity: .75; margin-top: 6px; }
+    .content { max-width: 480px; margin: 0 auto; padding: 32px 24px 64px; text-align: center; }
+    .ref { display: inline-block; background: #EFF6FF; color: #1A3A8F; font-weight: 700; font-size: 13px; letter-spacing: .04em; padding: 6px 14px; border-radius: 999px; margin-bottom: 18px; }
+    p { font-size: 14px; color: #374151; margin-bottom: 18px; }
+    .btn { display: inline-block; background: #1A3A8F; color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; padding: 14px 28px; border-radius: 10px; }
+    .hint { font-size: 12.5px; color: #6b7280; margin-top: 20px; }
+    .missing { font-size: 14px; color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PaMarket Order Request</h1>
+    <p>Opens securely inside the PaMarket app</p>
+  </div>
+  <div class="content" id="content">
+    <p>Loading…</p>
+  </div>
+  <script>
+    // This page deliberately never shows order details (items, price,
+    // customer name/address, shop contact info) — there is no customer
+    // sign-in on the public website, so there is no safe way to verify who
+    // is viewing this page here. It only ever displays the order id itself
+    // (which is not a secret — it's just which row to ask for) and hands
+    // off to the PaMarket app, which is already signed in and enforces the
+    // real RLS-protected "customer or owner or admin" read policy before
+    // showing anything. If a real web-based order view is ever built, it
+    // must add proper customer authentication first — this page is not
+    // that, and must not be extended to render private fields directly.
+    var params = new URLSearchParams(window.location.search);
+    var id = (params.get('id') || '').trim();
+    var el = document.getElementById('content');
+    if (!/^[0-9a-fA-F-]{10,40}$/.test(id)) {
+      el.innerHTML = '<p class="missing">This order link is missing or invalid.</p>';
+    } else {
+      var ref = id.slice(0, 8).toUpperCase();
+      var deepLink = 'com.pamarket.app://shop-order/' + encodeURIComponent(id);
+      el.innerHTML =
+        '<div class="ref">Order #' + ref + '</div>' +
+        '<p>Sign in to the PaMarket app to view and confirm this order request.</p>' +
+        '<a class="btn" href="' + deepLink + '">Open in PaMarket</a>' +
+        '<p class="hint">If nothing happens, open the PaMarket app yourself and check My Orders — this order will be there.</p>';
+      // Best-effort automatic hand-off for anyone with the app installed;
+      // the visible button above is the reliable path either way.
+      window.location.href = deepLink;
+    }
+  </script>
+</body>
+</html>

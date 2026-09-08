@@ -13,7 +13,7 @@ import { useCart } from "../lib/cart-context";
 import { useResolvedCart } from "../lib/use-resolved-cart";
 import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 import { isValidPhone } from "../lib/validation";
-import { createShopOrder, formatMoney, generateIdempotencyKey, type FulfillmentMethod } from "../lib/shop-orders";
+import { createShopOrder, generateIdempotencyKey, type FulfillmentMethod } from "../lib/shop-orders";
 import { Button, CountedTextArea, ErrorState, FieldLabel, GlassBackButton, toast } from "../components/ui";
 import { font, radius, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -28,7 +28,7 @@ export default function ShopCheckoutScreen() {
   const styles = useThemedStyles(buildStyles);
   const { session } = useAuth();
   const { cart, clear } = useCart();
-  const { lines, isLoading, error, hasUnavailable, estimatedTotal, currency } = useResolvedCart();
+  const { lines, isLoading, error, hasUnavailable } = useResolvedCart();
   const keyboardAvoidingKey = useKeyboardAvoidingReset();
 
   const [name, setName] = useState("");
@@ -194,15 +194,10 @@ export default function ShopCheckoutScreen() {
               <Text style={styles.summaryItemTitle} numberOfLines={1}>
                 {line.quantity} × {line.title}
               </Text>
-              <Text style={styles.summaryItemPrice}>{formatMoney((line.price ?? 0) * line.quantity, line.currency)}</Text>
             </View>
           ))}
           <View style={styles.summaryDivider} />
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryTotalLabel}>Estimated total</Text>
-            <Text style={styles.summaryTotalValue}>{formatMoney(estimatedTotal, currency)}</Text>
-          </View>
-          <Text style={styles.summaryHint}>The shop confirms the final total — this is an estimate based on current prices.</Text>
+          <Text style={styles.summaryHint}>The shop will review this request and confirm it before it's prepared.</Text>
         </View>
       </ScrollView>
 
@@ -255,10 +250,7 @@ function buildStyles(color: ColorPalette) {
     summaryTitle: { ...font.title, color: color.text, marginBottom: 4 },
     summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: space.md },
     summaryItemTitle: { ...font.body, color: color.textSub, flex: 1 },
-    summaryItemPrice: { ...font.body, color: color.text, fontWeight: "600" },
     summaryDivider: { height: 1, backgroundColor: color.divider, marginVertical: 4 },
-    summaryTotalLabel: { ...font.bodyStrong, color: color.text },
-    summaryTotalValue: { ...font.h3, color: color.brand },
     summaryHint: { ...font.caption, color: color.textMuted, marginTop: 4 },
     footer: { padding: space.lg, borderTopWidth: 1, borderTopColor: color.divider, backgroundColor: color.surface },
   });

@@ -337,6 +337,7 @@ function RootNavigator() {
       <Stack.Screen name="shop-cart" options={{ headerShown: Platform.OS === "ios", title: "Your Cart" }} />
       <Stack.Screen name="shop-checkout" options={{ headerShown: Platform.OS === "ios", title: "Order Request" }} />
       <Stack.Screen name="shop-order/[id]" options={{ headerShown: Platform.OS === "ios", title: "Order" }} />
+      <Stack.Screen name="my-orders" options={{ headerShown: Platform.OS === "ios", title: "Order Requests" }} />
       <Stack.Screen name="business-orders/[id]" options={{ headerShown: Platform.OS === "ios", title: "Orders" }} />
       <Stack.Screen name="owner-order/[id]" options={{ headerShown: Platform.OS === "ios", title: "Order" }} />
       <Stack.Screen name="two-factor-setup" options={{ headerShown: true, title: "Two-Factor Authentication" }} />
