@@ -56,6 +56,12 @@ export default function ShopCheckoutScreen() {
       .then(({ data }) => {
         if (data?.name) setName((current) => current || data.name);
         if (data?.phone) setPhone((current) => current || data.phone);
+      })
+      .then(undefined, () => {
+        // Best-effort prefill only — the screen's own loading state comes
+        // from useResolvedCart(), not this call, so a failure here must
+        // never block or delay the form. The customer can still type
+        // their name/phone in manually.
       });
   }, [session?.user?.id]);
 
