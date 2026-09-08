@@ -87,9 +87,20 @@ export function logClientError(input: LogErrorInput): void {
   try {
     const { error, screen, component, severity = "error", metadata } = input;
     // Sentry stays the primary, always-on crash reporter — unaffected by
-    // whether the DB log below succeeds.
+    // whether the DB log below succeeds. `level` was previously omitted,
+    // so every call landed in Sentry at its default "error" level
+    // regardless of the caller's own severity — an expected, benign
+    // outcome like a wrong password (severity: "warning") looked
+    // identical to a real bug in Sentry's issue stream. Passing the
+    // caller's severity through as the Sentry level fixes that
+    // classification without dropping the event — it's still visible,
+    // just correctly leveled, so genuine failures are never hidden.
     try {
-      Sentry.captureException(error, { tags: { screen: screen ?? "unknown" }, extra: { component, ...metadata } });
+      Sentry.captureException(error, {
+        level: severity,
+        tags: { screen: screen ?? "unknown" },
+        extra: { component, ...metadata },
+      });
     } catch {
       // Sentry itself failing must never block the DB log attempt below.
     }

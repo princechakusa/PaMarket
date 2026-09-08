@@ -2,7 +2,13 @@ import { Platform } from "react-native";
 import * as Crypto from "expo-crypto";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
-import messaging, { AuthorizationStatus } from "@react-native-firebase/messaging";
+import {
+  getMessaging,
+  getToken,
+  hasPermission,
+  registerDeviceForRemoteMessages,
+  AuthorizationStatus,
+} from "@react-native-firebase/messaging";
 import { supabase } from "./supabase";
 
 // PaMarket's backend push pipeline (supabase/functions/send-push,
@@ -56,20 +62,25 @@ export async function getPushPermissionState(): Promise<PushPermissionState> {
 }
 
 async function getFirebaseMessagingToken(): Promise<string | null> {
-  const instance = messaging();
+  // Modular API (RN Firebase v22+) — the namespaced `messaging()` default
+  // export with instance methods (`.hasPermission()`, `.getToken()`, etc.)
+  // is deprecated and logs a console warning on every call; these free
+  // functions taking the Messaging instance explicitly are the replacement,
+  // functionally identical for everything used here.
+  const instance = getMessaging();
   if (Platform.OS === "ios") {
     // expo-notifications owns the user-facing prompt. RN Firebase only
     // verifies the result and binds the granted installation to APNs/FCM.
-    const authStatus = await instance.hasPermission();
+    const authStatus = await hasPermission(instance);
     const enabled =
       authStatus === AuthorizationStatus.AUTHORIZED ||
       authStatus === AuthorizationStatus.PROVISIONAL;
     if (!enabled) return null;
 
-    await instance.registerDeviceForRemoteMessages();
+    await registerDeviceForRemoteMessages(instance);
   }
 
-  const token = await instance.getToken();
+  const token = await getToken(instance);
   return token || null;
 }
 

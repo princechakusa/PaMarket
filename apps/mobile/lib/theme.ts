@@ -234,13 +234,26 @@ export const hitSlop = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 // ── Glass / translucent materials ───────────────────────────────────────────
 // Tuning shared by GlassBackButton, GlassHeader and the tab bar so every
 // frosted surface in the app reads as one consistent material rather than
-// per-screen guesses at blur amount. `experimentalBlurMethod:
-// "dimezisBlurView"` is what makes expo-blur render a REAL blur on Android
-// (the default otherwise silently degrades to a flat tint with no blur) —
-// see https://docs.expo.dev/versions/v57.0.0/sdk/blur-view/.
+// per-screen guesses at blur amount.
+//
+// androidBlurMethod was previously "dimezisBlurView", written when that
+// method rendered a real blur on Android by default. In the installed
+// expo-blur version (57.0.2), "dimezisBlurView" additionally requires a
+// `blurTarget` ref (a separate BlurTargetView marking exactly what to blur)
+// — without one, expo-blur's own BlurView.tsx logs a console warning AND
+// silently falls back to blurMethod "none" itself ("The blur view will
+// fallback to 'none' blur method to avoid errors"). None of this app's
+// BlurView call sites pass a blurTarget, so Android has been silently
+// rendering the "none" flat-tint fallback all along — this was already a
+// no-op, just a noisy one. Setting it to "none" explicitly matches the
+// real current behavior exactly (zero visual change) and removes the
+// warning. Wiring up real per-screen BlurTargetViews to get an actual
+// Android blur is a legitimate follow-up, but it's a visual/layout change
+// across every glass surface in the app that needs device verification,
+// not a safe blind fix. See https://docs.expo.dev/versions/v57.0.0/sdk/blur-view/.
 export const glass = {
   intensity: { subtle: 32, standard: 55, strong: 80 },
-  androidBlurMethod: "dimezisBlurView" as const,
+  androidBlurMethod: "none" as const,
 } as const;
 
 export const theme = { color, space, radius, font, shadow, hitSlop, glass } as const;

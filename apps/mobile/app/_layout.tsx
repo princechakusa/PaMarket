@@ -3,7 +3,12 @@ import { AppState, Platform } from "react-native";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
-import messaging from "@react-native-firebase/messaging";
+import {
+  getInitialNotification,
+  getMessaging,
+  onNotificationOpenedApp,
+  onTokenRefresh,
+} from "@react-native-firebase/messaging";
 import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { ErrorBoundary } from "../components/ErrorBoundary";
@@ -117,7 +122,10 @@ function usePushNotifications() {
   // closing over one, so a token that arrives after sign-out is dropped
   // instead of being written back under the user who just left.
   useEffect(() => {
-    const unsubscribe = messaging().onTokenRefresh((token: string) => {
+    // Modular API (RN Firebase v22+) — messaging().onTokenRefresh(...) is
+    // the deprecated namespaced form; onTokenRefresh(instance, listener) is
+    // its direct, functionally identical replacement.
+    const unsubscribe = onTokenRefresh(getMessaging(), (token: string) => {
       saveRotatedPushToken(token).catch(() => {});
     });
     return unsubscribe;
@@ -189,14 +197,17 @@ function usePushNotifications() {
     // a given tap ever reaches both, it must still only navigate once.
     let unsubscribeOnOpen: (() => void) | undefined;
     if (Platform.OS === "ios") {
-      messaging()
-        .getInitialNotification()
+      // Modular API (RN Firebase v22+) replacements for
+      // messaging().getInitialNotification() / .onNotificationOpenedApp() —
+      // same behavior, no deprecation warning.
+      const messagingInstance = getMessaging();
+      getInitialNotification(messagingInstance)
         .then((remoteMessage) => {
           const data = remoteMessage?.data;
           if (data) setTimeout(() => handleNotificationTap(data, "firebase-cold-start"), 0);
         })
         .catch(() => {});
-      unsubscribeOnOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
+      unsubscribeOnOpen = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
         if (remoteMessage?.data) handleNotificationTap(remoteMessage.data, "firebase-opened-app");
       });
     }
