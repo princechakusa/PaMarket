@@ -25,6 +25,7 @@ import {
   type ShopOrderRow,
   type ShopOrderStatusHistoryRow,
 } from "../../lib/shop-orders";
+import { contactCustomerByPhone, contactCustomerByWhatsApp, normalizedPhoneDigits } from "../../lib/order-whatsapp";
 import { StatusChangeModal } from "../../components/orders/StatusChangeModal";
 import { Button, Card, EmptyState, ErrorState, GlassBackButton, toast } from "../../components/ui";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -186,6 +187,27 @@ export default function OwnerOrderDetailScreen() {
           <DetailRow label="Name" value={order.customer_name || "—"} />
           <DetailRow label="Phone" value={order.customer_phone || "—"} />
           {order.customer_note ? <DetailRow label="Note" value={order.customer_note} /> : null}
+          {/* Visible only here — this screen already refuses to render
+              anything past the "not-owner" gate above for a customer or
+              another shop's owner, so this action can never reach them. */}
+          <View style={styles.contactRow}>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Call Customer"
+                variant="secondary"
+                size="sm"
+                onPress={() => contactCustomerByPhone(normalizedPhoneDigits(order.customer_phone))}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="WhatsApp Customer"
+                variant="secondary"
+                size="sm"
+                onPress={() => contactCustomerByWhatsApp(normalizedPhoneDigits(order.customer_phone))}
+              />
+            </View>
+          </View>
         </Card>
 
         <Card style={styles.card}>
@@ -302,6 +324,7 @@ function buildStyles(color: ColorPalette) {
     shopLogo: { width: 32, height: 32, borderRadius: 16 },
     shopLogoPlaceholder: { backgroundColor: color.surfaceAlt },
     shopName: { ...font.bodyStrong, color: color.text },
+    contactRow: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
     sectionTitle: { ...font.title, color: color.text, marginBottom: 4 },
     itemRow: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.xs },
     itemPhoto: { width: 48, height: 48, borderRadius: radius.sm },

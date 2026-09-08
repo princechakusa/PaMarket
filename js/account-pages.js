@@ -121,7 +121,94 @@
       root.querySelectorAll('[data-open-notification]').forEach(function (a) { a.addEventListener('click', function () { PM.updateNotification(a.getAttribute('data-open-notification'), { read: true }).catch(function () {}); }); });
     }).catch(function () { root.innerHTML = '<div class="account-empty"><h2>Could not load notifications</h2><p>Please refresh and try again.</p></div>'; });
   }
+  var ORDER_STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', declined: 'Declined', preparing: 'Preparing', ready: 'Ready', completed: 'Completed', cancelled: 'Cancelled' };
+  var ORDER_FULFILLMENT_LABEL = { collection: 'Pickup', delivery: 'Delivery' };
+
+  function orderReference(id) {
+    return String(id || '').slice(0, 8).toUpperCase();
+  }
+
+  // Private, authenticated, read-only — the WhatsApp handoff's website
+  // fallback (Stage 5). No status-change actions live here; that stays the
+  // mobile app's owner-order screen. Customer name/phone/note are shown
+  // only when the signed-in viewer is verified (via businesses.owner_user_id,
+  // read back from the database, not assumed) to own the order's shop —
+  // the same isOwner distinction app/owner-order/[id].tsx makes.
+  function loadOrder() {
+    if (gate()) return;
+    var params = new URLSearchParams(location.search);
+    var orderId = params.get('id');
+    if (!orderId) {
+      root.innerHTML = '<div class="account-empty"><h2>Order not found</h2><p>No order was specified.</p></div>';
+      return;
+    }
+    if (!window.PMShopOrders) {
+      root.innerHTML = '<div class="account-empty"><h2>Could not load this order</h2><p>Please refresh and try again.</p></div>';
+      return;
+    }
+    root.innerHTML = '<div class="account-empty">Loading order…</div>';
+    window.PMShopOrders.getOrderDetail(orderId).then(function (result) {
+      var order = result.order;
+      if (!order) {
+        root.innerHTML = '<div class="account-empty"><h2>Order not found</h2><p>This order does not exist, or you do not have access to it.</p></div>';
+        return;
+      }
+      var business = result.business;
+      var items = result.items || [];
+      var history = result.history || [];
+      var reference = orderReference(order.id);
+
+      var itemsHtml = items.map(function (item) {
+        return '<div class="account-row" style="align-items:center">' +
+          '<div style="flex:1"><strong>' + esc(item.title_snapshot) + '</strong>' +
+          '<p>' + item.quantity + ' × ' + esc(PM.money(item.unit_price_snapshot, item.currency_snapshot)) +
+          (item.listing_id ? '' : ' · listing no longer exists') + '</p></div>' +
+          '<strong>' + esc(PM.money(item.subtotal_snapshot, item.currency_snapshot)) + '</strong></div>';
+      }).join('');
+
+      var historyHtml = history.map(function (h) {
+        return '<div class="account-row"><div>' +
+          '<strong>' + esc(ORDER_STATUS_LABEL[h.status] || h.status) + '</strong>' +
+          (h.note ? '<p>' + esc(h.note) + '</p>' : '') +
+          '<time>' + esc(new Date(h.created_at).toLocaleString()) + '</time></div></div>';
+      }).join('');
+
+      var customerHtml = result.isOwner
+        ? '<section><h2>Customer</h2>' +
+          '<p><strong>Name:</strong> ' + esc(order.customer_name || '—') + '</p>' +
+          '<p><strong>Phone:</strong> ' + esc(order.customer_phone || '—') + '</p>' +
+          (order.customer_note ? '<p><strong>Note:</strong> ' + esc(order.customer_note) + '</p>' : '') +
+          '</section>'
+        : '';
+
+      var deliveryHtml = order.fulfillment_method === 'delivery' && order.delivery_address
+        ? '<p><strong>Delivery address:</strong> ' + esc(order.delivery_address) + '</p>'
+        : '';
+
+      root.innerHTML =
+        '<section><h2>Order #' + esc(reference) + '</h2>' +
+        '<p><strong>Status:</strong> ' + esc(ORDER_STATUS_LABEL[order.status] || order.status) + '</p>' +
+        (business ? '<p><strong>Shop:</strong> ' + esc(business.name) + '</p>' : '') +
+        '</section>' +
+        '<section><h2>Items</h2>' + (itemsHtml || '<p>No items.</p>') +
+        '<p style="margin-top:10px"><strong>Total (' + order.item_count + ' item' + (order.item_count === 1 ? '' : 's') + '):</strong> ' +
+        esc(PM.money(order.total, order.currency)) + '</p></section>' +
+        '<section><h2>Fulfillment</h2>' +
+        '<p><strong>Method:</strong> ' + esc(ORDER_FULFILLMENT_LABEL[order.fulfillment_method] || order.fulfillment_method) + '</p>' +
+        deliveryHtml +
+        '<p><strong>Placed:</strong> ' + esc(new Date(order.created_at).toLocaleString()) + '</p>' +
+        '<p><strong>Last updated:</strong> ' + esc(new Date(order.updated_at).toLocaleString()) + '</p>' +
+        '</section>' +
+        customerHtml +
+        '<section><h2>Status history</h2>' + (historyHtml || '<p>No history yet.</p>') + '</section>' +
+        '<p class="account-hint">Manage this order (confirm, decline, update status) from the PaMarket app.</p>';
+    }).catch(function () {
+      root.innerHTML = '<div class="account-empty"><h2>Could not load this order</h2><p>Please refresh and try again.</p></div>';
+    });
+  }
+
   if (page === 'favourites') loadFavourites();
   if (page === 'saved-searches') loadSearches();
   if (page === 'notifications') loadNotifications();
+  if (page === 'order') loadOrder();
 })();

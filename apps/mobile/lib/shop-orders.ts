@@ -194,9 +194,11 @@ export type ShopOrderRow = {
 // same "shop_orders: customer or owner or admin read" policy that lets a
 // customer see only their own orders governs this automatically. There is
 // deliberately no client-side write path to any of these three tables.
+export type ShopOrderBusiness = { id: string; name: string; logo: string | null; phone: string | null; whatsapp: string | null };
+
 export async function fetchShopOrderDetail(orderId: string): Promise<{
   order: ShopOrderRow | null;
-  business: { id: string; name: string; logo: string | null } | null;
+  business: ShopOrderBusiness | null;
   items: ShopOrderItemRow[];
   history: ShopOrderStatusHistoryRow[];
   error: string | null;
@@ -223,11 +225,14 @@ export async function fetchShopOrderDetail(orderId: string): Promise<{
     return { order: null, business: null, history: [], items: [], error: "not-found" };
   }
 
-  const businessRes = await supabase.from("businesses").select("id,name,logo").eq("id", order.business_id).maybeSingle();
+  // phone/whatsapp are already public-facing fields shown on the shop's own
+  // storefront (app/business/[id].tsx) — reused here for the "message the
+  // shop on WhatsApp" action, not new exposure.
+  const businessRes = await supabase.from("businesses").select("id,name,logo,phone,whatsapp").eq("id", order.business_id).maybeSingle();
 
   return {
     order,
-    business: (businessRes.data as { id: string; name: string; logo: string | null } | null) ?? null,
+    business: (businessRes.data as ShopOrderBusiness | null) ?? null,
     items: (itemsRes.data as ShopOrderItemRow[]) ?? [],
     history: (historyRes.data as ShopOrderStatusHistoryRow[]) ?? [],
     error: null,

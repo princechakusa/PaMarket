@@ -16,10 +16,12 @@ import {
   formatMoney,
   formatOrderDateTime,
   orderStatusMeta,
+  type ShopOrderBusiness,
   type ShopOrderItemRow,
   type ShopOrderRow,
   type ShopOrderStatusHistoryRow,
 } from "../../lib/shop-orders";
+import { buildWhatsAppOrderMessage, resolveShopWhatsAppNumber, shareOrderToWhatsApp } from "../../lib/order-whatsapp";
 import { Button, Card, ErrorState, GlassBackButton } from "../../components/ui";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -38,12 +40,13 @@ export default function ShopOrderDetailScreen() {
   const styles = useThemedStyles(buildStyles);
 
   const [order, setOrder] = useState<ShopOrderRow | null>(null);
-  const [business, setBusiness] = useState<{ id: string; name: string; logo: string | null } | null>(null);
+  const [business, setBusiness] = useState<ShopOrderBusiness | null>(null);
   const [items, setItems] = useState<ShopOrderItemRow[]>([]);
   const [history, setHistory] = useState<ShopOrderStatusHistoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [sharingToWhatsApp, setSharingToWhatsApp] = useState(false);
 
   useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order" });
 
@@ -73,6 +76,31 @@ export default function ShopOrderDetailScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  // This never touches the order itself — no RPC call, no status change, no
+  // new notification. It only composes a pre-filled, user-editable message
+  // and opens WhatsApp (or the share sheet) via the existing safe url
+  // opener. Re-opening it is always safe and repeatable: the message is
+  // rebuilt fresh from the current order every time, never stored.
+  async function sendToWhatsApp() {
+    if (!order || sharingToWhatsApp) return;
+    setSharingToWhatsApp(true);
+    try {
+      const message = buildWhatsAppOrderMessage({
+        orderId: order.id,
+        shopName: business?.name ?? "the shop",
+        itemLines: items.map((item) => ({ title: item.title_snapshot, quantity: item.quantity })),
+        total: order.total,
+        currency: order.currency,
+        fulfillmentMethod: order.fulfillment_method,
+        deliveryAddress: order.delivery_address,
+        customerNote: order.customer_note,
+      });
+      await shareOrderToWhatsApp(resolveShopWhatsAppNumber(business), message);
+    } finally {
+      setSharingToWhatsApp(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -130,6 +158,21 @@ export default function ShopOrderDetailScreen() {
             <Text style={styles.reference}>#{order.id.slice(0, 8).toUpperCase()}</Text>
           </View>
           <Text style={styles.statusMessage}>{meta.message}</Text>
+
+          {order.status === "pending" ? (
+            <View style={styles.whatsappRow}>
+              <Button
+                label="Send order to shop on WhatsApp"
+                variant="secondary"
+                size="sm"
+                loading={sharingToWhatsApp}
+                onPress={sendToWhatsApp}
+              />
+              <Text style={styles.whatsappHint}>
+                Optional — the order stays pending until the shop confirms it here in PaMarket.
+              </Text>
+            </View>
+          ) : null}
 
           {business ? (
             <View style={styles.shopRow}>
@@ -233,6 +276,8 @@ function buildStyles(color: ColorPalette) {
     statusPillText: { ...font.caption, fontWeight: "800" },
     reference: { ...font.caption, color: color.textMuted },
     statusMessage: { ...font.body, color: color.textSub },
+    whatsappRow: { marginTop: space.sm, gap: 6 },
+    whatsappHint: { ...font.caption, color: color.textMuted },
     shopRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.xs },
     shopLogo: { width: 32, height: 32, borderRadius: 16 },
     shopLogoPlaceholder: { backgroundColor: color.surfaceAlt },

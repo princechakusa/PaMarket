@@ -28,3 +28,17 @@ export function listingPath(listing: { id: string; title?: string | null }): str
 export function listingUrl(listing: { id: string; title?: string | null }): string {
   return `${SITE_ORIGIN}/${listingPath(listing)}`;
 }
+
+// Private, authenticated order page (order.html, served extensionless like
+// every other top-level page on this site — see tools/build-includes.js's
+// header/footer convention). Unlike listing pages, this is never
+// pre-rendered and never indexed (order.html sets noindex,nofollow): the
+// page itself requires sign-in, then relies on the exact same
+// shop_orders/shop_order_items/shop_order_status_history RLS policies the
+// mobile app uses, so a signed-out visitor or the wrong signed-in user
+// never sees another customer's or shop's order data. The order id in the
+// query string is never treated as authorization by that page — only as
+// which row to ask RLS for.
+export function orderWebUrl(orderId: string): string {
+  return `${SITE_ORIGIN}/order?id=${encodeURIComponent(orderId)}`;
+}
