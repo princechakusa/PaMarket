@@ -16,6 +16,7 @@ import {
   fetchShopOrderDetail,
   formatOrderDateTime,
   orderStatusMeta,
+  updateShopOrderStatus,
   type ShopOrderBusiness,
   type ShopOrderItemRow,
   type ShopOrderRow,
@@ -23,7 +24,7 @@ import {
 } from "../../lib/shop-orders";
 import { buildWhatsAppOrderMessage, resolveShopWhatsAppNumber, shareOrderWithImage } from "../../lib/order-whatsapp";
 import { logClientError } from "../../lib/error-log";
-import { Button, Card, ConfirmModal, ErrorState, GlassBackButton } from "../../components/ui";
+import { Button, Card, ConfirmModal, ErrorState, GlassBackButton, toast } from "../../components/ui";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -49,6 +50,8 @@ export default function ShopOrderDetailScreen() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [sharingToWhatsApp, setSharingToWhatsApp] = useState(false);
   const [whatsAppPreview, setWhatsAppPreview] = useState<string | null>(null);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Reached straight from a successful checkout submission — the previous
   // screen in the navigation stack is the shop cart, which is now
@@ -110,6 +113,28 @@ export default function ShopOrderDetailScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  // The customer can cancel their own order while it's still pending or
+  // confirmed — before the shop has actually started preparing it (see
+  // update_shop_order_status's customer branch). Past that point the shop
+  // has likely already committed effort/stock, so cancellation from here
+  // stops being offered and the customer would need to contact the shop.
+  const canCustomerCancel = order?.status === "pending" || order?.status === "confirmed";
+
+  async function confirmCancelOrder() {
+    if (!order || cancelling) return;
+    setCancelling(true);
+    const result = await updateShopOrderStatus(order.id, "cancelled");
+    setCancelling(false);
+    setCancelConfirmOpen(false);
+    if (!result.ok) {
+      toast(result.message, 4000, true);
+      logClientError({ error: result.message, screen: "shop-order/[id]", component: "cancelOrder", severity: "warning", metadata: { code: result.code } });
+      return;
+    }
+    toast("Order request cancelled.");
+    load();
+  }
 
   // This never touches the order itself — no RPC call, no status change, no
   // new notification. It only composes a pre-filled, user-editable message
@@ -204,19 +229,36 @@ export default function ShopOrderDetailScreen() {
           </View>
           <Text style={styles.statusMessage}>{meta.message}</Text>
 
-          {order.status === "pending" ? (
-            <View style={styles.whatsappRow}>
-              <Button
-                label="Send order to shop on WhatsApp"
-                variant="secondary"
-                size="sm"
-                loading={sharingToWhatsApp}
-                onPress={openWhatsAppPreview}
-              />
-              <Text style={styles.whatsappHint}>
-                Optional — the order stays pending until the shop confirms it here in PaMarket.
-                {Platform.OS === "ios" ? " Includes a photo where possible." : ""}
-              </Text>
+          {order.status === "pending" || canCustomerCancel ? (
+            <View style={styles.actionsGroup}>
+              {order.status === "pending" ? (
+                <View style={styles.whatsappRow}>
+                  <Button
+                    label="Send order to shop on WhatsApp"
+                    variant="secondary"
+                    size="sm"
+                    loading={sharingToWhatsApp}
+                    onPress={openWhatsAppPreview}
+                  />
+                  <Text style={styles.whatsappHint}>
+                    Optional — the order stays pending until the shop confirms it here in PaMarket.
+                    {Platform.OS === "ios" ? " Includes a photo where possible." : ""}
+                  </Text>
+                </View>
+              ) : null}
+
+              {canCustomerCancel ? (
+                <View style={styles.cancelRow}>
+                  <Button
+                    label="Cancel Order Request"
+                    variant="danger"
+                    size="sm"
+                    loading={cancelling}
+                    onPress={() => setCancelConfirmOpen(true)}
+                  />
+                  <Text style={styles.whatsappHint}>You can cancel while the shop hasn't started preparing it yet.</Text>
+                </View>
+              ) : null}
             </View>
           ) : null}
 
@@ -298,6 +340,17 @@ export default function ShopOrderDetailScreen() {
         onConfirm={confirmSendToWhatsApp}
         onCancel={() => setWhatsAppPreview(null)}
       />
+
+      <ConfirmModal
+        visible={cancelConfirmOpen}
+        title="Cancel this order request?"
+        body={`${business?.name ?? "The shop"} will be notified this request was cancelled. This can't be undone.`}
+        confirmText="Cancel Order"
+        cancelText="Keep Order"
+        danger
+        onConfirm={confirmCancelOrder}
+        onCancel={() => setCancelConfirmOpen(false)}
+      />
     </View>
   );
 }
@@ -330,8 +383,10 @@ function buildStyles(color: ColorPalette) {
     statusPillText: { ...font.caption, fontWeight: "800" },
     reference: { ...font.caption, color: color.textMuted },
     statusMessage: { ...font.body, color: color.textSub },
-    whatsappRow: { marginTop: space.sm, gap: 6 },
+    actionsGroup: { marginTop: space.sm, gap: space.md },
+    whatsappRow: { gap: 6 },
     whatsappHint: { ...font.caption, color: color.textMuted },
+    cancelRow: { gap: 6, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: color.divider },
     shopRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.xs },
     shopLogo: { width: 32, height: 32, borderRadius: 16 },
     shopLogoPlaceholder: { backgroundColor: color.surfaceAlt },
