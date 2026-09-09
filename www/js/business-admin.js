@@ -141,7 +141,7 @@
       }
       const b = this._find(bizId); if (b) { b.verificationLevel = level; b.verificationPending = false; }
       H.state.adminVerifs = (H.state.adminVerifs || []).filter(x => x.id !== vid); saveState();
-      try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Business Verified', (bizNameOf(bizId)) + ' is now verified.', 'info', null, 'BusinessView'); } catch (e) {}
+      try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Business Verified', (bizNameOf(bizId)) + ' is now verified.', 'info', null, 'businessmanage:' + bizId); } catch (e) {}
       toast('Verification approved'); renderPage('BusinessAdmin');
     },
 
@@ -155,7 +155,7 @@
       }
       const b = this._find(bizId); if (b) b.verificationPending = false;
       H.state.adminVerifs = (H.state.adminVerifs || []).filter(x => x.id !== vid); saveState();
-      try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Verification Not Approved', 'Your business verification needs more detail. Please resubmit.', 'report', null, 'BusinessView'); } catch (e) {}
+      try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Verification Not Approved', 'Your business verification needs more detail. Please resubmit.', 'report', null, 'businessverify:' + bizId); } catch (e) {}
       toast('Verification rejected'); renderPage('BusinessAdmin');
     },
 
@@ -178,12 +178,12 @@
         const owner = bizOwnerOf(id);
         if (owner && H.pushNotif) {
           if (status === 'active') {
-            H.pushNotif(owner, 'Business approved', bizNameOf(id) + ' is now live on PaMarket.', 'business', null, 'BusinessView');
+            H.pushNotif(owner, 'Business approved', bizNameOf(id) + ' is now live on PaMarket.', 'business', null, 'businessmanage:' + id);
           } else if (status === 'suspended') {
             H.pushNotif(owner, wasPending ? 'Business not approved' : 'Business suspended',
               wasPending ? bizNameOf(id) + ' was not approved. Please review your details and resubmit.'
                          : bizNameOf(id) + ' has been suspended. Contact support for details.',
-              'report', null, 'BusinessView');
+              'report', null, 'businessmanage:' + id);
           }
         }
       } catch (e) {}

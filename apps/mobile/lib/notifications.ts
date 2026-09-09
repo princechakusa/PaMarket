@@ -194,10 +194,29 @@ function parseDeepLinkString(raw?: string | null): ExpoRoute | null {
     case "shop":
     case "store":
       return { pathname: "/business/[id]", params: { id } };
+    // Distinct from "business" above: this is the OWNER's private Seller
+    // Center dashboard (pending/rejected status, edit/resubmit, decline
+    // reason), not the public shop view — used by business
+    // activation/verification decision notifications, which need the
+    // owner looking at their own management screen, not their shop's
+    // public page.
+    case "businessmanage":
+    case "sellercenter":
+      return { pathname: "/business-manage/[id]", params: { id } };
+    // Business DOCUMENT verification (ID/registration cert review, the
+    // blue badge) — a separate concept and screen from the activation
+    // status above.
+    case "businessverify":
+      return { pathname: "/business-verify/[id]", params: { id } };
     case "job":
       return { pathname: "/jobs/[id]", params: { id } };
     case "review":
       return { pathname: "/reviews/[id]", params: { id } };
+    // Personal ID verification (own profile, no id needed) — a decline
+    // notification for this uses "verify:me" so it still fits the
+    // kind:id convention; the id itself is ignored.
+    case "verify":
+      return { pathname: "/verify" };
     case "ownerorder":
       return { pathname: "/owner-order/[id]", params: { id } };
     case "shoporder":

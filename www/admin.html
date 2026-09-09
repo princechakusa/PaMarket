@@ -2204,7 +2204,8 @@ async function bizDecline(id) {
           id:notifId(), user_id:b.owner_user_id,
           title:'Business Not Approved',
           body:(b.name||'Your business')+' was not approved.'+(note?' Reason: '+note+'. You can edit and resubmit.':' Please review and resubmit.'),
-          type:'report', read:false, created_at:Date.now()
+          type:'report', read:false, created_at:Date.now(),
+          meta:{deepLink:'businessmanage:'+id}
         });
       } catch(e){}
     }
@@ -2907,7 +2908,7 @@ async function approveListing(id) {
     var prev = l ? l.status : null;
     if(l){ l.status='active'; }
     if(l && l.sellerId) {
-      await sb.from('notifications').insert({id:notifId(),user_id:l.sellerId,title:'Listing Approved!',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:Date.now()});
+      await sb.from('notifications').insert({id:notifId(),user_id:l.sellerId,title:'Listing Approved!',body:'Your listing "'+l.title+'" is now live.',type:'info',read:false,created_at:Date.now(),meta:{deepLink:'listing:'+id}});
     }
     auditLog('approve_listing','listings',id,{status:prev},{status:'active'},null);
     if(COUNTS.listingsPending) COUNTS.listingsPending--;
@@ -2926,7 +2927,7 @@ async function rejectListing(id) {
     var prev = l ? l.status : null;
     if(l){ l.status='rejected'; }
     if(l && l.sellerId) {
-      await sb.from('notifications').insert({id:notifId(),user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:Date.now()});
+      await sb.from('notifications').insert({id:notifId(),user_id:l.sellerId,title:'Listing Not Approved',body:'Your listing "'+l.title+'" was not approved.'+(note?' Reason: '+note:''),type:'report',read:false,created_at:Date.now(),meta:{deepLink:'listing:'+id}});
     }
     auditLog('reject_listing','listings',id,{status:prev},{status:'rejected'},note||null);
     if(prev==='pending' && COUNTS.listingsPending) COUNTS.listingsPending--;
@@ -3355,7 +3356,7 @@ async function rejectVerification(userId, verifId) {
     var u = getUser(userId); if(u) u.verification_pending=false;
     DATA.pendingProfiles = (DATA.pendingProfiles||[]).filter(function(p){ return p.id!==userId; });
     var v = DATA.verifications.find(function(x){ return x.id===verifId; }); if(v) v.status='rejected';
-    await sb.from('notifications').insert({id:notifId(),user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:Date.now()});
+    await sb.from('notifications').insert({id:notifId(),user_id:userId,title:'Verification Not Approved',body:'Your ID was not approved.'+(note?' Reason: '+note+'. Please resubmit with clearer photos.':' Please resubmit.'),type:'report',read:false,created_at:Date.now(),meta:{deepLink:'verify:me'}});
     auditLog('reject_verification','profiles',userId,null,null,note||null);
     if(COUNTS.verifPending) COUNTS.verifPending--;
     updateBadges(); renderVerifications(); toast('Verification rejected, user notified','info');
@@ -7833,7 +7834,12 @@ async function vertModerate(id, status) {
     var prev = l ? l.status : null;
     if(l) l.status = status;
     if(l && l.sellerId){
-      try { await sb.from('notifications').insert({id:notifId(),user_id:l.sellerId,title:status==='active'?'Post Approved!':'Post Not Approved',body:status==='active'?('Your post "'+(l.title||'')+'" is now live.'):('Your post "'+(l.title||'')+'" was not approved.'+(reason?' Reason: '+reason:'')),type:status==='active'?'info':'report',read:false,created_at:Date.now()}); } catch(e){}
+      // Deep-links the poster straight to the exact post — the whole point
+      // of a rejection note is telling them what to fix, so they need to
+      // land on the thing itself, not a generic screen. 'job:' vs
+      // 'listing:' picks the right target screen on both platforms.
+      var vertDeepLink = (VERT.cat==='jobs'?'job:':'listing:')+id;
+      try { await sb.from('notifications').insert({id:notifId(),user_id:l.sellerId,title:status==='active'?'Post Approved!':'Post Not Approved',body:status==='active'?('Your post "'+(l.title||'')+'" is now live.'):('Your post "'+(l.title||'')+'" was not approved.'+(reason?' Reason: '+reason:'')),type:status==='active'?'info':'report',read:false,created_at:Date.now(),meta:{deepLink:vertDeepLink}}); } catch(e){}
     }
     auditLog((status==='active'?'approve':'reject')+'_'+VERT.cat+'_post','listings',id,{status:prev},{status:status},reason||null);
     renderVertical(VERT.cat); toast('Post '+(status==='active'?'approved':'rejected'));
@@ -8502,7 +8508,7 @@ async function miApprove(kind, id){
   if(!requirePerm('listings.moderate')) return;
   try { await updRow('listings', id, {status:'active'});
     var l = (MI.items||[]).find(function(x){return x.kind===kind&&x.id===id;});
-    if(l && l.who){ try{ await sb.from('notifications').insert({id:notifId(),user_id:l.who,title:'Listing Approved!',body:'Your listing is now live.',type:'info',read:false,created_at:Date.now()}); }catch(e){} }
+    if(l && l.who){ try{ await sb.from('notifications').insert({id:notifId(),user_id:l.who,title:'Listing Approved!',body:'Your listing is now live.',type:'info',read:false,created_at:Date.now(),meta:{deepLink:'listing:'+id}}); }catch(e){} }
     auditLog('approve_listing','listings',id,{status:'pending'},{status:'active'},'via inbox');
     if(COUNTS.listingsPending) COUNTS.listingsPending--;
     miRemove(kind,id); updateBadges(); renderModInbox(); toast('Approved');
@@ -8514,7 +8520,7 @@ async function miReject(kind, id){
   if(reason===null) return;
   try { await updRow('listings', id, {status:'rejected'});
     var l = (MI.items||[]).find(function(x){return x.kind===kind&&x.id===id;});
-    if(l && l.who){ try{ await sb.from('notifications').insert({id:notifId(),user_id:l.who,title:'Listing Not Approved',body:'Your listing was not approved.'+(reason?' Reason: '+reason:''),type:'report',read:false,created_at:Date.now()}); }catch(e){} }
+    if(l && l.who){ try{ await sb.from('notifications').insert({id:notifId(),user_id:l.who,title:'Listing Not Approved',body:'Your listing was not approved.'+(reason?' Reason: '+reason:''),type:'report',read:false,created_at:Date.now(),meta:{deepLink:'listing:'+id}}); }catch(e){} }
     auditLog('reject_listing','listings',id,{status:'pending'},{status:'rejected'},reason||'via inbox');
     if(COUNTS.listingsPending) COUNTS.listingsPending--;
     miRemove(kind,id); updateBadges(); renderModInbox(); toast('Rejected');

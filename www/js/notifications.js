@@ -30,17 +30,21 @@
     saveState();
     H._updateNotifBadge();
 
-    // Cloud persistence of CROSS-USER notifications is now handled exclusively by
+    // Cloud persistence of CROSS-USER notifications is handled exclusively by
     // server-side security-definer triggers (messages, reviews, business_leads,
-    // rental_* events). The notifications INSERT policy is self-only
-    // (auth.uid() = user_id), so a client insert for another user is rejected by
-    // RLS anyway. We therefore only persist when the target is the CURRENT user
-    // (e.g. a self/system notice), which RLS permits. This keeps a single source
-    // of truth for cross-user delivery and avoids doomed inserts.
+    // rental_* events) for ordinary users — the notifications INSERT policy
+    // ("notifications: self or admin insert") only allows auth.uid() = user_id
+    // OR is_admin(), so a non-admin client insert for another user is rejected
+    // by RLS anyway and we skip the doomed attempt. An admin caller (e.g.
+    // H._bizAdmin's approve/reject actions) is the one real exception RLS
+    // itself already grants — without this check those admin notifications
+    // silently never reached the target user at all, even though the RLS
+    // insert would have succeeded.
     const cu = H.currentUser && H.currentUser();
     const isSelf = cu && String(cu.id) === String(uid_);
+    const isAdminCaller = !isSelf && H.isAdmin && H.isAdmin();
     const c = sb();
-    if (c && isSelf) {
+    if (c && (isSelf || isAdminCaller)) {
       c.from('notifications').insert({
         id: n.id, user_id: uid_, title: n.title, body: n.body,
         type: n.type, read: false, created_at: n.t,
@@ -451,6 +455,39 @@
       // "chat:convId" shorthand (used by push notifications)
       const chatShort = link.match(/^chat:(.+)$/i);
       if (chatShort) { _openChat(chatShort[1]); return; }
+      // "kind:id" convention — the same one the mobile app's
+      // resolveNotifRoute() understands (apps/mobile/lib/notifications.ts).
+      // Admin-sent decision notifications (business decline, listing/job
+      // reject, etc.) use this so a single deepLink value routes correctly
+      // on both platforms instead of needing a website-specific format.
+      const kindMatch = link.match(/^([a-z_]+)\s*:\s*(.+)$/i);
+      if (kindMatch) {
+        const kind = kindMatch[1].toLowerCase();
+        const kid = kindMatch[2].trim();
+        switch (kind) {
+          case 'listing': case 'product': case 'sale':
+            H.openInner('Detail', { id: kid }); return;
+          case 'job':
+            H.openInner('JobDetail', { id: kid }); return;
+          case 'profile': case 'user': case 'seller':
+            H.openInner('Profile', { id: kid }); return;
+          case 'business': case 'shop': case 'store':
+            H.openInner('BusinessShop', { id: kid }); return;
+          // OWNER's own Seller Center — activation status, decline
+          // reason, edit/resubmit. Distinct from the public shop view above.
+          case 'businessmanage': case 'sellercenter':
+            if (H._bizOnboard) H._bizOnboard.view(kid); else H.openInner('BusinessView', { id: kid });
+            return;
+          case 'businessverify':
+            H.openInner('BusinessVerify', { id: kid }); return;
+          // Personal ID verification — own profile, no id needed.
+          case 'verify':
+            H.openInner('ProfileVerify'); return;
+          // No website equivalent of the app's order-management screens
+          // (order tracking is app-only) — fall through to type-based
+          // routing below rather than opening a page that doesn't exist.
+        }
+      }
       // Named in-app route: "Chat?id=xxx", "Detail?id=xxx", "Messages", …
       const routeMatch = link.match(/^([A-Za-z][\w-]*)(?:\?(.*))?$/);
       if (routeMatch) {
