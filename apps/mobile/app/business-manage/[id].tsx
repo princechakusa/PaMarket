@@ -32,7 +32,7 @@ export default function BusinessManageScreen() {
     const { data } = await supabase
       .from("businesses")
       .select(
-        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,updated_at"
+        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,rejection_note,updated_at"
       )
       .eq("id", id)
       .maybeSingle();
@@ -51,6 +51,37 @@ export default function BusinessManageScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  async function editAndResubmit() {
+    if (!business) return;
+    // business-onboarding only resumes a status='draft' business — without
+    // this, clicking Edit & Resubmit from a 'rejected' business would start
+    // a brand new blank draft instead of reopening this one.
+    const { error } = await supabase.from("businesses").update({ status: "draft" }).eq("id", business.id);
+    if (error) { toast("Couldn't open for editing — please try again", 4000, true); return; }
+    router.push("/business-onboarding");
+  }
+
+  function cancelSubmission() {
+    if (!business) return;
+    Alert.alert(
+      "Cancel Submission",
+      "This pulls your business back to draft so you can edit it. You can resubmit any time.",
+      [
+        { text: "Keep Waiting", style: "cancel" },
+        {
+          text: "Cancel Request",
+          style: "destructive",
+          onPress: async () => {
+            const { error } = await supabase.from("businesses").update({ status: "draft" }).eq("id", business.id);
+            if (error) { toast("Couldn't cancel — please try again", 4000, true); return; }
+            toast("Submission cancelled");
+            setBusiness({ ...business, status: "draft" });
+          },
+        },
+      ]
+    );
+  }
 
   function confirmDelete() {
     if (!business) return;
@@ -109,6 +140,30 @@ export default function BusinessManageScreen() {
         <Text style={styles.notFoundSub}>Submitted for review. We will notify you once it is approved and live.</Text>
         <Pressable style={styles.secondaryButton} onPress={() => router.replace("/(tabs)/profile")}>
           <Text style={styles.secondaryButtonText}>Go to Account</Text>
+        </Pressable>
+        <Pressable style={styles.textButton} onPress={cancelSubmission}>
+          <Text style={styles.textButtonText}>Cancel Request</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (business.status === "rejected") {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.notFoundTitle}>{business.name || "Your business"}</Text>
+        <Text style={styles.notFoundSub}>Your submission wasn't approved.</Text>
+        {business.rejection_note ? (
+          <View style={styles.rejectionNoteBox}>
+            <Text style={styles.rejectionNoteLabel}>Reason</Text>
+            <Text style={styles.rejectionNoteText}>{business.rejection_note}</Text>
+          </View>
+        ) : null}
+        <Pressable style={styles.primaryButton} onPress={editAndResubmit}>
+          <Text style={styles.primaryButtonText}>Edit &amp; Resubmit</Text>
+        </Pressable>
+        <Pressable style={styles.textButton} onPress={() => router.replace("/(tabs)/profile")}>
+          <Text style={styles.textButtonText}>Go to Account</Text>
         </Pressable>
       </View>
     );
@@ -270,6 +325,11 @@ function buildStyles(color: ColorPalette) {
     primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
     secondaryButton: { backgroundColor: color.surfaceAlt, borderRadius: 10, paddingVertical: 14, paddingHorizontal: 28, alignItems: "center" },
     secondaryButtonText: { color: color.text, fontSize: 14, fontWeight: "700" },
+    textButton: { marginTop: 14, paddingVertical: 8, paddingHorizontal: 12 },
+    textButtonText: { color: color.textMuted, fontSize: 13, fontWeight: "600" },
+    rejectionNoteBox: { backgroundColor: color.dangerTint, borderRadius: 10, padding: 14, marginBottom: 20, width: "100%" },
+    rejectionNoteLabel: { fontSize: 11, fontWeight: "800", color: color.danger, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 },
+    rejectionNoteText: { fontSize: 13, color: color.text, lineHeight: 19 },
     hero: { backgroundColor: color.brand, padding: 20, paddingTop: 26 },
     heroTop: { flexDirection: "row", alignItems: "center", gap: 14 },
     logoWrap: { width: 62, height: 62, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.16)", alignItems: "center", justifyContent: "center", overflow: "hidden" },

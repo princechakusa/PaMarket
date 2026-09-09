@@ -138,6 +138,7 @@
       province: b.province || null, city: b.city || null, suburb: b.suburb || null,
       status: b.status || 'draft', onboarding_step: b.onboardingStep || 'details',
       verification_level: b.verificationLevel || 0,
+      verification_pending: !!b.verificationPending,
       featured_listing_ids: (b.featuredListingIds && b.featuredListingIds.length) ? b.featuredListingIds : null,
       updated_at: new Date().toISOString()
     };
@@ -189,7 +190,7 @@
     const u = currentUser();
     if (!sb || !u) return;
     try {
-      const { data, error } = await sb.from('businesses').select('id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,onboarding_step,verification_level,created_at,updated_at').eq('owner_user_id', u.id).limit(10);
+      const { data, error } = await sb.from('businesses').select('id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,onboarding_step,verification_level,verification_pending,rejection_note,created_at,updated_at').eq('owner_user_id', u.id).limit(10);
       if (error || !Array.isArray(data)) return;
       H.state.businesses = H.state.businesses || [];
       data.forEach(row => {
@@ -201,6 +202,8 @@
           province: row.province, city: row.city, suburb: row.suburb,
           status: row.status || 'draft', onboardingStep: row.onboarding_step || 'details',
           verificationLevel: row.verification_level || 0,
+          verificationPending: !!row.verification_pending,
+          rejectionNote: row.rejection_note || null,
           createdAt: new Date(row.created_at || Date.now()).getTime(),
           updatedAt: new Date(row.updated_at || Date.now()).getTime()
         };
@@ -450,6 +453,18 @@
             <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
             <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:24px">Submitted for review. We will notify you once it is approved and live.</div>
             <button class="ml-act-btn" style="width:100%;max-width:300px;padding:13px" onclick="H.navTo('Account')">Go to Account</button>
+            <button style="width:100%;max-width:300px;padding:11px;margin-top:10px;background:none;border:none;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" onclick="H._bizOnboard.cancelSubmission('${b.id}')">Cancel Request</button>
+          </div></div>`;
+      }
+      if (b.status === 'rejected') {
+        return `<div class="page active">${innerTopbar('Seller Center')}
+          <div class="inner-content" style="text-align:center;padding:40px 24px">
+            <div style="width:64px;height:64px;border-radius:50%;background:#FFF1F0;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">${escHtml(b.name || 'Your business')}</div>
+            <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:${b.rejectionNote ? '12px' : '24px'}">Your submission wasn't approved.</div>
+            ${b.rejectionNote ? `<div style="text-align:left;background:rgba(239,68,68,.08);border-radius:10px;padding:12px 14px;margin-bottom:24px"><div style="font-size:11px;font-weight:800;color:#EF4444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Reason</div><div style="font-size:13px;color:var(--text);line-height:1.5">${escHtml(b.rejectionNote)}</div></div>` : ''}
+            <button class="btn-pri" style="width:100%;max-width:300px" onclick="H._bizOnboard.edit('${b.id}')">Edit &amp; Resubmit</button>
+            <button style="width:100%;max-width:300px;padding:11px;margin-top:10px;background:none;border:none;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" onclick="H.navTo('Account')">Go to Account</button>
           </div></div>`;
       }
       if (b.status === 'suspended') {
@@ -580,6 +595,9 @@
       // Already submitted — show the "under review" status screen, not the wizard.
       const pendingActivation = mine.find(b => b.status === 'pending_activation');
       if (pendingActivation) { this.view(pendingActivation.id); return; }
+      // Declined — show the reason + Edit & Resubmit, not a blank wizard.
+      const rejected = mine.find(b => b.status === 'rejected');
+      if (rejected) { this.view(rejected.id); return; }
       // Still a draft — resume the wizard where the user left off.
       const draft = mine.find(b => b.status === 'draft');
       if (draft) { _mode = 'create'; _draft = JSON.parse(JSON.stringify(draft)); H.openInner('BusinessOnboarding'); return; }
@@ -598,6 +616,21 @@
     },
 
     createAnother() { _mode = 'create'; _draft = blankDraft(); H.openInner('BusinessOnboarding'); },
+
+    // Pull a pending_activation business back to draft so the owner can
+    // edit it — mirrors the admin decline path, just owner-initiated and
+    // with no note.
+    async cancelSubmission(id) {
+      if (!confirm('Cancel this submission? You can edit and resubmit any time.')) return;
+      const b = getBiz(id); if (!b) return;
+      const sb = window.supabase;
+      try {
+        if (sb) await sb.from('businesses').update({ status: 'draft' }).eq('id', id);
+        b.status = 'draft'; b.updatedAt = Date.now(); saveState();
+        toast('Submission cancelled');
+        renderPage('BusinessView', { id });
+      } catch (e) { toast('Could not cancel — please try again'); }
+    },
 
     // Bottom-sheet switcher between the user's businesses (+ add another).
     switcher() {

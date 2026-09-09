@@ -98,7 +98,7 @@ export default function BusinessVerifyScreen() {
 
   const level = business.verification_level ?? 0;
   const phoneOk = PHONE_RE.test(business.phone || "");
-  const pendingReview = !!(business as any).verification_pending;
+  const pendingReview = !!business?.verification_pending;
 
   async function confirmPhone() {
     if (!business) return;
@@ -128,15 +128,34 @@ export default function BusinessVerifyScreen() {
     const idPath = pendingId ? await uploadVerificationDoc(session.user.id, pendingId, "biz_id") : null;
     const regPath = pendingReg ? await uploadVerificationDoc(session.user.id, pendingReg, "biz_reg") : null;
     const levelRequested = pendingReg ? 3 : 2;
-    await supabase.from("business_verifications").insert({
+    // Both writes below used to go unchecked — business_verifications and
+    // businesses.verification_pending didn't exist on the live database
+    // until 2026-09-09, so every submission "succeeded" from the user's
+    // side while nothing was ever actually recorded for admin review. Both
+    // tables/columns now exist, but still check errors explicitly so a
+    // genuine future failure surfaces instead of repeating that silently.
+    const { error: insertError } = await supabase.from("business_verifications").insert({
       business_id: business.id,
       level_requested: levelRequested,
       id_doc_path: idPath,
       reg_doc_path: regPath,
       status: "pending",
     });
-    await supabase.from("businesses").update({ verification_pending: true }).eq("id", business.id);
-    setBusiness({ ...business, ...({ verification_pending: true } as any) });
+    if (insertError) {
+      setIsSubmitting(false);
+      toast("Couldn't submit — please try again", 4000, true);
+      return;
+    }
+    const { error: updateError } = await supabase
+      .from("businesses")
+      .update({ verification_pending: true })
+      .eq("id", business.id);
+    if (updateError) {
+      setIsSubmitting(false);
+      toast("Couldn't submit — please try again", 4000, true);
+      return;
+    }
+    setBusiness({ ...business, verification_pending: true });
     setPendingId(null);
     setPendingReg(null);
     setIsSubmitting(false);

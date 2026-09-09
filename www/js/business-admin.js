@@ -26,7 +26,7 @@
       H.state.adminBusinesses = data.map(r => ({
         id: r.id, ownerUserId: r.owner_user_id, name: r.name, bizType: r.biz_type,
         category: r.category, status: r.status, planId: r.plan_id || 'free',
-        verificationLevel: r.verification_level || 0, verificationPending: false,
+        verificationLevel: r.verification_level || 0, verificationPending: !!r.verification_pending,
         city: r.city, province: r.province, createdAt: new Date(r.created_at || Date.now()).getTime()
       }));
       saveState();
@@ -134,17 +134,26 @@
       level = Number(level) || 1;
       const sb = window.supabase;
       if (sb) {
-        try { await sb.from('business_verifications').update({ status: 'approved' }).eq('id', vid); } catch (e) {}
-        try { await sb.from('businesses').update({ verification_level: level }).eq('id', bizId); } catch (e) {}
+        try { await sb.from('business_verifications').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', vid); } catch (e) {}
+        // verification_pending must be cleared here too, or the owner's
+        // "documents under review" banner never goes away after approval.
+        try { await sb.from('businesses').update({ verification_level: level, verification_pending: false }).eq('id', bizId); } catch (e) {}
       }
-      const b = this._find(bizId); if (b) b.verificationLevel = level;
+      const b = this._find(bizId); if (b) { b.verificationLevel = level; b.verificationPending = false; }
       H.state.adminVerifs = (H.state.adminVerifs || []).filter(x => x.id !== vid); saveState();
       try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Business Verified', (bizNameOf(bizId)) + ' is now verified.', 'info', null, 'BusinessView'); } catch (e) {}
       toast('Verification approved'); renderPage('BusinessAdmin');
     },
 
     async rejectVerify(vid, bizId) {
-      const sb = window.supabase; if (sb) { try { await sb.from('business_verifications').update({ status: 'rejected' }).eq('id', vid); } catch (e) {} }
+      const sb = window.supabase;
+      if (sb) {
+        try { await sb.from('business_verifications').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', vid); } catch (e) {}
+        // Same as approve — clear the pending flag so the owner isn't stuck
+        // seeing "under review" forever after a rejection.
+        try { await sb.from('businesses').update({ verification_pending: false }).eq('id', bizId); } catch (e) {}
+      }
+      const b = this._find(bizId); if (b) b.verificationPending = false;
       H.state.adminVerifs = (H.state.adminVerifs || []).filter(x => x.id !== vid); saveState();
       try { const owner = bizOwnerOf(bizId); if (owner && H.pushNotif) H.pushNotif(owner, 'Verification Not Approved', 'Your business verification needs more detail. Please resubmit.', 'report', null, 'BusinessView'); } catch (e) {}
       toast('Verification rejected'); renderPage('BusinessAdmin');

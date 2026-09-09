@@ -95,11 +95,18 @@ function BizCard({
 }) {
   const activeBiz = businesses.find((b) => b.status === "active");
   const pendingBiz = businesses.find((b) => b.status === "pending_activation");
+  const rejectedBiz = businesses.find((b) => b.status === "rejected");
   const draftBiz = businesses.find((b) => b.status === "draft");
 
   const goToBusiness = () => {
     if (activeBiz) router.push(`/business-manage/${activeBiz.id}`);
     else if (pendingBiz) router.push(`/business-manage/${pendingBiz.id}`);
+    // Route through business-manage (not business-onboarding directly) for
+    // a rejected business too — that screen shows the decline reason and
+    // its own Edit & Resubmit action, which correctly moves the business
+    // back to 'draft' first so onboarding actually resumes it instead of
+    // starting a blank new one.
+    else if (rejectedBiz) router.push(`/business-manage/${rejectedBiz.id}`);
     else router.push("/business-onboarding");
   };
 
@@ -132,9 +139,11 @@ function BizCard({
     );
   }
 
-  const title = pendingBiz ? "Under Review" : draftBiz ? "Finish Business Setup" : "Open a Business";
+  const title = pendingBiz ? "Under Review" : rejectedBiz ? "Not Approved" : draftBiz ? "Finish Business Setup" : "Open a Business";
   const sub = pendingBiz
     ? "Submitted for review. You will be notified once approved."
+    : rejectedBiz
+    ? "Tap to see why and resubmit"
     : "Create your shop and reach more customers";
 
   return (

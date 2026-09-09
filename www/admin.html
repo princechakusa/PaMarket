@@ -2004,11 +2004,12 @@ function renderBusinesses() {
     all: DATA.businesses.length,
     active: DATA.businesses.filter(function(b){return b.status==='active';}).length,
     suspended: DATA.businesses.filter(function(b){return b.status==='suspended';}).length,
+    rejected: DATA.businesses.filter(function(b){return b.status==='rejected';}).length,
     draft: DATA.businesses.filter(function(b){return b.status==='draft'||b.status==='pending_activation';}).length
   };
 
   var html = '<div class="sec-head"><div class="sec-title">Business Platform</div><div class="sec-actions">';
-  ['all','active','suspended','draft'].forEach(function(f){
+  ['all','active','suspended','rejected','draft'].forEach(function(f){
     html += '<button class="filter-btn'+((_bizFilter===f)?' on':'')+'" onclick="_bizFilter=\''+f+'\';renderBusinesses()">'+f.charAt(0).toUpperCase()+f.slice(1)+' ('+counts[f]+')</button>';
   });
   html += '<button class="btn-refresh" onclick="loadBusinesses().then(renderBusinesses)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Refresh</button>';
@@ -2035,7 +2036,7 @@ function renderBusinesses() {
     list.forEach(function(b){
       var plan = bizActivePlan(b.id);
       var st = b.status||'draft';
-      var stClass = st==='active'?'active':(st==='suspended'?'rejected':'pending');
+      var stClass = st==='active'?'active':((st==='suspended'||st==='rejected')?'rejected':'pending');
       var initial = (b.name||'?').trim().charAt(0).toUpperCase()||'?';
       var sub = DATA.businessSubs.find(function(x){return x.business_id===b.id;});
       var renewT = sub && sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
@@ -2052,6 +2053,7 @@ function renderBusinesses() {
         +(b.city?'<span class="dot"></span><span>'+esc((b.city||'')+(b.province?', '+b.province:''))+'</span>':'')
         +(renewHtml?'<span class="dot"></span>'+renewHtml:'')
         +'</div>';
+      if(st==='rejected' && b.rejection_note) html += '<div style="font-size:11.5px;color:var(--red);margin-top:4px"><b>Declined:</b> '+esc(b.rejection_note)+'</div>';
       html += '</div>';
       html += '<div class="ent-stats">'
         +'<div class="ent-stat"><b>L'+(b.verification_level||0)+'</b><span>Verify</span></div>'
@@ -2059,8 +2061,9 @@ function renderBusinesses() {
         +'</div>';
       html += '<div class="ent-actions">';
       html += '<button class="ab ab-view" onclick="viewBusiness(\''+b.id+'\')">View</button>';
-      if(st==='suspended'||st==='pending_activation') html += '<button class="ab ab-approve" onclick="bizSetStatus(\''+b.id+'\',\'active\')">'+(st==='pending_activation'?'Approve':'Activate')+'</button>';
-      if(st!=='pending_activation') html += '<button class="ab ab-reject" onclick="bizSetStatus(\''+b.id+'\',\'suspended\')">Suspend</button>';
+      if(st==='suspended'||st==='pending_activation'||st==='rejected') html += '<button class="ab ab-approve" onclick="bizSetStatus(\''+b.id+'\',\'active\')">'+(st==='suspended'?'Activate':'Approve')+'</button>';
+      if(st==='pending_activation') html += '<button class="ab ab-reject" onclick="bizDecline(\''+b.id+'\')">Decline</button>';
+      if(st==='active') html += '<button class="ab ab-reject" onclick="bizSetStatus(\''+b.id+'\',\'suspended\')">Suspend</button>';
       html += '<button class="ab ab-view" onclick="bizSetPlan(\''+b.id+'\')">Plan</button>';
       html += '<button class="ab ab-view" onclick="bizSetVerify(\''+b.id+'\')">Verify</button>';
       html += '<button class="ab ab-delete" onclick="adminDeleteBusiness(\''+b.id+'\')">Delete</button>';
@@ -2076,6 +2079,18 @@ function viewBusiness(id) {
   var plan = bizActivePlan(id);
   var sub = DATA.businessSubs.find(function(x){return x.business_id===id;});
   var leadsNew = DATA.businessLeads.filter(function(l){return l.business_id===id && l.status==='new';}).length;
+  var st = b.status||'draft';
+  // Reviewing what a pending business is actually selling is the whole
+  // point of the approval step — the listings grid below (loaded async)
+  // is what makes that possible; before this it was just a bare count.
+  var actionsHtml = st==='pending_activation'
+    ? '<button class="btn-verif-approve" onclick="bizSetStatus(\''+id+'\',\'active\');closeModal()">Approve</button>'
+      + '<button class="btn-verif-reject" onclick="bizDecline(\''+id+'\');closeModal()">Decline</button>'
+    : st==='suspended'
+    ? '<button class="btn-verif-approve" onclick="bizSetStatus(\''+id+'\',\'active\');closeModal()">Activate</button>'
+    : st==='rejected'
+    ? '<button class="btn-verif-approve" onclick="bizSetStatus(\''+id+'\',\'active\');closeModal()">Approve</button>'
+    : '<button class="btn-verif-reject" onclick="bizSetStatus(\''+id+'\',\'suspended\');closeModal()">Suspend</button>';
   openModal('<div class="modal-title">'+esc(b.name||'Business')+'<button class="modal-close" onclick="closeModal()">×</button></div>'
     + '<div style="font-size:13px;color:var(--sub);line-height:1.8">'
     + '<div><b>Owner:</b> '+esc(ownerName(b.owner_user_id))+'</div>'
@@ -2084,20 +2099,44 @@ function viewBusiness(id) {
     + '<div><b>Location:</b> '+esc([b.suburb,b.city,b.province].filter(Boolean).join(', ')||'—')+'</div>'
     + '<div><b>Plan:</b> '+esc(plan)+(sub&&sub.billing_cycle?(' ('+esc(sub.billing_cycle)+')'):'')+(sub&&sub.current_period_end?(' · renews '+fmtDate(sub.current_period_end)):'')+'</div>'
     + '<div><b>Verification level:</b> '+(b.verification_level||0)+'</div>'
-    + '<div><b>Status:</b> '+esc(b.status||'—')+'</div>'
+    + '<div><b>Status:</b> '+esc(st)+'</div>'
     + '<div><b>Listings:</b> <span id="bizLstCount">…</span> &nbsp; <b>Leads:</b> '+bizLeadCount(id)+' ('+leadsNew+' new)</div>'
     + '</div>'
+    + (st==='rejected' && b.rejection_note?'<div style="font-size:12.5px;color:var(--red);background:rgba(239,68,68,.08);border-radius:8px;padding:8px 10px;margin-top:10px"><b>Declined:</b> '+esc(b.rejection_note)+'</div>':'')
     + (b.description?'<div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">'+esc(b.description)+'</div>':'')
+    + '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin:14px 0 6px">Listings</div>'
+    + '<div id="bizListingsGrid" style="display:flex;gap:8px;flex-wrap:wrap"><div style="font-size:12px;color:var(--sub)">Loading…</div></div>'
     + '<div id="bizCRM" style="margin-top:14px"><div style="font-size:12px;color:var(--sub)">Loading CRM detail…</div></div>'
     + '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">'
-    + (b.status==='suspended'
-        ? '<button class="btn-verif-approve" onclick="bizSetStatus(\''+id+'\',\'active\');closeModal()">Activate</button>'
-        : '<button class="btn-verif-reject" onclick="bizSetStatus(\''+id+'\',\'suspended\');closeModal()">Suspend</button>')
+    + actionsHtml
     + '<button class="btn-verif-approve" style="background:#1A3A8F" onclick="bizSetPlan(\''+id+'\')">Override Plan</button>'
     + '</div>'
   );
   cnt('listings',function(q){return q.eq('business_id',id);}).then(function(n){ var el=document.getElementById('bizLstCount'); if(el) el.textContent=fmtCnt(n); });
+  loadBizListingsGrid(id);
   loadBizCRM(id);
+}
+
+// Thumbnail grid of a business's listings — what the "approve a pending
+// business" step actually needs to be a real review, not a blind click.
+async function loadBizListingsGrid(id) {
+  var el = document.getElementById('bizListingsGrid'); if (!el) return;
+  try {
+    var r = await sb.from('listings').select('id,title,photos,status').eq('business_id', id).order('created_at', {ascending: false}).limit(24);
+    if (r.error || !Array.isArray(r.data) || !r.data.length) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--sub)">No listings posted yet.</div>';
+      return;
+    }
+    el.innerHTML = r.data.map(function (l) {
+      var photo = Array.isArray(l.photos) && l.photos[0];
+      var thumb = photo
+        ? '<img src="'+esc(photo)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" loading="lazy">'
+        : '<div style="width:64px;height:64px;border-radius:8px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--sub2)">No photo</div>';
+      return '<div title="'+esc(l.title||'')+'">'+thumb+'</div>';
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--sub)">Listings unavailable.</div>';
+  }
 }
 
 // Business CRM detail: lifetime revenue, conversion, payment + audit history.
@@ -2136,10 +2175,40 @@ async function bizSetStatus(id, status) {
   try {
     var b = DATA.businesses.find(function(x){return x.id===id;});
     var prev = b ? b.status : null;
-    await updRow('businesses', id, {status:status});
-    if(b) b.status=status;
+    // Approving/activating always clears any earlier decline note — a
+    // resubmitted, now-approved business shouldn't keep showing a stale
+    // rejection reason anywhere.
+    var patch = status==='active' ? {status:status, rejection_note:null} : {status:status};
+    await updRow('businesses', id, patch);
+    if(b) { b.status=status; if(status==='active') b.rejection_note=null; }
     auditLog(status==='active'?'activate_business':'suspend_business','businesses',id,{status:prev},{status:status},null);
     renderBusinesses(); toast('Business '+status);
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Decline a pending_activation business: distinct from Suspend (which means
+// "was live, now disabled") — 'rejected' + a note the owner sees, so they
+// know what to fix before resubmitting.
+async function bizDecline(id) {
+  var b = DATA.businesses.find(function(x){return x.id===id;});
+  var note = await confirm2('Decline Business','Reason (will be sent to the owner):','Decline','red',true,'e.g. Add more product photos, phone number invalid');
+  if(note===null) return;
+  try {
+    var prev = b ? b.status : null;
+    await updRow('businesses', id, {status:'rejected', rejection_note: note || 'Please review and resubmit.'});
+    if(b) { b.status='rejected'; b.rejection_note = note || 'Please review and resubmit.'; }
+    auditLog('decline_business','businesses',id,{status:prev},{status:'rejected'},note||null);
+    if(b && b.owner_user_id) {
+      try {
+        await sb.from('notifications').insert({
+          id:notifId(), user_id:b.owner_user_id,
+          title:'Business Not Approved',
+          body:(b.name||'Your business')+' was not approved.'+(note?' Reason: '+note+'. You can edit and resubmit.':' Please review and resubmit.'),
+          type:'report', read:false, created_at:Date.now()
+        });
+      } catch(e){}
+    }
+    renderBusinesses(); toast('Business declined, owner notified','info');
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
