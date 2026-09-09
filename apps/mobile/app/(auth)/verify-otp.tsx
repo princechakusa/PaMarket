@@ -49,7 +49,7 @@ export default function VerifyOtpScreen() {
   }
 
   async function handleVerify(code: string) {
-    if (!email) return;
+    if (!email || isSubmitting) return;
     setError(null);
     setIsSubmitting(true);
     const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -57,11 +57,14 @@ export default function VerifyOtpScreen() {
       token: code,
       type: "signup",
     });
-    setIsSubmitting(false);
     if (verifyError) {
+      setIsSubmitting(false);
       setError(verifyError.message);
       return;
     }
+    // Not resetting isSubmitting here — this screen is about to be
+    // replaced by router.replace below; see project_fabric_navigation_crash
+    // memory for why that race matters.
     router.replace("/(tabs)");
   }
 
@@ -94,6 +97,7 @@ export default function VerifyOtpScreen() {
             keyboardType="number-pad"
             maxLength={1}
             value={digit}
+            editable={!isSubmitting}
             onChangeText={(text) => handleChange(text, i)}
             onKeyPress={({ nativeEvent }) => handleKeyPress(i, nativeEvent.key)}
           />

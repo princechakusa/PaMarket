@@ -118,7 +118,7 @@ export default function ApplyJobScreen() {
   );
 
   async function submit() {
-    if (!session?.user || !job) return;
+    if (!session?.user || !job || isSubmitting) return;
     if (!hasCandidateProfile) {
       toast("Complete your Candidate Profile before applying");
       return;
@@ -148,13 +148,20 @@ export default function ApplyJobScreen() {
       message: message.trim(),
       status: "pending",
     });
-    setIsSubmitting(false);
     if (error) {
+      // 23505 (duplicate) also navigates back below — isSubmitting is
+      // reset in every OTHER branch here, which all stay on this screen;
+      // it's deliberately left as-is on the two branches that navigate
+      // away (this one and the success path below), since resetting it in
+      // the same tick as router.back() is exactly the race that produced a
+      // real production crash elsewhere in the app (see
+      // project_fabric_navigation_crash memory).
       if (error.code === "23505") {
         toast("You already applied for this job");
         router.back();
         return;
       }
+      setIsSubmitting(false);
       if (/rate_limited:/i.test(error.message)) {
         toast("You've submitted several applications recently. Please wait a little before applying again.", 3500, true);
         return;

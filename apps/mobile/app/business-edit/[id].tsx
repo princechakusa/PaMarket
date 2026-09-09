@@ -118,7 +118,7 @@ export default function BusinessEditScreen() {
   }
 
   async function save() {
-    if (!id) return;
+    if (!id || isSaving) return;
     if (!name.trim()) { toast("Business name is required"); return; }
     if (!categories.length || categories.some((category) => !taxCategories.some((valid) => valid.id === category))) {
       toast("Select at least one valid business category");
@@ -149,11 +149,13 @@ export default function BusinessEditScreen() {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
-    setIsSaving(false);
     if (error) {
+      setIsSaving(false);
       toast("Could not save profile. Please try again.", 4000, true);
       return;
     }
+    // Not resetting isSaving here — router.replace below unmounts this
+    // screen; see project_fabric_navigation_crash memory.
     toast("Profile saved");
     router.replace(`/business-manage/${id}`);
   }

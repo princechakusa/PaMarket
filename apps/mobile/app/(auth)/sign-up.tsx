@@ -46,6 +46,7 @@ export default function SignUpScreen() {
   const privacyDoc = useLegalDocUpgrade("privacy", PRIVACY);
 
   async function handleSignUp() {
+    if (isSubmitting) return;
     if (fullName.trim().length < 2) {
       setError("Enter your full name.");
       return;
@@ -83,20 +84,29 @@ export default function SignUpScreen() {
         },
       },
     });
-    setIsSubmitting(false);
 
     if (signUpError) {
+      setIsSubmitting(false);
       setError(signUpError.message);
       return;
     }
 
     if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setIsSubmitting(false);
       setError("An account with this email already exists. Try signing in instead.");
       return;
     }
 
+    // isSubmitting is intentionally left true here — this screen is about
+    // to be replaced by router.push below, so resetting it in the same
+    // tick as that navigation is exactly the race that produced a real
+    // production crash elsewhere in the app (a native Fabric
+    // IllegalStateException — "child already has a parent" — see
+    // project_fabric_navigation_crash memory).
     if (!data.session) {
       router.push({ pathname: "/(auth)/verify-otp", params: { email: email.trim() } });
+    } else {
+      setIsSubmitting(false);
     }
   }
 

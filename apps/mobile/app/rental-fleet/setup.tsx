@@ -24,7 +24,7 @@ export default function RentalCompanySetupScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit() {
-    if (!bizId || !session?.user) return;
+    if (!bizId || !session?.user || isSubmitting) return;
     setIsSubmitting(true);
     try {
       const { error } = await supabase.rpc("rental_setup_company", {
@@ -34,14 +34,16 @@ export default function RentalCompanySetupScreen() {
         p_whatsapp: whatsapp.trim() || null,
       });
       if (error) throw error;
+      // Not resetting isSubmitting here — router.replace below unmounts
+      // this screen; see project_fabric_navigation_crash memory.
       toast("Submitted! Email your documents so we can approve you.", 5000);
       router.replace("/rental-fleet");
+      return;
     } catch (e: any) {
       console.warn("rental setup:", e);
       toast("Setup failed. Please sign out, sign back in, and try again.", 5000, true);
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }
 
   function emailDocuments() {

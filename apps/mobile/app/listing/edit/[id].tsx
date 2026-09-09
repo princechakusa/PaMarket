@@ -199,13 +199,18 @@ export default function EditListingScreen() {
         .eq("seller_id", session.user.id);
 
       if (updErr) throw updErr;
+      // Not resetting isSubmitting here (or in a finally below) — router.back()
+      // unmounts this screen; a state update landing in the same tick as
+      // that navigation is exactly the race that produced a real production
+      // crash elsewhere in the app (see project_fabric_navigation_crash
+      // memory).
       toast("Listing updated");
       router.back();
+      return;
     } catch (e) {
       setError(friendlyError(e).message);
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }
 
   if (loadError) {

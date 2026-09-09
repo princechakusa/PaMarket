@@ -99,7 +99,7 @@ export default function RentalAddVehicleScreen() {
   }
 
   async function submit() {
-    if (!bizId) return;
+    if (!bizId || isSubmitting) return;
     if (!categorySlug || !brandSlug || !model.trim() || !citySlug) {
       toast("Please fill in all required fields.");
       return;
@@ -122,11 +122,14 @@ export default function RentalAddVehicleScreen() {
         supabase.from("rental_companies").select("id").eq("business_id", bizId).maybeSingle(),
       ]);
       if (!compRes.data) {
+        // Not resetting isSubmitting here — router.replace below unmounts
+        // this screen; see project_fabric_navigation_crash memory.
         toast("Rental company not set up. Please complete setup first.", 5000, true);
         router.replace(`/rental-fleet/setup?bizId=${bizId}`);
         return;
       }
       if (!catRes.data || !brandRes.data) {
+        setIsSubmitting(false);
         toast("Selected category or brand is no longer available. Please reselect.", 5000, true);
         return;
       }
@@ -177,15 +180,17 @@ export default function RentalAddVehicleScreen() {
         }
       }
 
+      // Not resetting isSubmitting here — router.replace below unmounts
+      // this screen; see project_fabric_navigation_crash memory.
       toast("Vehicle created! It will appear in the marketplace once approved.");
       router.replace(`/rental-fleet/manage?bizId=${bizId}`);
+      return;
     } catch (e: any) {
       console.warn("vehicle create:", e);
       if (e?.code === "42501") toast("Access denied. Your company must be active to add vehicles.", 5000, true);
       else toast("Could not create vehicle. Check your details and try again.", 5000, true);
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }
 
   if (canCreate === false) {

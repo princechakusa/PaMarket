@@ -359,8 +359,8 @@ export default function CvProfileScreen() {
         cv,
       })
       .eq("id", session.user.id);
-    setIsSaving(false);
     if (error) {
+      setIsSaving(false);
       toast("Could not save your profile");
       return;
     }
@@ -374,12 +374,17 @@ export default function CvProfileScreen() {
       setCvPathPendingDelete(null);
     }
 
+    // Not resetting isSaving here — router.back() below unmounts this
+    // screen; without a pending CV delete above, this state update would
+    // otherwise land in the same tick as that navigation, which is exactly
+    // the race that produced a real production crash elsewhere in the app
+    // (see project_fabric_navigation_crash memory).
     toast(publish ? "Profile saved — employers can now find you!" : "Profile saved");
     router.back();
   }
 
   async function save() {
-    if (!session?.user) return;
+    if (!session?.user || isSaving) return;
     if (!jobTitle.trim()) {
       toast("Add your professional title");
       return;

@@ -112,7 +112,7 @@ export default function RentalEditVehicleScreen() {
   }, [load]);
 
   async function save() {
-    if (!id) return;
+    if (!id || isSaving) return;
     const daily = parseFloat(dailyRate);
     if (!daily || daily <= 0) {
       toast("Daily rate is required.");
@@ -143,15 +143,17 @@ export default function RentalEditVehicleScreen() {
       ]);
       if (lstRes.error) throw lstRes.error;
       if (!lstRes.data?.length) throw new Error("Update matched 0 rows — your company must be active to edit vehicles.");
+      // Not resetting isSaving here — router.back() below unmounts this
+      // screen; see project_fabric_navigation_crash memory.
       toast("Vehicle updated.");
       router.back();
+      return;
     } catch (e: any) {
       console.warn("rental edit:", e);
       if (e?.code === "42501") toast("Access denied. Your company account is not active.", 4000, true);
       else toast(e?.message || "Could not save changes.", 4000, true);
-    } finally {
-      setIsSaving(false);
     }
+    setIsSaving(false);
   }
 
   async function pickAndUploadPhoto() {

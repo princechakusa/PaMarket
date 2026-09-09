@@ -243,7 +243,7 @@ export default function BusinessOnboardingScreen() {
   );
 
   async function activate() {
-    if (!session?.user) return;
+    if (!session?.user || isSubmitting) return;
     if (!draft.name || !draft.phone || !provinces.includes(draft.province)
       || !(citiesByProvince[draft.province] ?? []).includes(draft.city)) { setStep("details"); return; }
     if (!draft.categories.length || draft.categories.some((id) => !categories.some((category) => category.id === id))) {

@@ -136,7 +136,7 @@ export default function EditJobScreen() {
   }, [load]);
 
   async function save() {
-    if (!id || !session?.user) return;
+    if (!id || !session?.user || isSaving) return;
     if (!company.trim()) return toast("Company name is required");
     if (!title.trim()) return toast("Job title is required");
     if (!category) return toast("Please select a job category");
@@ -187,11 +187,13 @@ export default function EditJobScreen() {
       .eq("id", id)
       .eq("seller_id", session.user.id);
 
-    setIsSaving(false);
     if (error) {
+      setIsSaving(false);
       toast("Could not save changes");
       return;
     }
+    // Not resetting isSaving here — router.back() below unmounts this
+    // screen; see project_fabric_navigation_crash memory.
     toast("Job updated!");
     router.back();
   }

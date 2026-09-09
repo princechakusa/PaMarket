@@ -128,7 +128,7 @@ export default function RentalCompanyProfileScreen() {
   }
 
   async function save() {
-    if (!companyId || !businessId) return;
+    if (!companyId || !businessId || isSaving) return;
     setIsSaving(true);
     try {
       const [profRes, coRes, bizRes] = await Promise.all([
@@ -145,14 +145,16 @@ export default function RentalCompanyProfileScreen() {
       if (coRes.error) throw coRes.error;
       if ((bizRes as any).error) throw (bizRes as any).error;
       if (!coRes.data?.length) throw new Error("Update matched 0 rows — your company must be active to save changes.");
+      // Not resetting isSaving here — router.back() below unmounts this
+      // screen; see project_fabric_navigation_crash memory.
       toast("Company profile updated.");
       router.back();
+      return;
     } catch (e: any) {
       console.warn("save company profile:", e);
       toast(e?.message || "Could not save changes.", 5000, true);
-    } finally {
-      setIsSaving(false);
     }
+    setIsSaving(false);
   }
 
   if (isLoading) {

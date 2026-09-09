@@ -31,6 +31,7 @@ export default function ChangePasswordScreen() {
   const strengthInfo = strength(newPass);
 
   async function save() {
+    if (isSubmitting) return;
     if (!newPass || !confirmPass) {
       setError("Please fill in both password fields");
       return;
@@ -62,11 +63,13 @@ export default function ChangePasswordScreen() {
     setError(null);
     setIsSubmitting(true);
     const { error: updateError } = await supabase.auth.updateUser({ password: newPass });
-    setIsSubmitting(false);
     if (updateError) {
+      setIsSubmitting(false);
       setError(updateError.message || "Password update failed. Try again.");
       return;
     }
+    // Not resetting isSubmitting here — router.back() below unmounts this
+    // screen; see project_fabric_navigation_crash memory.
     toast("Password updated successfully!");
     router.back();
   }

@@ -331,7 +331,7 @@ export default function PostJobScreen() {
   }
 
   async function submit() {
-    if (!session?.user) return;
+    if (!session?.user || isSubmitting) return;
     if (!company.trim()) return toast("Company name is required");
     if (!title.trim()) return toast("Job title is required");
     if (!category) return toast("Please select a job category");
@@ -398,8 +398,8 @@ export default function PostJobScreen() {
       p_seller_phone: phone.trim(),
     });
 
-    setIsSubmitting(false);
     if (error) {
+      setIsSubmitting(false);
       toast(friendlyError(error).message, 4000, true);
       return;
     }
@@ -407,6 +407,7 @@ export default function PostJobScreen() {
       | { ok: boolean; msg?: string; used_credit?: boolean }
       | null;
     if (!result?.ok) {
+      setIsSubmitting(false);
       toast(
         result?.msg || "Could not post job — please try again",
         4000,
@@ -415,6 +416,8 @@ export default function PostJobScreen() {
       return;
     }
     if (result.used_credit) refreshCredits();
+    // Not resetting isSubmitting here — router.back() below unmounts this
+    // screen; see project_fabric_navigation_crash memory.
     toast("Job posted! Candidates can now apply.");
     router.back();
   }
