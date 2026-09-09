@@ -4,18 +4,18 @@ import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
-  property: require("../../assets/cats/cat_property.png"),
-  vehicles: require("../../assets/cats/cat_vehicles.png"),
-  rooms: require("../../assets/cats/cat_rooms.png"),
-  electronics: require("../../assets/cats/cat_electronics.png"),
-  jobs: require("../../assets/cats/cat_jobs.png"),
-  furniture: require("../../assets/cats/cat_furniture.png"),
-  fashion: require("../../assets/cats/cat_fashion.png"),
-  services: require("../../assets/cats/cat_services.png"),
-  agriculture: require("../../assets/cats/cat_agriculture.png"),
-  pets: require("../../assets/cats/cat_pets.png"),
-  kids: require("../../assets/cats/cat_kids.png"),
-  other: require("../../assets/cats/cat_other.png"),
+  property: require("../../assets/cats/cat_property.webp"),
+  vehicles: require("../../assets/cats/cat_vehicles.webp"),
+  rooms: require("../../assets/cats/cat_rooms.webp"),
+  electronics: require("../../assets/cats/cat_electronics.webp"),
+  jobs: require("../../assets/cats/cat_jobs.webp"),
+  furniture: require("../../assets/cats/cat_furniture.webp"),
+  fashion: require("../../assets/cats/cat_fashion.webp"),
+  services: require("../../assets/cats/cat_services.webp"),
+  agriculture: require("../../assets/cats/cat_agriculture.webp"),
+  pets: require("../../assets/cats/cat_pets.webp"),
+  kids: require("../../assets/cats/cat_kids.webp"),
+  other: require("../../assets/cats/cat_other.webp"),
 };
 // Stage 5: any category id without a bundled icon (e.g. one an admin adds
 // after this build shipped) falls back to the existing generic "Other"
@@ -78,7 +78,7 @@ function buildStyles(color: ColorPalette) {
       paddingVertical: 14,
       paddingHorizontal: 4,
     },
-    // The cat_*.png assets are fully opaque with a white square baked into
+    // The cat_*.webp assets are fully opaque with a white square baked into
     // every image (same assets used on the Home screen's category grid) —
     // a small white chip sized to the icon keeps that edge looking
     // deliberate against this card's own themed (dark-in-dark-mode)

@@ -4,24 +4,24 @@ import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
-  property: require("../../assets/cats/cat_property.png"),
-  vehicles: require("../../assets/cats/cat_vehicles.png"),
-  rooms: require("../../assets/cats/cat_rooms.png"),
-  electronics: require("../../assets/cats/cat_electronics.png"),
-  jobs: require("../../assets/cats/cat_jobs.png"),
-  furniture: require("../../assets/cats/cat_furniture.png"),
-  fashion: require("../../assets/cats/cat_fashion.png"),
-  services: require("../../assets/cats/cat_services.png"),
-  agriculture: require("../../assets/cats/cat_agriculture.png"),
-  pets: require("../../assets/cats/cat_pets.png"),
-  kids: require("../../assets/cats/cat_kids.png"),
-  other: require("../../assets/cats/cat_other.png"),
+  property: require("../../assets/cats/cat_property.webp"),
+  vehicles: require("../../assets/cats/cat_vehicles.webp"),
+  rooms: require("../../assets/cats/cat_rooms.webp"),
+  electronics: require("../../assets/cats/cat_electronics.webp"),
+  jobs: require("../../assets/cats/cat_jobs.webp"),
+  furniture: require("../../assets/cats/cat_furniture.webp"),
+  fashion: require("../../assets/cats/cat_fashion.webp"),
+  services: require("../../assets/cats/cat_services.webp"),
+  agriculture: require("../../assets/cats/cat_agriculture.webp"),
+  pets: require("../../assets/cats/cat_pets.webp"),
+  kids: require("../../assets/cats/cat_kids.webp"),
+  other: require("../../assets/cats/cat_other.webp"),
 };
 
 // All 12 categories, 4 per row — a "Browse Categories" heading over a 4x3
 // grid of the real category cover images.
 //
-// The cat_*.png assets are fully opaque (no alpha channel) with a white
+// The cat_*.webp assets are fully opaque (no alpha channel) with a white
 // square baked into every image, so each icon sits in its own small white
 // "iconChip" backing sized to just the image — that keeps the baked-in
 // white edge looking deliberate on any background. This used to make the
