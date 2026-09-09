@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Image } from "expo-image";
 import Svg, { Path } from "react-native-svg";
 import type { Listing } from "../lib/listings";
 import { formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
+import { SmartImage } from "./ui/SmartImage";
 
 type ListingRowProps = {
   listing: Listing;
@@ -30,11 +30,7 @@ export function ListingRow({ listing, onPress, saved, onToggleSave }: ListingRow
   return (
     <Pressable style={[styles.row, shadow.sm]} onPress={onPress}>
       <View style={styles.photoWrap}>
-        {photo ? (
-          <Image source={{ uri: photo }} style={styles.photo} contentFit="cover" transition={150} cachePolicy="memory-disk" />
-        ) : (
-          <View style={[styles.photo, styles.placeholder]} />
-        )}
+        <SmartImage uri={photo} style={styles.photo} screen="ListingRow" />
         {featured ? (
           <View style={[styles.ribbon, styles.ribbonGold]}>
             <Text style={styles.ribbonText}>PROMOTED</Text>
@@ -78,7 +74,6 @@ function buildStyles(color: ColorPalette) {
     },
     photoWrap: { width: 104, height: 104, position: "relative", backgroundColor: color.surfaceAlt },
     photo: { width: "100%", height: "100%" },
-    placeholder: { backgroundColor: color.skeleton },
     ribbon: {
       position: "absolute",
       top: space.sm,

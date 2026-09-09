@@ -60,8 +60,15 @@
     try {
       var blob = _dataUrlToBlob(dataUrl);
       var key = 'verification/' + userId + '/' + label + '_' + Date.now() + '.jpg';
-      await H.uploadToR2(blob, key, blob.type || 'image/jpeg');
-      return key; // return key, not URL — private bucket has no public URL
+      // H.uploadToR2 now returns the server's actual resolved key for
+      // verification uploads (private bucket, randomized server-side key) —
+      // use THAT, not the locally-built `key` above, which only routes the
+      // request to the right prefix and no longer matches where the file
+      // really lands. Returning the local `key` here previously stored an
+      // unfindable path in the DB for every submission between 2026-08-19
+      // and 2026-09-09. See project_verification_doc_key_mismatch memory.
+      var resolved = await H.uploadToR2(blob, key, blob.type || 'image/jpeg');
+      return resolved || key;
     } catch (e) { console.warn('verification upload error:', e); return null; }
   };
 

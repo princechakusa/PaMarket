@@ -9,10 +9,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
+import { SmartImage } from "../components/ui/SmartImage";
 import { formatPrice, type Listing } from "../lib/listings";
 import { friendlyError, listingStatus } from "../lib/safety";
 import type { ColorPalette } from "../lib/theme";
@@ -137,11 +137,7 @@ export default function MyListingsScreen() {
                 : router.push({ pathname: "/listing/[id]", params: { id: item.id } })
             }
           >
-            {item.photos?.[0] ? (
-              <Image source={{ uri: item.photos[0] }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
-            ) : (
-              <View style={[styles.thumb, styles.thumbPlaceholder]} />
-            )}
+            <SmartImage uri={item.photos?.[0]} style={styles.thumb} screen="my-listings" />
             <View style={styles.info}>
               <Text style={styles.title} numberOfLines={1}>
                 {item.title}

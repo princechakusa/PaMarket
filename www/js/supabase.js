@@ -85,6 +85,7 @@
     var payload = await res.json();
     var signedUrl = payload.signedUrl;
     var publicUrl = payload.publicUrl;
+    var resolvedKey = payload.key;
     if (!signedUrl) throw new Error('R2 upload-url response missing signedUrl');
     var up;
     try {
@@ -105,7 +106,16 @@
     if (!isVerificationKey && !/^https?:\/\//i.test(publicUrl || '')) {
       throw new Error('R2 upload succeeded but returned an invalid public URL: ' + JSON.stringify(publicUrl));
     }
-    return publicUrl;
+    // Verification uploads have no publicUrl (private bucket) — the server
+    // always generates its own randomized object key (see
+    // get-r2-upload-url's comment), so the caller's own `key` argument is
+    // NOT what the file actually landed at. Return the server's resolved
+    // key instead of the caller's guess — returning `key` here silently
+    // broke every verification document submitted between 2026-08-19 (when
+    // that randomization shipped) and 2026-09-09 (this fix): the file
+    // uploaded fine but the DB recorded an unfindable path. See
+    // project_verification_doc_key_mismatch memory.
+    return isVerificationKey ? (resolvedKey || key) : publicUrl;
   };
 
   // Generates a short-lived presigned GET URL for private verification documents.

@@ -12,6 +12,15 @@ const MAX_DIMENSION = 1600;
 // Mirrors www/js/supabase.js H.uploadToR2: get a short-lived presigned PUT
 // URL from the get-r2-upload-url edge function, then PUT the blob directly
 // to Cloudflare R2. Returns the permanent public URL.
+//
+// The `key` param only routes the request to the right prefix check — the
+// edge function always generates the real object key server-side
+// (keyPrefix + a random UUID), never trusting the caller's literal string.
+// This return value reflects that real key (via `publicUrl` when the bucket
+// is public, or the resolved `key` field otherwise) — never re-derive your
+// own key from the input; see get-r2-upload-url's comment and
+// project_verification_doc_key_mismatch memory for why that silently broke
+// verification document retrieval for three weeks.
 export async function uploadToR2(blob: Blob, key: string, contentType: string): Promise<string> {
   const { data: sessionData } = await supabase.auth.getSession();
   let token = sessionData.session?.access_token;
@@ -39,7 +48,11 @@ export async function uploadToR2(blob: Blob, key: string, contentType: string): 
     throw new Error(`R2 upload-url error: ${errText || res.status}`);
   }
 
-  const { signedUrl, publicUrl } = (await res.json()) as { signedUrl?: string; publicUrl?: string };
+  const { signedUrl, publicUrl, key: resolvedKey } = (await res.json()) as {
+    signedUrl?: string;
+    publicUrl?: string;
+    key?: string;
+  };
   if (!signedUrl) throw new Error("R2 upload-url response missing signedUrl");
 
   const uploadRes = await fetch(signedUrl, {
@@ -49,7 +62,7 @@ export async function uploadToR2(blob: Blob, key: string, contentType: string): 
   });
   if (!uploadRes.ok) throw new Error(`R2 PUT failed: ${uploadRes.status}`);
 
-  return publicUrl ?? signedUrl.split("?")[0];
+  return publicUrl ?? resolvedKey ?? signedUrl.split("?")[0];
 }
 
 function getImageSize(uri: string): Promise<{ width: number; height: number }> {

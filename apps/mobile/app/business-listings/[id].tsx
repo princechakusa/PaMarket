@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -10,6 +9,7 @@ import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
 import { planEntitlements } from "../../lib/plan-entitlements";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SmartImage } from "../../components/ui/SmartImage";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -187,11 +187,7 @@ export default function BusinessListingsScreen() {
               onPress={() => router.push({ pathname: "/listing/[id]", params: { id: l.id } })}
             >
               <View style={styles.thumbWrap}>
-                {l.photos?.[0] ? (
-                  <Image source={{ uri: l.photos[0] }} style={styles.thumb} contentFit="cover" transition={150} cachePolicy="memory-disk" />
-                ) : (
-                  <View style={styles.thumb} />
-                )}
+                <SmartImage uri={l.photos?.[0]} style={styles.thumb} screen="business-listings/[id]" />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.title} numberOfLines={1}>

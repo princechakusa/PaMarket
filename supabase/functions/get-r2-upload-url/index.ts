@@ -246,7 +246,19 @@ Deno.serve(async (req) => {
       ? undefined
       : `${Deno.env.get('R2_PUBLIC_URL')}/${finalKey}`
 
-    return new Response(JSON.stringify({ signedUrl, publicUrl }), {
+    // `key` is the actual object key the PUT will land at (server-generated,
+    // randomized — see the comment above `let keyPrefix` for why the caller's
+    // own `key` is never trusted as the final name). Every upload caller must
+    // persist THIS value, not re-derive its own — for the public-bucket case
+    // `publicUrl` already embeds it so this is redundant but harmless; for
+    // verification uploads (no publicUrl, private bucket) this was the
+    // missing piece: callers used to store their own locally-guessed key
+    // instead, which silently diverged from the real object location the
+    // moment server-side key randomization shipped (2026-08-19), making
+    // every verification document submitted after that permanently
+    // unfindable for admin review. Fixed 2026-09-09 — see
+    // project_verification_doc_key_mismatch memory.
+    return new Response(JSON.stringify({ signedUrl, publicUrl, key: finalKey }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err: unknown) {

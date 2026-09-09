@@ -45,6 +45,7 @@ import { notifyListingViewed } from "../../lib/store-review";
 import { REPORT_REASONS, friendlyError } from "../../lib/safety";
 import { StarRow } from "../../components/StarRow";
 import { ListingCard } from "../../components/ListingCard";
+import { SmartImage } from "../../components/ui/SmartImage";
 import { AddToCartBar } from "../../components/cart/AddToCartBar";
 import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
 import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
@@ -829,12 +830,11 @@ export default function ListingDetailScreen() {
               scrollEventThrottle={16}
               renderItem={({ item }) => (
                 <Pressable onPress={() => setViewerOpen(true)}>
-                  <Image
-                    source={{ uri: item }}
+                  <SmartImage
+                    uri={item}
                     style={[styles.photo, { width }]}
                     contentFit="cover"
-                    transition={150}
-                    cachePolicy="memory-disk"
+                    screen="listing/[id]"
                   />
                 </Pressable>
               )}
@@ -1323,11 +1323,11 @@ export default function ListingDetailScreen() {
             })}
             renderItem={({ item }) => (
               <View style={{ width, justifyContent: "center" }}>
-                <Image
-                  source={{ uri: item }}
+                <SmartImage
+                  uri={item}
                   style={{ width, height: "100%" }}
                   contentFit="contain"
-                  cachePolicy="memory-disk"
+                  screen="listing/[id]-viewer"
                 />
               </View>
             )}
