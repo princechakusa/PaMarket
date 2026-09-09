@@ -85,6 +85,12 @@ const FCM_PERMANENT_TOKEN_ERRORS = [
   'NOT_FOUND',
 ];
 
+// Android-only fallback icon — see send-push/index.ts's comment for the
+// full explanation. This dispatcher covers ~20 different notification
+// trigger types, none of which currently carry their own image, so this is
+// unconditional here. apns below is deliberately untouched.
+const PAMARKET_ANDROID_FALLBACK_ICON_URL = 'https://pamarketzw.com/img/app-notification-icon.png';
+
 type FcmResult = {
   ok: boolean;
   /** Sanitized reason, safe to persist — never contains the token or payload. */
@@ -101,7 +107,7 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     // icon/color explicit here too, matching send-push/index.ts — see that
     // file's comment for why (defense-in-depth alongside the
     // AndroidManifest.xml defaults some OEM skins are known to ignore).
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', icon: 'notification_icon', color: '#F5A623' } },
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', icon: 'notification_icon', color: '#F5A623', image: PAMARKET_ANDROID_FALLBACK_ICON_URL } },
     apns: { payload: { aps: { sound: 'default' } } },
   };
   const url = 'https://fcm.googleapis.com/v1/projects/' + projectId + '/messages:send';

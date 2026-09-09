@@ -68,6 +68,20 @@ const FCM_PERMANENT_TOKEN_ERRORS = [
   'NOT_FOUND',
 ];
 
+// Android-only fallback for a notification with no specific image of its own
+// (no listing/profile photo) — without ANY image set, several OEM
+// notification-shade skins (confirmed on a Honor/Magic UI device) fall back
+// to showing just the adaptive launcher icon's bare foreground ("Pa", no
+// wordmark) as the notification's avatar, instead of the full branded icon
+// iOS always shows. Pointing `android.notification.image` at the real app
+// icon (www/img/app-notification-icon.png — a copy of
+// apps/mobile/assets/icon.png, hosted on the public site; NOT icon-512.png,
+// which is a different, color-inverted asset used only for the website's
+// own apple-touch-icon/og:image) fixes this on Android without touching iOS
+// at all — apns below is deliberately untouched, and this constant is never
+// referenced there.
+const PAMARKET_ANDROID_FALLBACK_ICON_URL = 'https://pamarketzw.com/img/app-notification-icon.png';
+
 async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, imageUrl): Promise<{ ok: boolean; permanentTokenFailure?: boolean }> {
   const message = {
     token: pushToken,
@@ -81,7 +95,7 @@ async function sendFCM(pushToken, projectId, accessToken, title, body, fcmData, 
     // set directly on the FCM message itself. 'notification_icon' is the
     // drawable resource name (no extension) baked into the app by the
     // expo-notifications config plugin from assets/notification-icon.png.
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', image: imageUrl || undefined, icon: 'notification_icon', color: '#F5A623' } },
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', image: imageUrl || PAMARKET_ANDROID_FALLBACK_ICON_URL, icon: 'notification_icon', color: '#F5A623' } },
     // aps.sound was previously only set implicitly via the top-level
     // `notification` block, which iOS does NOT read for sound — APNs only
     // plays a sound when it's explicitly set inside `aps`. Android reads

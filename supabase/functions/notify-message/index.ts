@@ -24,6 +24,13 @@ function corsHeaders(req: Request) {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// Android-only fallback icon — see send-push/index.ts's comment for the
+// full explanation. Chat messages never carry their own image, so this is
+// unconditional here (not an `|| fallback` like send-push's listing-photo
+// case). apns below is deliberately untouched — iOS already shows the full
+// icon on its own.
+const PAMARKET_ANDROID_FALLBACK_ICON_URL = 'https://pamarketzw.com/img/app-notification-icon.png';
+
 // ── OAuth token cache (reused across invocations while the instance is warm) ──
 let _tokenCache: { value: string; exp: number } | null = null;
 
@@ -57,7 +64,7 @@ async function sendFCM(pushToken: string, projectId: string, accessToken: string
     data,
     // icon/color explicit here too, matching send-push/index.ts and
     // dispatch-notification-push/index.ts — see send-push's comment for why.
-    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', tag: data['conversationId'] || undefined, icon: 'notification_icon', color: '#F5A623' } },
+    android: { priority: 'high', notification: { channel_id: 'pamarket_default', sound: 'default', tag: data['conversationId'] || undefined, icon: 'notification_icon', color: '#F5A623', image: PAMARKET_ANDROID_FALLBACK_ICON_URL } },
     // iOS reads sound only from aps, never from the top-level `notification`
     // block — this was missing entirely, so message pushes arrived silent
     // on iOS even though Android's sound (set above) always worked.
