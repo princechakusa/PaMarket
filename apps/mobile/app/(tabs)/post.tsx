@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   AppState,
   BackHandler,
+  InteractionManager,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -333,15 +334,28 @@ export default function PostScreen() {
 
       setSubmitStatus("Ad posted successfully.");
       notifyPositiveAction();
+      // Reset the form now (this tab screen stays mounted in the background
+      // when you navigate away via the bottom tabs, so a stale filled-in
+      // form would otherwise greet you next time you open Post).
       setState(INITIAL_STATE);
       if (params.businessId) router.replace({ pathname: "/business-listings/[id]", params: { id: params.businessId } });
       else router.replace("/(tabs)");
+      // isSubmitting is reset AFTER the navigation transition finishes
+      // (InteractionManager), not in this same tick — a state update
+      // landing in the same tick as router.replace's own screen transition
+      // is exactly the race that produced a real production crash elsewhere
+      // in the app (Sentry REACT-NATIVE-7, a native Fabric
+      // IllegalStateException — "child already has a parent" — see
+      // business-onboarding.tsx's activate() for the full story). Since
+      // this tab stays mounted, it still needs resetting eventually (unlike
+      // that stack screen, which just unmounts) — just not immediately.
+      InteractionManager.runAfterInteractions(() => setIsSubmitting(false));
+      return;
     } catch (e) {
       setError(friendlyError(e).message);
       setSubmitStatus(null);
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   }
 
   const categoryName = categories.find((c) => c.id === state.category)?.name ?? "Other";

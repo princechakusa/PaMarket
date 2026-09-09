@@ -256,10 +256,23 @@ export default function BusinessOnboardingScreen() {
     // already-active business (existingStatus === 'active') stays active.
     const status = existingStatus === "active" ? "active" : "pending_activation";
     const id = await persist(status);
-    setIsSubmitting(false);
-    if (!id) return;
+    if (!id) {
+      // Only reset the button state on the failure path, where the user
+      // stays on this screen — see the success path below for why.
+      setIsSubmitting(false);
+      return;
+    }
     await SecureStore.deleteItemAsync(draftStorageKey(session.user.id)).catch(() => {});
 
+    // Deliberately NOT calling setIsSubmitting(false) here: this screen is
+    // about to be replaced (router.replace below), so that re-render (the
+    // button swapping its ActivityIndicator back to text) would land in the
+    // same tick as the navigation's own unmount. That race is what produced
+    // a real production crash (Sentry REACT-NATIVE-7, a native Fabric
+    // IllegalStateException — "child already has a parent" — on Android,
+    // Honor/Magic UI): two mounting-manager operations touching the same
+    // view tree at once. Leaving isSubmitting=true is harmless — the whole
+    // screen unmounts right after — and removes the race entirely.
     if (status === "active") {
       toast("Business updated");
       router.replace(`/business/${id}`);
