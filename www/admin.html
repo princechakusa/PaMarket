@@ -1453,7 +1453,7 @@ var TAB_LOADERS = {
   vehiclesAdmin: function(){ return loadVertical('vehicles'); },
   reviewsCenter: function(){ return loadReviewsCenter(); },
   auditCenter:   function(){ return loadAuditCenter(); },
-  errorsCenter:  function(){ return loadErrorsCenter(); },
+  errorsCenter:  function(){ return Promise.allSettled([loadErrorsCenter(), loadSentryIssues()]); },
   opsCenter:     function(){ return loadOps(); },
   modInbox:      function(){ return loadModInbox(); },
   supportCenter: function(){ return loadSupport(); },
@@ -8113,8 +8113,29 @@ function acExport() {
 // this section's own writes are ordinary RLS-gated `.update()` calls
 // followed by auditLog(), same as every other admin.html moderation
 // action, not a bespoke RPC.
-var EC = { rows:null, page:0, pageSize:50, total:null, search:'', severity:'', status:'', platform:'', appVersion:'', screen:'', fingerprint:'', overview:null };
+var EC = { rows:null, page:0, pageSize:50, total:null, search:'', severity:'', status:'', platform:'', appVersion:'', screen:'', fingerprint:'', overview:null, sentry:null };
 var EC_PAGE_SIZE = 50;
+
+// Native crashes (Sentry) — a distinct source from app_error_events below.
+// app_error_events only ever sees what logClientError() can report, which
+// is JS-reachable errors; a native crash (e.g. the Fabric IllegalState
+// crash root-caused 2026-09-09 — see project_fabric_navigation_crash
+// memory) kills the process before any JS cleanup code runs, so it can
+// only ever be seen via Sentry directly. Proxied through the
+// admin-sentry-issues edge function so the Sentry auth token never reaches
+// the browser.
+async function loadSentryIssues() {
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if (!session) { EC.sentry = 'missing'; return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/admin-sentry-issues', {
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON }
+    });
+    if (!res.ok) { EC.sentry = 'missing'; return; }
+    var body = await res.json();
+    EC.sentry = Array.isArray(body.issues) ? body.issues : 'missing';
+  } catch (e) { EC.sentry = 'missing'; }
+}
 
 function ecQueryBase() {
   var q = sb.from('app_error_events').select('*', {count:'exact'});
@@ -8169,12 +8190,81 @@ async function loadErrorsCenter() {
   } catch(e){ EC.rows='missing'; }
 }
 function ecGo(page){ EC.page=page; renderErrorsCenter(); loadErrorsCenter().then(renderErrorsCenter); }
-function ecRefresh(){ EC.page=0; EC.rows=null; renderErrorsCenter(); loadErrorsCenter().then(renderErrorsCenter); }
+function ecRefresh(){ EC.page=0; EC.rows=null; renderErrorsCenter(); Promise.allSettled([loadErrorsCenter(), loadSentryIssues()]).then(renderErrorsCenter); }
 function ecSearch(v){ EC.search=v; EC.page=0; debounce('ecSearch', ecRefresh, 300); }
 function ecSetFilter(key, val){ EC[key]=val; EC.page=0; ecRefresh(); }
 
 function topEntries(obj, n) {
   return Object.keys(obj).map(function(k){ return [k, obj[k]]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0, n||5);
+}
+
+function sentryLevelBadge(level) {
+  var cls = level==='fatal' ? 'badge-rejected' : level==='error' ? 'badge-rejected' : level==='warning' ? 'badge-pending' : 'badge-info';
+  return '<span class="badge '+cls+'">'+esc(level||'—')+'</span>';
+}
+
+function renderSentrySection() {
+  var html = '<div class="sec-head" style="margin-top:0"><div class="sec-title" style="font-size:13px">Native Crashes (Sentry)</div></div>'
+    + '<div style="font-size:11.5px;color:var(--sub);padding:0 0 10px">A native crash (the app closing outright, not a handled error) kills the process before any of the app\'s own error logging can run — those only ever show up here, not in the table below. Last 14 days, unresolved.</div>';
+  if (EC.sentry === null) {
+    html += '<div class="loading-msg">Loading…</div>';
+  } else if (EC.sentry === 'missing' ) {
+    html += '<div class="empty-msg">Sentry data unavailable — check the admin-sentry-issues function is deployed and SENTRY_AUTH_TOKEN is set.</div>';
+  } else if (!EC.sentry.length) {
+    html += '<div class="empty-msg">No unresolved Sentry issues in the last 14 days.</div>';
+  } else {
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Level</th><th>Issue</th><th>Events</th><th>Users</th><th>Last Seen</th><th></th></tr></thead><tbody>';
+    EC.sentry.forEach(function(i) {
+      html += '<tr>'
+        + '<td>'+sentryLevelBadge(i.level)+'</td>'
+        + '<td style="max-width:420px"><div style="font-weight:700;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.title||'—')+'</div>'
+          + '<div style="font-size:11px;color:var(--sub2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.culprit||'')+'</div></td>'
+        + '<td>'+fmtCnt(i.count)+'</td>'
+        + '<td>'+fmtCnt(i.userCount)+'</td>'
+        + '<td style="font-size:12px;color:var(--sub)">'+fmtDateTime(i.lastSeen)+'</td>'
+        + '<td><button class="ab ab-view" onclick="viewSentryIssue(\''+esc(i.id)+'\')">Details</button>'
+          + (i.permalink ? ' <a class="ab ab-view" href="'+esc(i.permalink)+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Open in Sentry</a>' : '')
+          + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  return html;
+}
+
+async function viewSentryIssue(issueId) {
+  openModal('<div class="modal-title">Crash Detail<button class="modal-close" onclick="closeModal()">×</button></div><div id="sentryDetailBody" style="font-size:12.5px;color:var(--sub)">Loading…</div>');
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if (!session) { document.getElementById('sentryDetailBody').textContent = 'Session expired.'; return; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/admin-sentry-issues?issueId=' + encodeURIComponent(issueId), {
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON }
+    });
+    var body = await res.json();
+    var el = document.getElementById('sentryDetailBody'); if (!el) return;
+    if (!res.ok) { el.textContent = 'Could not load: ' + (body.error || res.status); return; }
+    var app = body.app || {}, device = body.device || {};
+    var h = '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;word-break:break-word">'+esc(body.title||'')+'</div>';
+    h += '<div style="line-height:1.9;margin-bottom:12px">'
+      + '<div><b>App:</b> '+esc(app.app_version||'—')+' (build '+esc(app.app_build||'—')+')</div>'
+      + '<div><b>Device:</b> '+esc(device.manufacturer||'')+' '+esc(device.model||'—')+' · Android '+esc((body.tags||[]).find(function(t){return t.key==='os';})?.value||'')+'</div>'
+      + '</div>';
+    if (body.exception) {
+      h += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:4px">'+esc(body.exception.type||'Exception')+'</div>';
+      h += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;word-break:break-word">'+esc(body.exception.value||'')+'</div>';
+      if ((body.exception.frames||[]).length) {
+        h += '<div style="font-size:11px;font-weight:700;color:var(--sub2);text-transform:uppercase;margin-bottom:4px">Stack (top frames)</div>';
+        h += '<div style="font-family:monospace;font-size:11px;color:var(--sub);max-height:240px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px">';
+        body.exception.frames.slice(0, 15).forEach(function(f) {
+          h += esc((f.module||'')+'.'+(f.function||''))+(f.filename?' ('+esc(f.filename)+':'+(f.lineno||'')+')':'')+'<br>';
+        });
+        h += '</div>';
+      }
+    }
+    el.innerHTML = h;
+  } catch (e) {
+    var el2 = document.getElementById('sentryDetailBody'); if (el2) el2.textContent = 'Error: ' + e.message;
+  }
 }
 
 function renderErrorsCenter() {
@@ -8188,6 +8278,8 @@ function renderErrorsCenter() {
     + '<button class="filter-btn" onclick="ecExport()">Export CSV</button>'
     + '<button class="btn-refresh" onclick="ecRefresh()">Refresh</button>'
     + '</div></div>';
+
+  html += renderSentrySection();
 
   if(EC.overview){
     var ov = EC.overview;
