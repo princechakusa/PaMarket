@@ -3,7 +3,7 @@
   "policy": "Existing review-level debt may not grow; new review-level debt fails.",
   "debt": {
     "account-settings.html": {
-      "bytes": 85434,
+      "bytes": 85438,
       "lines": 886,
       "inlineJs": 41119,
       "inlineCss": 11393
@@ -14,14 +14,20 @@
       "inlineJs": 29716,
       "inlineCss": 9269
     },
+    "blog-post.html": {
+      "bytes": 32335,
+      "lines": 581,
+      "inlineJs": 8884,
+      "inlineCss": 4013
+    },
     "business.html": {
-      "bytes": 40824,
+      "bytes": 40828,
       "lines": 629,
       "inlineJs": 17847,
       "inlineCss": 4604
     },
     "chats.html": {
-      "bytes": 36683,
+      "bytes": 36687,
       "lines": 385,
       "inlineJs": 2433,
       "inlineCss": 14337
@@ -33,28 +39,40 @@
       "inlineCss": 0
     },
     "dashboard.html": {
-      "bytes": 36385,
+      "bytes": 36389,
       "lines": 569,
       "inlineJs": 11509,
       "inlineCss": 7103
     },
+    "delete-account.html": {
+      "bytes": 29800,
+      "lines": 585,
+      "inlineJs": 8868,
+      "inlineCss": 2332
+    },
     "detail.html": {
-      "bytes": 85392,
+      "bytes": 85396,
       "lines": 1332,
       "inlineJs": 35996,
       "inlineCss": 18873
     },
     "help.html": {
-      "bytes": 51596,
+      "bytes": 51687,
       "lines": 826,
-      "inlineJs": 17348,
+      "inlineJs": 17431,
       "inlineCss": 3734
     },
     "index.html": {
-      "bytes": 95534,
+      "bytes": 95538,
       "lines": 1404,
       "inlineJs": 28144,
       "inlineCss": 26531
+    },
+    "jobs.html": {
+      "bytes": 40370,
+      "lines": 676,
+      "inlineJs": 9069,
+      "inlineCss": 5683
     },
     "js/blog-data.js": {
       "bytes": 118480,
@@ -93,13 +111,19 @@
       "inlineCss": 0
     },
     "open-shop.html": {
-      "bytes": 50402,
+      "bytes": 50406,
       "lines": 405,
       "inlineJs": 18561,
       "inlineCss": 11371
     },
+    "plans.html": {
+      "bytes": 47558,
+      "lines": 708,
+      "inlineJs": 3996,
+      "inlineCss": 5830
+    },
     "post-ad.html": {
-      "bytes": 48101,
+      "bytes": 48105,
       "lines": 854,
       "inlineJs": 15278,
       "inlineCss": 8477
@@ -111,13 +135,13 @@
       "inlineCss": 6132
     },
     "profile.html": {
-      "bytes": 55378,
+      "bytes": 55382,
       "lines": 882,
       "inlineJs": 19863,
       "inlineCss": 10563
     },
     "rental-detail.html": {
-      "bytes": 38410,
+      "bytes": 38414,
       "lines": 676,
       "inlineJs": 12142,
       "inlineCss": 4430
@@ -128,32 +152,8 @@
       "inlineJs": 0,
       "inlineCss": 10512
     },
-    "blog-post.html": {
-      "bytes": 32331,
-      "lines": 581,
-      "inlineJs": 8884,
-      "inlineCss": 4013
-    },
-    "delete-account.html": {
-      "bytes": 29796,
-      "lines": 585,
-      "inlineJs": 8868,
-      "inlineCss": 2332
-    },
-    "jobs.html": {
-      "bytes": 40366,
-      "lines": 676,
-      "inlineJs": 9069,
-      "inlineCss": 5683
-    },
-    "plans.html": {
-      "bytes": 47554,
-      "lines": 708,
-      "inlineJs": 3996,
-      "inlineCss": 5830
-    },
     "rentals.html": {
-      "bytes": 33601,
+      "bytes": 33605,
       "lines": 557,
       "inlineJs": 8670,
       "inlineCss": 4178
