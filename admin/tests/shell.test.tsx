@@ -4,7 +4,7 @@ import { App } from '../src/app/App';
 import { HoneypotField } from '../src/security/HoneypotField';
 import { mockRoutes, navigationGroups } from '../src/app/navigation';
 
-describe('Stage B admin shell', () => {
+describe('Stage C admin shell', () => {
   beforeEach(() => window.history.replaceState({}, '', '/'));
 
   it('labels the dashboard and data as mock-only', () => {
@@ -18,7 +18,7 @@ describe('Stage B admin shell', () => {
     window.history.replaceState({}, '', '/marketplace/users');
     render(<App />);
     expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
-    expect(screen.getByText('Mock shell only. This section is not connected to production yet.')).toBeInTheDocument();
+    expect(screen.getByText('Mock feature data only. This section is not connected to production data yet.')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/marketplace/users');
   });
 
@@ -27,6 +27,14 @@ describe('Stage B admin shell', () => {
     const input = container.querySelector('input');
     expect(input).toHaveAttribute('tabindex', '-1');
     expect(input).toHaveAttribute('autocomplete', 'off');
+  });
+
+  it('shows only safe fields on the protected connection check', () => {
+    window.history.replaceState({}, '', '/security');
+    render(<App />);
+    expect(screen.getByRole('heading', { name: 'Connection check' })).toBeInTheDocument();
+    expect(screen.getByText('mock')).toBeInTheDocument();
+    expect(screen.queryByText(/access token|refresh token|service role/i)).not.toBeInTheDocument();
   });
 
   it('defines the complete Stage A navigation surface without duplicate routes', () => {

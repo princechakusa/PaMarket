@@ -1,30 +1,30 @@
-# Stage B architecture
+# Stage C architecture
 
 ## Scope
 
-Stage B is a frontend shell with static fixtures. Its dependency direction is:
+Stage C keeps feature data as static fixtures while adding a production-shaped authentication boundary. Its dependency direction is:
 
 ```text
 main → providers + router → layout → route pages → reusable shell components
 ```
 
-`src/app` owns application composition, navigation metadata, and the mock environment descriptor. `src/layouts` owns page chrome. `src/components` owns reusable shell and feedback UI. `src/pages` owns small route views. `src/security` contains placeholders whose names make their non-production status clear. Tests live outside `src`.
+`src/app` owns composition and route metadata. `src/security` resolves a Supabase session, loads the caller's role from `profiles`, and maps it to frontend permissions. `src/services` owns validated browser configuration, the one typed Supabase client, error normalization, and the dormant Edge invocation wrapper. Layouts and pages consume those boundaries. Tests live outside `src`.
 
 Feature folders are deliberately absent until a feature migration begins. The shell does not import files from `www`, `apps/mobile`, or `supabase`.
 
 ## Security boundary
 
-The mock identity, role, permissions, environment badge, and session time are display fixtures. They authorize nothing. No Supabase client, authentication call, service-role key, token storage, audit logger, custom MFA logic, or production API exists in this folder.
+Mock mode remains the default and authorizes only the static preview. In live mode, the shell stays hidden until Supabase Auth has a session and `profiles.role` resolves to a recognized admin role. The client never trusts `user_metadata`. The connection page exposes only mode, connection state, user ID, database role, assurance level, and enabled permissions.
 
-Future authentication must use a separate browser storage namespace, clear cached privileged data on authorization loss, and treat route guards as presentation behavior. Supabase RLS and server-side Edge Function role checks remain authoritative. Privileged operations must verify the caller and any required MFA assurance on the server and produce durable audit outcomes.
+Auth storage uses the separate `pamarket.admin.v2.auth` key. Auth events re-read the profile role and authorization loss clears the exposed identity and access token. Route and action guards remain presentation behavior. Supabase RLS and server-side Edge Function checks remain authoritative. Stage C observes Supabase's assurance level but does not enforce MFA; privileged operations must eventually require the approved assurance level on the server and in RLS.
 
 Only public browser configuration may ever use a `VITE_` environment variable. Server credentials and service-role keys must remain in server-managed secrets.
 
 ## Honeypot placeholder
 
-`HoneypotField.tsx` is a visual/form primitive only. It is not connected to a form and provides no security in Stage B.
+`HoneypotField.tsx` remains a form primitive only. It is not connected to a server check and provides no security in Stage C.
 
-Later validation must happen at the protected server endpoint using a short-lived, action-bound challenge. The server must not log passwords, tokens, OTP values, TOTP secrets, or sensitive field contents. It should record only minimized signals, provide a safe retry or step-up path for legitimate users, and apply an approved retention policy. Detection logic and thresholds must remain server-side. Honeypots supplement authentication, rate limiting, Cloudflare controls, and RLS.
+Real honeypot validation must happen at the protected server endpoint. The server must not log the honeypot value or any passwords, tokens, OTP values, TOTP secrets, or sensitive field contents. Detection logic and thresholds must remain server-side. A honeypot does not replace authentication, RLS, rate limits, or Cloudflare controls. Any future Cloudflare Turnstile token must be verified server-side.
 
 ## Free-tools constraint
 
@@ -34,8 +34,8 @@ For a future Cloudflare layer, evaluate free options first: Turnstile, the appli
 
 ## Future Supabase rules
 
-Stage C must begin with current deployed-policy verification and an approved permission matrix. Add one shared browser client using only the public project URL and publishable/anon key. Feature modules should own typed queries, while a shared transport normalizes cancellation and safe errors. Reads use the signed-in user's JWT and RLS. Sensitive multi-step changes should use server-authoritative operations with traceable outcomes; no browser-held service-role key is permitted.
+The shared browser client accepts only the public project URL and browser-safe publishable key. It defaults to mock mode when configuration is absent and returns an explicit configuration state when live mode is incomplete. Feature modules will own generated database types and queries; no feature query exists in Stage C. The Edge wrapper requires the current session JWT, supports cancellation and timeout, and normalizes errors. It is not called by the shell.
 
 ## Build isolation
 
-`admin/package.json`, lockfile, TypeScript configuration, tests, and Vite output are local to this folder. `npm run build` writes only `admin/dist`. Stage B does not modify root scripts, public allowlists, GitHub workflows, `admin-build.sh`, or existing deployment routes.
+`admin/package.json`, lockfile, TypeScript configuration, tests, and Vite output are local to this folder. `npm run build` writes only `admin/dist`. Stage C does not modify root scripts, public allowlists, GitHub workflows, `admin-build.sh`, existing deployment routes, the legacy admin, website, mobile app, or Supabase resources.

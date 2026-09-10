@@ -1,8 +1,9 @@
 import { EnvironmentBadge } from './EnvironmentBadge';
-import { useMockAdmin } from '../../app/providers';
+import { useAuth } from '../../security/auth-context';
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
-  const admin = useMockAdmin();
+  const { identity: admin } = useAuth();
+  if (!admin) return null;
   return <header className="topbar">
     <button className="menu-button" type="button" onClick={onMenu} aria-label="Open navigation"><span aria-hidden="true">☰</span></button>
     <div className="search-shell" role="search"><label className="sr-only" htmlFor="admin-search">Search the mock admin</label><span aria-hidden="true">⌕</span><input id="admin-search" type="search" placeholder="Search preview (not connected)" disabled /><kbd aria-hidden="true">⌘ K</kbd></div>

@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
+import type { Permission } from '../security/permissions';
 
-export function ForbiddenState({ requestedPermission = 'security.manage' }: { requestedPermission?: string }) { return <section className="state-card forbidden" role="status"><p className="eyebrow">403 mock state</p><h1>Permission required</h1><p>This mock identity does not have <code>{requestedPermission}</code>. No data request was made.</p></section>; }
+export function ForbiddenState({ requestedPermission = 'security.manage' }: { requestedPermission?: Permission }) { return <section className="state-card forbidden" role="status"><p className="eyebrow">403 state</p><h1>Permission required</h1><p>This identity does not have <code>{requestedPermission}</code>. No feature data request was made.</p></section>; }
 
 export function UnavailablePage() {
   const { state } = useParams();

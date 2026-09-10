@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMockAdmin } from '../app/providers';
+import { useAuth } from '../security/auth-context';
 
 const metrics = [
   { label: 'Active listings', value: '18,420', change: '+6.4%', tone: 'navy' },
@@ -22,7 +22,8 @@ const rows = [
 ];
 
 export function MockDashboardPage() {
-  const admin = useMockAdmin();
+  const { identity: admin } = useAuth();
+  if (!admin) return null;
   return <>
     <div className="mock-banner" role="note"><strong>Mock shell only.</strong> This section is not connected to production yet. Every number and identity shown here is fictional.</div>
     <div className="page-heading dashboard-heading"><div><p className="eyebrow">Wednesday, 10 September</p><h1>Good morning, {admin.name.split(' ')[0]}</h1><p>A static operations preview for the new PaMarket admin application.</p></div><button type="button" className="primary-button" disabled>Export mock report</button></div>
