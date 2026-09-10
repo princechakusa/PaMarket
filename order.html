@@ -35,7 +35,11 @@
 <script src="js/supabase-config.js"></script>
 <script src="js/core/supabase-client.js"></script>
 <script src="js/services/service-transport.js"></script>
-<script src="js/services/shop-orders.js"></script>
+<script src="js/services/saved-content.js"></script>
+<script src="js/services/listings.js"></script>
+<script src="js/services/profiles.js"></script>
+<script src="js/services/businesses.js"></script>
+<script src="js/services/rentals.js"></script>
 <script src="js/site-announcements.js" defer></script>
 <script src="js/taxonomy.js" defer></script>
 
@@ -238,5 +242,9 @@ window.doSearch = window.doSearch || function(){
 })();
 </script>
 <!-- FOOTER:END -->
-<script src="js/supabase-config.js"></script><script src="js/session.js"></script><script src="js/marketplace-data.js"></script><script src="js/nav-dropdowns.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script><script src="js/account-pages.js"></script>
+<!-- shop-orders.js MUST load here (page body), not in the shared HEADER
+     region above — tools/build-includes.js re-stamps that region from
+     partials/header.html on every deploy and would wipe a page-specific
+     include. account-pages.js's loadOrder() needs window.PMShopOrders. -->
+<script src="js/supabase-config.js"></script><script src="js/session.js"></script><script src="js/marketplace-data.js"></script><script src="js/nav-dropdowns.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script><script src="js/services/shop-orders.js"></script><script src="js/account-pages.js"></script>
 </body></html>
