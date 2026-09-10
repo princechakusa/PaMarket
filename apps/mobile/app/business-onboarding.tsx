@@ -12,14 +12,19 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../lib/auth";
 import { GlassBackButton, ProvinceCityFields } from "../components/ui";
+import { PhotoGrid } from "../components/post/PhotoGrid";
 import { supabase } from "../lib/supabase";
+import { uploadImageUriToR2 } from "../lib/uploadToR2";
 import { toast } from "../components/ui/Toast";
 import { useTaxonomy, withSelectedValue } from "../lib/taxonomy";
 import type { Business } from "../lib/businesses";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
+
+const MAX_SHOP_PHOTOS = 8;
 
 // Mirrors www/js/business-onboarding.js STEPS. Every business onboards on
 // the Free plan — paid plans are only ever purchased through the real
@@ -27,9 +32,9 @@ import { useThemedStyles } from "../lib/theme-provider";
 // from Seller Center right after onboarding completes), never from here.
 // This screen used to show priced paid tiers that just alerted "Coming
 // soon" when tapped — a real App Review risk (priced-but-inert products).
-const STEPS = ["details", "category", "activate"] as const;
+const STEPS = ["details", "category", "photos", "activate"] as const;
 type Step = (typeof STEPS)[number];
-const STEP_LABELS: Record<Step, string> = { details: "Details", category: "Category", activate: "Activate" };
+const STEP_LABELS: Record<Step, string> = { details: "Details", category: "Category", photos: "Photos", activate: "Activate" };
 const draftStorageKey = (userId: string) => `business-onboarding-draft:${userId}`;
 
 const BIZ_TYPES = [
@@ -49,6 +54,9 @@ type Draft = {
   city: string;
   suburb: string;
   categories: string[];
+  // Local file:// URIs while picking; already-uploaded https R2 URLs when
+  // resuming an existing business. activate() uploads any local ones.
+  photos: string[];
   planId: string;
 };
 
@@ -64,6 +72,7 @@ function blankDraft(phone?: string, email?: string): Draft {
     city: "",
     suburb: "",
     categories: [],
+    photos: [],
     planId: "free",
   };
 }
@@ -80,6 +89,7 @@ function fromBusiness(b: Business): Draft {
     city: b.city ?? "",
     suburb: b.suburb ?? "",
     categories: (b.category ?? "").split("|").filter(Boolean),
+    photos: Array.isArray(b.photos) ? b.photos : [],
     planId: "free",
   };
 }
@@ -106,6 +116,7 @@ export default function BusinessOnboardingScreen() {
   const [existingStatus, setExistingStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessingPhotos, setIsProcessingPhotos] = useState(false);
 
   // Resume an incomplete draft only — an already-submitted/active/suspended
   // business must not reopen here (mirrors ensureDraft's guard).
@@ -113,7 +124,7 @@ export default function BusinessOnboardingScreen() {
     if (!session?.user) return;
     const { data } = await supabase
       .from("businesses")
-      .select("id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level")
+      .select("id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,photos")
       .eq("owner_user_id", session.user.id)
       .eq("status", "draft")
       .maybeSingle();
@@ -171,10 +182,65 @@ export default function BusinessOnboardingScreen() {
     });
   }
 
+  // ── Shop photos (same picker/grid as posting a listing) ──────────────
+  async function pickPhotos(source: "gallery" | "camera") {
+    if (isProcessingPhotos || draft.photos.length >= MAX_SHOP_PHOTOS) return;
+    const permission =
+      source === "gallery"
+        ? await ImagePicker.requestMediaLibraryPermissionsAsync()
+        : await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      toast(`Permission needed to access ${source === "gallery" ? "your photos" : "the camera"}`, 3500, true);
+      return;
+    }
+    const remaining = MAX_SHOP_PHOTOS - draft.photos.length;
+    const result =
+      source === "gallery"
+        ? await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            quality: 0.8,
+            allowsMultipleSelection: true,
+            selectionLimit: remaining,
+          })
+        : await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 });
+    if (result.canceled || !result.assets?.length) return;
+    setIsProcessingPhotos(true);
+    const uris = result.assets.slice(0, remaining).map((a) => a.uri);
+    setDraft((d) => ({ ...d, photos: [...d.photos, ...uris] }));
+    setIsProcessingPhotos(false);
+  }
+
+  function removePhoto(index: number) {
+    setDraft((d) => ({ ...d, photos: d.photos.filter((_, i) => i !== index) }));
+  }
+
+  function setCoverPhoto(index: number) {
+    if (index <= 0) return;
+    setDraft((d) => {
+      const next = [...d.photos];
+      const [cover] = next.splice(index, 1);
+      next.unshift(cover);
+      return { ...d, photos: next };
+    });
+  }
+
+  function movePhoto(index: number, direction: "left" | "right") {
+    const target = direction === "left" ? index - 1 : index + 1;
+    if (target < 0 || target >= draft.photos.length) return;
+    setDraft((d) => {
+      const next = [...d.photos];
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...d, photos: next };
+    });
+  }
+
   // Persist current draft state to Supabase (id assigned on first save).
-  async function persist(status: string) {
+  // `photos` is passed explicitly by activate() with the uploaded R2 URLs;
+  // the draft-only save (to get an id for the R2 key prefix) omits it and
+  // leaves whatever's already stored untouched.
+  async function persist(status: string, photos?: string[]) {
     if (!session?.user) return null;
-    const row = {
+    const row: Record<string, unknown> = {
       id: businessId ?? undefined,
       owner_user_id: session.user.id,
       name: draft.name,
@@ -190,6 +256,7 @@ export default function BusinessOnboardingScreen() {
       status,
       updated_at: new Date().toISOString(),
     };
+    if (photos) row.photos = photos;
     const { data, error } = await supabase.from("businesses").upsert(row).select("id").single();
     if (error) {
       toast("Could not save. Please check your connection.", 4000, true);
@@ -212,6 +279,13 @@ export default function BusinessOnboardingScreen() {
     } else if (step === "category") {
       if (!draft.categories.length || draft.categories.some((id) => !categories.some((category) => category.id === id))) {
         toast("Pick at least one valid category");
+        return;
+      }
+      setStep("photos");
+    } else if (step === "photos") {
+      if (isProcessingPhotos) return;
+      if (!draft.photos.length) {
+        toast("Add at least one photo of your shop or what you sell");
         return;
       }
       setStep("activate");
@@ -250,18 +324,46 @@ export default function BusinessOnboardingScreen() {
       setStep("category");
       return;
     }
+    if (!draft.photos.length) { setStep("photos"); return; }
 
     setIsSubmitting(true);
     // New businesses go to pending_activation for admin review; editing an
     // already-active business (existingStatus === 'active') stays active.
     const status = existingStatus === "active" ? "active" : "pending_activation";
-    const id = await persist(status);
+
+    // A business row must exist before shop photos can be uploaded — the
+    // R2 key prefix is businesses/{id}/... and get-r2-upload-url verifies
+    // ownership of that id. So save-as-draft first (only if we don't have
+    // an id yet), then upload, then the real status write below.
+    let id = businessId;
     if (!id) {
+      id = await persist("draft");
+      if (!id) { setIsSubmitting(false); return; }
+    }
+
+    const photoUrls: string[] = [];
+    for (const uri of draft.photos) {
+      if (/^https?:\/\//i.test(uri)) { photoUrls.push(uri); continue; }
+      try {
+        const key = `businesses/${id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        photoUrls.push(await uploadImageUriToR2(uri, key));
+      } catch {
+        toast("A photo failed to upload — check your connection and try again", 4000, true);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    // Reflect the uploaded URLs locally so a later retry doesn't re-upload.
+    setDraft((d) => ({ ...d, photos: photoUrls }));
+
+    const finalId = await persist(status, photoUrls);
+    if (!finalId) {
       // Only reset the button state on the failure path, where the user
       // stays on this screen — see the success path below for why.
       setIsSubmitting(false);
       return;
     }
+    id = finalId;
     await SecureStore.deleteItemAsync(draftStorageKey(session.user.id)).catch(() => {});
 
     // Deliberately NOT calling setIsSubmitting(false) here: this screen is
@@ -378,6 +480,23 @@ export default function BusinessOnboardingScreen() {
           </>
         ) : null}
 
+        {step === "photos" ? (
+          <>
+            <Text style={styles.intro}>Add photos of your shop and what you sell — the same as posting a listing. These help buyers recognise your business, and our team reviews them before your shop goes live.</Text>
+            <PhotoGrid
+              photos={draft.photos}
+              onPickGallery={() => pickPhotos("gallery")}
+              onPickCamera={() => pickPhotos("camera")}
+              onRemove={removePhoto}
+              onSetCover={setCoverPhoto}
+              onMove={movePhoto}
+              isProcessing={isProcessingPhotos}
+            />
+            <Text style={styles.selCount}>{draft.photos.length ? `${draft.photos.length} photo${draft.photos.length === 1 ? "" : "s"} added` : "No photos yet"}</Text>
+            <StepNav onBack={goBack} onNext={goNext} styles={styles} />
+          </>
+        ) : null}
+
         {step === "activate" ? (
           <>
             <Text style={styles.intro}>Review your details, then activate to get your business live on PaMarket. You'll start on the Free plan — upgrade any time from Seller Center.</Text>
@@ -385,6 +504,7 @@ export default function BusinessOnboardingScreen() {
               <ReviewRow label="Name" value={draft.name || "—"} styles={styles} />
               <ReviewRow label="Type" value={BIZ_TYPES.find((t) => t.id === draft.bizType)?.label ?? draft.bizType} styles={styles} />
               <ReviewRow label="Categories" value={draft.categories.map((id) => categories.find((c) => c.id === id)?.name ?? id).join(", ") || "—"} styles={styles} />
+              <ReviewRow label="Photos" value={draft.photos.length ? `${draft.photos.length} added` : "—"} styles={styles} />
               <ReviewRow label="Phone" value={draft.phone || "—"} styles={styles} />
               <ReviewRow label="Location" value={[draft.suburb, draft.city, draft.province].filter(Boolean).join(", ") || "—"} styles={styles} />
               <ReviewRow label="Plan" value="Free" last styles={styles} />

@@ -18,6 +18,7 @@ export type Business = {
   verification_level?: number | null;
   verification_pending?: boolean | null;
   rejection_note?: string | null;
+  photos?: string[] | null;
   featured_listing_ids?: string[] | null;
   created_at?: string;
   updated_at?: string | null;
