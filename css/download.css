@@ -1,0 +1,155 @@
+.download-page{background:#fff;overflow-x:hidden}
+.download-wrap{width:min(1180px,calc(100% - 48px));margin:0 auto}
+
+.download-hero{position:relative;min-height:720px;overflow:hidden;background:var(--navy-deep);isolation:isolate}
+.download-hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 62%;opacity:.2;filter:saturate(.7) contrast(1.08);z-index:-3}
+.download-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,16,45,.99) 0%,rgba(11,28,77,.94) 48%,rgba(26,58,143,.78) 100%);z-index:-2}
+.download-hero::after{content:"";position:absolute;width:520px;height:520px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-170px;top:-210px;box-shadow:0 0 0 80px rgba(255,255,255,.025),0 0 0 160px rgba(255,255,255,.018);z-index:-1}
+.download-hero-glow{position:absolute;width:560px;height:560px;border-radius:50%;right:3%;bottom:-280px;background:radial-gradient(circle,rgba(232,163,61,.3),rgba(232,163,61,0) 68%);filter:blur(8px);z-index:-1}
+.download-hero-grid{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(360px,.8fr);gap:72px;align-items:center;min-height:720px;padding-top:62px;padding-bottom:70px}
+.download-copy{max-width:670px}
+.download-kicker{display:inline-flex;align-items:center;gap:10px;padding:7px 13px 7px 8px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.08);color:#dfe8fb;font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.download-kicker img{width:24px;height:16px;object-fit:cover;border-radius:2px}
+.download-brand-row{display:flex;align-items:center;gap:15px;margin-top:28px}
+.download-app-icon{width:72px;height:72px;border-radius:18px;box-shadow:0 16px 40px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.22)}
+.download-brand-name{display:block;color:#fff;font-family:'Fraunces',Georgia,serif;font-size:1.45rem;font-weight:700;line-height:1.15}
+.download-brand-note{display:block;margin-top:5px;color:#a9bce2;font-size:.82rem;font-weight:600}
+.download-copy h1{max-width:690px;margin-top:28px;color:#fff;font-family:'Fraunces',Georgia,serif;font-size:clamp(3.3rem,6vw,5.25rem);font-weight:700;line-height:.98;letter-spacing:-.052em}
+.download-copy h1 span{color:var(--gold)}
+.download-lead{max-width:610px;margin-top:23px;color:#d0dbef;font-size:1.08rem;line-height:1.7}
+.download-store-links{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:29px}
+.download-store-link{display:inline-flex;min-height:56px;border-radius:10px;transition:transform .2s ease,filter .2s ease,box-shadow .2s ease}
+.download-store-link:hover{transform:translateY(-3px);filter:brightness(1.05);box-shadow:0 14px 30px rgba(0,0,0,.2)}
+.download-store-link:focus-visible,.download-web-link:focus-visible{outline:3px solid #fff;outline-offset:4px}
+.download-store-link img{height:56px;width:auto;object-fit:contain}
+.download-trust{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;color:#a9bce2;font-size:.8rem;font-weight:700}
+.download-trust i{width:3px;height:3px;border-radius:50%;background:var(--gold)}
+
+.download-status{display:flex;align-items:center;gap:10px;width:fit-content;max-width:100%;margin-top:24px;padding:11px 15px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:.9rem}
+.download-status-spinner{width:18px;height:18px;flex:0 0 auto;border:2px solid rgba(255,255,255,.35);border-top-color:var(--gold);border-radius:50%;animation:download-spin .8s linear infinite}
+.download-status a{color:#ffd991;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+@keyframes download-spin{to{transform:rotate(360deg)}}
+
+.download-visual{position:relative;display:flex;align-items:center;justify-content:center;min-height:580px}
+.download-phone{position:relative;overflow:hidden;border:9px solid #0a1022;border-radius:42px;background:#0a1022;box-shadow:0 45px 90px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.12)}
+.download-phone::after{content:"";position:absolute;inset:0;border-radius:32px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);pointer-events:none}
+.download-phone img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.download-phone-top{position:absolute;z-index:2;top:8px;left:50%;transform:translateX(-50%);width:31%;height:19px;border-radius:999px;background:#070b16;box-shadow:0 1px 0 rgba(255,255,255,.08)}
+.download-phone-main{width:265px;aspect-ratio:688/1522;transform:rotate(3deg);animation:download-float 5.5s ease-in-out infinite}
+.download-orbit{position:absolute;border:1px solid rgba(255,255,255,.12);border-radius:50%}
+.download-orbit-one{width:430px;height:430px}
+.download-orbit-two{width:530px;height:530px;border-color:rgba(232,163,61,.18)}
+.download-float-card{position:absolute;z-index:3;padding:14px 17px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.94);box-shadow:0 18px 45px rgba(0,0,0,.24);backdrop-filter:blur(12px);color:var(--navy-deep)}
+.download-float-card strong{display:block;font-size:1rem;line-height:1.15}
+.download-float-card span{display:block;margin-top:4px;color:var(--sub);font-size:.72rem;font-weight:700}
+.download-float-top{top:17%;right:0;min-width:150px}
+.download-float-top strong{font-family:'Fraunces',Georgia,serif;color:var(--gold-dark);font-size:1.8rem}
+.download-float-bottom{left:0;bottom:18%;display:flex;align-items:center;gap:9px}
+.download-float-bottom strong{font-size:.78rem}
+.download-live-dot{width:9px;height:9px;margin:0!important;border-radius:50%;background:#1f9d62;box-shadow:0 0 0 5px rgba(31,157,98,.12)}
+@keyframes download-float{0%,100%{transform:rotate(3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-12px)}}
+
+.download-possibilities{padding:94px 0 104px;background:#fff}
+.download-section-heading{max-width:680px}
+.download-section-heading>span,.download-eyebrow{color:var(--gold-dark);font-size:.75rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.download-section-heading h2,.download-screens-copy h2,.download-final-copy h2{margin-top:9px;color:var(--navy-deep);font-family:'Fraunces',Georgia,serif;font-size:clamp(2.2rem,4vw,3.25rem);line-height:1.08;letter-spacing:-.035em}
+.download-section-heading p,.download-screens-copy>p{margin-top:14px;color:var(--sub);font-size:1rem;line-height:1.7}
+.download-feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:46px}
+.download-feature-card{position:relative;min-height:250px;padding:29px 24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,#fff 0%,#fbfaf7 100%);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.download-feature-card:hover{transform:translateY(-5px);border-color:rgba(26,58,143,.22);box-shadow:0 20px 45px rgba(11,28,77,.1)}
+.download-feature-number{display:inline-grid;width:42px;height:42px;place-items:center;border-radius:12px;background:var(--navy-tint);color:var(--navy);font-size:.78rem;font-weight:900}
+.download-feature-card:nth-child(even) .download-feature-number{background:var(--gold-tint);color:var(--gold-dark)}
+.download-feature-card h3{margin-top:35px;color:var(--navy-deep);font-size:1.15rem;font-weight:850}
+.download-feature-card p{margin-top:10px;color:var(--sub);font-size:.9rem;line-height:1.7}
+
+.download-screens{padding:105px 0;background:var(--paper);overflow:hidden}
+.download-screens-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:60px;align-items:center}
+.download-screens-copy{max-width:440px}
+.download-screens-copy ul{display:grid;gap:14px;margin-top:28px;list-style:none}
+.download-screens-copy li{display:flex;align-items:center;gap:11px;color:var(--ink);font-size:.93rem;font-weight:700}
+.download-screens-copy li span{display:grid;width:26px;height:26px;flex:0 0 auto;place-items:center;border-radius:50%;background:var(--navy);color:#fff;font-size:.75rem}
+.download-phone-gallery{position:relative;min-height:540px}
+.download-phone-small{position:absolute;width:220px;aspect-ratio:688/1522;border-width:7px;border-radius:34px;box-shadow:0 28px 60px rgba(11,28,77,.22)}
+.download-phone-small::after{border-radius:26px}
+.download-phone-small .download-phone-top{top:6px;height:15px}
+.download-phone-back{left:2%;top:40px;transform:rotate(-8deg)}
+.download-phone-front{z-index:2;left:35%;top:0;transform:rotate(1deg)}
+.download-phone-side{right:0;top:48px;transform:rotate(8deg)}
+
+.download-final{padding:88px 0;background:#fff}
+.download-final-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;padding:40px 44px;border-radius:26px;background:linear-gradient(125deg,var(--navy-deep),var(--navy));box-shadow:0 28px 65px rgba(11,28,77,.18);color:#fff}
+.download-final-icon{width:72px;height:72px;border-radius:18px;border:1px solid rgba(255,255,255,.18)}
+.download-final-copy span{color:#b5c7ea;font-size:.78rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.download-final-copy h2{margin-top:5px;color:#fff;font-size:2rem}
+.download-store-links-final{margin-top:0;justify-content:flex-end}
+.download-store-links-final .download-store-link,.download-store-links-final img{height:48px;min-height:48px}
+.download-web-link{grid-column:2/-1;width:fit-content;color:#c8d6ef;font-size:.82rem;font-weight:700}
+.download-web-link:hover{color:#fff}
+
+@media(max-width:980px){
+  .download-hero-grid{grid-template-columns:1fr .7fr;gap:28px}
+  .download-copy h1{font-size:clamp(3rem,7vw,4.5rem)}
+  .download-float-card{display:none}
+  .download-feature-grid{grid-template-columns:1fr 1fr}
+  .download-screens-grid{grid-template-columns:1fr;text-align:center}
+  .download-screens-copy{max-width:640px;margin:0 auto}
+  .download-screens-copy ul{width:fit-content;margin-left:auto;margin-right:auto;text-align:left}
+  .download-phone-gallery{width:min(680px,100%);margin:10px auto 0}
+  .download-final-card{grid-template-columns:auto 1fr}
+  .download-store-links-final{grid-column:1/-1;justify-content:center}
+  .download-web-link{grid-column:1/-1;margin:0 auto}
+}
+
+@media(max-width:720px){
+  .download-wrap{width:min(100% - 30px,1180px)}
+  .download-hero{min-height:auto}
+  .download-hero::before{background:linear-gradient(180deg,rgba(6,16,45,.97),rgba(11,28,77,.93))}
+  .download-hero-grid{display:block;min-height:auto;padding-top:54px;padding-bottom:58px;text-align:center}
+  .download-copy{margin:0 auto}
+  .download-kicker{margin:0 auto}
+  .download-brand-row{justify-content:center;margin-top:22px;text-align:left}
+  .download-app-icon{width:62px;height:62px;border-radius:16px}
+  .download-copy h1{margin-top:24px;font-size:clamp(2.8rem,13vw,4rem);line-height:1.01}
+  .download-lead{font-size:1rem;line-height:1.65}
+  .download-store-links{justify-content:center}
+  .download-trust{justify-content:center}
+  .download-status{margin-left:auto;margin-right:auto;flex-wrap:wrap;justify-content:center}
+  .download-visual{min-height:470px;margin-top:35px}
+  .download-phone-main{width:220px}
+  .download-orbit-one{width:340px;height:340px}
+  .download-orbit-two{width:430px;height:430px}
+  .download-possibilities,.download-screens{padding:72px 0}
+  .download-section-heading{margin:0 auto;text-align:center}
+  .download-feature-grid{grid-template-columns:1fr;gap:13px;margin-top:34px}
+  .download-feature-card{min-height:0;padding:22px;text-align:left}
+  .download-feature-card h3{margin-top:22px}
+  .download-phone-gallery{min-height:480px}
+  .download-phone-small{width:185px}
+  .download-phone-back{left:0}
+  .download-phone-front{left:calc(50% - 92px)}
+  .download-phone-side{right:0}
+  .download-final{padding:55px 0}
+  .download-final-card{display:flex;flex-direction:column;padding:34px 20px;text-align:center}
+  .download-store-links-final{flex-direction:column}
+}
+
+@media(max-width:500px){
+  .download-store-links{flex-direction:column;align-items:center}
+  .download-store-link,.download-store-link img{height:52px;min-height:52px}
+  .download-trust{gap:9px;font-size:.74rem}
+  .download-visual{min-height:430px}
+  .download-phone-gallery{min-height:420px;transform:scale(.86);transform-origin:center top;margin-bottom:-55px}
+  .download-phone-back{left:-12%}
+  .download-phone-side{right:-12%}
+}
+
+@media(max-width:360px){
+  .download-copy h1{font-size:2.55rem}
+  .download-brand-note{font-size:.74rem}
+  .download-phone-gallery{transform:scale(.75);width:116%;margin-left:-8%;margin-bottom:-100px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .download-phone-main,.download-status-spinner{animation:none}
+  .download-store-link,.download-feature-card{transition:none}
+}
