@@ -2213,7 +2213,28 @@ async function bizSetStatus(id, status) {
     await updRow('businesses', id, patch);
     if(b) { b.status=status; if(status==='active') b.rejection_note=null; }
     auditLog(status==='active'?'activate_business':'suspend_business','businesses',id,{status:prev},{status:status},null);
-    renderBusinesses(); toast('Business '+status);
+    // Tell the owner. Approving a business that was awaiting review is the
+    // one the owner is actually waiting on a notification for — before this
+    // it went live silently. (Decline already notifies via bizDecline;
+    // Suspend of an already-live business also worth a heads-up.)
+    if(b && b.owner_user_id) {
+      var notif = status==='active'
+        ? { title:'Business Approved', body:(b.name||'Your business')+' is now live on PaMarket.' }
+        : status==='suspended'
+        ? { title:'Business Suspended', body:(b.name||'Your business')+' has been suspended. Contact support if you think this is a mistake.' }
+        : null;
+      if(notif) {
+        try {
+          await sb.from('notifications').insert({
+            id:notifId(), user_id:b.owner_user_id,
+            title:notif.title, body:notif.body,
+            type:status==='active'?'info':'report', read:false, created_at:Date.now(),
+            meta:{deepLink:'businessmanage:'+id}
+          });
+        } catch(e){}
+      }
+    }
+    renderBusinesses(); toast('Business '+status+(b&&b.owner_user_id?', owner notified':''));
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
@@ -3287,7 +3308,7 @@ function businessVerifCard(bv) {
   html += '<div class="verif-docs">';
   docs.forEach(function(d){
     html += '<div class="verif-doc-box"><div class="verif-doc-label">'+esc(d[0])+'</div>';
-    if(d[1]) html += '<img class="verif-doc-img" src="'+esc(d[1])+'" onclick="openVerifPhoto(this,false)" onerror="this.style.opacity=\'.3\'">';
+    if(d[1]) html += '<img class="verif-doc-img" src="'+esc(d[1])+'" onclick="openVerifPhoto(this,false)" onerror="verifImgError(this)">';
     else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:12px">Not submitted</div>';
     html += '</div>';
   });
@@ -3377,7 +3398,7 @@ function companyVerifCard(cv, u) {
   html += '<div class="verif-docs">';
   docs.forEach(function(d){
     html += '<div class="verif-doc-box"><div class="verif-doc-label">'+esc(d[0])+'</div>';
-    if(d[1]) html += '<img class="verif-doc-img" src="'+esc(d[1])+'" onclick="openVerifPhoto(this,false)" onerror="this.style.opacity=\'.3\'">';
+    if(d[1]) html += '<img class="verif-doc-img" src="'+esc(d[1])+'" onclick="openVerifPhoto(this,false)" onerror="verifImgError(this)">';
     else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:12px">Not submitted</div>';
     html += '</div>';
   });
@@ -3414,6 +3435,36 @@ async function rejectCompany(userId) {
   } catch(e){ toast('Failed: '+e.message,'error'); }
 }
 
+// "Which area is this verification for?" — an ID/identity verification has
+// no reason field of its own, so surface what the same user is actually
+// building on the platform (a shop, and its category / activation state).
+// Rental fleet ownership shows through the business too (a rental company
+// is always attached to a business).
+// A doc image that 404s is almost always a stale/mismatched storage path
+// from a pre-2026-09-09 app build (see project_verification_doc_key_mismatch)
+// — make that legible instead of a silent faint image.
+function verifImgError(img) {
+  var box = img.parentElement;
+  if(box) box.innerHTML = (box.querySelector ? '' : '') +
+    '<div style="padding:18px;text-align:center;color:var(--amber);font-size:12px;line-height:1.6">' +
+    '<b>Couldn’t load this document</b><br>' +
+    '<span style="color:var(--sub);font-size:11px">The stored file path doesn’t resolve. Usually a pre-fix app version — ask the user to resubmit from the latest app, or contact them directly.</span></div>';
+}
+
+function verifUserContext(userId) {
+  var mine = (DATA.businesses||[]).filter(function(b){ return b.owner_user_id===userId; });
+  if(!mine.length) return '<span style="color:var(--sub2)">No shop or business — identity badge only.</span>';
+  return mine.map(function(b){
+    var cat = (b.category||'').split('|').filter(Boolean).join(', ');
+    var stTxt = b.status==='pending_activation' ? '<b style="color:var(--amber)">awaiting activation</b>'
+      : b.status==='active' ? '<b style="color:var(--green)">active</b>'
+      : b.status==='rejected' ? '<b style="color:var(--red)">declined</b>'
+      : esc(b.status||'draft');
+    return '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px"><path d="M3 9l1.5-5h15L21 9M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M3 9h18"/></svg>'
+      + '<b>'+esc(b.name||'Business')+'</b> — '+esc(b.biz_type||'business')+(cat?' · '+esc(cat):'')+' · '+stTxt;
+  }).join('<br>');
+}
+
 function verifCard(v, u, hasPhotos) {
   var ini = initials(u.name||'U');
   var html = '<div class="verif-card">';
@@ -3421,18 +3472,19 @@ function verifCard(v, u, hasPhotos) {
   html += '<div class="verif-user"><div class="verif-avatar">'+ini+'</div><div><div class="verif-name">'+esc(u.name||'Unknown User')+'</div><div class="verif-meta">'+esc(u.phone||u.email||'—')+(v?' · Submitted '+fmtDate(v.submitted_at):'')+'</div></div></div>';
   if(v) html += '<span class="badge badge-pending">Pending</span>';
   html += '</div>';
+  html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:var(--sub);line-height:1.7"><div style="font-size:10px;font-weight:800;color:var(--sub2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">What this verification is for</div>'+verifUserContext(u.id)+'</div>';
 
   if(hasPhotos && v) {
     html += '<div class="verif-docs">';
     html += '<div class="verif-doc-box"><div class="verif-doc-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M10 14h4"/></svg> ID Document</div>';
     var _idSrc = v._idUrl || v.id_doc;
-    if(_idSrc) html += '<img class="verif-doc-img" src="'+esc(_idSrc)+'" alt="ID" onclick="openVerifPhoto(this,false)" onerror="this.alt=\'Image failed to load\';this.style.opacity=\'.3\'">';
-    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No ID uploaded</div>';
+    if(_idSrc) html += '<img class="verif-doc-img" src="'+esc(_idSrc)+'" alt="ID" onclick="openVerifPhoto(this,false)" onerror="verifImgError(this)">';
+    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">'+(v.id_doc_path?'<b style="color:var(--amber)">Document file not found in storage</b><br><span style="font-size:11px">Recorded path doesn\'t match a real file — the user likely submitted from an old app version. Ask them to resubmit.</span>':'No ID uploaded')+'</div>';
     html += '</div>';
     html += '<div class="verif-doc-box"><div class="verif-doc-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Selfie</div>';
     var _selfieSrc = v._selfieUrl || v.selfie;
-    if(_selfieSrc) html += '<img class="verif-selfie" src="'+esc(_selfieSrc)+'" alt="Selfie" onclick="openVerifPhoto(this,true)" onerror="this.alt=\'Selfie failed to load\';this.style.opacity=\'.3\'">';
-    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">No selfie uploaded</div>';
+    if(_selfieSrc) html += '<img class="verif-selfie" src="'+esc(_selfieSrc)+'" alt="Selfie" onclick="openVerifPhoto(this,true)" onerror="verifImgError(this)">';
+    else html += '<div style="padding:20px;text-align:center;color:var(--sub);font-size:13px">'+(v.selfie_path?'<b style="color:var(--amber)">File not found in storage</b><br><span style="font-size:11px">Ask the user to resubmit from the latest app version.</span>':'No selfie uploaded')+'</div>';
     html += '</div>';
     html += '</div>';
   } else if(!hasPhotos) {
