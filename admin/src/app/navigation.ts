@@ -49,6 +49,7 @@ export const navigationGroups: NavigationGroup[] = [
   { label: 'Observability', items: [
     { label: 'Analytics', path: '/observability/analytics', permission: 'analytics.view' }, { label: 'Audit center', path: '/observability/audit', permission: 'audit.view' },
     { label: 'Errors', path: '/observability/errors', permission: 'errors.view' }, { label: 'Operations', path: '/observability/operations', permission: 'operations.view' },
+    { label: 'Security events', path: '/security/events', permission: 'audit.view' },
   ] },
   { label: 'Security', items: [
     { label: 'Connection check', path: '/security', permission: 'security.view' },
@@ -63,4 +64,4 @@ export const navigationGroups: NavigationGroup[] = [
 
 export const mockRoutes = navigationGroups
   .flatMap((group) => group.items)
-  .filter((item) => item.path !== '/' && item.path !== '/settings/security');
+  .filter((item) => item.path !== '/' && item.path !== '/settings/security' && item.path !== '/security/events');

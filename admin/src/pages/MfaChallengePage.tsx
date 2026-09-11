@@ -4,6 +4,7 @@ import type { Factor } from '@supabase/supabase-js';
 import { useAuth } from '../security/auth-context';
 import { sanitizeReturnTo } from '../security/return-to';
 import { challengeAndVerifyTotp, listMfaFactors } from '../services/supabase/mfa';
+import { reportLoginSecurityEvent } from '../services/security-events/report';
 
 /**
  * Reached only when Supabase reports aal1 with a verified factor available
@@ -54,8 +55,17 @@ export function MfaChallengePage() {
       setSubmitting(false);
       setError('That code was not accepted. Enter the current code from your authenticator app.');
       setCode('');
+      void reportLoginSecurityEvent('admin_mfa_challenge_failed', {
+        reasonCode: 'invalid_code',
+        metadata: { factor_type: 'totp' },
+        accessToken: auth.accessToken ?? undefined,
+      });
       return;
     }
+    void reportLoginSecurityEvent('admin_mfa_challenge_succeeded', {
+      metadata: { factor_type: 'totp' },
+      accessToken: auth.accessToken ?? undefined,
+    });
     await auth.refreshAssurance();
     setSubmitting(false);
     // Once assurance reaches aal2, the status === 'authenticated' branch

@@ -5,6 +5,7 @@ import { getSupabaseClient } from '../services/supabase/client';
 import { normalizeError } from '../services/errors/normalize-error';
 import { AuthContext, type AdminIdentity, type AuthStatus, type SignInResult } from './auth-context';
 import { isAdminRole, permissionsForRole } from './permissions';
+import { reportLoginSecurityEvent } from '../services/security-events/report';
 
 const mockIdentity: AdminIdentity = {
   id: 'mock-admin-stage-c',
@@ -107,6 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (adminEnvironment.mode !== 'live') return;
     const client = getSupabaseClient();
     if (!client) return;
+    // Report before the token is invalidated — the Edge Function requires
+    // an authenticated caller for admin_logout. Best-effort, bounded, and
+    // never blocks the actual sign-out below.
+    if (state.accessToken) void reportLoginSecurityEvent('admin_logout', { accessToken: state.accessToken });
     const { error } = await client.auth.signOut();
     if (error) setState((current) => ({ ...current, error: normalizeError(error).message }));
   }

@@ -45,7 +45,11 @@ const PRODUCTION_ORIGINS = [
 // allowlists — Stage 6 does not add or remove any of these.
 const NATIVE_APP_ORIGINS = ['https://localhost', 'capacitor://localhost'] as const;
 
-const DEV_ORIGINS = ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:3000'] as const;
+// http://localhost:5173 added for C2D — Vite's default dev port, used by
+// the new admin/ React app's local dev server (`npm run dev`). Same
+// ALLOW_DEV_CORS_ORIGINS opt-in gate as the rest of this list; no
+// production behavior change.
+const DEV_ORIGINS = ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:3000', 'http://localhost:5173'] as const;
 
 function devOriginsEnabled(): boolean {
   return Deno.env.get('ALLOW_DEV_CORS_ORIGINS') === 'true';
