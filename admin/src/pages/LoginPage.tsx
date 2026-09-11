@@ -20,6 +20,16 @@ export function LoginPage() {
   if (auth.status === 'authenticated') return <Navigate to={returnTo} replace />;
   if (auth.status === 'mfa_required') return <Navigate to={`/mfa/challenge?returnTo=${encodeURIComponent(returnTo)}`} replace />;
 
+  if (auth.status === 'configuration_error') {
+    return (
+      <main className="standalone-state" role="alert">
+        <p className="eyebrow">Configuration error</p>
+        <h1>Live mode is not configured</h1>
+        <p>{auth.error}</p>
+      </main>
+    );
+  }
+
   if (auth.mode !== 'live') {
     return (
       <main className="standalone-state" role="status">

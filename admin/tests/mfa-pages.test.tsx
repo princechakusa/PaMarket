@@ -83,6 +83,18 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   });
 
+  it('shows the configuration error instead of a non-functional form when live config is missing', () => {
+    mockAuth = baseAuth({
+      mode: 'live',
+      status: 'configuration_error',
+      error: 'Live admin mode requires the configured variables.',
+    });
+    renderAt('/login', <LoginPage />);
+    expect(screen.getByRole('heading', { name: /live mode is not configured/i })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/requires the configured variables/i);
+    expect(document.querySelector('form')).toBeNull();
+  });
+
   it('calls signInWithPassword on submit and blocks duplicate submission', async () => {
     let resolveSignIn: (value: { error: string | null }) => void = () => {};
     const signIn = vi.fn(() => new Promise<{ error: string | null }>((resolve) => { resolveSignIn = resolve; }));
