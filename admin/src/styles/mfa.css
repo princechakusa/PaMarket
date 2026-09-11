@@ -1,0 +1,29 @@
+/* Stage C2C-1 — login, MFA challenge, and MFA enrollment/settings. Reuses
+   the existing token set and .panel/.notice-card/.status-pill/.standalone-
+   state primitives; only adds the handful of classes those pages need. */
+.auth-card { text-align: left; }
+.auth-card h1 { text-align: left; }
+.auth-card form { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+.auth-card label { margin-top: 10px; color: var(--ink-500); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.auth-card input { height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-900); background: white; }
+.auth-card input:disabled { opacity: .65; }
+.auth-card button[type="submit"] { margin-top: 14px; }
+
+.form-error { margin: 6px 0 0; padding: 9px 12px; border-radius: 8px; color: var(--red); background: var(--red-bg); font-size: .78rem; }
+
+.factor-list { display: flex; flex-direction: column; gap: 10px; margin: 0 0 14px; padding: 0; list-style: none; }
+.factor-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 11px; border: 1px solid var(--border); border-radius: 9px; background: #f7f8fb; }
+.factor-list li strong { font-size: .8rem; }
+.factor-list li small { display: block; margin-top: 2px; color: var(--ink-500); font-size: .65rem; }
+.factor-list button { padding: 7px 11px; border: 1px solid var(--border); border-radius: 7px; color: var(--ink-700); background: white; font-size: .7rem; font-weight: 700; cursor: pointer; }
+.confirm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .7rem; }
+.danger-button { border-color: var(--red) !important; color: var(--red) !important; background: var(--red-bg) !important; }
+
+.enroll-panel h2 { margin-top: 18px; margin-bottom: 8px; }
+.enroll-panel h2:first-child { margin-top: 0; }
+.mfa-qr { display: block; border: 1px solid var(--border); border-radius: 10px; background: white; }
+.secret-row { display: flex; align-items: center; gap: 10px; }
+.secret-value { padding: 8px 10px; font-family: ui-monospace, monospace; font-size: .78rem; letter-spacing: .04em; word-break: break-all; }
+.secret-row button { padding: 7px 11px; border: 1px solid var(--border); border-radius: 7px; color: var(--navy-700); background: white; font-size: .7rem; font-weight: 700; cursor: pointer; }
+.enroll-actions { display: flex; gap: 10px; margin-top: 14px; }
+.enroll-actions button[type="button"] { padding: 10px 16px; border: 1px solid var(--border); border-radius: 9px; color: var(--ink-700); background: white; font-weight: 700; cursor: pointer; }
