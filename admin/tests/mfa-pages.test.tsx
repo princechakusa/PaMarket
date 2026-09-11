@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom';
@@ -6,7 +7,13 @@ import type { AuthContextValue } from '../src/security/auth-context';
 // Values that must never reach console.* anywhere in this file's flows.
 // Deliberately fake — this test never talks to a real Supabase project.
 const FAKE_SECRET = 'FAKETESTSECRETNOTREAL234567';
-const FAKE_QR = '<svg data-fake="not-a-real-qr"></svg>';
+const RAW_FAKE_SVG = '<svg data-fake="not-a-real-qr"></svg>';
+// Matches what the INSTALLED @supabase/auth-js client actually returns —
+// verified directly in node_modules/@supabase/auth-js/dist/module/
+// GoTrueClient.js, whose enroll() already does
+// `data.totp.qr_code = \`data:image/svg+xml;utf-8,${data.totp.qr_code}\``
+// before this app ever sees it.
+const FAKE_QR = `data:image/svg+xml;utf-8,${RAW_FAKE_SVG}`;
 const FAKE_URI = 'otpauth://totp/fake?secret=' + FAKE_SECRET;
 const VALID_CODE = '654321';
 
@@ -217,18 +224,62 @@ describe('SecuritySettingsPage', () => {
 describe('MfaEnrollPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('starts enrollment, shows the QR/secret, verifies, and reaches "done"', async () => {
+  it('starts enrollment, shows the QR/secret via a plain <img>, verifies, and reaches "done"', async () => {
     mfaService.enrollTotpFactor.mockResolvedValue({ data: { id: 'f1', friendlyName: 'Test', totp: { qrCode: FAKE_QR, secret: FAKE_SECRET, uri: FAKE_URI } }, error: null });
     mfaService.challengeAndVerifyTotp.mockResolvedValue({ data: { factorId: 'f1' }, error: null });
     mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal2' });
     render(<MemoryRouter><MfaEnrollPage /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /start enrollment/i }));
-    await waitFor(() => expect(screen.getByAltText(/authenticator qr code/i)).toBeInTheDocument());
+    const img = await screen.findByAltText(/authenticator qr code/i);
+    expect(img.tagName).toBe('IMG');
+    // Exactly the value the installed client returned — no re-prefixing,
+    // no double `data:image/svg+xml` in the src.
+    expect(img.getAttribute('src')).toBe(FAKE_QR);
+    expect((img.getAttribute('src')?.match(/data:image\/svg\+xml/g) ?? []).length).toBe(1);
     expect(screen.getByText(FAKE_SECRET)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/verification code/i), { target: { value: VALID_CODE } });
     fireEvent.click(screen.getByRole('button', { name: /verify and finish/i }));
     await waitFor(() => expect(screen.getByText(/authenticator verified/i)).toBeInTheDocument());
     expect(mockAuth.refreshAssurance).toHaveBeenCalledTimes(1);
+  });
+
+  it('also renders correctly if a future/older client returns raw, unprefixed SVG', async () => {
+    mfaService.enrollTotpFactor.mockResolvedValue({ data: { id: 'f1', friendlyName: 'Test', totp: { qrCode: RAW_FAKE_SVG, secret: FAKE_SECRET, uri: FAKE_URI } }, error: null });
+    mockAuth = baseAuth({ status: 'authenticated' });
+    render(<MemoryRouter><MfaEnrollPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: /start enrollment/i }));
+    const img = await screen.findByAltText(/authenticator qr code/i);
+    expect(img.getAttribute('src')).toBe(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(RAW_FAKE_SVG)}`);
+  });
+
+  it('shows a safe error and keeps the setup key available when the QR value is unsafe', async () => {
+    mfaService.enrollTotpFactor.mockResolvedValue({ data: { id: 'f1', friendlyName: 'Test', totp: { qrCode: 'javascript:alert(document.cookie)', secret: FAKE_SECRET, uri: FAKE_URI } }, error: null });
+    mockAuth = baseAuth({ status: 'authenticated' });
+    render(<MemoryRouter><MfaEnrollPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: /start enrollment/i }));
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    expect(screen.queryByAltText(/authenticator qr code/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('alert').textContent).toMatch(/could not be displayed safely/i);
+    // The manual fallback must still be usable even though the QR was rejected.
+    expect(screen.getByText(FAKE_SECRET)).toBeInTheDocument();
+    expect(screen.getByLabelText(/verification code/i)).not.toBeDisabled();
+  });
+
+  it('React StrictMode double-rendering/double-effect does not create two unverified factors', async () => {
+    mfaService.enrollTotpFactor.mockResolvedValue({ data: { id: 'f1', friendlyName: 'Test', totp: { qrCode: FAKE_QR, secret: FAKE_SECRET, uri: FAKE_URI } }, error: null });
+    mockAuth = baseAuth({ status: 'authenticated' });
+    render(
+      <StrictMode>
+        <MemoryRouter><MfaEnrollPage /></MemoryRouter>
+      </StrictMode>,
+    );
+    // enroll() is only ever fired by an explicit user click, never inside a
+    // useEffect — StrictMode's double-invocation of effects on mount has
+    // nothing to double, and the click itself is still guarded.
+    expect(mfaService.enrollTotpFactor).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /start enrollment/i }));
+    await screen.findByAltText(/authenticator qr code/i);
+    expect(mfaService.enrollTotpFactor).toHaveBeenCalledTimes(1);
   });
 
   it('cleans up the unverified factor when enrollment is cancelled', async () => {

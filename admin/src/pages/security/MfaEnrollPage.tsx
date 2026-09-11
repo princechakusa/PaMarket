@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../security/auth-context';
+import { normalizeQrSource } from '../../security/qr-source';
 import { challengeAndVerifyTotp, enrollTotpFactor, unenrollFactor } from '../../services/supabase/mfa';
 
 type Stage = 'start' | 'enrolling' | 'awaiting_code' | 'verifying' | 'cancelling' | 'done';
@@ -19,6 +20,7 @@ export function MfaEnrollPage() {
   const [stage, setStage] = useState<Stage>('start');
   const [factorId, setFactorId] = useState<string | null>(null);
   const [qrDataUri, setQrDataUri] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [copyLabel, setCopyLabel] = useState('Copy setup key');
   const [code, setCode] = useState('');
@@ -41,9 +43,9 @@ export function MfaEnrollPage() {
       return;
     }
     setFactorId(result.data.id);
-    // qr_code is an SVG payload; per supabase-js's own doc comment it needs
-    // the data: prefix below to render as an <img src>.
-    setQrDataUri(`data:image/svg+xml;utf-8,${result.data.totp.qrCode}`);
+    const safeQr = normalizeQrSource(result.data.totp.qrCode);
+    setQrDataUri(safeQr);
+    setQrError(safeQr ? null : 'The QR code could not be displayed safely. Use the setup key below instead.');
     setSecret(result.data.totp.secret);
     setStage('awaiting_code');
   }, []);
@@ -56,6 +58,7 @@ export function MfaEnrollPage() {
     submittingRef.current = false;
     setFactorId(null);
     setQrDataUri(null);
+    setQrError(null);
     setSecret(null);
     setCode('');
     setError(null);
@@ -134,10 +137,14 @@ export function MfaEnrollPage() {
 
       {stage === 'enrolling' && <section className="panel" aria-busy="true" role="status"><p>Starting enrollment…</p></section>}
 
-      {(stage === 'awaiting_code' || stage === 'verifying' || stage === 'cancelling') && qrDataUri && secret && (
+      {(stage === 'awaiting_code' || stage === 'verifying' || stage === 'cancelling') && secret && (
         <section className="panel enroll-panel">
           <h2>1. Scan this QR code</h2>
-          <img className="mfa-qr" src={qrDataUri} alt="Authenticator QR code — scan with your authenticator app" width={220} height={220} />
+          {qrDataUri ? (
+            <img className="mfa-qr" src={qrDataUri} alt="Authenticator QR code — scan with your authenticator app" width={220} height={220} />
+          ) : (
+            <p role="alert" className="form-error">{qrError}</p>
+          )}
           <h2>2. Or enter this setup key manually</h2>
           <div className="secret-row">
             <code className="secret-value">{secret}</code>
