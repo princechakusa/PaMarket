@@ -49,22 +49,6 @@ jobs:
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/pamarket.keystore"
 
-      # TEMPORARY — audit-only step to derive the Meta (Facebook) Android key
-      # hash from the release keystore. Prints ONLY the resulting hash, never
-      # the keystore bytes or passwords. Remove this step once the hash has
-      # been retrieved from the workflow log.
-      - name: Compute Meta Android key hash (temporary)
-        env:
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        run: |
-          echo "Meta Android key hash:"
-          keytool -exportcert \
-            -alias "$ANDROID_KEY_ALIAS" \
-            -keystore "$RUNNER_TEMP/pamarket.keystore" \
-            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
-            | openssl sha1 -binary | openssl base64
-
       - name: Build signed release AAB
         working-directory: android
         env:
