@@ -50,11 +50,17 @@ export const navigationGroups: NavigationGroup[] = [
     { label: 'Analytics', path: '/observability/analytics', permission: 'analytics.view' }, { label: 'Audit center', path: '/observability/audit', permission: 'audit.view' },
     { label: 'Errors', path: '/observability/errors', permission: 'errors.view' }, { label: 'Operations', path: '/observability/operations', permission: 'operations.view' },
   ] },
-  { label: 'Security', items: [{ label: 'Connection check', path: '/security', permission: 'security.view' }, { label: 'Permission preview', path: '/security/permissions', permission: 'security.view' }] },
+  { label: 'Security', items: [
+    { label: 'Connection check', path: '/security', permission: 'security.view' },
+    { label: 'Permission preview', path: '/security/permissions', permission: 'security.view' },
+    { label: 'Security settings', path: '/settings/security', permission: 'security.view' },
+  ] },
   { label: 'Settings', items: [
     { label: 'Notifications', path: '/settings/notifications', permission: 'settings.view' }, { label: 'Automation', path: '/settings/automation', permission: 'settings.view' },
     { label: 'Maintenance', path: '/settings/maintenance', permission: 'settings.manage' }, { label: 'Settings', path: '/settings/general', permission: 'settings.view' },
   ] },
 ];
 
-export const mockRoutes = navigationGroups.flatMap((group) => group.items).filter((item) => item.path !== '/');
+export const mockRoutes = navigationGroups
+  .flatMap((group) => group.items)
+  .filter((item) => item.path !== '/' && item.path !== '/settings/security');

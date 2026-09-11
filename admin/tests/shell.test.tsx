@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { App } from '../src/app/App';
+import { Sidebar } from '../src/components/shell/Sidebar';
 import { HoneypotField } from '../src/security/HoneypotField';
 import { mockRoutes, navigationGroups } from '../src/app/navigation';
 
@@ -41,5 +43,25 @@ describe('Stage C admin shell', () => {
     expect(navigationGroups).toHaveLength(13);
     expect(mockRoutes).toHaveLength(55);
     expect(new Set(mockRoutes.map((route) => route.path)).size).toBe(55);
+  });
+
+  it('links visibly to the real security settings route and exposes its active state', () => {
+    const securityItem = navigationGroups
+      .find((group) => group.label === 'Security')
+      ?.items.find((item) => item.label === 'Security settings');
+    expect(securityItem).toEqual({
+      label: 'Security settings',
+      path: '/settings/security',
+      permission: 'security.view',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/settings/security']}>
+        <Sidebar open onClose={() => {}} />
+      </MemoryRouter>,
+    );
+    const link = screen.getByRole('link', { name: /security settings/i });
+    expect(link).toHaveAttribute('href', '/settings/security');
+    expect(link).toHaveAttribute('aria-current', 'page');
   });
 });

@@ -55,6 +55,11 @@ begin
   perform set_config('request.jwt.claim.role', 'authenticated', true);
 
   perform set_config('request.jwt.claim.sub', v_super::text, true);
+  perform set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub', v_super, 'role', 'authenticated', 'aal', 'aal2')::text,
+    true
+  );
   set local role authenticated;
   insert into c2b_fix_results values (1, 'super_admin passes is_admin', public.is_admin());
   insert into c2b_fix_results values (2, 'super_admin passes is_moderator', public.is_moderator());
@@ -65,7 +70,7 @@ begin
   insert into c2b_fix_results values (11, 'super_admin performs representative guarded profile action', v_rows = 1);
   begin
     perform public.amos_set_integration_credential(
-      'c2b_fix_rollback_probe', 'c2b_fix_rollback_probe_super', 'rollback-only-value'
+      'c2b_fix_rollback_probe', 'c2b_fix_rollback_probe_super', md5(random()::text)
     );
     insert into c2b_fix_results values (14, 'AMOS credential setter accepts super_admin', true);
   exception when others then
@@ -112,7 +117,7 @@ begin
     v_rejected := false;
     begin
       perform public.amos_set_integration_credential(
-        'c2b_fix_rollback_probe', 'c2b_fix_rollback_probe_rejected', 'rollback-only-value'
+        'c2b_fix_rollback_probe', 'c2b_fix_rollback_probe_rejected', md5(random()::text)
       );
     exception when others then
       v_rejected := sqlerrm = 'Only super_admin can connect AMOS integrations';
