@@ -1,0 +1,164 @@
+-- Stage C2E-2: extend the server-owned evidence allowlist for R2
+-- privileged namespace authorization decisions.
+-- Prepared only. Do not apply without review and production approval.
+
+begin;
+
+do $preflight$
+begin
+  if to_regclass('public.security_events') is null then
+    raise exception 'C2E-2 abort: public.security_events is missing';
+  end if;
+  if to_regprocedure('public.record_security_event(text,text,text,uuid,text,boolean,text,text,text,text,text,text,uuid,text,text,inet,text,text,text,jsonb)') is null then
+    raise exception 'C2E-2 abort: record_security_event(...) is missing';
+  end if;
+end
+$preflight$;
+
+create or replace function public.record_security_event(
+  p_event_type          text,
+  p_severity             text,
+  p_source               text,
+  p_actor_user_id        uuid,
+  p_actor_role           text,
+  p_actor_authenticated  boolean,
+  p_assurance_level      text,
+  p_target_type          text,
+  p_target_id            text,
+  p_action               text,
+  p_outcome              text,
+  p_reason_code          text,
+  p_correlation_id       uuid,
+  p_request_path         text,
+  p_request_method       text,
+  p_ip_address           inet,
+  p_ip_source            text,
+  p_user_agent           text,
+  p_event_key            text,
+  p_metadata             jsonb
+)
+returns table(id uuid, status text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_allowed_event_types constant text[] := array[
+    'admin_login_honeypot','admin_login_failed','admin_login_succeeded',
+    'admin_mfa_challenge_failed','admin_mfa_challenge_succeeded','admin_logout',
+    'admin_sentry_access_denied','admin_sentry_issues_listed','admin_sentry_issue_viewed',
+    'admin_r2_access_denied','admin_r2_upload_issued','admin_r2_verification_read_issued'
+  ];
+  v_prohibited_metadata_keys constant text[] := array[
+    'password','otp','otp_code','code','secret','totp_secret','qr','qr_code',
+    'token','access_token','refresh_token','authorization','honeypot',
+    'honeypot_value','card','cvv','card_number','email','query'
+  ];
+  v_metadata jsonb;
+  v_path     text;
+  v_ua       text;
+  v_id       uuid;
+  v_status   text;
+  k          text;
+begin
+  if p_event_type is null or not (p_event_type = any(v_allowed_event_types)) then
+    raise exception 'record_security_event: unsupported event_type' using errcode = '22023';
+  end if;
+  if p_severity is null or not (p_severity in ('info','notice','warning','high','critical')) then
+    raise exception 'record_security_event: unsupported severity' using errcode = '22023';
+  end if;
+  if p_source is null or not (p_source in ('edge_function','database')) then
+    raise exception 'record_security_event: unsupported source' using errcode = '22023';
+  end if;
+  if p_outcome is null or not (p_outcome in ('success','failure','blocked','suspicious')) then
+    raise exception 'record_security_event: unsupported outcome' using errcode = '22023';
+  end if;
+  if p_action is null or length(p_action) = 0 then
+    raise exception 'record_security_event: action is required' using errcode = '22023';
+  end if;
+
+  v_path := p_request_path;
+  if v_path is not null then
+    v_path := split_part(v_path, '?', 1);
+    if length(v_path) > 512 then v_path := left(v_path, 512); end if;
+  end if;
+
+  v_ua := p_user_agent;
+  if v_ua is not null and length(v_ua) > 300 then v_ua := left(v_ua, 300); end if;
+
+  if p_metadata is null then
+    v_metadata := '{}'::jsonb;
+  else
+    if jsonb_typeof(p_metadata) <> 'object' then
+      raise exception 'record_security_event: metadata must be a JSON object' using errcode = '22023';
+    end if;
+    v_metadata := p_metadata;
+    foreach k in array v_prohibited_metadata_keys loop
+      v_metadata := v_metadata - k;
+    end loop;
+    if pg_column_size(v_metadata) > 4096 then
+      raise exception 'record_security_event: metadata too large' using errcode = '22023';
+    end if;
+  end if;
+
+  if p_event_key is not null and length(p_event_key) > 200 then
+    raise exception 'record_security_event: event_key too long' using errcode = '22023';
+  end if;
+
+  insert into public.security_events (
+    event_type, severity, source, actor_user_id, actor_role, actor_authenticated,
+    assurance_level, target_type, target_id, action, outcome, reason_code,
+    correlation_id, request_path, request_method, ip_address, ip_source,
+    user_agent, event_key, metadata
+  ) values (
+    p_event_type, p_severity, p_source, p_actor_user_id,
+    left(nullif(p_actor_role, ''), 32),
+    coalesce(p_actor_authenticated, false),
+    coalesce(nullif(p_assurance_level, ''), 'aal1'),
+    left(nullif(p_target_type, ''), 64),
+    left(nullif(p_target_id, ''), 128),
+    left(p_action, 64),
+    p_outcome,
+    left(nullif(p_reason_code, ''), 64),
+    p_correlation_id,
+    v_path,
+    left(nullif(p_request_method, ''), 8),
+    p_ip_address,
+    coalesce(nullif(p_ip_source, ''), 'unavailable'),
+    v_ua,
+    p_event_key,
+    v_metadata
+  )
+  on conflict (event_key) where event_key is not null do nothing
+  returning security_events.id into v_id;
+
+  if v_id is null and p_event_key is not null then
+    select se.id into v_id from public.security_events se where se.event_key = p_event_key limit 1;
+    v_status := 'duplicate';
+  else
+    v_status := 'recorded';
+  end if;
+
+  return query select v_id, v_status;
+end;
+$$;
+
+comment on function public.record_security_event is
+  'C2E: the only INSERT path into security_events. Timestamps are always server-generated by the table default — no timestamp parameter exists. Rejects unknown event_type/severity/source/outcome, strips query strings from request_path, redacts a fixed set of prohibited metadata keys, bounds metadata to 4KB, and is idempotent on event_key via ON CONFLICT DO NOTHING. Callable only by service_role.';
+
+revoke all on function public.record_security_event(
+  text, text, text, uuid, text, boolean, text, text, text, text, text, text,
+  uuid, text, text, inet, text, text, text, jsonb
+) from public;
+revoke execute on function public.record_security_event(
+  text, text, text, uuid, text, boolean, text, text, text, text, text, text,
+  uuid, text, text, inet, text, text, text, jsonb
+) from anon, authenticated;
+grant execute on function public.record_security_event(
+  text, text, text, uuid, text, boolean, text, text, text, text, text, text,
+  uuid, text, text, inet, text, text, text, jsonb
+) to service_role;
+
+notify pgrst, 'reload schema';
+
+commit;

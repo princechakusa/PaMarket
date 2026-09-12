@@ -83,6 +83,36 @@ const EXT_BY_CONTENT_TYPE: Record<string, string> = {
 // no AMOS-specific constraint on fn_name.
 const BURST_LIMIT = { windowMinutes: 1, maxCalls: 20 }
 const DAILY_QUOTA  = { windowMinutes: 24 * 60, maxCalls: 150 }
+const ADMIN_ROLES = new Set(['admin', 'super_admin'])
+
+function publicErrorMessage(message: string): { message: string; status: number } {
+  if (message === 'Unauthorized') return { message, status: 401 }
+  if (message === 'Forbidden' || message === 'Forbidden path') return { message, status: 403 }
+  if (message.startsWith('Too many upload requests') || message.startsWith('Daily upload limit reached')) {
+    return { message, status: 429 }
+  }
+  if (
+    message === 'key required' ||
+    message === 'contentType required for upload' ||
+    message === 'Content type not permitted' ||
+    message === 'PDF uploads only permitted under cv/ prefix' ||
+    message.startsWith('File exceeds maximum size')
+  ) {
+    return { message, status: 400 }
+  }
+  return { message: 'Unable to process upload request', status: 500 }
+}
+
+function verifiedAssuranceLevel(jwt: string): 'aal1' | 'aal2' | 'unknown' {
+  try {
+    const segment = jwt.split('.')[1]
+    if (!segment) return 'unknown'
+    const payload = JSON.parse(atob(segment.replace(/-/g, '+').replace(/_/g, '/').padEnd(segment.length + (4 - segment.length % 4) % 4, '='))) as Record<string, unknown>
+    return payload['aal'] === 'aal2' ? 'aal2' : payload['aal'] === 'aal1' ? 'aal1' : 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
 
 Deno.serve(async (req) => {
   const cors = corsHeaders(req)
@@ -110,6 +140,47 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authErr } = await sb.auth.getUser()
     if (authErr || !user) throw new Error('Unauthorized')
 
+    const callerJwt = auth.replace(/^Bearer\s+/i, '').trim()
+    const assuranceLevel = verifiedAssuranceLevel(callerJwt)
+    const requestUrl = new URL(req.url)
+    let actorRole: string | null = null
+    let roleLoaded = false
+
+    const loadActorRole = async () => {
+      if (roleLoaded) return actorRole
+      const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      actorRole = typeof profile?.role === 'string' ? profile.role : null
+      roleLoaded = true
+      return actorRole
+    }
+
+    const recordEvidence = async (eventType: string, outcome: 'success' | 'failure' | 'blocked', reasonCode: string | null, operation: string) => {
+      const eventKey = `${eventType}:${user.id}:${operation}:${Math.floor(Date.now() / (5 * 60_000))}`
+      const { error } = await db.rpc('record_security_event', {
+        p_event_type: eventType,
+        p_severity: outcome === 'blocked' ? 'warning' : outcome === 'failure' ? 'notice' : 'info',
+        p_source: 'edge_function',
+        p_actor_user_id: user.id,
+        p_actor_role: actorRole,
+        p_actor_authenticated: true,
+        p_assurance_level: assuranceLevel,
+        p_target_type: 'r2_namespace',
+        p_target_id: operation,
+        p_action: 'r2_url_issue',
+        p_outcome: outcome,
+        p_reason_code: reasonCode,
+        p_correlation_id: null,
+        p_request_path: requestUrl.pathname,
+        p_request_method: req.method,
+        p_ip_address: req.headers.get('cf-connecting-ip')?.trim() || null,
+        p_ip_source: req.headers.get('cf-connecting-ip')?.trim() ? 'cf-connecting-ip' : 'unavailable',
+        p_user_agent: req.headers.get('user-agent')?.slice(0, 300) ?? null,
+        p_event_key: eventKey,
+        p_metadata: { operation },
+      })
+      if (error) console.error('get-r2-upload-url: evidence write failed', error.code ?? 'unknown')
+    }
+
     const { key, contentType, verb = 'PUT', expiresIn } = await req.json()
     if (!key || typeof key !== 'string') throw new Error('key required')
 
@@ -129,20 +200,22 @@ Deno.serve(async (req) => {
 
     if (isGet && isVerification) {
       // Admin can access any verification path; users only their own
-      const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).single()
-      const isAdmin = profile?.role === 'admin'
-      if (!isAdmin && !key.startsWith(`verification/${user.id}/`)) throw new Error('Forbidden')
+      const role = await loadActorRole()
+      const isAdmin = role !== null && ADMIN_ROLES.has(role)
+      if (!isAdmin && !key.startsWith(`verification/${user.id}/`)) {
+        await recordEvidence('admin_r2_access_denied', 'blocked', 'verification_path_forbidden', 'verification_read')
+        throw new Error('Forbidden')
+      }
     } else {
       // Ad creatives and AMOS marketing media use shared public
       // namespaces, but only administrators may request upload URLs for
       // either.
       if (isAd || isAmos) {
-        const { data: profile, error: profileErr } = await sb
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        if (profileErr || profile?.role !== 'admin') throw new Error('Forbidden')
+        const role = await loadActorRole()
+        if (!role || !ADMIN_ROLES.has(role)) {
+          await recordEvidence('admin_r2_access_denied', 'blocked', 'insufficient_role', isAd ? 'ads_upload' : 'amos_media_upload')
+          throw new Error('Forbidden')
+        }
       }
 
       // Business logo/cover uploads are keyed by business ID, not user ID
@@ -246,6 +319,14 @@ Deno.serve(async (req) => {
       ? undefined
       : `${Deno.env.get('R2_PUBLIC_URL')}/${finalKey}`
 
+    if (isGet && isVerification && actorRole && ADMIN_ROLES.has(actorRole)) {
+      await recordEvidence('admin_r2_verification_read_issued', 'success', null, 'verification_read')
+    } else if (!isGet && isAd && actorRole && ADMIN_ROLES.has(actorRole)) {
+      await recordEvidence('admin_r2_upload_issued', 'success', null, 'ads_upload')
+    } else if (!isGet && isAmos && actorRole && ADMIN_ROLES.has(actorRole)) {
+      await recordEvidence('admin_r2_upload_issued', 'success', null, 'amos_media_upload')
+    }
+
     // `key` is the actual object key the PUT will land at (server-generated,
     // randomized — see the comment above `let keyPrefix` for why the caller's
     // own `key` is never trusted as the final name). Every upload caller must
@@ -263,13 +344,9 @@ Deno.serve(async (req) => {
     })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Internal error'
-    const status =
-      msg === 'Unauthorized' ? 401
-      : msg === 'Forbidden' || msg === 'Forbidden path' ? 403
-      : msg.startsWith('Too many upload requests') || msg.startsWith('Daily upload limit reached') ? 429
-      : 400
-    return new Response(JSON.stringify({ error: msg }), {
-      status,
+    const safeError = publicErrorMessage(msg)
+    return new Response(JSON.stringify({ error: safeError.message }), {
+      status: safeError.status,
       headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
