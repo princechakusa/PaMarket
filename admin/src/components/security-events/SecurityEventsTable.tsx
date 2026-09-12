@@ -1,4 +1,4 @@
-import type { SecurityEvent } from '../../services/security-events/query';
+import { ipDisplay, type SecurityEventRow } from '../../services/security-events/query';
 
 const SEVERITY_LABEL: Record<string, string> = {
   info: 'Info', notice: 'Notice', warning: 'Warning', high: 'High', critical: 'Critical',
@@ -7,14 +7,17 @@ const OUTCOME_CLASS: Record<string, string> = {
   success: 'review', failure: 'escalated', blocked: 'escalated', suspicious: 'pending',
 };
 
+// The IP column is always shown — what varies per caller is the *value*
+// the server returned (a real address for super_admin, "Restricted for
+// this role" for admin), never whether the browser decided to render the
+// column. Authorization already happened server-side before this data
+// arrived.
 export function SecurityEventsTable({
   rows,
-  canSeeIp,
   onSelect,
 }: {
-  rows: SecurityEvent[];
-  canSeeIp: boolean;
-  onSelect: (event: SecurityEvent) => void;
+  rows: SecurityEventRow[];
+  onSelect: (event: SecurityEventRow) => void;
 }) {
   return (
     <div className="table-scroll">
@@ -27,7 +30,7 @@ export function SecurityEventsTable({
             <th>Outcome</th>
             <th>Actor</th>
             <th>Source</th>
-            {canSeeIp && <th>IP</th>}
+            <th>IP</th>
           </tr>
         </thead>
         <tbody>
@@ -44,7 +47,7 @@ export function SecurityEventsTable({
               <td><span className={`status-pill ${OUTCOME_CLASS[row.outcome] ?? 'neutral'}`}>{row.outcome}</span></td>
               <td>{row.actor_role ?? (row.actor_authenticated ? 'authenticated' : '—')}</td>
               <td>{row.source}</td>
-              {canSeeIp && <td className="break-value">{row.ip_address ?? '—'}</td>}
+              <td className="break-value">{ipDisplay(row.ip_address, row.ip_source)}</td>
             </tr>
           ))}
         </tbody>

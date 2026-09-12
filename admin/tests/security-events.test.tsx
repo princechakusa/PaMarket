@@ -8,9 +8,11 @@ vi.mock('../src/services/security-events/report', () => reportService);
 
 const queryService = vi.hoisted(() => ({
   listSecurityEvents: vi.fn(),
+  getSecurityEvent: vi.fn(),
   listHoldsForEvent: vi.fn(),
   placeLegalHold: vi.fn(),
   releaseLegalHold: vi.fn(),
+  ipDisplay: (ipAddress: string | null, ipSource: string) => ipSource === 'restricted' ? 'Restricted for this role' : (ipAddress ?? 'Not available'),
   PAGE_SIZE: 25,
 }));
 vi.mock('../src/services/security-events/query', () => queryService);
@@ -153,8 +155,53 @@ describe('SecurityEventsPage', () => {
     mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal2', identity: { id: 'x', name: 'Test', role: 'admin', permissions: [] } });
     render(<MemoryRouter><SecurityEventsPage /></MemoryRouter>);
     await waitFor(() => expect(screen.getByText('admin_login_failed')).toBeInTheDocument());
-    // admin (not super_admin) must not see the IP column at all.
-    expect(screen.queryByText('IP')).not.toBeInTheDocument();
+    // C2D-FIX: the IP column is always rendered — authorization already
+    // happened server-side before this data arrived. What the RPC
+    // returned for a redacted row (ip_source: 'unavailable' here, i.e.
+    // genuinely not captured, not merely hidden from this role) is shown
+    // via ipDisplay(), never hidden by a frontend role check.
+    expect(screen.getByText('IP')).toBeInTheDocument();
+    expect(screen.getByText('Not available')).toBeInTheDocument();
+  });
+
+  it('shows "Restricted for this role" for admin when the RPC redacts the ip (never a frontend role check)', async () => {
+    queryService.listSecurityEvents.mockResolvedValue({
+      data: { rows: [{ id: 'e2', event_type: 'admin_login_honeypot', severity: 'high', source: 'edge_function', occurred_at: new Date().toISOString(), actor_user_id: null, actor_role: null, actor_authenticated: false, assurance_level: 'aal1', target_type: null, target_id: null, action: 'login', outcome: 'blocked', reason_code: null, correlation_id: null, request_path: '/record-security-event', request_method: 'POST', ip_address: null, ip_source: 'restricted', user_agent: null, retention_until: '' }], total: 1, page: 1, pageSize: 25 },
+      error: null,
+    });
+    mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal2', identity: { id: 'x', name: 'Test', role: 'admin', permissions: [] } });
+    render(<MemoryRouter><SecurityEventsPage /></MemoryRouter>);
+    await waitFor(() => expect(screen.getByText('Restricted for this role')).toBeInTheDocument());
+  });
+
+  it('shows the real ip for super_admin when the RPC includes it', async () => {
+    queryService.listSecurityEvents.mockResolvedValue({
+      data: { rows: [{ id: 'e3', event_type: 'admin_login_honeypot', severity: 'high', source: 'edge_function', occurred_at: new Date().toISOString(), actor_user_id: null, actor_role: null, actor_authenticated: false, assurance_level: 'aal1', target_type: null, target_id: null, action: 'login', outcome: 'blocked', reason_code: null, correlation_id: null, request_path: '/record-security-event', request_method: 'POST', ip_address: '198.51.100.7', ip_source: 'cf-connecting-ip', user_agent: null, retention_until: '' }], total: 1, page: 1, pageSize: 25 },
+      error: null,
+    });
+    mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal2', identity: { id: 'x', name: 'Test', role: 'super_admin', permissions: [] } });
+    render(<MemoryRouter><SecurityEventsPage /></MemoryRouter>);
+    await waitFor(() => expect(screen.getByText('198.51.100.7')).toBeInTheDocument());
+  });
+
+  it('the detail drawer loads via getSecurityEvent(), never a direct table read, and shows hold status', async () => {
+    queryService.listSecurityEvents.mockResolvedValue({
+      data: { rows: [{ id: 'e4', event_type: 'admin_login_failed', severity: 'notice', source: 'edge_function', occurred_at: new Date().toISOString(), actor_user_id: null, actor_role: null, actor_authenticated: false, assurance_level: 'aal1', target_type: null, target_id: null, action: 'login', outcome: 'failure', reason_code: 'invalid_credentials', correlation_id: null, request_path: '/login', request_method: 'POST', ip_address: null, ip_source: 'restricted', user_agent: null, retention_until: '' }], total: 1, page: 1, pageSize: 25 },
+      error: null,
+    });
+    queryService.getSecurityEvent.mockResolvedValue({
+      data: { id: 'e4', event_type: 'admin_login_failed', severity: 'notice', source: 'edge_function', occurred_at: new Date().toISOString(), received_at: new Date().toISOString(), actor_user_id: null, actor_role: null, actor_authenticated: false, assurance_level: 'aal1', target_type: null, target_id: null, action: 'login', outcome: 'failure', reason_code: 'invalid_credentials', correlation_id: null, request_path: '/login', request_method: 'POST', ip_address: null, ip_source: 'restricted', user_agent: null, metadata: {}, retention_until: '', created_at: '', hold_status: 'active', hold_id: 'hold-1' },
+      error: null,
+    });
+    mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal2', identity: { id: 'x', name: 'Test', role: 'admin', permissions: [] } });
+    render(<MemoryRouter><SecurityEventsPage /></MemoryRouter>);
+    await waitFor(() => expect(document.querySelector('tbody tr')).toBeTruthy());
+    fireEvent.click(document.querySelector('tbody tr') as HTMLElement);
+    await waitFor(() => expect(queryService.getSecurityEvent).toHaveBeenCalledWith('e4'));
+    expect(queryService.listHoldsForEvent).not.toHaveBeenCalled();
+    expect(screen.getByText('On hold')).toBeInTheDocument();
+    // admin cannot manage holds even though this event has one.
+    expect(screen.getByText(/only super_admin, with an aal2 session/i)).toBeInTheDocument();
   });
 
   it('shows an empty state distinctly from an error state', async () => {

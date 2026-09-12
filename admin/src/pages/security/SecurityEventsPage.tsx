@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../security/auth-context';
-import { listSecurityEvents, type SecurityEvent, type SecurityEventFilters, PAGE_SIZE } from '../../services/security-events/query';
+import { listSecurityEvents, type SecurityEventRow, type SecurityEventFilters, PAGE_SIZE } from '../../services/security-events/query';
 import { SecurityEventsTable } from '../../components/security-events/SecurityEventsTable';
 import { SecurityEventDetail } from '../../components/security-events/SecurityEventDetail';
 
@@ -16,16 +16,15 @@ type LoadState = 'loading' | 'loaded' | 'empty' | 'error';
 
 export function SecurityEventsPage() {
   const auth = useAuth();
-  const canSeeIp = auth.identity?.role === 'super_admin';
   const hasAal2 = auth.assuranceLevel === 'aal2';
 
   const [filters, setFilters] = useState<SecurityEventFilters>({});
   const [page, setPage] = useState(1);
   const [state, setState] = useState<LoadState>('loading');
-  const [rows, setRows] = useState<SecurityEvent[]>([]);
+  const [rows, setRows] = useState<SecurityEventRow[]>([]);
   const [total, setTotal] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [selected, setSelected] = useState<SecurityEvent | null>(null);
+  const [selected, setSelected] = useState<SecurityEventRow | null>(null);
 
   const load = useCallback(async () => {
     if (!hasAal2) return;
@@ -140,7 +139,7 @@ export function SecurityEventsPage() {
       {state === 'loaded' && (
         <>
           <section className="panel table-panel">
-            <SecurityEventsTable rows={rows} canSeeIp={canSeeIp} onSelect={setSelected} />
+            <SecurityEventsTable rows={rows} onSelect={setSelected} />
           </section>
           <div className="state-preview">
             <p>Page {page} of {totalPages}</p>
@@ -154,8 +153,7 @@ export function SecurityEventsPage() {
 
       {selected && (
         <SecurityEventDetail
-          event={selected}
-          canSeeIp={canSeeIp}
+          eventSummary={selected}
           onClose={() => setSelected(null)}
           onHoldChanged={() => void load()}
         />

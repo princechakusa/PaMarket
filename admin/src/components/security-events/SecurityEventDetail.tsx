@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../security/auth-context';
 import {
-  listHoldsForEvent, placeLegalHold, releaseLegalHold,
-  type SecurityEvent, type LegalHold,
+  getSecurityEvent, placeLegalHold, releaseLegalHold, ipDisplay,
+  type SecurityEventRow, type SecurityEventDetail as SecurityEventDetailRow,
 } from '../../services/security-events/query';
 
 function MetadataList({ metadata }: { metadata: unknown }) {
@@ -20,14 +20,19 @@ function MetadataList({ metadata }: { metadata: unknown }) {
   );
 }
 
-export function SecurityEventDetail({ event, onClose, canSeeIp, onHoldChanged }: {
-  event: SecurityEvent;
+/**
+ * Detail drawer. C2D-FIX: fetches through get_security_event() only —
+ * never a direct table read of security_events or
+ * security_event_legal_holds. IP visibility and hold_status both come
+ * back from that one RPC call, already redacted/computed server-side.
+ */
+export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
+  eventSummary: SecurityEventRow;
   onClose: () => void;
-  canSeeIp: boolean;
   onHoldChanged: () => void;
 }) {
   const auth = useAuth();
-  const [holds, setHolds] = useState<LegalHold[] | null>(null);
+  const [event, setEvent] = useState<SecurityEventDetailRow | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -36,21 +41,19 @@ export function SecurityEventDetail({ event, onClose, canSeeIp, onHoldChanged }:
   const canManageHolds = auth.identity?.role === 'super_admin' && auth.assuranceLevel === 'aal2';
 
   const load = useCallback(async () => {
-    const result = await listHoldsForEvent(event.id, event.correlation_id);
+    const result = await getSecurityEvent(eventSummary.id);
     if (result.error) { setLoadError(result.error.message); return; }
     setLoadError(null);
-    setHolds(result.data);
-  }, [event.id, event.correlation_id]);
+    setEvent(result.data);
+  }, [eventSummary.id]);
 
   useEffect(() => { void load(); }, [load]);
-
-  const activeHold = holds?.find((hold) => hold.status === 'active') ?? null;
 
   async function handlePlaceHold() {
     if (busy || reason.trim().length === 0) return;
     setBusy(true);
     setActionError(null);
-    const result = await placeLegalHold({ eventId: event.id, reason: reason.trim() });
+    const result = await placeLegalHold({ eventId: eventSummary.id, reason: reason.trim() });
     setBusy(false);
     if (result.error) { setActionError(result.error.message); return; }
     setReason('');
@@ -59,14 +62,23 @@ export function SecurityEventDetail({ event, onClose, canSeeIp, onHoldChanged }:
   }
 
   async function handleReleaseHold() {
-    if (busy || !activeHold) return;
+    if (busy || !event?.hold_id) return;
     setBusy(true);
     setActionError(null);
-    const result = await releaseLegalHold(activeHold.id);
+    const result = await releaseLegalHold(event.hold_id);
     setBusy(false);
     if (result.error) { setActionError(result.error.message); return; }
     await load();
     onHoldChanged();
+  }
+
+  if (!event) {
+    return (
+      <aside className="panel" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
+        {loadError ? <p role="alert" className="form-error">{loadError}</p> : <p>Loading…</p>}
+        <button type="button" onClick={onClose}>Close</button>
+      </aside>
+    );
   }
 
   return (
@@ -97,7 +109,7 @@ export function SecurityEventDetail({ event, onClose, canSeeIp, onHoldChanged }:
         <div><dt>Target</dt><dd>{event.target_type ? `${event.target_type}:${event.target_id ?? ''}` : '—'}</dd></div>
         <div><dt>Correlation ID</dt><dd className="break-value">{event.correlation_id ?? '—'}</dd></div>
         <div><dt>Request path</dt><dd className="break-value">{event.request_path ?? '—'}</dd></div>
-        {canSeeIp && <div><dt>IP address</dt><dd>{event.ip_address ?? '—'} <small>({event.ip_source})</small></dd></div>}
+        <div><dt>IP address</dt><dd>{ipDisplay(event.ip_address, event.ip_source)}</dd></div>
         <div><dt>User agent</dt><dd className="break-value">{event.user_agent ?? '—'}</dd></div>
         <div><dt>Retention until</dt><dd>{new Date(event.retention_until).toLocaleDateString()}</dd></div>
       </dl>
@@ -106,20 +118,19 @@ export function SecurityEventDetail({ event, onClose, canSeeIp, onHoldChanged }:
       <MetadataList metadata={event.metadata} />
 
       <h3>Legal hold</h3>
-      {loadError && <p role="alert" className="form-error">{loadError}</p>}
-      {holds === null ? <p>Loading…</p> : activeHold ? (
-        <p><span className="status-pill escalated">On hold</span> — placed {new Date(activeHold.placed_at).toLocaleString()}. Reason: {activeHold.reason}</p>
+      {event.hold_status === 'active' ? (
+        <p><span className="status-pill escalated">On hold</span></p>
       ) : (
         <p><span className="status-pill neutral">No active hold</span></p>
       )}
 
       {canManageHolds ? (
-        activeHold ? (
-          <button type="button" className="danger-button" disabled={busy} onClick={() => void handleReleaseHold()}>{busy ? 'Releasing…' : 'Release hold'}</button>
+        event.hold_status === 'active' ? (
+          <button type="button" className="danger-button" disabled={busy} onClick={() => void handleReleaseHold()}>Release hold</button>
         ) : (
           <div>
             <label htmlFor="hold-reason" className="sr-only">Hold reason</label>
-            <input id="hold-reason" placeholder="Reason (required)" value={reason} onChange={(event) => setReason(event.target.value.slice(0, 500))} disabled={busy} />
+            <input id="hold-reason" placeholder="Reason (required)" value={reason} onChange={(changeEvent) => setReason(changeEvent.target.value.slice(0, 500))} disabled={busy} />
             <button type="button" className="primary-button" disabled={busy || reason.trim().length === 0} onClick={() => void handlePlaceHold()}>{busy ? 'Placing…' : 'Place legal hold'}</button>
           </div>
         )
