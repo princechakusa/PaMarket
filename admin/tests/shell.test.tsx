@@ -63,6 +63,17 @@ describe('Stage C admin shell', () => {
     expect(screen.getByRole('button', { name: /Release Escrow/i })).toBeDisabled();
   });
 
+  it('renders the shop orders ledger and switches the escrow inspector', () => {
+    window.history.replaceState({}, '', '/orders');
+    render(<App />);
+    expect(screen.getByRole('heading', { name: 'Shop Orders & Escrow Inbox' })).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Shop orders and escrow ledger' })).toBeInTheDocument();
+    expect(screen.getByText('REFERENCE ORDER DATA')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect #ORD-ZW-9820' }));
+    expect(screen.getByRole('complementary', { name: 'Order escrow inspector' })).toHaveTextContent('#ORD-ZW-9820');
+    expect(screen.getByRole('button', { name: /EXECUTE ESCROW RELEASE/i })).toBeDisabled();
+  });
+
   it('keeps the honeypot placeholder out of keyboard navigation', () => {
     const { container } = render(<HoneypotField />);
     const input = container.querySelector('input');
