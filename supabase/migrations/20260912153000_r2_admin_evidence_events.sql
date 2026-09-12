@@ -52,7 +52,8 @@ declare
   v_prohibited_metadata_keys constant text[] := array[
     'password','otp','otp_code','code','secret','totp_secret','qr','qr_code',
     'token','access_token','refresh_token','authorization','honeypot',
-    'honeypot_value','card','cvv','card_number','email','query'
+    'honeypot_value','card','cvv','card_number','email','query',
+    'key','object_key','filename','file_name','url','signed_url','signedurl'
   ];
   v_metadata jsonb;
   v_path     text;
