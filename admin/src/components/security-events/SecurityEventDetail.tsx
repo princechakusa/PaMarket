@@ -74,7 +74,7 @@ export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
 
   if (!event) {
     return (
-      <aside className="panel" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
+      <aside className="panel security-event-dossier" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
         {loadError ? <p role="alert" className="form-error">{loadError}</p> : <p>Loading…</p>}
         <button type="button" onClick={onClose}>Close</button>
       </aside>
@@ -82,7 +82,7 @@ export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
   }
 
   return (
-    <aside className="panel" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
+    <aside className="panel security-event-dossier" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
       <div className="panel-heading">
         <h2>{event.event_type}</h2>
         <button type="button" onClick={onClose}>Close</button>

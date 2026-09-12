@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../security/auth-context';
-import { listSecurityEvents, type SecurityEventRow, type SecurityEventFilters, PAGE_SIZE } from '../../services/security-events/query';
+import { ipDisplay, listSecurityEvents, type SecurityEventRow, type SecurityEventFilters, PAGE_SIZE } from '../../services/security-events/query';
 import { SecurityEventsTable } from '../../components/security-events/SecurityEventsTable';
 import { SecurityEventDetail } from '../../components/security-events/SecurityEventDetail';
 
@@ -49,6 +49,9 @@ export function SecurityEventsPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const honeypotCount = rows.filter((row) => row.event_type.includes('honeypot')).length;
+  const blockedCount = rows.filter((row) => row.outcome === 'blocked').length;
+  const elevatedCount = rows.filter((row) => ['high', 'critical'].includes(row.severity)).length;
 
   if (!hasAal2) {
     return (
@@ -61,13 +64,12 @@ export function SecurityEventsPage() {
   }
 
   return (
-    <>
-      <div className="page-heading">
-        <div><p className="eyebrow">Observability</p><h1>Security events</h1><p>Server-recorded login, MFA, and honeypot signals. Investigation records, not a claim of proven intrusion.</p></div>
-        <span className="status-pill neutral">{total} total</span>
-      </div>
+    <div className="security-ops-page">
+      <header className="security-ops-hero"><div><small>PAMARKET OPS / SECURITY & PLATFORM / <b>SECURITY & HONEYPOT EVIDENCE</b></small><h1>Honeypot Traps & Forensic Evidence Center</h1><p>Server-recorded authentication, MFA, tripwire, and rate-limit evidence. Signals require investigation and do not prove attribution by themselves.</p></div><aside><span><i className={elevatedCount ? 'danger' : ''}/>THREAT SIGNALS</span><strong>{elevatedCount ? 'ELEVATED' : 'NORMAL'}</strong><span><i/>EVIDENCE CONTROL</span><strong>APPEND-ONLY · RLS</strong></aside><button disabled><span className="material-symbols-outlined">file_download</span>Export requires super_admin handler</button></header>
+      <section className="security-kpis"><article><header><span className="material-symbols-outlined">bug_report</span>HONEYPOT SIGNALS<b>SERVER RECORDED</b></header><strong>{honeypotCount}</strong><span>IN CURRENT PAGE</span><p>Hidden-field tripwire events returned by the protected audit RPC.</p><footer>DISPLAYED / TOTAL <b>{honeypotCount} / {total}</b></footer></article><article className="danger"><header><span className="material-symbols-outlined">block</span>BLOCKED ATTEMPTS<b>ACTIVE RESULT</b></header><strong>{blockedCount}</strong><span>IN CURRENT PAGE</span><p>Requests recorded with a server-owned blocked outcome.</p><footer>HIGH OR CRITICAL <b>{elevatedCount}</b></footer></article><article className="legal"><header><span className="material-symbols-outlined">gavel</span>LEGAL EVIDENCE CONTROL<b>AAL2</b></header><strong>24</strong><span>MONTH RETENTION</span><p>Active legal holds suspend retention cleanup for matching records.</p><footer>HASH CHAIN <b>NOT IMPLEMENTED</b></footer></article></section>
+      <section className="security-stream"><header><div><span className="material-symbols-outlined">terminal</span><b>STREAM: SERVER SECURITY EVENTS</b></div><span><i/>RPC BUFFER: {rows.length} EVENTS</span></header><div>{rows.slice(0,4).map((row)=><button key={row.id} onClick={()=>setSelected(row)}><b className={['high','critical'].includes(row.severity)?'danger-text':''}>{row.event_type.replaceAll('_',' ')}</b><time>{new Date(row.occurred_at).toLocaleTimeString()}</time><code>IP: {ipDisplay(row.ip_address,row.ip_source)}</code><span>{row.request_method ?? 'EVENT'} {row.request_path ?? row.source}</span><em>{row.outcome.toUpperCase()}</em></button>)}{rows.length===0&&<p>{state==='loading'?'Connecting to protected event stream…':'No event rows available for this filter.'}</p>}</div><footer><span>EVENT RATE · CURRENT PAGE</span><div>{Array.from({length:12},(_,index)=><i key={index} style={{height:`${18+((index*17+rows.length*7)%75)}%`}}/>)}</div><b>NO RAW CREDENTIAL OR TOKEN DATA</b></footer></section>
 
-      <section className="panel" aria-label="Filters">
+      <section className="panel security-filters" aria-label="Filters">
         <div className="section-grid" style={{ gridTemplateColumns: 'repeat(4, minmax(0,1fr))' }}>
           <div>
             <label htmlFor="filter-from">From</label>
@@ -139,10 +141,10 @@ export function SecurityEventsPage() {
 
       {state === 'loaded' && (
         <>
-          <section className="panel table-panel">
+          <section className="panel table-panel security-ledger">
             <SecurityEventsTable rows={rows} onSelect={setSelected} />
           </section>
-          <div className="state-preview">
+          <div className="state-preview security-pagination">
             <p>Page {page} of {totalPages}</p>
             <div>
               <button type="button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button>
@@ -159,6 +161,7 @@ export function SecurityEventsPage() {
           onHoldChanged={() => void load()}
         />
       )}
-    </>
+      <footer className="security-ledger-footer"><span className="material-symbols-outlined">lock_clock</span><div><strong>PAMARKET FORENSIC AUDIT LEDGER</strong><small>Append-only evidence · 24-month default retention · active holds suspend cleanup</small></div><span>CRYPTOGRAPHIC HASH CHAIN: <b>NOT IMPLEMENTED</b></span></footer>
+    </div>
   );
 }
