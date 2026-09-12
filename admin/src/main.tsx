@@ -13,6 +13,7 @@ import './styles/reports.css';
 import './styles/orders.css';
 import './styles/jobs.css';
 import './styles/directory.css';
+import './styles/policy.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Admin root element is missing.');
 createRoot(root).render(<StrictMode><App /></StrictMode>);
