@@ -1,19 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
 import { App } from '../src/app/App';
-import { Sidebar } from '../src/components/shell/Sidebar';
 import { HoneypotField } from '../src/security/HoneypotField';
-import { mockRoutes, navigationGroups } from '../src/app/navigation';
+import { mockRoutes, navigationGroups, opsNavigationGroups } from '../src/app/navigation';
 
 describe('Stage C admin shell', () => {
   beforeEach(() => window.history.replaceState({}, '', '/'));
 
-  it('labels the dashboard and data as mock-only', () => {
+  it('renders the approved enterprise ops dashboard and identifies reference data', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /good morning/i })).toBeInTheDocument();
-    expect(screen.getByText(/every number and identity shown here is fictional/i)).toBeInTheDocument();
-    expect(screen.getByText('Local mock')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /operational queue matrix/i })).toBeInTheDocument();
+    expect(screen.getByText('REFERENCE DATA MODE')).toBeInTheDocument();
+    expect(screen.getByText('PREVIEW · LOCAL')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /security & honeypot/i })).toHaveAttribute('href', '/security/events');
+    expect(screen.getByRole('button', { name: /emergency freeze/i })).toBeDisabled();
   });
 
   it('renders an explicitly unmigrated section route', () => {
@@ -55,11 +55,10 @@ describe('Stage C admin shell', () => {
       permission: 'security.view',
     });
 
-    render(
-      <MemoryRouter initialEntries={['/settings/security']}>
-        <Sidebar open onClose={() => {}} />
-      </MemoryRouter>,
-    );
+    const compactSecurityItem = opsNavigationGroups.flatMap((group) => group.items).find((item) => item.path === '/settings/security');
+    expect(compactSecurityItem?.label).toBe('Security Settings');
+    window.history.replaceState({}, '', '/settings/security');
+    render(<App />);
     const link = screen.getByRole('link', { name: /security settings/i });
     expect(link).toHaveAttribute('href', '/settings/security');
     expect(link).toHaveAttribute('aria-current', 'page');

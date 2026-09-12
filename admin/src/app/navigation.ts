@@ -3,6 +3,31 @@ import type { Permission } from '../security/permissions';
 export type NavigationItem = { label: string; path: string; permission: Permission };
 export type NavigationGroup = { label: string; items: NavigationItem[] };
 
+export type OpsNavigationItem = NavigationItem & { icon: string; badge?: string; badgeTone?: 'warning' | 'danger' | 'neutral' };
+export type OpsNavigationGroup = { label: string; items: OpsNavigationItem[] };
+
+export const opsNavigationGroups: OpsNavigationGroup[] = [
+  { label: 'Overview', items: [{ label: 'Operations Dashboard', path: '/', permission: 'dashboard.view', icon: 'monitoring' }] },
+  { label: 'Trust & Moderation', items: [
+    { label: 'Listings Queue', path: '/marketplace/listings', permission: 'listings.view', icon: 'fact_check', badge: '42', badgeTone: 'warning' },
+    { label: 'Verifications', path: '/marketplace/verifications', permission: 'verifications.manage', icon: 'verified', badge: '9', badgeTone: 'neutral' },
+    { label: 'Reports & Disputes', path: '/trust/reports', permission: 'reports.view', icon: 'gavel', badge: '18', badgeTone: 'danger' },
+  ] },
+  { label: 'Directory & Commerce', items: [
+    { label: 'User Directory', path: '/marketplace/users', permission: 'users.view', icon: 'group' },
+    { label: 'Shop Orders', path: '/orders', permission: 'orders.view', icon: 'receipt_long' },
+    { label: 'Jobs & Recruiters', path: '/marketplace/jobs', permission: 'listings.view', icon: 'work' },
+    { label: 'Vehicle Rentals', path: '/rentals', permission: 'rentals.view', icon: 'directions_car' },
+  ] },
+  { label: 'Security & Platform', items: [
+    { label: 'Security & Honeypot', path: '/security/events', permission: 'audit.view', icon: 'shield_with_heart' },
+    { label: 'Roles & Permissions', path: '/security/permissions', permission: 'security.view', icon: 'admin_panel_settings' },
+    { label: 'Errors & Health', path: '/observability/errors', permission: 'errors.view', icon: 'vital_signs' },
+    { label: 'Security Settings', path: '/settings/security', permission: 'security.view', icon: 'passkey' },
+    { label: 'General Settings', path: '/settings/general', permission: 'settings.view', icon: 'tune' },
+  ] },
+];
+
 export const navigationGroups: NavigationGroup[] = [
   { label: 'Overview', items: [{ label: 'Dashboard', path: '/', permission: 'dashboard.view' }] },
   { label: 'Marketplace', items: [

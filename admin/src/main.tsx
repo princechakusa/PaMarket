@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/global.css';
 import './styles/layout.css';
 import './styles/mfa.css';
+import './styles/enterprise.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Admin root element is missing.');
 createRoot(root).render(<StrictMode><App /></StrictMode>);

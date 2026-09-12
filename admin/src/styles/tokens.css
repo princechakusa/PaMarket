@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --navy-950: #07152f;
   --navy-900: #0b1f45;
   --navy-800: #12336d;
@@ -9,9 +9,9 @@
   --ink-900: #16233a;
   --ink-700: #45536a;
   --ink-500: #6d788b;
-  --surface: #ffffff;
-  --canvas: #f4f6fa;
-  --border: #dde3ed;
+  --surface: #1c211e;
+  --canvas: #0f1412;
+  --border: #3d4a42;
   --green: #147a55;
   --green-bg: #e7f6ef;
   --red: #b42318;
@@ -20,9 +20,9 @@
   --blue-bg: #edf4ff;
   --purple: #6840a5;
   --purple-bg: #f2edfb;
-  --shadow: 0 8px 30px rgb(7 21 47 / 7%);
-  --sidebar-width: 264px;
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --shadow: 0 8px 30px rgb(0 0 0 / 22%);
+  --sidebar-width: 256px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }

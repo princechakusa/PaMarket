@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
-import { MockDashboardPage } from '../pages/MockDashboardPage';
+import { OpsDashboardPage } from '../pages/OpsDashboardPage';
 import { MockSectionPage } from '../pages/MockSectionPage';
 import { UnavailablePage } from '../pages/UnavailablePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -20,7 +20,7 @@ export function createAppRouter() { return createBrowserRouter([
   { path: '/mfa/challenge', element: <MfaChallengePage /> },
   {
     path: '/', element: <RequireSession><AdminLayout /></RequireSession>, errorElement: <NotFoundPage />, children: [
-      { index: true, element: <RequirePermission permission="dashboard.view"><MockDashboardPage /></RequirePermission> },
+      { index: true, element: <RequirePermission permission="dashboard.view"><OpsDashboardPage /></RequirePermission> },
       ...mockRoutes.map((route) => ({
         path: route.path.slice(1),
         element: <RequirePermission permission={route.permission}>{route.path === '/security' ? <SecurityCheckPage /> : <MockSectionPage title={route.label} permission={route.permission} />}</RequirePermission>,
