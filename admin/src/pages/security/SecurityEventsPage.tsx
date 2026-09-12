@@ -7,6 +7,7 @@ import { SecurityEventDetail } from '../../components/security-events/SecurityEv
 const EVENT_TYPES = [
   'admin_login_honeypot', 'admin_login_failed', 'admin_login_succeeded',
   'admin_mfa_challenge_failed', 'admin_mfa_challenge_succeeded', 'admin_logout',
+  'admin_sentry_access_denied', 'admin_sentry_issues_listed', 'admin_sentry_issue_viewed',
 ];
 const SEVERITIES = ['info', 'notice', 'warning', 'high', 'critical'];
 const SOURCES = ['edge_function', 'database'];

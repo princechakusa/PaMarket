@@ -13,6 +13,9 @@ enabled = false
 [functions.send-push]
 verify_jwt = true
 
+[functions.admin-sentry-issues]
+verify_jwt = true
+
 [functions.automation-runner]
 verify_jwt = true
 
@@ -26,4 +29,3 @@ verify_jwt = true
 # play-rtdn-webhook's equivalent (Google) configuration.
 [functions.apple-notifications-webhook]
 verify_jwt = false
-

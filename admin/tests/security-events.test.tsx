@@ -140,6 +140,17 @@ describe('Security Events navigation', () => {
 describe('SecurityEventsPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('offers filters for the server-recorded Sentry access events', async () => {
+    queryService.listSecurityEvents.mockResolvedValue({ data: { rows: [], total: 0, page: 1, pageSize: 25 }, error: null });
+    mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal2', identity: { id: 'x', name: 'Test', role: 'admin', permissions: [] } });
+    render(<MemoryRouter><SecurityEventsPage /></MemoryRouter>);
+
+    const filter = screen.getByLabelText(/event type/i);
+    expect(filter).toHaveTextContent('admin_sentry_access_denied');
+    expect(filter).toHaveTextContent('admin_sentry_issues_listed');
+    expect(filter).toHaveTextContent('admin_sentry_issue_viewed');
+  });
+
   it('requires an aal2 session before attempting any query', () => {
     mockAuth = baseAuth({ status: 'authenticated', assuranceLevel: 'aal1', identity: { id: 'x', name: 'Test', role: 'super_admin', permissions: [] } });
     render(<MemoryRouter><SecurityEventsPage /></MemoryRouter>);
