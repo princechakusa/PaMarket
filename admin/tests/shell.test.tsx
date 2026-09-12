@@ -17,11 +17,11 @@ describe('Stage C admin shell', () => {
   });
 
   it('renders an explicitly unmigrated section route', () => {
-    window.history.replaceState({}, '', '/marketplace/users');
+    window.history.replaceState({}, '', '/marketplace/services');
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Services' })).toBeInTheDocument();
     expect(screen.getByText('Mock feature data only. This section is not connected to production data yet.')).toBeInTheDocument();
-    expect(window.location.pathname).toBe('/marketplace/users');
+    expect(window.location.pathname).toBe('/marketplace/services');
   });
 
   it('renders the listings moderation reference and opens its forensic dossier', () => {
