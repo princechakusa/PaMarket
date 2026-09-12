@@ -51,6 +51,18 @@ describe('Stage C admin shell', () => {
     expect(screen.getByRole('button', { name: /Authorize & Issue Merchant Badge/i })).toBeDisabled();
   });
 
+  it('renders the dispute arbitration queue and switches the active dossier', () => {
+    window.history.replaceState({}, '', '/trust/reports');
+    render(<App />);
+    expect(screen.getByRole('heading', { name: 'Reports & Dispute Arbitration Queue' })).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Active dispute cases' })).toBeInTheDocument();
+    expect(screen.getByText('REFERENCE CASE DATA')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect #DSP-4017' }));
+    expect(screen.getByRole('complementary', { name: 'Active dispute dossier' })).toHaveTextContent('#DSP-4017');
+    expect(screen.getByRole('button', { name: /Impound Stock & Ban Merchant/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Release Escrow/i })).toBeDisabled();
+  });
+
   it('keeps the honeypot placeholder out of keyboard navigation', () => {
     const { container } = render(<HoneypotField />);
     const input = container.querySelector('input');
