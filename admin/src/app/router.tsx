@@ -18,6 +18,7 @@ import { JobsRecruitersPage } from '../pages/JobsRecruitersPage';
 import { UserDirectoryPage } from '../pages/UserDirectoryPage';
 import { GeneralSettingsPage } from '../pages/GeneralSettingsPage';
 import { ErrorsHealthPage } from '../pages/ErrorsHealthPage';
+import { VehicleRentalsPage } from '../pages/VehicleRentalsPage';
 import { RequirePermission } from '../security/RequirePermission';
 import { RequireSession } from '../security/RequireSession';
 import { mockRoutes } from './navigation';
@@ -31,7 +32,7 @@ export function createAppRouter() { return createBrowserRouter([
       { index: true, element: <RequirePermission permission="dashboard.view"><OpsDashboardPage /></RequirePermission> },
       ...mockRoutes.map((route) => ({
         path: route.path.slice(1),
-        element: <RequirePermission permission={route.permission}>{route.path === '/security' ? <SecurityCheckPage /> : route.path === '/marketplace/listings' ? <ListingsModerationPage /> : route.path === '/marketplace/verifications' ? <BusinessVerificationsPage /> : route.path === '/trust/reports' ? <ReportsDisputesPage /> : route.path === '/orders' ? <ShopOrdersPage /> : route.path === '/marketplace/jobs' ? <JobsRecruitersPage /> : route.path === '/marketplace/users' ? <UserDirectoryPage /> : route.path === '/settings/general' ? <GeneralSettingsPage /> : route.path === '/observability/errors' ? <ErrorsHealthPage /> : <MockSectionPage title={route.label} permission={route.permission} />}</RequirePermission>,
+        element: <RequirePermission permission={route.permission}>{route.path === '/security' ? <SecurityCheckPage /> : route.path === '/marketplace/listings' ? <ListingsModerationPage /> : route.path === '/marketplace/verifications' ? <BusinessVerificationsPage /> : route.path === '/trust/reports' ? <ReportsDisputesPage /> : route.path === '/orders' ? <ShopOrdersPage /> : route.path === '/marketplace/jobs' ? <JobsRecruitersPage /> : route.path === '/marketplace/users' ? <UserDirectoryPage /> : route.path === '/settings/general' ? <GeneralSettingsPage /> : route.path === '/observability/errors' ? <ErrorsHealthPage /> : route.path === '/rentals' ? <VehicleRentalsPage /> : <MockSectionPage title={route.label} permission={route.permission} />}</RequirePermission>,
       })),
       { path: 'settings/security', element: <RequirePermission permission="security.view"><SecuritySettingsPage /></RequirePermission> },
       { path: 'settings/security/mfa/enroll', element: <RequirePermission permission="security.view"><MfaEnrollPage /></RequirePermission> },
