@@ -1,15 +1,13 @@
-// admin-login-guard — server-side brute-force protection for the admin panel
-// login (www/admin.html). Client-side sessionStorage lockouts are trivially
-// bypassed (clear storage / new tab / new IP), so the real gate lives here:
+// admin-login-guard — authenticated destructive-action throttling and the
+// legacy admin panel's server-observed IP helper.
 //
-//   check  → called BEFORE Supabase auth. Returns whether this IP+email pair
-//            is currently locked out. The real client IP is only visible to
-//            an edge function (CF-Connecting-IP / x-forwarded-for), never to
-//            browser JS.
-//   record → called AFTER each login attempt (success or failure). Persists
-//            the attempt with the real IP, and once a caller crosses the
-//            failure threshold, opens a timed IP block and pushes an admin
-//            alert (via send-push) naming the IP and email that were tried.
+// The old anonymous `check` / `record` login-state actions are deliberately
+// retired. A browser cannot prove that Supabase Auth rejected a password, so
+// accepting its claimed email/result allowed anyone to manufacture attempts
+// and lock out a chosen administrator. Password brute-force protection is
+// owned by Supabase Auth. The admin clients retain their local duplicate/UX
+// limiter and send bounded, non-authoritative security signals through
+// record-security-event.
 //
 // Deploy:  supabase functions deploy admin-login-guard --no-verify-jwt
 // Required Edge Function secrets:
@@ -18,16 +16,9 @@
 //   ADMIN_ALERT_USER_IDS  comma-separated profile ids to push-alert (falls
 //                         back to every profile with role in ADMIN_ROLES)
 //
-// Requires admin_login_attempts.ip (text) and table admin_ip_blocks — see
-// supabase/schema/admin_login_guard.sql.
-
 // Migrated to the shared allowlist (Stage 6).
 import { corsHeaders } from '../_shared/cors.ts';
-
-const MAX_FAILS_PER_IP    = 8;   // across any email, from one IP
-const MAX_FAILS_PER_EMAIL = 5;   // across any IP, against one admin email
-const BLOCK_MS            = 30 * 60 * 1000;   // 30 min hard block
-const WINDOW_MS           = 15 * 60 * 1000;   // failures older than this don't count
+import { ADMIN_ALERT_ROLES, isRetiredPublicLoginStateAction, trustedCloudflareIp } from '../_shared/admin-login-guard-policy.ts';
 
 // Destructive-mutation throttle (ban/delete/role-change). A compromised or
 // rogue admin session should not be able to mass-ban/mass-delete faster than
@@ -38,12 +29,9 @@ const MUTATION_WINDOW_MS       = 5 * 60 * 1000;   // 20 destructive actions / 5 
 const MUTATION_BLOCK_MS        = 10 * 60 * 1000;  // then a 10 min cool-down
 
 function realIp(req: Request): string {
-  // Cloudflare sets CF-Connecting-IP; fall back to the first hop of XFF.
-  const cf = req.headers.get('cf-connecting-ip');
-  if (cf) return cf;
-  const xff = req.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
-  return req.headers.get('x-real-ip') || 'unknown';
+  // Only Cloudflare's own header is trusted. Browser-controlled forwarding
+  // headers are never accepted as an attributed client IP.
+  return trustedCloudflareIp(req.headers);
 }
 
 Deno.serve(async (req) => {
@@ -54,13 +42,20 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(data), { status: status || 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 
   try {
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-    const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-
-    const ip = realIp(req);
     const body = await req.json().catch(() => ({}));
     const action = body['action'];
-    const email = String(body['email'] || '').trim().toLowerCase();
+
+    // These actions previously accepted a caller-selected email plus a
+    // caller-asserted authentication result. Reject them before constructing
+    // a service-role client so no anonymous request can read or write login
+    // attempt/block state, even if obsolete client code replays the request.
+    if (isRetiredPublicLoginStateAction(action)) {
+      return json({ error: 'unsupported_action' }, 410);
+    }
+
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const ip = realIp(req);
 
     if (action === 'whoami') {
       // Cheap real-IP echo for the admin panel's audit logger (section 9 of
@@ -131,83 +126,14 @@ Deno.serve(async (req) => {
       return json({ blocked: false, countInWindow: count });
     }
 
-    if (action === 'check') {
-      if (!email) return json({ error: 'email required' }, 400);
-      const now = new Date().toISOString();
-      const blocked = await db
-        .from('admin_ip_blocks')
-        .select('until, reason')
-        .or(`ip.eq.${ip},email.eq.${email}`)
-        .gt('until', now)
-        .order('until', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (blocked.data) {
-        return json({ blocked: true, until: blocked.data['until'], reason: blocked.data['reason'] });
-      }
-      return json({ blocked: false, ip });
-    }
-
-    if (action === 'record') {
-      const ok = !!body['ok'];
-      const reason = body['reason'] || null;
-      const userAgent = req.headers.get('user-agent') || null;
-
-      await db.from('admin_login_attempts').insert({
-        email: email || null, ok, reason, ip, user_agent: userAgent,
-      });
-
-      if (ok) return json({ recorded: true });
-
-      const since = new Date(Date.now() - WINDOW_MS).toISOString();
-      const [byIp, byEmail] = await Promise.all([
-        db.from('admin_login_attempts').select('id', { count: 'exact', head: true }).eq('ip', ip).eq('ok', false).gt('created_at', since),
-        email
-          ? db.from('admin_login_attempts').select('id', { count: 'exact', head: true }).eq('email', email).eq('ok', false).gt('created_at', since)
-          : Promise.resolve({ count: 0 } as any),
-      ]);
-
-      const ipFails = byIp.count || 0;
-      const emailFails = byEmail.count || 0;
-      const triggerIp = ipFails >= MAX_FAILS_PER_IP;
-      const triggerEmail = emailFails >= MAX_FAILS_PER_EMAIL;
-
-      if (triggerIp || triggerEmail) {
-        const until = new Date(Date.now() + BLOCK_MS).toISOString();
-        const blockReason = triggerIp && triggerEmail
-          ? 'repeated failed logins (ip+email)'
-          : triggerIp ? 'repeated failed logins (ip)' : 'repeated failed logins (email)';
-
-        await db.from('admin_ip_blocks').insert({
-          ip: triggerIp ? ip : null,
-          email: triggerEmail ? email : null,
-          until, reason: blockReason,
-        });
-
-        // Fire-and-forget push alert to admins — never let a delivery failure
-        // affect the lockout response itself.
-        try {
-          await alertAdmins(db, { ip, email, ipFails, emailFails, blockReason });
-        } catch (_e) { /* alert is best-effort */ }
-
-        return json({ blocked: true, until, reason: blockReason });
-      }
-
-      return json({ recorded: true, ipFailsInWindow: ipFails, emailFailsInWindow: emailFails });
-    }
-
     return json({ error: 'unknown action' }, 400);
-  } catch (err) {
-    return json({ error: (err as Error).message }, 500);
+  } catch (_err) {
+    return json({ error: 'internal_error' }, 500);
   }
 });
 
-// How often this function will actually alert admins, regardless of how
-// many times `record` crosses the lockout threshold in that window. The
-// `record` action is unauthenticated by design (it runs before Supabase
-// login), so without this an anonymous caller could keep tripping the
-// lockout and force a fresh alert (and, before this fix, a fresh
-// full-userbase push) on every single call.
+// How often this function alerts admins when the authenticated destructive-
+// mutation throttle opens a block.
 const ALERT_COOLDOWN_MS = 5 * 60 * 1000;
 
 async function alertAdmins(db: any, info: { ip: string; email: string; ipFails: number; emailFails: number; blockReason: string }) {
@@ -229,7 +155,7 @@ async function alertAdmins(db: any, info: { ip: string; email: string; ipFails: 
 
   let targetIds = explicit;
   if (!targetIds.length) {
-    const admins = await db.from('profiles').select('id').in('role', ['admin', 'moderator', 'support', 'finance']);
+    const admins = await db.from('profiles').select('id').in('role', [...ADMIN_ALERT_ROLES]);
     targetIds = (admins.data || []).map((p: any) => p['id']);
   }
   if (!targetIds.length) return;

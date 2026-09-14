@@ -1088,34 +1088,24 @@ async function heartbeatSession(){
   try { await sb.from('admin_sessions').update({last_seen_at:new Date().toISOString()}).eq('id',_sessionId); } catch(e){}
 }
 setInterval(heartbeatSession, 120000);
-// Login attempts and IP blocks are now written exclusively by the
-// admin-login-guard edge function (service role) — see admin_login_guard.sql.
-// RLS grants authenticated/anon no insert on these tables, so a client-side
-// write would silently fail; that's intentional, it makes the lockout
-// tamper-proof from the browser. checkLoginGuard/recordLoginAttempt below
-// are the real gate. logLoginAttempt is kept as a no-op-safe wrapper in case
-// older code paths still call it.
-async function checkLoginGuard(email){
+// Password-attempt state is owned by Supabase Auth. The former anonymous
+// admin-login-guard check/record calls trusted a browser-asserted result and
+// could be replayed against a chosen email. Keep only the local limiter as a
+// duplicate/UX guard; it is not an authorization boundary.
+async function reportLoginSecuritySignal(eventType, accessToken){
   try {
-    var r = await fetch(SUPABASE_URL + '/functions/v1/admin-login-guard', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
-      body: JSON.stringify({ action: 'check', email: email })
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, 5000);
+    var body = { eventType:eventType };
+    if(eventType==='admin_login_failed') body.reasonCode='invalid_credentials';
+    await fetch(SUPABASE_URL + '/functions/v1/record-security-event', {
+      method:'POST', signal:controller.signal,
+      headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_ANON, 'Authorization':'Bearer '+(accessToken||SUPABASE_ANON) },
+      body:JSON.stringify(body)
     });
-    return await r.json();
-  } catch(e){ return { blocked:false }; }
+    clearTimeout(timer);
+  } catch(e){}
 }
-async function recordLoginAttempt(email, ok, reason){
-  try {
-    var r = await fetch(SUPABASE_URL + '/functions/v1/admin-login-guard', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON },
-      body: JSON.stringify({ action: 'record', email: email, ok: ok, reason: reason || null })
-    });
-    return await r.json();
-  } catch(e){ return {}; }
-}
-async function logLoginAttempt(email, ok, reason){ return recordLoginAttempt(email, ok, reason); }
 
 // ── Trust / risk / fraud scoring (shared, transparent heuristics) ──
 // Trust 0-100 (higher=better). Risk 0-100 (higher=worse). Both derive purely
@@ -1547,26 +1537,16 @@ async function doLogin() {
   if(!email||!pass){ showErr('Enter your email and password.'); return; }
   var btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Signing in…';
-  // Server-side gate first: real-IP-aware, cannot be bypassed by clearing
-  // sessionStorage. See admin-login-guard edge function.
-  var guard = await checkLoginGuard(email);
-  if(guard && guard.blocked){
-    var untilMs = guard.until ? new Date(guard.until).getTime() : (Date.now()+30*60000);
-    var gmins = Math.max(1, Math.ceil((untilMs-Date.now())/60000));
-    showErr('Access temporarily blocked ('+(guard.reason||'too many attempts')+'). Try again in '+gmins+' min'+(gmins>1?'s':'.'));
-    btn.disabled=false; btn.textContent='Sign In'; return;
-  }
   try {
     var res = await sb.auth.signInWithPassword({ email:email, password:pass });
     if(res.error||!res.data||!res.data.user){
       recordFail();
-      var rr1 = await recordLoginAttempt(email,false,res.error?res.error.message:'invalid');
-      if(rr1 && rr1.blocked){ showErr('Too many failed attempts — access blocked for 30 minutes.'); btn.disabled=false; btn.textContent='Sign In'; return; }
-      showErr((res.error?res.error.message:'Invalid credentials')+' ('+(MAX_FAILS-getFailState().count)+' attempts left)'); btn.disabled=false; btn.textContent='Sign In'; return;
+      reportLoginSecuritySignal('admin_login_failed');
+      showErr('That email or password was not accepted.'); btn.disabled=false; btn.textContent='Sign In'; return;
     }
     var pr = await sb.from('profiles').select('role,name').eq('id',res.data.user.id).single();
     if(pr.error||!pr.data||ADMIN_ROLES.indexOf(pr.data.role)===-1){
-      await sb.auth.signOut(); recordLoginAttempt(email,false,'not_admin'); showErr('Access denied. Admin team only.');
+      await sb.auth.signOut(); showErr('Access denied. Admin team only.');
       btn.disabled=false; btn.textContent='Sign In'; return;
     }
     // mfa_secret is column-locked (see admin_mfa_secret_column_lockdown.sql)
@@ -1579,19 +1559,19 @@ async function doLogin() {
       var code = await confirm2('Two-Factor Authentication','Enter the 6-digit code from your authenticator app.','Verify','confirm-ok',true,'123456');
       if(code===null){ await sb.auth.signOut(); btn.disabled=false; btn.textContent='Sign In'; return; }
       var ok = await verifyTOTP(mySecret, String(code).replace(/\s/g,''));
-      if(!ok){ await sb.auth.signOut(); var rr2 = await recordLoginAttempt(email,false,'bad_mfa'); if(rr2&&rr2.blocked){ showErr('Too many failed attempts — access blocked for 30 minutes.'); } else { showErr('Incorrect authentication code.'); } btn.disabled=false; btn.textContent='Sign In'; return; }
+      if(!ok){ reportLoginSecuritySignal('admin_mfa_challenge_failed',res.data.session&&res.data.session.access_token); await sb.auth.signOut(); showErr('Incorrect authentication code.'); btn.disabled=false; btn.textContent='Sign In'; return; }
     }
     clearFails();
     _adminEmail = email;
     ADMIN_ROLE = pr.data.role;
     _adminUid = res.data.user.id;
     auditLog('admin_login','auth',res.data.user.id,null,{mfa:!!mySecret},null);
-    recordLoginAttempt(email,true,null);
+    reportLoginSecuritySignal('admin_login_succeeded',res.data.session&&res.data.session.access_token);
     startAdminSession();
     document.getElementById('sidebarUser').textContent = (pr.data.name || email) + (ADMIN_ROLE!=='admin' ? ' ('+ADMIN_ROLE+')' : '');
     showDash();
   } catch(e) {
-    showErr('Login error: '+e.message);
+    showErr('Login could not be completed. Please try again.');
     btn.disabled=false; btn.textContent='Sign In';
   }
 }

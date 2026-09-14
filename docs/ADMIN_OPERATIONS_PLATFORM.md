@@ -26,7 +26,7 @@ This document describes the third-pass transformation of the admin panel from an
 | Global search (press **g** or the topbar Search) | Command-palette overlay searching users, listings, businesses in parallel; jumps straight to the record. |
 | Saved views (`admin_saved_views`) | Per-admin, per-module saved filter sets. Wired into Listings and Users; the helper `savedViewsBar` drops into any module. |
 | Admin session + device tracking (`admin_sessions`) | A row per login with parsed device; 2-min heartbeat; revoked on logout; listed/revocable in the Security Center. |
-| Login-attempt logging (`admin_login_attempts`) | Server-visible success/failure log (brute-force signal) shown in the Security Center. |
+| Login-attempt logging (`admin_login_attempts`) | Historical operational rows shown in the Security Center. Browser writes are retired by C2E-3A; Supabase Auth owns password brute-force enforcement and `security_events` receives bounded, non-authoritative login signals. |
 | **TOTP two-factor auth** (`profiles.mfa_secret`) | Self-contained RFC 6238 implementation via Web Crypto (HMAC-SHA1) — no external library. QR enrolment, ±30s drift tolerance, required at every login once enabled. |
 | Trust / risk / fraud scoring | `computeTrust` (0–100, higher good) and `computeRisk` (0–100, higher bad) from transparent live signals; surfaced in the User CRM and Moderation Inbox. |
 | Keyboard shortcuts | `/` focuses the tab search box, `g` opens global search, `Esc` closes overlays. |

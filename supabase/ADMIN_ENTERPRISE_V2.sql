@@ -56,8 +56,10 @@ ALTER TABLE admin_login_attempts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "login_attempts read" ON admin_login_attempts;
 CREATE POLICY "login_attempts read" ON admin_login_attempts FOR SELECT USING (is_admin_team());
 DROP POLICY IF EXISTS "login_attempts insert" ON admin_login_attempts;
--- Anyone attempting the admin login may write a row (pre-auth), but only their own outcome.
-CREATE POLICY "login_attempts insert" ON admin_login_attempts FOR INSERT WITH CHECK (true);
+-- C2E-3A: browser-observed authentication results are not trusted. Supabase
+-- Auth owns password attempt enforcement; no public login-attempt INSERT.
+REVOKE ALL PRIVILEGES ON TABLE admin_login_attempts FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON TABLE admin_login_attempts TO authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. SUPPORT TICKETS  (Customer Support Center)
