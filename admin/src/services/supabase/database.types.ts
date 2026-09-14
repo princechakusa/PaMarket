@@ -66,9 +66,97 @@ export type Database = {
         Update: { status?: string | null };
         Relationships: [];
       };
-      rental_companies: { Row: { id: string; business_id: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
-      rental_vehicle_listings: { Row: { id: string; status: string | null; admin_status: string | null; company_id: string | null }; Insert: { id?: string; status?: string | null; admin_status?: string | null }; Update: { status?: string | null; admin_status?: string | null }; Relationships: [] };
-      business_subscriptions: { Row: { id: string; business_id: string | null; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      // Batch 2 (Commerce + Rentals + Reviews): all tables below reuse
+      // already-verified admin/owner-scoped RLS (is_admin() throughout,
+      // per the C2E-14/15/20 sibling-table precedent) — no new policies
+      // except paid_ads' admin SELECT and the finance RPC fix, both
+      // documented in the Batch 2 migration. play_purchases and
+      // rental_featured_slot_packs deliberately exclude purchase_token
+      // (sensitive) from every Row type below.
+      rental_companies: {
+        Row: {
+          id: string; business_id: string | null; trading_name: string | null; status: string | null;
+          admin_note: string | null; approved_at: string | null; approved_by: string | null;
+          fleet_count: number | null; avg_rating: number | null; review_count: number | null;
+          total_views: number | null; created_at: string | null; deleted_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null; admin_note?: string | null; approved_at?: string | null; approved_by?: string | null };
+        Relationships: [];
+      };
+      rental_vehicle_listings: {
+        Row: {
+          id: string; company_id: string | null; model: string | null; year: number | null; registration: string | null;
+          daily_rate: number | null; status: string | null; admin_status: string | null; admin_note: string | null;
+          is_available: boolean | null; view_count: number | null; inquiry_count: number | null; save_count: number | null;
+          created_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null; admin_status?: string | null };
+        Update: { status?: string | null; admin_status?: string | null; admin_note?: string | null };
+        Relationships: [];
+      };
+      rental_vehicle_states: {
+        Row: { listing_id: string; current_state: string | null; changed_by: string | null; change_reason: string | null; previous_state: string | null; state_entered_at: string | null; auto_return_at: string | null };
+        Insert: { listing_id: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      rental_reviews: {
+        Row: { id: string; company_id: string | null; reviewer_id: string | null; reviewer_name: string | null; rating: number | null; title: string | null; body: string | null; status: string | null; admin_note: string | null; created_at: string | null };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null; admin_note?: string | null };
+        Relationships: [];
+      };
+      rental_reports: {
+        Row: { id: string; listing_id: string | null; reporter_id: string | null; reason: string | null; detail: string | null; status: string | null; resolved_by: string | null; resolved_at: string | null; admin_note: string | null; severity: string | null; created_at: string | null };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null; resolved_by?: string | null; resolved_at?: string | null; admin_note?: string | null };
+        Relationships: [];
+      };
+      rental_audit_logs: {
+        Row: { id: string; actor_id: string | null; actor_role: string | null; action: string | null; target_table: string | null; target_id: string | null; created_at: string | null };
+        Insert: { id?: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      rental_featured_listings: {
+        Row: { id: string; listing_id: string | null; company_id: string | null; starts_at: string | null; ends_at: string | null; priority: number | null; approved_by: string | null; is_active: boolean | null; created_at: string | null };
+        Insert: { id?: string };
+        Update: { is_active?: boolean | null; approved_by?: string | null };
+        Relationships: [];
+      };
+      rental_brands: { Row: { id: string; slug: string | null; label: string | null; is_active: boolean | null; sort_order: number | null }; Insert: { id?: string }; Update: { is_active?: boolean | null }; Relationships: [] };
+      rental_categories: { Row: { id: string; slug: string | null; label: string | null; sort_order: number | null; is_active: boolean | null }; Insert: { id?: string }; Update: { is_active?: boolean | null }; Relationships: [] };
+      rental_locations: { Row: { id: string; city: string | null; province: string | null; country: string | null; is_active: boolean | null; sort_order: number | null; slug: string | null }; Insert: { id?: string }; Update: { is_active?: boolean | null }; Relationships: [] };
+      shop_orders: {
+        Row: {
+          id: string; business_id: string | null; customer_id: string | null; status: string | null;
+          fulfillment_method: string | null; delivery_address: string | null; customer_name: string | null;
+          customer_phone: string | null; customer_note: string | null; item_count: number | null;
+          total: number | null; currency: string | null; created_at: string | null; updated_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null };
+        Relationships: [];
+      };
+      shop_order_items: { Row: { id: string; order_id: string | null; title_snapshot: string | null; image_snapshot: string | null; unit_price_snapshot: number | null; currency_snapshot: string | null; quantity: number | null; subtotal_snapshot: number | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      shop_order_status_history: { Row: { id: string; order_id: string | null; status: string | null; note: string | null; changed_by: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      paid_ads: {
+        Row: {
+          id: string; ad_type: string | null; business_name: string | null; headline: string | null; tagline: string | null;
+          target_cat: string | null; target_section: string | null; starts_at: string | null; ends_at: string | null;
+          active: boolean | null; status: string | null; price_paid: number | null; payment_method: string | null;
+          impressions: number | null; clicks: number | null; created_at: string | null; listing_id: string | null;
+          advertiser_id: string | null; activated_at: string | null; completed_at: string | null;
+        };
+        Insert: { id?: string; active?: boolean | null };
+        Update: { active?: boolean | null };
+        Relationships: [];
+      };
+      play_purchases: { Row: { id: string; user_id: string | null; listing_id: string | null; product_id: string | null; status: string | null; verification_error: string | null; purchase_time: string | null; expiry_time: string | null; created_at: string | null; verified_at: string | null; platform: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      reviews: { Row: { id: string; seller_id: string | null; reviewer_id: string | null; reviewer_name: string | null; rating: number | null; body: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      business_reviews: { Row: { id: string; business_id: string | null; reviewer_id: string | null; reviewer_name: string | null; rating: number | null; comment: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      business_subscriptions: { Row: { id: string; business_id: string | null; status: string | null; plan_id: string | null; billing_cycle: string | null; current_period_end: string | null; auto_renew: boolean | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
       app_error_events: { Row: { id: string; status: string | null; severity: string | null }; Insert: { id?: string; status?: string | null; severity?: string | null }; Update: { status?: string | null; severity?: string | null }; Relationships: [] };
       admin_audit_logs: {
         Row: { id: string; action: string; entity: string; entity_id: string | null; actor_role: string | null; reason: string | null; created_at: string };
@@ -170,6 +258,10 @@ export type Database = {
       admin_province_breakdown: { Args: Record<string, never>; Returns: { province: string; n: number }[] };
       admin_revenue_summary: { Args: { days?: number }; Returns: { subs_paid: number; subs_failed: number; subs_pending: number; other_paid: number; ads_revenue: number; txn_count: number } };
       admin_top_payers: { Args: { days?: number; lim?: number }; Returns: { business_id: string; total: number; payments: number }[] };
+      // Batch 2: existing, already-audited mutation RPCs — reused as-is.
+      update_shop_order_status: { Args: { p_order_id: string; p_new_status: string; p_note?: string | null }; Returns: Json };
+      admin_set_paid_ad_active: { Args: { p_ad_id: string; p_active: boolean }; Returns: { id: string; active: boolean; status: string }[] };
+      admin_pause_scheduled_paid_ad: { Args: { p_ad_id: string }; Returns: { id: string; active: boolean; status: string }[] };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

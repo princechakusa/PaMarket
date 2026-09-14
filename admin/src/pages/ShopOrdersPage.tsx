@@ -1,32 +1,130 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../security/auth-context';
+import {
+  listShopOrders, getShopOrder, getShopOrderItems, getShopOrderHistory, updateShopOrderStatus,
+  COMMERCE_PAGE_SIZE, SHOP_ORDER_STATUSES,
+  type ShopOrderRow, type ShopOrderDetail, type ShopOrderItemRow, type ShopOrderHistoryRow,
+} from '../services/commerce/query';
 
-type ShopOrder = { id:string; time:string; hash:string; merchant:string; merchantState:string; merchantMeta:string; buyer:string; phone:string; destination:string; items:string[]; amount:string; equivalent:string; rail:string; railRef:string; escrow:string; escrowNote:string; tone:'clear'|'warning'|'transit'|'settled'; icon:string };
+function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
+function fmtMoney(value: number | null, currency: string | null) { return value === null ? '—' : `${currency ?? 'USD'} ${value.toLocaleString('en-ZW')}`; }
 
-const orders: ShopOrder[] = [
-  {id:'#ORD-ZW-9821',time:'10:42:19 CAT · Today',hash:'HASH: 9a7e...4c2',merchant:'Avondale Mobile Tech & Spares',merchantState:'VERIFIED STORE',merchantMeta:'KYB: AAL2',buyer:'Nyasha Chitepo',phone:'+263 77 419 8832',destination:'Mutare Main Depot, Manicaland',items:['2x 48V 100Ah LiFePO4 Battery Pack','1x 5.5kVA Sunsynk Hybrid Inverter','+ 1x Heavy Duty DC Isolator'],amount:'$2,840.00 USD',equivalent:'ZiG Equiv: 36,920.00',rail:'EcoCash USD',railRef:'EC-991204',escrow:'FUNDS SECURED',escrowNote:'Release: Biometric PIN',tone:'clear',icon:'receipt_long'},
-  {id:'#ORD-ZW-9820',time:'09:15:02 CAT · Today',hash:'HASH: 3b1f...89e',merchant:'Borrowdale Gadgets & Imports',merchantState:'FLAGGED MERCHANT',merchantMeta:'Dispute #D-881',buyer:'Farai Matambo',phone:'+263 71 290 1024',destination:'Borrowdale Brooke Gate 2, Harare',items:['1x Apple iPhone 15 Pro Max 256GB','Serial No. IMEI mismatch flagged'],amount:'$1,350.00 USD',equivalent:'Direct Nostro FCA Settlement',rail:'Nostro Hold',railRef:'Stanbic Ref: ST-0294',escrow:'QUARANTINED',escrowNote:'Buyer flagged IMEI',tone:'warning',icon:'find_in_page'},
-  {id:'#ORD-ZW-9819',time:'08:44:11 CAT · Today',hash:'HASH: 7c89...00d',merchant:'Chitungwiza Agro Supplies Ltd',merchantState:'COOPERATIVE TIER-1',merchantMeta:'KYB: Verified',buyer:'Kudakwashe Shumba',phone:'+263 78 554 9910',destination:'Bindura Central Farm Store, Mash Central',items:['1x 3-Phase Submersible Solar Water Pump Kit','8x 450W Mono Crystalline Solar Panels'],amount:'$1,920.00 USD',equivalent:'',rail:'InnBucks Remittance Terminal',railRef:'Claim Code: INN-7731-ZW',escrow:'IN TRANSIT',escrowNote:'Waybill #WB-HRE-901',tone:'transit',icon:'location_searching'},
-  {id:'#ORD-ZW-9818',time:'Yesterday 18:20 CAT',hash:'HASH: 1a03...df2',merchant:'Bulawayo Industrial Hardware Depot',merchantState:'VERIFIED STORE',merchantMeta:'KYB: AAL2',buyer:'Sipho Ncube',phone:'+263 77 122 0948',destination:'Belmont Industrial Site, Bulawayo',items:['50x 50kg Portland Cement bags (PPC)','Bulk delivery verified'],amount:'78,500.00 ZiG',equivalent:'USD Equiv: $603.84',rail:'ZIPIT Realtime Instant',railRef:'ZIP-88219',escrow:'ESCROW SETTLED',escrowNote:'Auto-released via OTP',tone:'settled',icon:'description'},
-];
+export function ShopOrdersPage() {
+  const auth = useAuth();
+  const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [rows, setRows] = useState<ShopOrderRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<ShopOrderDetail | null>(null);
+  const [items, setItems] = useState<ShopOrderItemRow[]>([]);
+  const [history, setHistory] = useState<ShopOrderHistoryRow[]>([]);
+  const [detailPhase, setDetailPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-const states = ['ALL ORDERS','PENDING VERIFICATION','ESCROW HELD','IN TRANSIT','DELIVERED & RELEASED','CANCELLED / REFUNDED'];
+  const load = useCallback(async () => {
+    if (auth.mode !== 'live') { setPhase('ready'); return; }
+    setPhase('loading');
+    setError(null);
+    const result = await listShopOrders(status || undefined, page);
+    if (result.error) { setError(result.error.message); setPhase('error'); return; }
+    setRows(result.data.rows);
+    setTotal(result.data.total);
+    setPhase('ready');
+  }, [auth.mode, status, page]);
 
-export function ShopOrdersPage(){
-  const [state,setState]=useState('ALL ORDERS'); const [query,setQuery]=useState(''); const [province,setProvince]=useState('Province: Nationwide'); const [rail,setRail]=useState('Channel: All Settlement Rails'); const [selectedId,setSelectedId]=useState(orders[0].id);
-  const shown=useMemo(()=>orders.filter(order=>{
-    const stateMatch=state==='ALL ORDERS'||state==='ESCROW HELD'&&['clear','warning'].includes(order.tone)||state==='IN TRANSIT'&&order.tone==='transit'||state==='DELIVERED & RELEASED'&&order.tone==='settled';
-    const provinceMatch=province==='Province: Nationwide'||order.destination.toLowerCase().includes(province.replace('Province: ','').split(' ')[0].toLowerCase());
-    const railMatch=rail==='Channel: All Settlement Rails'||order.rail.toLowerCase().includes(rail.split(' ')[0].toLowerCase());
-    return stateMatch&&provinceMatch&&railMatch&&[order.id,order.merchant,order.buyer,order.destination,...order.items].join(' ').toLowerCase().includes(query.toLowerCase());
-  }),[state,query,province,rail]);
-  const selected=orders.find(order=>order.id===selectedId)??orders[0];
-  return <div className="orders-page">
-    <div className="orders-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE ORDER DATA</b><span>Settlement values and shipment events are design fixtures. No payment rail or escrow action is connected.</span></div>
-    <header className="orders-hero"><div><small>PAMARKET OPS / DIRECTORY & COMMERCE / <b>SHOP ORDERS & ESCROW MANAGEMENT</b></small><div><h1>Shop Orders & Escrow Inbox</h1><span>Sub-ledger: Vault-04</span></div></div><nav><button disabled><i className="material-symbols-outlined">tune</i>DISPUTE RECON</button><button disabled><i className="material-symbols-outlined">rule</i>BATCH AUDIT POD</button></nav></header>
-    <section className="order-kpis"><article><header>Total Escrow Volume<i className="material-symbols-outlined">account_balance</i></header><strong>$48,240 <small>USD</small></strong><p><i className="material-symbols-outlined">swap_horiz</i>184,200 ZiG in active transit</p><footer>Settlement nodes: 14 <b>100% COLLATERALIZED</b></footer></article><article><header>Pending Dispatch<i className="material-symbols-outlined">local_shipping</i></header><strong>38 <small>ORDERS</small></strong><p>14 approaching 24h SLA cut-off</p><footer>Harare / Byo Hubs <b>DISPATCH QUEUED</b></footer></article><article className="danger"><header>Payment / Dispute Hold<i className="material-symbols-outlined">gavel</i></header><strong>07 <small>CASES</small></strong><p><i className="material-symbols-outlined">warning</i>$4,120 USD flagged by AI Shield</p><footer>Immediate Escalations <b>LEVEL-2 REVIEW</b></footer></article><article><header>Verified Delivery SLA<i className="material-symbols-outlined">verified</i></header><strong>98.4%</strong><p><i className="material-symbols-outlined">check_circle</i>+0.6% vs 7-day rolling target</p><footer>Biometric OTP Verify <b>99.1% COMPLIANT</b></footer></article></section>
-    <section className="order-filters"><nav aria-label="Order states">{states.map((item,index)=><button key={item} className={state===item?'active':''} onClick={()=>setState(item)}>{item}<b>{[142,19,64,35,24,8][index]}</b></button>)}</nav><div><label className="order-search"><span className="material-symbols-outlined">search</span><input aria-label="Search orders" value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search order, merchant, buyer or manifest"/></label><select aria-label="Settlement rail" value={rail} onChange={event=>setRail(event.target.value)}><option>Channel: All Settlement Rails</option><option>EcoCash USD (Direct Escrow)</option><option>InnBucks (Simbisa Hub)</option><option>Nostro USD (FCA Domestic)</option><option>ZiG RTGS / POS</option><option>ZIPIT Real-time Switch</option></select><select aria-label="Province" value={province} onChange={event=>setProvince(event.target.value)}><option>Province: Nationwide</option><option>Harare Metro</option><option>Bulawayo</option><option>Manicaland</option><option>Midlands</option><option>Mashonaland</option></select><button type="button" onClick={()=>{setQuery('');setState('ALL ORDERS');setRail('Channel: All Settlement Rails');setProvince('Province: Nationwide')}}><span className="material-symbols-outlined">filter_alt_off</span></button></div></section>
-    <div className="orders-workspace"><section className="orders-ledger"><div className="orders-table-scroll"><table aria-label="Shop orders and escrow ledger"><thead><tr><th>Order ID & Time</th><th>Merchant Storefront</th><th>Buyer & Route</th><th>Order Manifest Items</th><th>Settlement & Rail</th><th>Escrow State</th><th>Terminal Actions</th></tr></thead><tbody>{shown.map(order=><tr key={order.id} className={`${order.tone} ${selected.id===order.id?'selected':''}`} onClick={()=>setSelectedId(order.id)}><td><strong>{order.id}</strong><small>{order.time}</small><code>{order.hash}</code></td><td><strong>{order.merchant}</strong><b>{order.merchantState}</b><small>{order.merchantMeta}</small></td><td><strong>{order.buyer}</strong><small>{order.phone}</small><span><i className="material-symbols-outlined">location_on</i>{order.destination}</span></td><td>{order.items.map(item=><span key={item}>{item}</span>)}</td><td><strong>{order.amount}</strong><small>{order.equivalent}</small><span>{order.rail} [{order.railRef}]</span></td><td><b>{order.escrow}</b><small>{order.escrowNote}</small></td><td><button type="button" aria-label={`Inspect ${order.id}`} onClick={event=>{event.stopPropagation();setSelectedId(order.id)}}><i className="material-symbols-outlined">{order.icon}</i>{order.tone==='clear'?'Ledger':order.tone==='warning'?'Audit':order.tone==='transit'?'Track':'Tax Slip'}</button>{order.tone==='clear'&&<button disabled><i className="material-symbols-outlined">verified_user</i>Release</button>}{order.tone==='warning'&&<button disabled><i className="material-symbols-outlined">lock</i>Freeze</button>}</td></tr>)}</tbody></table>{!shown.length&&<p className="orders-empty">No reference orders match these filters.</p>}</div><footer><span>Showing {shown.length?`1-${shown.length}`:'0'} of 142 records</span><b>● SETTLEMENT ENGINE: REFERENCE MODE</b><nav><button disabled>PREV</button><button className="active">1</button><button>2</button><button>3</button><button disabled>NEXT</button></nav></footer></section>
-      <aside className="order-inspector" aria-label="Order escrow inspector"><header><span className="material-symbols-outlined">account_balance_wallet</span><div><small>ORDER {selected.id}</small><h2>VAULT ESCROW</h2><p>Ledger Reference: ZW-FED-ESCROW-2024-009821</p></div><b>READ ONLY</b></header><section className="handshake"><article><small>Buyer Handshake Status</small><strong><i className="material-symbols-outlined">qr_code_scanner</i>OTP Awaiting Scan</strong><p>Biometric code sent to +263 77 419 8832</p></article><article><small>Gate Settlement Ref</small><strong><i className="material-symbols-outlined">verified</i>EcoCash #EC-991204-ZW</strong><p>Instant Clearing Node: Harare-S1</p></article></section><section className="allocation"><header>Escrow Collateral Allocation <b>100% SECURED</b></header><dl><div><dt>Merchant Gross Settlement</dt><dd>$2,754.80 USD</dd></div><div><dt>PaMarket Escrow Platform Fee (3%)</dt><dd>$85.20 USD</dd></div><div><dt>Courier Insurance & Tracking Levy</dt><dd>$0.00 USD (Covered by Merchant)</dd></div><div><dt>Total In-Transit Hold</dt><dd>$2,840.00 USD (36,920.00 ZiG)</dd></div></dl></section><section className="manifest"><header>Consignment Manifest</header><article><i className="material-symbols-outlined">battery_charging_full</i><div><strong>48V 100Ah LiFePO4 Lithium Battery Pack</strong><small>SKU: BAT-SOL-48100 · Qty: 2</small></div><b>$1,900.00</b></article><article><i className="material-symbols-outlined">solar_power</i><div><strong>5.5kVA Sunsynk Hybrid Inverter 48V</strong><small>SKU: INV-SYN-55 · Qty: 1</small></div><b>$940.00</b></article></section><section className="dispatch-proof"><header>Merchant Dispatch Proof Attachment <b>STAMP VERIFIED</b></header><div><i className="material-symbols-outlined">attach_file</i><span><strong>WAYBILL_AVONDALE_MUTARE_9821.PDF</strong><small>Signed by Driver: Knowledge Sithole · 1.4 MB</small></span><button disabled><i className="material-symbols-outlined">visibility</i>Inspect</button></div></section><section className="order-timeline"><header>Forensic Audit Timeline</header><article><i className="material-symbols-outlined">lock</i><div><strong>Escrow Inflow Collateral Locked</strong><p>Funds intercepted via EcoCash ZW gateway into Vault-04. Ref: EC-991204</p><small>10:42:20 CAT · System Automated Trigger</small></div></article><article><i className="material-symbols-outlined">inventory</i><div><strong>Store Dispatch Confirmed & GPS Tracked</strong><p>Avondale Mobile Tech staged packages for Swift Courier Mutare route.</p><small>11:15:00 CAT · Driver Tag #ZW-SWIFT-88</small></div></article></section><section className="escrow-terminal"><header>Escrow Release Override <span>DUAL KEY REQUIRED</span></header><div><button disabled><i className="material-symbols-outlined">emergency_home</i>Freeze Payout</button><button disabled><i className="material-symbols-outlined">security</i>Dual-Key Escrow Override</button></div><p><b>Irreversible Settlement Instruction</b> Direct escrow disbursement requires a protected server transaction, an admin reason, AAL2 verification, a SecOps co-sign, and append-only audit evidence.</p><label>Dispute Resolution Reference / Justification<textarea disabled placeholder="Required reason"/></label><dl><div><dt>Admin AAL2 Hardware Token</dt><dd>✓ Tinashe Moyo (Key OK)</dd></div><div><dt>Co-Signer SecOps OTP</dt><dd>Awaiting co-signer handshake</dd></div></dl><footer><button disabled>CANCEL</button><button disabled><i className="material-symbols-outlined">verified</i>EXECUTE ESCROW RELEASE</button></footer></section></aside>
+  useEffect(() => { void load(); }, [load]);
+
+  const loadDetail = useCallback(async (id: string) => {
+    setSelectedId(id);
+    setDetailPhase('loading');
+    setActionMessage(null);
+    const orderResult = await getShopOrder(id);
+    if (orderResult.error) { setDetailPhase('error'); return; }
+    const itemsResult = await getShopOrderItems(id);
+    const historyResult = await getShopOrderHistory(id);
+    setDetail(orderResult.data);
+    setItems(itemsResult.data ?? []);
+    setHistory(historyResult.data ?? []);
+    setDetailPhase('ready');
+  }, []);
+
+  async function applyStatus(newStatus: string) {
+    if (!selectedId) return;
+    setActionMessage(null);
+    const result = await updateShopOrderStatus(selectedId, newStatus);
+    if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
+    setActionMessage(`Status updated to "${newStatus}".`);
+    void loadDetail(selectedId);
+    void load();
+  }
+
+  const pageCount = Math.max(1, Math.ceil(total / COMMERCE_PAGE_SIZE));
+
+  return <div className="directory-page">
+    {auth.mode === 'mock' && <div className="directory-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment.</span></div>}
+    <div className="directory-breadcrumb">PAMARKET OPS / COMMERCE / <b>SHOP ORDERS</b></div>
+    <header className="directory-hero"><div><small>PRODUCTION SHOP ORDERS</small><h1>Shop Orders</h1><p>Real order status, buyer/seller context, and history. Status changes use the existing production RPC.</p></div></header>
+
+    <section className="directory-filters" aria-label="Order filters"><div>
+      <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>{SHOP_ORDER_STATUSES.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}</select>
+      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+    </div></section>
+
+    <div className="directory-workspace">
+      <section className="directory-ledger">
+        <header><span aria-live="polite">{phase === 'loading' ? 'Loading…' : `${total.toLocaleString('en-ZW')} order(s)`}</span>
+          <div><button disabled={page <= 1 || phase === 'loading'} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><span>Page {page} of {pageCount}</span><button disabled={page >= pageCount || phase === 'loading'} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
+        </header>
+        <div className="directory-table-scroll">
+          {phase === 'error' && <div className="directory-empty" role="alert">Could not load orders: {error}</div>}
+          {phase !== 'error' && <table aria-label="Shop orders"><thead><tr><th>Order</th><th>Fulfillment</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody>{rows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => void loadDetail(row.id)} style={{ cursor: 'pointer' }}>
+              <td><code>{row.id.slice(0, 8)}…</code></td><td>{row.fulfillment_method ?? '—'}</td><td>{row.customer_name ?? '—'}</td><td>{row.item_count ?? 0}</td><td>{fmtMoney(row.total, row.currency)}</td><td>{row.status ?? '—'}</td><td>{fmtDate(row.created_at)}</td>
+            </tr>)}</tbody></table>}
+          {phase === 'ready' && rows.length === 0 && <div className="directory-empty" role="status">No orders match these filters.</div>}
+        </div>
+      </section>
+
+      <aside className="directory-inspector" aria-label="Order detail">
+        {!selectedId && <p>Select an order to view real production detail.</p>}
+        {selectedId && detailPhase === 'loading' && <p>Loading…</p>}
+        {selectedId && detailPhase === 'error' && <p role="alert">Could not load order detail.</p>}
+        {selectedId && detailPhase === 'ready' && detail && <>
+          <header><span className="material-symbols-outlined">receipt_long</span><div><small>ORDER</small><strong>{detail.id.slice(0, 8)}…</strong></div><b>{detail.status?.toUpperCase() ?? '—'}</b></header>
+          <section><h3>Order</h3><dl>
+            <div><dt>Fulfillment</dt><dd>{detail.fulfillment_method ?? '—'}</dd></div>
+            <div><dt>Delivery address</dt><dd>{detail.delivery_address ?? '—'}</dd></div>
+            <div><dt>Total</dt><dd>{fmtMoney(detail.total, detail.currency)}</dd></div>
+            <div><dt>Created</dt><dd>{fmtDate(detail.created_at)}</dd></div>
+            <div><dt>Updated</dt><dd>{fmtDate(detail.updated_at)}</dd></div>
+          </dl></section>
+          <section><h3>Customer</h3><dl>
+            <div><dt>Name</dt><dd>{detail.customer_name ?? '—'}</dd></div>
+            <div><dt>Phone</dt><dd>{detail.customer_phone ?? '—'}</dd></div>
+            {detail.customer_note && <div><dt>Note</dt><dd>{detail.customer_note}</dd></div>}
+          </dl></section>
+          <section><h3>Items ({items.length})</h3>
+            {items.length === 0 ? <p>None</p> : <ul>{items.map((it) => <li key={it.id}>{it.title_snapshot ?? 'Item'} × {it.quantity ?? 1} — {fmtMoney(it.subtotal_snapshot, it.currency_snapshot)}</li>)}</ul>}
+          </section>
+          <section><h3>Status history</h3>
+            {history.length === 0 ? <p>None</p> : <ul>{history.map((h) => <li key={h.id}>{h.status} · {fmtDate(h.created_at)}{h.note ? ` · ${h.note}` : ''}</li>)}</ul>}
+          </section>
+          <section><h3>Admin actions</h3>
+            <div className="jobs-actions">
+              <button onClick={() => void applyStatus('confirmed')}>Confirm</button>
+              <button onClick={() => void applyStatus('preparing')}>Preparing</button>
+              <button onClick={() => void applyStatus('ready')}>Ready</button>
+              <button onClick={() => void applyStatus('completed')}>Complete</button>
+              <button onClick={() => void applyStatus('cancelled')}>Cancel</button>
+            </div>
+            {actionMessage && <p role="status">{actionMessage}</p>}
+            <p><small>Uses the existing update_shop_order_status RPC. AAL2 is required for this admin-override path.</small></p>
+          </section>
+        </>}
+      </aside>
     </div>
   </div>;
 }
