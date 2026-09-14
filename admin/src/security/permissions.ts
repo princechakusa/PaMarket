@@ -15,6 +15,7 @@ export const permissions = [
   'analytics.view', 'audit.view', 'audit.export', 'errors.view', 'errors.resolve', 'operations.view',
   'security.view', 'security.manage', 'admins.manage', 'mfa_policy.manage',
   'settings.view', 'settings.manage',
+  'legal_holds.manage', 'notifications.view',
 ] as const;
 
 export type Permission = typeof permissions[number];
@@ -31,7 +32,7 @@ const operationalAdmin: Permission[] = [
   'billing.view', 'amos.view', 'amos.run', 'amos.publish', 'rentals.view',
   'rentals.moderate', 'rentals.manage', 'analytics.view', 'audit.view',
   'errors.view', 'errors.resolve', 'operations.view', 'security.view',
-  'settings.view', 'settings.manage',
+  'settings.view', 'settings.manage', 'notifications.view',
 ];
 
 export const rolePermissions: Readonly<Record<AdminRole, readonly Permission[]>> = {
