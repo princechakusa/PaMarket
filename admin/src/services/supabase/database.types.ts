@@ -3,8 +3,17 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      // C2E-10: extended with the real, non-secret profile columns User
+      // Intelligence needs. Never includes mfa_secret/two_factor_secret —
+      // only the safe generated `mfa_enabled` boolean (C2E-6/C2E-8).
       profiles: {
-        Row: { id: string; name: string | null; role: string | null };
+        Row: {
+          id: string; name: string | null; email: string | null; phone: string | null;
+          role: string | null; status: string | null; verified: boolean | null;
+          city: string | null; province: string | null; company: string | null;
+          company_verified: boolean | null; created_at: string | null;
+          last_seen: string | null; last_active_at: string | null; mfa_enabled: boolean | null;
+        };
         Insert: { id: string; name?: string | null; role?: string | null };
         Update: { name?: string | null; role?: string | null };
         Relationships: [];
@@ -19,15 +28,20 @@ export type Database = {
       // admin/moderator-tier RLS (verified live during the C2E-9 audit) —
       // these are read-only Row shapes for `.select('*', { count: 'exact',
       // head: true })` style queries, not full table mirrors.
-      businesses: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      verifications: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      business_verifications: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      listings: { Row: { id: string; status: string | null; province: string | null }; Insert: { id?: string; status?: string | null; province?: string | null }; Update: { status?: string | null; province?: string | null }; Relationships: [] };
-      reports: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      moderation_appeals: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      applications: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      rental_vehicle_listings: { Row: { id: string; status: string | null; admin_status: string | null }; Insert: { id?: string; status?: string | null; admin_status?: string | null }; Update: { status?: string | null; admin_status?: string | null }; Relationships: [] };
-      business_subscriptions: { Row: { id: string; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      // C2E-10: extended with the owner/user-linkage and review-metadata
+      // columns User Intelligence needs. Deliberately excludes id_doc /
+      // selfie / id_doc_path / selfie_path / reg_doc_path — raw document
+      // paths are never selected by any C2E-10 query.
+      businesses: { Row: { id: string; name: string | null; status: string | null; owner_user_id: string | null; province: string | null; created_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      verifications: { Row: { id: string; user_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      business_verifications: { Row: { id: string; business_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      listings: { Row: { id: string; status: string | null; province: string | null; seller_id: string | null }; Insert: { id?: string; status?: string | null; province?: string | null }; Update: { status?: string | null; province?: string | null }; Relationships: [] };
+      reports: { Row: { id: string; status: string | null; target_type: string | null; target_id: string | null; reason: string | null; severity: string | null; created_at: number | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      moderation_appeals: { Row: { id: string; status: string | null; requester_id: string | null; entity: string | null; reason: string | null; created_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      applications: { Row: { id: string; status: string | null; applicant_id: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      rental_companies: { Row: { id: string; business_id: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      rental_vehicle_listings: { Row: { id: string; status: string | null; admin_status: string | null; company_id: string | null }; Insert: { id?: string; status?: string | null; admin_status?: string | null }; Update: { status?: string | null; admin_status?: string | null }; Relationships: [] };
+      business_subscriptions: { Row: { id: string; business_id: string | null; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
       app_error_events: { Row: { id: string; status: string | null; severity: string | null }; Insert: { id?: string; status?: string | null; severity?: string | null }; Update: { status?: string | null; severity?: string | null }; Relationships: [] };
       admin_audit_logs: {
         Row: { id: string; action: string; entity: string; entity_id: string | null; actor_role: string | null; reason: string | null; created_at: string };
