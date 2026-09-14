@@ -1,78 +1,176 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../security/auth-context';
-import { listSecurityEvents, type SecurityEvent } from '../services/security-events/query';
+import { listSecurityEvents } from '../services/security-events/query';
+import {
+  getCategoryBreakdown, getDailyGrowth, getProvinceBreakdown, getQueueCounts,
+  getRecentAuditLog, getRevenueSummary, getTopPayers,
+  type AuditLogRow, type CategoryRow, type GrowthPoint, type ProvinceRow,
+  type QueueCounts, type RevenueSummary, type TopPayerRow,
+} from '../services/dashboard/query';
 import { ZimbabweActivityMap } from '../components/ZimbabweActivityMap';
 
-const metrics = [
-  ['Total Users', '148,290', '+12.4% MoM', 'groups'], ['Listings', '42,810', '+8.2% 4 cities', 'sell'],
-  ['In Moderation', '384', '-14% queue burn', 'fact_check'], ['Verified Biz', '1,420', '+24 this week', 'verified'],
-  ['Pending Verify', '28', '8 past SLA', 'pending_actions'], ['Shop Requests', '892', '+18.7% today', 'receipt_long'],
-  ['Open Reports', '67', '19 high risk', 'report'], ['Platform Health', '99.98%', 'All core online', 'vital_signs'],
-] as const;
+type Phase = 'loading' | 'ready' | 'error';
 
-const queues = [
-  ['directions_car', 'Vehicle Listings Approval', 'HIGH · CID CHECKS', '15 mins', '42 WAITING', '1h 14m (Toyota GD6)', '/marketplace/listings'],
-  ['verified_user', 'ZIMRA Business Tax Certs', 'MERCHANT VERIF', '24 hours', '28 WAITING', '26h 02m (Borrowdale Hardware)', '/marketplace/verifications'],
-  ['agriculture', 'High-Value Farm Tractors', 'DEED & SERIALS', '45 mins', '11 WAITING', '38m (John Deere 5075E)', '/marketplace/listings'],
-  ['report', 'Reported Counterfeit Electronics', 'FRAUD DISPUTE', '30 mins', '19 WAITING', '54m (iPhone 15 Pro Clone)', '/trust/reports'],
-] as const;
+type Snapshot = {
+  growth: GrowthPoint[];
+  category: CategoryRow[];
+  province: ProvinceRow[];
+  revenue: RevenueSummary | null;
+  topPayers: TopPayerRow[];
+  queues: QueueCounts | null;
+  auditLog: AuditLogRow[];
+};
 
-function formatEvent(event: SecurityEvent) {
-  const time = new Intl.DateTimeFormat('en-ZW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Africa/Harare' }).format(new Date(event.occurred_at));
-  return { time, actor: event.actor_role?.replace('_', ' ').toUpperCase() ?? 'SYSTEM', action: event.action.replaceAll('_', ' ').toUpperCase(), detail: `${event.event_type.replaceAll('_', ' ')} · ${event.source}`, result: `${event.assurance_level.toUpperCase()} ${event.outcome.toUpperCase()}`, tone: ['blocked', 'failure', 'suspicious'].includes(event.outcome) ? 'danger' : 'success' };
+const emptySnapshot: Snapshot = { growth: [], category: [], province: [], revenue: null, topPayers: [], queues: null, auditLog: [] };
+
+function sum(rows: GrowthPoint[], key: 'users' | 'listings') { return rows.reduce((total, row) => total + row[key], 0); }
+function fmt(value: number | null | undefined) { return value === null || value === undefined ? '—' : value.toLocaleString('en-ZW'); }
+function money(value: number | null | undefined) { return value === null || value === undefined ? '—' : `$${Number(value).toLocaleString('en-ZW', { maximumFractionDigits: 0 })}`; }
+
+function toCsv(snapshot: Snapshot): string {
+  const lines: string[] = ['section,metric,value'];
+  lines.push(`growth,new_users_14d,${sum(snapshot.growth, 'users')}`);
+  lines.push(`growth,new_listings_14d,${sum(snapshot.growth, 'listings')}`);
+  if (snapshot.queues) Object.entries(snapshot.queues).forEach(([key, value]) => lines.push(`queues,${key},${value}`));
+  if (snapshot.revenue) Object.entries(snapshot.revenue).forEach(([key, value]) => lines.push(`revenue,${key},${value}`));
+  snapshot.category.forEach((row) => lines.push(`category,${row.category},${row.n}`));
+  snapshot.province.forEach((row) => lines.push(`province,${row.province},${row.n}`));
+  snapshot.topPayers.forEach((row, index) => lines.push(`top_payer_${index + 1},business_id_${row.business_id},${row.total}`));
+  return lines.join('\n');
 }
 
 export function OpsDashboardPage() {
   const auth = useAuth();
   const admin = auth.identity;
   const canReadAudit = Boolean(admin?.permissions.includes('audit.view'));
-  const [events, setEvents] = useState<SecurityEvent[]>([]);
-  const [auditState, setAuditState] = useState<'fixture' | 'loading' | 'live' | 'unavailable'>('fixture');
+
+  const [snapshot, setSnapshot] = useState<Snapshot>(emptySnapshot);
+  const [phase, setPhase] = useState<Phase>('loading');
+  const [sectionErrors, setSectionErrors] = useState<string[]>([]);
+  const [securityTotal, setSecurityTotal] = useState<number | null>(null);
+  const [securityState, setSecurityState] = useState<'loading' | 'live' | 'unavailable' | 'unchecked'>('unchecked');
+
+  const load = useCallback(async () => {
+    if (auth.mode !== 'live') { setPhase('ready'); return; }
+    setPhase('loading');
+    setSectionErrors([]);
+    const [growth, category, province, revenue, topPayers, queues, auditLog] = await Promise.all([
+      getDailyGrowth(14), getCategoryBreakdown(), getProvinceBreakdown(),
+      getRevenueSummary(30), getTopPayers(30, 5), getQueueCounts(), getRecentAuditLog(8),
+    ]);
+    const errors: string[] = [];
+    if (growth.error) errors.push(`Growth: ${growth.error.message}`);
+    if (category.error) errors.push(`Category breakdown: ${category.error.message}`);
+    if (province.error) errors.push(`Province breakdown: ${province.error.message}`);
+    if (revenue.error) errors.push(`Revenue summary: ${revenue.error.message}`);
+    if (topPayers.error) errors.push(`Top payers: ${topPayers.error.message}`);
+    if (queues.error) errors.push(`Queue counts: ${queues.error.message}`);
+    if (auditLog.error) errors.push(`Audit log: ${auditLog.error.message}`);
+    setSnapshot({
+      growth: growth.data ?? [], category: category.data ?? [], province: province.data ?? [],
+      revenue: revenue.data ?? null, topPayers: topPayers.data ?? [], queues: queues.data ?? null,
+      auditLog: auditLog.data ?? [],
+    });
+    setSectionErrors(errors);
+    setPhase('ready');
+  }, [auth.mode]);
+
+  useEffect(() => { void load(); }, [load]);
 
   useEffect(() => {
     if (auth.mode !== 'live' || auth.assuranceLevel !== 'aal2' || !canReadAudit) return;
     let active = true;
-    setAuditState('loading');
+    setSecurityState('loading');
     void listSecurityEvents({}, 1).then((result) => {
       if (!active) return;
-      if (result.error) setAuditState('unavailable');
-      else { setEvents(result.data.rows.slice(0, 4)); setAuditState('live'); }
+      if (result.error) setSecurityState('unavailable');
+      else { setSecurityTotal(result.data.total); setSecurityState('live'); }
     });
     return () => { active = false; };
   }, [auth.mode, auth.assuranceLevel, canReadAudit]);
 
+  const exportCsv = useCallback(() => {
+    const blob = new Blob([toCsv(snapshot)], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `pamarket-command-center-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [snapshot]);
+
   if (!admin) return null;
   const today = new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Africa/Harare' }).format(new Date());
-  const fixtureAudit = [
-    { time: '14:48:12', actor: 'RUDO CHIWARA', action: 'APPROVED SHOP', detail: 'Borrowdale Gadgets & Spares · verification review completed.', result: 'AAL2 PASS', tone: 'success' },
-    { time: '14:41:05', actor: 'FARAI NCUBE', action: 'SUSPENDED LISTING', detail: 'Vehicle listing held after duplicate chassis signal.', result: 'CID ALERT', tone: 'danger' },
-    { time: '14:32:49', actor: 'TINASHE MOYO', action: 'RELEASED ESCROW', detail: 'Consignment receipt evidence reviewed.', result: 'SUPER ADMIN', tone: 'success' },
-    { time: '14:19:10', actor: 'SIPHO KHUMALO', action: 'RESET 2FA RECOVERY', detail: 'Manual identity recovery review completed.', result: 'MANUAL KYC', tone: 'neutral' },
+  const q = snapshot.queues;
+
+  const metrics: [string, string, string, string][] = [
+    ['New Users (14d)', fmt(sum(snapshot.growth, 'users')), 'admin_daily_growth', 'groups'],
+    ['New Listings (14d)', fmt(sum(snapshot.growth, 'listings')), 'admin_daily_growth', 'sell'],
+    ['Businesses', fmt(q?.businesses), 'businesses', 'storefront'],
+    ['Pending Verify', fmt((q?.pendingVerifications ?? 0) + (q?.pendingBusinessVerifications ?? 0)), 'verifications + business_verifications', 'pending_actions'],
+    ['In Moderation', fmt(q?.pendingListings), 'listings', 'fact_check'],
+    ['Open Reports', fmt(q?.openReports), 'reports', 'report'],
+    ['Open Appeals', fmt(q?.openAppeals), 'moderation_appeals', 'gavel'],
+    ['Open Errors', fmt(q?.openErrors), 'app_error_events', 'bug_report'],
   ];
-  const auditRows = events.length ? events.map(formatEvent) : fixtureAudit;
+
+  const queueRows: [string, string, number | undefined, string][] = [
+    ['fact_check', 'Pending Listing Moderation', q?.pendingListings, '/marketplace/listings'],
+    ['verified_user', 'Pending Business Verification', q?.pendingBusinessVerifications, '/marketplace/verifications'],
+    ['badge', 'Pending KYC Verification', q?.pendingVerifications, '/marketplace/verifications'],
+    ['report', 'Open Reports', q?.openReports, '/trust/reports'],
+    ['gavel', 'Open Moderation Appeals', q?.openAppeals, '/trust/reports'],
+    ['work', 'Pending Job Applications', q?.pendingApplications, '/marketplace/jobs'],
+    ['directions_car', 'Rentals Pending Approval', q?.pendingRentals, '/rentals'],
+  ];
+
+  const categoryTotal = snapshot.category.reduce((total, row) => total + row.n, 0);
+  const growthMax = Math.max(1, ...snapshot.growth.map((row) => row.listings));
+  const growthPoints = snapshot.growth
+    .map((row, index) => `${(index / Math.max(1, snapshot.growth.length - 1)) * 800},${150 - (row.listings / growthMax) * 140}`)
+    .join(' ');
 
   return <div className="ops-dashboard">
-    {auth.mode === 'mock' && <div className="preview-notice" role="note"><span className="material-symbols-outlined">science</span><strong>REFERENCE DATA MODE</strong><span>Operational figures and named cases are static UI fixtures. Authentication and permission behavior remain connected to the admin shell.</span></div>}
-    <section className="command-bar"><div><span className="command-label">CONTEXT:</span><span className="context-chip"><span className="material-symbols-outlined">calendar_today</span>Today ({today})</span><span className="context-chip muted"><span className="material-symbols-outlined">compare_arrows</span>Comparison: Previous 7 Days</span><span className="edge-chip"><i />EDGE: HRE-SOUTH-NODE-1</span></div><div><button disabled><span className="material-symbols-outlined">download</span>Export KPI (CSV/PDF)</button><button disabled className="primary"><span className="material-symbols-outlined">refresh</span>Emergency Queue Refresh</button></div></section>
+    {auth.mode === 'mock' && <div className="preview-notice" role="note"><span className="material-symbols-outlined">science</span><strong>REFERENCE DATA MODE</strong><span>Live Supabase is not configured in this environment. Authentication and permission behavior remain connected to the admin shell; Dashboard figures cannot load.</span></div>}
+    {phase === 'ready' && sectionErrors.length > 0 && <div className="preview-notice" role="alert"><span className="material-symbols-outlined">error</span><strong>SOME DASHBOARD DATA UNAVAILABLE</strong><span>{sectionErrors.join(' · ')}</span></div>}
 
-    <section className="alert-grid" aria-label="Tactical alerts">
-      <article className="alert-card danger"><div><span className="alert-icon material-symbols-outlined">no_crash</span><div><header><strong>CID INTERPOL HOOK</strong><b>14 HITS</b></header><p>14 listings flagged for stolen vehicle VIN match via the review feed. Immediate operator review required.</p></div></div><footer><span>Harare CBD & Southerton</span><Link to="/marketplace/listings">Review Queue</Link></footer></article>
-      <article className="alert-card warning"><div><span className="alert-icon material-symbols-outlined">hourglass_top</span><div><header><strong>SLA BREACH ALERT</strong><b>&gt;24H PENDING</b></header><p>8 merchant applications pending business validation beyond the configured review threshold.</p></div></div><footer><span>Tier-1 Retail Applicants</span><Link to="/marketplace/verifications">Expedite (8)</Link></footer></article>
-      <article className="alert-card success"><div><span className="alert-icon material-symbols-outlined">shield_person</span><div><header><strong>HONEYPOT MONITOR</strong><b>{auditState === 'live' ? 'LIVE FEED' : 'CONNECTED'}</b></header><p>Server-owned authentication and honeypot evidence is available through the protected security-event review path.</p></div></div><footer><span>RLS + AAL2 boundary</span><Link to="/security/events">Inspect Events</Link></footer></article>
+    <section className="command-bar"><div><span className="command-label">CONTEXT:</span><span className="context-chip"><span className="material-symbols-outlined">calendar_today</span>Today ({today})</span><span className="context-chip muted"><span className="material-symbols-outlined">compare_arrows</span>Window: Last 14 Days</span></div><div><button onClick={exportCsv} disabled={phase !== 'ready'}><span className="material-symbols-outlined">download</span>Export KPI (CSV)</button><button onClick={() => void load()} disabled={phase === 'loading'} className="primary"><span className="material-symbols-outlined">refresh</span>{phase === 'loading' ? 'Refreshing…' : 'Refresh Dashboard'}</button></div></section>
+
+    <section className="alert-grid" aria-label="Operational alerts">
+      <article className="alert-card warning"><div><span className="alert-icon material-symbols-outlined">report</span><div><header><strong>OPEN REPORTS</strong><b>{fmt(q?.openReports)}</b></header><p>Unresolved marketplace reports awaiting moderator review.</p></div></div><footer><span>reports · status = open</span><Link to="/trust/reports">Review Queue</Link></footer></article>
+      <article className="alert-card warning"><div><span className="alert-icon material-symbols-outlined">hourglass_top</span><div><header><strong>PENDING VERIFICATION</strong><b>{fmt((q?.pendingVerifications ?? 0) + (q?.pendingBusinessVerifications ?? 0))}</b></header><p>KYC and business verification submissions waiting on review.</p></div></div><footer><span>verifications + business_verifications</span><Link to="/marketplace/verifications">Review Queue</Link></footer></article>
+      <article className="alert-card success"><div><span className="alert-icon material-symbols-outlined">shield_person</span><div><header><strong>SECURITY EVENTS</strong><b>{securityState === 'live' ? fmt(securityTotal) : securityState === 'loading' ? '…' : 'RESTRICTED'}</b></header><p>Server-owned authentication and honeypot evidence, available through the protected security-event review path.</p></div></div><footer><span>RLS + AAL2 boundary</span><Link to="/security/events">Inspect Events</Link></footer></article>
     </section>
 
-    <section className="kpi-grid" aria-label="Core telemetry">{metrics.map(([label, value, change, icon], index) => <article key={label}><header><span>{label}</span><span className="material-symbols-outlined">{icon}</span></header><strong className={index === 2 || index === 4 || index === 6 ? 'attention' : ''}>{value}</strong><small>{change}</small></article>)}</section>
+    <section className="kpi-grid" aria-label="Core telemetry">{metrics.map(([label, value, source, icon]) => <article key={label}><header><span>{label}</span><span className="material-symbols-outlined">{icon}</span></header><strong>{phase === 'loading' ? '…' : value}</strong><small>{source}</small></article>)}</section>
 
     <section className="analytics-grid">
-      <article className="ops-panel influx"><header className="panel-title"><div><span className="material-symbols-outlined">query_stats</span><h2>Listing Influx by Category</h2></div><span>7-DAY WINDOW · STATIC REFERENCE</span></header><div className="chart"><div className="grid-lines" /><svg viewBox="0 0 800 150" preserveAspectRatio="none" aria-label="Reference listing influx chart"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#68dba9" stopOpacity=".34"/><stop offset="1" stopColor="#68dba9" stopOpacity="0"/></linearGradient></defs><path d="M0 128 L75 118 L150 124 L225 82 L300 96 L375 58 L450 72 L525 30 L600 52 L675 18 L750 36 L800 16 L800 150 L0 150Z" fill="url(#area)"/><polyline points="0,128 75,118 150,124 225,82 300,96 375,58 450,72 525,30 600,52 675,18 750,36 800,16" fill="none" stroke="#68dba9" strokeWidth="3"/></svg></div><div className="category-bars">{[['Cars & Bakkies',82,'42%'],['Property & Stands',64,'28%'],['Electronics & Smartphones',51,'17%'],['Farming & Agri Yields',38,'8%'],['Services & Logistics',25,'5%']].map(([label,width,value]) => <div key={label as string}><span>{label}</span><i><b style={{width: `${width}%`}} /></i><strong>{value}</strong></div>)}</div></article>
-      <article className="ops-panel geo"><header className="panel-title"><div><span className="material-symbols-outlined">public</span><h2>Provincial Activity Grid</h2></div><span>REAL ZIMBABWE MAP</span></header><ZimbabweActivityMap /></article>
+      <article className="ops-panel influx"><header className="panel-title"><div><span className="material-symbols-outlined">query_stats</span><h2>Listing Volume &amp; Category Mix</h2></div><span>14-DAY WINDOW · LIVE</span></header>
+        <div className="chart"><div className="grid-lines" /><svg viewBox="0 0 800 150" preserveAspectRatio="none" aria-label="Daily new listings, last 14 days">
+          {snapshot.growth.length > 0 ? <polyline points={growthPoints} fill="none" stroke="#68dba9" strokeWidth="3" /> : <text x="20" y="80" fill="#8aa" fontSize="14">No listing growth data yet.</text>}
+        </svg></div>
+        <div className="category-bars">{snapshot.category.length > 0
+          ? snapshot.category.map((row) => <div key={row.category}><span>{row.category}</span><i><b style={{ width: `${categoryTotal ? (row.n / categoryTotal) * 100 : 0}%` }} /></i><strong>{fmt(row.n)}</strong></div>)
+          : <p>No category data yet.</p>}</div>
+      </article>
+      <article className="ops-panel geo"><header className="panel-title"><div><span className="material-symbols-outlined">public</span><h2>Provincial Activity Grid</h2></div><span>LIVE · LISTINGS BY PROVINCE</span></header><ZimbabweActivityMap data={snapshot.province} /></article>
     </section>
 
-    <section className="ops-panel queue-panel"><header className="queue-head"><div><span className="material-symbols-outlined">checklist_rtl</span><h2>Operational Queue Matrix</h2><nav aria-label="Queue filters"><button className="active" disabled>All Queues (4)</button><button disabled>Moderation</button><button disabled>Businesses</button><button disabled>Disputes</button></nav></div><span><i className="warning-dot"/> AUTO-ALLOCATION ACTIVE</span></header><div className="table-scroll"><table className="ops-table"><thead><tr><th>Queue Name</th><th>Priority & Category</th><th>Target SLA</th><th>Pending Count</th><th>Oldest Item Waiting</th><th>Action</th></tr></thead><tbody>{queues.map(([icon,name,category,sla,count,oldest,path], index) => <tr key={name}><td><span className="material-symbols-outlined">{icon}</span><strong>{name}</strong></td><td><b className={index === 3 ? 'danger-text' : 'category'}>{category}</b></td><td>{sla}</td><td><b className={index < 2 || index === 3 ? 'count attention' : 'count'}>{count}</b></td><td className={index === 0 || index === 1 || index === 3 ? 'danger-text' : ''}>{oldest}</td><td><Link to={path}>Launch Triage</Link></td></tr>)}</tbody></table></div><footer><span>SHOWING 4 OF 18 TOTAL SECURITY OPS QUEUES</span><Link to="/trust/moderation">View All Queues →</Link></footer></section>
+    <section className="ops-panel finance-panel" aria-label="Revenue"><header className="panel-title"><div><span className="material-symbols-outlined">payments</span><h2>Revenue (Last 30 Days)</h2></div><span>admin_revenue_summary</span></header>
+      {snapshot.revenue
+        ? <div className="finance-grid"><div><span>Subscriptions paid</span><strong>{money(snapshot.revenue.subs_paid)}</strong></div><div><span>Other paid</span><strong>{money(snapshot.revenue.other_paid)}</strong></div><div><span>Ads revenue</span><strong>{money(snapshot.revenue.ads_revenue)}</strong></div><div><span>Transactions</span><strong>{fmt(snapshot.revenue.txn_count)}</strong></div><div><span>Subs pending</span><strong>{fmt(snapshot.revenue.subs_pending)}</strong></div><div><span>Subs failed</span><strong>{fmt(snapshot.revenue.subs_failed)}</strong></div></div>
+        : <p>{phase === 'loading' ? 'Loading revenue…' : 'Revenue summary unavailable.'}</p>}
+      {snapshot.topPayers.length > 0 && <ol className="top-payers">{snapshot.topPayers.map((row) => <li key={row.business_id}>{row.business_id.slice(0, 8)}… — {money(row.total)} ({fmt(row.payments)} payments)</li>)}</ol>}
+    </section>
 
-    <section className="bottom-grid"><article className="ops-panel audit-panel"><header className="panel-title"><div><span className="material-symbols-outlined">history</span><h2>Recent Administrator Audit Timeline</h2></div><span className={auditState === 'unavailable' ? 'danger-text' : 'live-label'}><i />{auditState === 'live' ? 'LIVE REPLICATION LOG' : auditState === 'loading' ? 'CONNECTING' : auditState === 'unavailable' ? 'FEED UNAVAILABLE' : 'REFERENCE EVENTS'}</span></header><div className="audit-list">{auditRows.map((row, index) => <div className="audit-row" key={`${row.time}-${index}`}><time>{row.time}</time><span className={`audit-icon material-symbols-outlined ${row.tone}`}>{row.tone === 'danger' ? 'block' : row.tone === 'success' ? 'check' : 'vpn_key'}</span><div><header><strong>{row.actor}</strong><b>{row.action}</b></header><p>{row.detail}</p></div><span className={row.tone === 'danger' ? 'danger-text' : ''}>{row.result}</span></div>)}</div><footer><span>{events.length ? 'SERVER-RECORDED SECURITY EVENTS · CAT' : 'STATIC REFERENCE EVENTS · CAT'}</span><Link to="/security/events">Open protected audit log</Link></footer></article>
-      <article className="ops-panel forensic"><header className="panel-title"><div><span className="material-symbols-outlined">policy</span><h2>Target Forensic Snapshot</h2></div><b>INSPECTION ACTIVE</b></header><div className="forensic-image"><span className="material-symbols-outlined">storefront</span><small>GPS: -17.7548° S, 31.0822° E</small><b>REFERENCE DOSSIER</b></div><dl><div><dt>TARGET ENTITY</dt><dd>Borrowdale Gadgets Ltd</dd></div><div><dt>NATIONAL ID / REG</dt><dd>63-1994820-T-42</dd></div><div><dt>KYC ASSURANCE LEVEL</dt><dd>TIER 3 (REFERENCE)</dd></div><div><dt>DISPUTE PROBABILITY</dt><dd>0.4% (REFERENCE)</dd></div></dl><footer><button disabled>Inspect Docs</button><button disabled className="primary">Approve Badge</button></footer></article>
+    <section className="ops-panel queue-panel"><header className="queue-head"><div><span className="material-symbols-outlined">checklist_rtl</span><h2>Operational Queue Matrix</h2></div></header><div className="table-scroll"><table className="ops-table"><thead><tr><th>Queue Name</th><th>Pending Count</th><th>Action</th></tr></thead><tbody>{queueRows.map(([icon, name, count, path]) => <tr key={name}><td><span className="material-symbols-outlined">{icon}</span><strong>{name}</strong></td><td><b className={count ? 'count attention' : 'count'}>{phase === 'loading' ? '…' : fmt(count)}</b></td><td><Link to={path}>Open</Link></td></tr>)}</tbody></table></div></section>
+
+    <section className="ops-panel audit-panel"><header className="panel-title"><div><span className="material-symbols-outlined">history</span><h2>Recent Administrator Actions</h2></div><span className="live-label"><i />admin_audit_logs</span></header>
+      {phase === 'loading' ? <p>Loading…</p>
+        : snapshot.auditLog.length === 0 ? <p>No recent administrator actions recorded.</p>
+        : <div className="audit-list">{snapshot.auditLog.map((row) => <div className="audit-row" key={row.id}><time>{new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Africa/Harare' }).format(new Date(row.created_at))}</time><span className="audit-icon material-symbols-outlined">history</span><div><header><strong>{row.actor_role?.replace('_', ' ').toUpperCase() ?? 'ADMIN'}</strong><b>{row.action.replaceAll('_', ' ').toUpperCase()}</b></header><p>{row.entity}{row.entity_id ? ` · ${row.entity_id}` : ''}{row.reason ? ` · ${row.reason}` : ''}</p></div></div>)}</div>}
+      <footer><span>OPERATIONAL AUDIT LOG · NOT EVIDENCE-GRADE</span><Link to="/security/events">Open protected security-event log</Link></footer>
     </section>
   </div>;
 }
