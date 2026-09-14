@@ -1,24 +1,128 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../security/auth-context';
+import {
+  listErrorEvents, getErrorEvent, updateErrorEventStatus, listSentryIssues,
+  PLATFORM_PAGE_SIZE, type ErrorEventRow, type ErrorEventDetail, type SentryIssue,
+} from '../services/platform/query';
 
-type Incident = { id:string; severity:'P1 HIGH'|'P2 MEDIUM'|'P1 SECURITY'; subsystem:string; file:string; events:number; impact:string; cause:string; gateway:string; trace:string[] };
-const incidents: Incident[] = [
-  {id:'ERR-4091',severity:'P1 HIGH',subsystem:'ECONNRESET: EcoCash C2B Webhook Timeout',file:'services/escrow/ecocash_gateway.go:184',events:412,impact:'84 shop escrow payments queued in buffer',cause:'Carrier gateway throttling Econet Bulawayo node',gateway:'ECO/PAYNOW',trace:['Exception: dial tcp 196.220.101.44:443: i/o timeout','net/http.(*persistConn).writeLoop','pamarket/services/escrow.(*EcoCashGateway).DispatchWebhook','pamarket/workers/queue.(*Worker).Execute']},
-  {id:'ERR-4085',severity:'P2 MEDIUM',subsystem:'OCR Failure: ZIMRA ITF263 Tax Clearance QR',file:'workers/kyc/ocr_parser_zimra.py:49',events:28,impact:'Business verification uploads stalled',cause:'Mobile camera uploads below 150 DPI resolution',gateway:'KYC/OCR',trace:['OCRConfidenceError: minimum threshold not met','kyc/ocr_parser.parseTaxClearance','workers/queue.consumeUpload']},
-  {id:'ERR-4072',severity:'P2 MEDIUM',subsystem:'PostGIS Query Slowdown: Harare Stands Radius',file:'db/queries/geo_radius_property.sql:12',events:19,impact:'Spatial query latency escalated to 1,840ms',cause:'Missing GiST index scan on reference partition',gateway:'DATABASE',trace:['QueryTimeout: radius search exceeded 1500ms','property/search.findWithinRadius','postgis/ST_DWithin']},
-  {id:'ERR-4050',severity:'P1 SECURITY',subsystem:'Rate Limit Tripped: /api/v1/auth/sms-otp',file:'middleware/security/honeypot_ratelimit.go:91',events:8400,impact:'SMS OTP flood and enumeration attempt',cause:'Reference IP block quarantined at edge',gateway:'SECURITY',trace:['RateLimitExceeded: sms-otp threshold','security/honeypot.detectProbe','edge/firewall.applyReferenceRule']},
-];
-function Icon({name}:{name:string}){return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>}
-export function ErrorsHealthPage(){
-  const [severity,setSeverity]=useState('ALL'); const [gateway,setGateway]=useState('ALL'); const [selectedId,setSelectedId]=useState(incidents[0].id);
-  const shown=useMemo(()=>incidents.filter(item=>(severity==='ALL'||item.severity===severity)&&(gateway==='ALL'||item.gateway===gateway)),[severity,gateway]);
-  const selected=incidents.find(item=>item.id===selectedId)??shown[0]??incidents[0];
-  return <div className="health-page">
-    <div className="health-reference" role="note"><Icon name="science"/><b>REFERENCE OBSERVABILITY DATA</b><span>Incidents, infrastructure values and traces are design fixtures. No Sentry or infrastructure telemetry source is connected.</span></div>
-    <section className="health-strip">{[['HARARE CENTRAL zw-hre-1','ONLINE','99.98%','Target: 99.95%'],['SENTRY EXCEPTIONS (24H)','8 UNRESOLVED P1','142','Resolved: 134'],['FINTECH GATEWAY PIPELINES','ECOCASH DEGRADED','2.1% err','Other rails: reference healthy'],['REDIS DISPATCH & QUEUES','ZERO DROPS','24ms','Buffered: 1,492 tasks']].map(([title,state,value,note])=><article key={title}><small>{title}</small><b>{state}</b><strong>{value}</strong><span>{note}</span></article>)}</section>
-    <div className="health-breadcrumb">PAMARKET OPS / SECURITY & PLATFORM / <b>SYSTEM ERRORS & OBSERVABILITY</b><span>LIVE STREAM: NOT CONNECTED</span></div>
-    <header className="health-hero"><div><small>CORE SYSTEM ERRORS, INCIDENTS & EDGE HEALTH</small><h1>Errors & Health</h1><p>Inspect reference edge, payment, database, OCR and security incidents from one operations view.</p></div><nav><button disabled><Icon name="cached"/>PURGE EDGE CACHE</button><button disabled><Icon name="alt_route"/>AUTO-FAILOVER RULES</button><button disabled className="danger"><Icon name="dangerous"/>TERMINATE DB POOL LEAKS</button></nav></header>
-    <section className="health-nodes" aria-label="Reference network health">{[['router','Liquid Intelligent Tech','HEALTHY','14ms','Harare Core Node','Packet Loss: 0.00%'],['cell_tower','Econet Wireless (5G/LTE)','DEGRADED','88ms','Bulawayo Tower Subnet','Packet Loss: 3.4%'],['cable','TelOne Zimbabwe','HEALTHY','18ms','EASSy / Mazowe Fibre','Packet Loss: 0.02%'],['satellite_alt','NetOne Cellular','HEALTHY','22ms','OneMoney Relay Net','Packet Loss: 0.08%']].map(([icon,name,state,rtt,node,loss])=><article key={name} className={state==='DEGRADED'?'degraded':''}><Icon name={icon}/><div><strong>{name}</strong><b>{state}</b><span>{node}</span></div><div><strong>{rtt}</strong><small>RTT</small><span>{loss}</span></div></article>)}</section>
-    <section className="health-incidents"><header><div><h2>ACTIVE INCIDENTS & TRACED EXCEPTIONS</h2><b>REFERENCE TELEMETRY</b></div><label>SEVERITY<select aria-label="Incident severity" value={severity} onChange={e=>setSeverity(e.target.value)}><option>ALL</option><option>P1 HIGH</option><option>P2 MEDIUM</option><option>P1 SECURITY</option></select></label><label>SUBSYSTEM<select aria-label="Incident subsystem" value={gateway} onChange={e=>setGateway(e.target.value)}><option>ALL</option><option>ECO/PAYNOW</option><option>KYC/OCR</option><option>DATABASE</option><option>SECURITY</option></select></label></header><div className="health-table-scroll"><table aria-label="System incident queue"><thead><tr><th>Incident / Error Hash</th><th>Severity</th><th>Subsystem & Exception</th><th>Events</th><th>Impact & Root Cause</th><th>Mitigation Protocol</th></tr></thead><tbody>{shown.map(item=><tr key={item.id} className={selected.id===item.id?'selected':''}><td><strong>#{item.id}</strong></td><td><b className={`health-severity ${item.severity.includes('P1')?'p1':''}`}>{item.severity}</b></td><td><strong>{item.subsystem}</strong><code>{item.file}</code></td><td><strong>{item.events.toLocaleString()}</strong></td><td><span>{item.impact}</span><small>{item.cause}</small></td><td><button onClick={()=>setSelectedId(item.id)} aria-label={`Inspect ${item.id}`}><Icon name="find_in_page"/>INSPECT TRACE</button><button disabled>MITIGATE</button></td></tr>)}</tbody></table>{!shown.length&&<p role="status">No reference incidents match these filters.</p>}</div><footer>SHOWING {shown.length} OF {incidents.length} REFERENCE INCIDENTS <span>LOG ARCHIVE: NOT CONNECTED</span></footer></section>
-    <section className="health-trace" aria-label="Exception trace inspector"><header><Icon name="bug_report"/><div><small>EXCEPTION STACK TRACE & INGRESS CONTEXT</small><h2>TARGET: #{selected.id}</h2><p>TRACE ID: reference-{selected.id.toLowerCase()}</p></div><b>FIXTURE</b></header><div className="health-trace-grid"><article><h3>RUNTIME EXECUTION FRAME</h3><pre>{selected.trace.map((line,index)=>`${String(index+1).padStart(2,'0')}  ${line}`).join('\n')}</pre><h3>TIMEOUT TIMELINE RECONSTRUCTION</h3><div className="health-timeline"><span>CLIENT (0ms)</span><span>INGRESS (14ms)</span><span>DISPATCH (42ms)</span><span>FAILURE THRESHOLD</span></div></article><aside><h3>REFERENCE CONTEXT</h3><dl><div><dt>subsystem</dt><dd>{selected.gateway}</dd></div><div><dt>events</dt><dd>{selected.events.toLocaleString()}</dd></div><div><dt>impact</dt><dd>{selected.impact}</dd></div><div><dt>root cause</dt><dd>{selected.cause}</dd></div></dl><p><Icon name="info"/>Context values are illustrative and contain no production secrets, IP addresses, credentials or customer data.</p><h3>TRIAGE TERMINAL DISPATCH</h3><button disabled>RETRY FAILED WORK (DRY-RUN)</button><button disabled>FORCE FAILOVER</button><button disabled>ACKNOWLEDGE INCIDENT</button></aside></div></section>
-  </div>
+function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
+function Icon({ name }: { name: string }) { return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>; }
+
+export function ErrorsHealthPage() {
+  const auth = useAuth();
+  const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [rows, setRows] = useState<ErrorEventRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<ErrorEventDetail | null>(null);
+  const [detailPhase, setDetailPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [note, setNote] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [sentry, setSentry] = useState<SentryIssue[] | null>(null);
+  const [sentryPhase, setSentryPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  const load = useCallback(async () => {
+    if (auth.mode !== 'live') { setPhase('ready'); return; }
+    setPhase('loading');
+    setError(null);
+    const result = await listErrorEvents(status || undefined, page, PLATFORM_PAGE_SIZE);
+    if (result.error) { setError(result.error.message); setPhase('error'); return; }
+    setRows(result.data.rows);
+    setTotal(result.data.total);
+    setPhase('ready');
+  }, [auth.mode, status, page]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const loadDetail = useCallback(async (id: string) => {
+    setSelectedId(id);
+    setDetailPhase('loading');
+    setMessage(null);
+    const result = await getErrorEvent(id);
+    if (result.error || !result.data) { setDetailPhase('error'); return; }
+    setDetail(result.data);
+    setNote(result.data.admin_notes ?? '');
+    setDetailPhase('ready');
+  }, []);
+
+  async function setErrorStatus(next: string) {
+    if (!selectedId) return;
+    const result = await updateErrorEventStatus(selectedId, next, note || undefined);
+    setMessage(result.error ? `Failed: ${result.error.message}` : `Marked ${next}.`);
+    void loadDetail(selectedId);
+    void load();
+  }
+
+  async function loadSentry() {
+    if (!auth.accessToken || auth.mode !== 'live') return;
+    setSentryPhase('loading');
+    const result = await listSentryIssues(auth.accessToken);
+    if (result.error) { setSentryPhase('error'); return; }
+    setSentry(result.data);
+    setSentryPhase('ready');
+  }
+
+  const pageCount = Math.max(1, Math.ceil(total / PLATFORM_PAGE_SIZE));
+
+  return <div className="directory-page">
+    {auth.mode === 'mock' && <div className="directory-reference" role="note"><Icon name="science" /><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment.</span></div>}
+    <div className="directory-breadcrumb">PAMARKET OPS / SECURITY & PLATFORM / <b>ERRORS & HEALTH</b></div>
+    <header className="directory-hero"><div><small>PRODUCTION OBSERVABILITY</small><h1>Errors & Health</h1><p>Real client/server error events (app_error_events) and, on demand, real Sentry issues via the secure admin-sentry-issues function. No fabricated uptime or incident data.</p></div></header>
+
+    <section className="directory-filters" aria-label="Filters"><div>
+      <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option><option value="open">OPEN</option><option value="investigating">INVESTIGATING</option><option value="resolved">RESOLVED</option><option value="ignored">IGNORED</option></select>
+      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><Icon name="restart_alt" /></button>
+      <button onClick={() => void loadSentry()} disabled={sentryPhase === 'loading' || auth.mode !== 'live'}><Icon name="bug_report" />Load Sentry Issues (14d)</button>
+    </div></section>
+
+    {sentryPhase !== 'idle' && <section className="directory-panel" aria-label="Sentry issues">
+      {sentryPhase === 'loading' && <p>Loading Sentry issues…</p>}
+      {sentryPhase === 'error' && <p role="alert">Could not load Sentry issues.</p>}
+      {sentryPhase === 'ready' && sentry && (sentry.length === 0 ? <p role="status">No Sentry issues in the last 14 days.</p> : <ul>{sentry.map((issue) => <li key={issue.id ?? issue.shortId}><b>{issue.level?.toUpperCase() ?? '—'}</b> {issue.title ?? '—'} — {issue.culprit ?? '—'} ({issue.count ?? 0} events, {issue.userCount ?? 0} users) · last seen {fmtDate(issue.lastSeen)}{issue.permalink && <> · <a href={issue.permalink} target="_blank" rel="noreferrer">Sentry</a></>}</li>)}</ul>)}
+    </section>}
+
+    <div className="directory-workspace">
+      <section className="directory-ledger">
+        <header><span aria-live="polite">{phase === 'loading' ? 'Loading…' : `${total.toLocaleString('en-ZW')} event(s)`}</span>
+          <div><button disabled={page <= 1 || phase === 'loading'} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><span>Page {page} of {pageCount}</span><button disabled={page >= pageCount || phase === 'loading'} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
+        </header>
+        <div className="directory-table-scroll">
+          {phase === 'error' && <div className="directory-empty" role="alert">Could not load error events: {error}</div>}
+          {phase !== 'error' && <table aria-label="Error events"><thead><tr><th>Type</th><th>Screen</th><th>Severity</th><th>Occurrences</th><th>Affected users</th><th>Status</th><th>Last seen</th></tr></thead>
+            <tbody>{rows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => void loadDetail(row.id)} style={{ cursor: 'pointer' }}>
+              <td>{row.error_type ?? '—'}</td><td>{row.screen ?? '—'}</td><td>{row.severity ?? '—'}</td><td>{row.occurrence_count ?? 0}</td><td>{row.affected_users_count ?? 0}</td><td>{row.status ?? '—'}</td><td>{fmtDate(row.last_seen_at)}</td>
+            </tr>)}</tbody></table>}
+          {phase === 'ready' && rows.length === 0 && <div className="directory-empty" role="status">No error events match these filters.</div>}
+        </div>
+      </section>
+
+      <aside className="directory-inspector" aria-label="Error detail">
+        {!selectedId && <p>Select an error event to view real production detail.</p>}
+        {selectedId && detailPhase === 'loading' && <p>Loading…</p>}
+        {selectedId && detailPhase === 'error' && <p role="alert">Could not load error detail.</p>}
+        {selectedId && detailPhase === 'ready' && detail && <>
+          <header><Icon name="bug_report" /><div><small>ERROR</small><strong>{detail.error_type ?? '—'}</strong></div><b>{detail.status?.toUpperCase() ?? '—'}</b></header>
+          <section><h3>Details</h3><dl>
+            <div><dt>Message</dt><dd>{detail.message ?? '—'}</dd></div>
+            <div><dt>Screen</dt><dd>{detail.screen ?? '—'}</dd></div>
+            <div><dt>Platform</dt><dd>{detail.platform ?? '—'}</dd></div>
+            <div><dt>App version</dt><dd>{detail.app_version ?? '—'}</dd></div>
+            <div><dt>Environment</dt><dd>{detail.environment ?? '—'}</dd></div>
+            <div><dt>First seen</dt><dd>{fmtDate(detail.first_seen_at)}</dd></div>
+            <div><dt>Last seen</dt><dd>{fmtDate(detail.last_seen_at)}</dd></div>
+            <div><dt>Sentry event</dt><dd>{detail.sentry_event_id ?? '—'}</dd></div>
+          </dl></section>
+          {detail.stack && <section><h3>Stack</h3><pre>{detail.stack}</pre></section>}
+          <section><h3>Notes & status</h3>
+            <textarea placeholder="Admin notes…" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
+            <div className="jobs-actions"><button onClick={() => void setErrorStatus('investigating')}>Investigating</button><button onClick={() => void setErrorStatus('resolved')}>Resolve</button><button onClick={() => void setErrorStatus('ignored')}>Ignore</button></div>
+            {message && <p role="status">{message}</p>}
+          </section>
+        </>}
+      </aside>
+    </div>
+  </div>;
 }

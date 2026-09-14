@@ -113,6 +113,7 @@ export function OpsDashboardPage() {
     ['Open Reports', fmt(q?.openReports), 'reports', 'report'],
     ['Open Appeals', fmt(q?.openAppeals), 'moderation_appeals', 'gavel'],
     ['Open Errors', fmt(q?.openErrors), 'app_error_events', 'bug_report'],
+    ['Open Tickets', fmt(q?.openTickets), 'support_tickets', 'support_agent'],
   ];
 
   const queueRows: [string, string, number | undefined, string][] = [
@@ -123,6 +124,7 @@ export function OpsDashboardPage() {
     ['gavel', 'Open Moderation Appeals', q?.openAppeals, '/trust/reports'],
     ['work', 'Pending Job Applications', q?.pendingApplications, '/marketplace/jobs'],
     ['directions_car', 'Rentals Pending Approval', q?.pendingRentals, '/rentals'],
+    ['support_agent', 'Open Support Tickets', q?.openTickets, '/trust/support'],
   ];
 
   const categoryTotal = snapshot.category.reduce((total, row) => total + row.n, 0);

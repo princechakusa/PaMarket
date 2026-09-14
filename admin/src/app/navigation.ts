@@ -18,6 +18,15 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
     { label: 'Shop Orders', path: '/orders', permission: 'orders.view', icon: 'receipt_long' },
     { label: 'Jobs & Recruiters', path: '/marketplace/jobs', permission: 'listings.view', icon: 'work' },
     { label: 'Vehicle Rentals', path: '/rentals', permission: 'rentals.view', icon: 'directions_car' },
+    { label: 'Reviews', path: '/trust/reviews', permission: 'reviews.moderate', icon: 'reviews' },
+    { label: 'Ads & Boosts', path: '/monetization/ads', permission: 'ads.view', icon: 'campaign' },
+    { label: 'Finance Center', path: '/monetization/finance', permission: 'revenue.view', icon: 'payments' },
+    { label: 'Play Billing', path: '/monetization/play-billing', permission: 'billing.view', icon: 'receipt' },
+  ] },
+  { label: 'Business Platform', items: [
+    { label: 'Businesses', path: '/businesses', permission: 'businesses.view', icon: 'storefront' },
+    { label: 'Support Center', path: '/trust/support', permission: 'support.manage', icon: 'support_agent' },
+    { label: 'Contact Requests', path: '/trust/contacts', permission: 'support.manage', icon: 'contact_mail' },
   ] },
   { label: 'Security & Platform', items: [
     { label: 'Security & Honeypot', path: '/security/events', permission: 'audit.view', icon: 'shield_with_heart' },
@@ -25,6 +34,8 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
     { label: 'Errors & Health', path: '/observability/errors', permission: 'errors.view', icon: 'vital_signs' },
     { label: 'Security Settings', path: '/settings/security', permission: 'security.view', icon: 'passkey' },
     { label: 'General Settings', path: '/settings/general', permission: 'settings.view', icon: 'tune' },
+    { label: 'Maintenance', path: '/settings/maintenance', permission: 'settings.manage', icon: 'construction' },
+    { label: 'Notifications', path: '/settings/notifications', permission: 'settings.view', icon: 'notifications' },
   ] },
 ];
 

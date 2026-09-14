@@ -32,7 +32,58 @@ export type Database = {
       // columns User Intelligence needs. Deliberately excludes id_doc /
       // selfie / id_doc_path / selfie_path / reg_doc_path — raw document
       // paths are never selected by any C2E-10 query.
-      businesses: { Row: { id: string; name: string | null; status: string | null; owner_user_id: string | null; province: string | null; created_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      // Batch 3: extended with the operational fields the Businesses
+      // workspace needs. Still excludes id_doc/selfie/*_path columns.
+      businesses: {
+        Row: {
+          id: string; name: string | null; status: string | null; owner_user_id: string | null;
+          province: string | null; city: string | null; category: string | null; biz_type: string | null;
+          phone: string | null; email: string | null; plan_id: string | null; verification_level: number | null;
+          verification_pending: boolean | null; created_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null };
+        Relationships: [];
+      };
+      // Batch 3: Platform + Operations tables. All already admin/support-
+      // gated RLS (is_admin()/is_support_team()), verified live before use.
+      app_error_events: {
+        Row: {
+          id: string; source: string | null; error_type: string | null; message: string | null; stack: string | null;
+          screen: string | null; app_version: string | null; platform: string | null; environment: string | null;
+          severity: string | null; occurrence_count: number | null; affected_users_count: number | null;
+          first_seen_at: string | null; last_seen_at: string | null; status: string | null; admin_notes: string | null;
+          resolved_at: string | null; sentry_event_id: string | null; created_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null; admin_notes?: string | null; resolved_at?: string | null; resolved_by?: string | null };
+        Relationships: [];
+      };
+      app_settings: { Row: { id: number; settings: Json; updated_at: string | null }; Insert: { id?: number; settings?: Json }; Update: { settings?: Json }; Relationships: [] };
+      notifications: {
+        Row: { id: string; user_id: string | null; title: string | null; body: string | null; read: boolean | null; created_at: number | null; type: string | null; category: string | null; push_sent: boolean | null; push_status: string | null };
+        Insert: { id?: string; user_id: string; title: string; body?: string | null; type?: string | null; category?: string | null };
+        Update: { read?: boolean | null };
+        Relationships: [];
+      };
+      contact_requests: {
+        Row: { id: string; requester_id: string | null; candidate_id: string | null; requester_name: string | null; candidate_name: string | null; company: string | null; role: string | null; note: string | null; status: string | null; created_at: string | null; decided_at: string | null; decided_by: string | null };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null; decided_at?: string | null; decided_by?: string | null };
+        Relationships: [];
+      };
+      support_tickets: {
+        Row: { id: string; subject: string | null; requester_id: string | null; status: string | null; priority: string | null; category: string | null; assigned_to: string | null; source: string | null; first_response_at: string | null; resolved_at: string | null; created_at: string | null; updated_at: string | null };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null; priority?: string | null; assigned_to?: string | null; resolved_at?: string | null };
+        Relationships: [];
+      };
+      support_ticket_messages: {
+        Row: { id: string; ticket_id: string | null; author_id: string | null; author_kind: string | null; body: string | null; internal: boolean | null; created_at: string | null };
+        Insert: { id?: string; ticket_id: string; author_id: string; author_kind: string; body: string; internal?: boolean };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       // Batch 1: extended with review-workflow columns. Still excludes
       // id_doc/selfie/id_doc_path/selfie_path/reg_doc_path — raw document
       // paths are never selected anywhere in this codebase.
@@ -157,7 +208,11 @@ export type Database = {
       reviews: { Row: { id: string; seller_id: string | null; reviewer_id: string | null; reviewer_name: string | null; rating: number | null; body: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       business_reviews: { Row: { id: string; business_id: string | null; reviewer_id: string | null; reviewer_name: string | null; rating: number | null; comment: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       business_subscriptions: { Row: { id: string; business_id: string | null; status: string | null; plan_id: string | null; billing_cycle: string | null; current_period_end: string | null; auto_renew: boolean | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      app_error_events: { Row: { id: string; status: string | null; severity: string | null }; Insert: { id?: string; status?: string | null; severity?: string | null }; Update: { status?: string | null; severity?: string | null }; Relationships: [] };
+      // Batch 3: business_payments row shape for the Businesses workspace's
+      // aggregate-only summary (C2E-15: is_admin(), super_admin included).
+      business_payments: { Row: { id: string; business_id: string | null; amount: number | null; status: string | null; type: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      // C2E-14: admin-read-only business_staff (is_admin()).
+      business_staff: { Row: { id: string; business_id: string | null; user_id: string | null; role: string | null; status: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       admin_audit_logs: {
         Row: { id: string; action: string; entity: string; entity_id: string | null; actor_role: string | null; reason: string | null; created_at: string };
         Insert: { id?: string; action: string; entity: string; entity_id?: string | null; actor_role?: string | null; reason?: string | null; created_at?: string };

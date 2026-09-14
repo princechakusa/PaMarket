@@ -2,7 +2,7 @@ import { normalizeError, type NormalizedError } from '../errors/normalize-error'
 import { getSupabaseClient } from '../supabase/client';
 
 export type EdgeResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
-type InvokeOptions = { body?: string | Record<string, unknown>; signal?: AbortSignal; timeoutMs?: number };
+type InvokeOptions = { body?: string | Record<string, unknown>; signal?: AbortSignal; timeoutMs?: number; method?: 'GET' | 'POST' };
 
 export async function invokeAdminFunction<T>(name: string, accessToken: string, options: InvokeOptions = {}): Promise<EdgeResult<T>> {
   const client = getSupabaseClient();
@@ -17,6 +17,7 @@ export async function invokeAdminFunction<T>(name: string, accessToken: string, 
   try {
     const { data, error } = await client.functions.invoke<T>(name, {
       body: options.body,
+      method: options.method,
       headers: { Authorization: `Bearer ${accessToken}` },
       signal: controller.signal,
     });

@@ -1,43 +1,75 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../security/auth-context';
+import { getOperationalSettings, updateOperationalSettings, type OperationalSettings } from '../services/platform/query';
 
-const initial = { zig: '26.8540', zar: '18.4210', scope: 'All 10 Provinces + Cross-Border Gateways', unverified: '100', approval: '2500', sensitivity: '3', readOnly: false };
-const holds = [
-  ['directions_car', 'Vehicles & Heavy Machinery', 'Toyota GD6, tractors, haulage tippers and mining excavators', 'VID PHYSICAL INSPECTION · ZIMRA CLEARANCE', '72 Hours', 'Post-VID Signoff'],
-  ['solar_power', 'High-Value Solar & Inverter Gear', 'Deye / Sunsynk inverters, lithium packs and Tier-1 panels', 'SERIAL NUMBER SCAN & SMS OTP RELEASE', '48 Hours', 'Serial Check Window'],
-  ['domain', 'Real Estate Stands Token Earnest', 'Residential and commercial plots across Zimbabwe', 'DEEDS REGISTRY & SURVEYOR GENERAL LOCK', '14 Days', 'Conveyance Window'],
-  ['shopping_bag', 'General Classifieds & Apparel', 'Apparel, footwear, household utensils and low-value retail', 'DISPUTE ESCALATION TIMER', '24 Hours', 'Standard Courier Window'],
-];
 function Icon({ name }: { name: string }) { return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>; }
 
 export function GeneralSettingsPage() {
-  const [draft, setDraft] = useState(initial);
-  const [notice, setNotice] = useState('');
-  const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
-  const errors = Object.entries({ zig: draft.zig, zar: draft.zar, unverified: draft.unverified, approval: draft.approval }).filter(([, value]) => !value.trim() || !Number.isFinite(Number(value)) || Number(value) <= 0).map(([key]) => key);
-  const ceilingInvalid = !errors.length && Number(draft.approval) < Number(draft.unverified);
-  const valid = errors.length === 0 && !ceilingInvalid;
-  function update(key: keyof typeof initial, value: string | boolean) { setDraft(previous => ({ ...previous, [key]: value })); setNotice(''); }
-  function exportDraft() {
-    if (!valid) return;
-    const blob = new Blob([JSON.stringify({ mode: 'reference-draft', productionApplied: false, settings: draft, escrowHolds: holds.map(([, category, , , duration]) => ({ category, duration })) }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'pamarket-policy-reference-draft.json'; anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setNotice('Reference draft exported. No production policy was changed.');
+  const auth = useAuth();
+  const [current, setCurrent] = useState<OperationalSettings | null>(null);
+  const [draft, setDraft] = useState<OperationalSettings | null>(null);
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (auth.mode !== 'live') { setPhase('ready'); return; }
+    setPhase('loading');
+    setError(null);
+    const result = await getOperationalSettings();
+    if (result.error) { setError(result.error.message); setPhase('error'); return; }
+    setCurrent(result.data);
+    setDraft(result.data);
+    setPhase('ready');
+  }, [auth.mode]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  function update<K extends keyof OperationalSettings>(key: K, value: OperationalSettings[K]) {
+    setDraft((previous) => (previous ? { ...previous, [key]: value } : previous));
+    setMessage(null);
   }
-  function numberField(key: 'zig' | 'zar' | 'unverified' | 'approval', label: string, unit: string) {
-    return <label className="policy-field">{label}<span><input type="number" min="0.0001" step="any" aria-label={label} aria-invalid={errors.includes(key)} value={draft[key]} onChange={event => update(key, event.target.value)} /><b>{unit}</b></span>{errors.includes(key) && <small className="policy-error">Enter a positive number.</small>}</label>;
+
+  const dirty = draft && current && JSON.stringify(draft) !== JSON.stringify(current);
+
+  async function save() {
+    if (!draft || !current) return;
+    setSaving(true);
+    const patch: Partial<OperationalSettings> = {};
+    (Object.keys(draft) as (keyof OperationalSettings)[]).forEach((key) => { if (draft[key] !== current[key]) (patch as Record<string, unknown>)[key] = draft[key]; });
+    const result = await updateOperationalSettings(patch);
+    setSaving(false);
+    if (result.error) { setMessage(`Save failed: ${result.error.message}`); return; }
+    setMessage('Saved.');
+    void load();
   }
+
   return <div className="jobs-page policy-page">
-    <div className="jobs-reference" role="note"><Icon name="science" /><b>REFERENCE POLICY DATA</b><span>Rates, balances and policies are design samples. Edits are local drafts and are lost when you leave this page. Production saving is not connected.</span></div>
-    <div className="jobs-breadcrumb">PAMARKET OPS / SECURITY & PLATFORM / <b>GENERAL SETTINGS & POLICY ENGINE</b><span>POLICY SYNC: NOT CONNECTED</span></div>
-    <header className="jobs-hero"><div><small>PLATFORM CONFIGURATION & COMPLIANCE POLICIES</small><h1>General Settings & Policy Engine</h1><p>Manage marketplace operating parameters, currency references, escrow durations and risk thresholds.</p></div><div className="policy-summary"><span>Active Peg Status <b>REFERENCE</b></span><span>Escrow Locked <b>$1,482,900 USD · SAMPLE</b></span><span>Quarantine Rule <b>DEFCON-2 · SAMPLE</b></span></div></header>
-    <nav className="policy-navigation" aria-label="Settings sections"><span aria-current="page"><Icon name="currency_exchange" />Currency & Escrow Policy</span><Link to="/taxonomy"><Icon name="account_tree" />Taxonomy & Categories</Link><Link to="/settings/notifications"><Icon name="cell_tower" />SMS & Carrier Gateways</Link><Link to="/settings/security"><Icon name="security" />Security & Session Policies</Link><Link to="/content/legal"><Icon name="policy" />Legal & Terms</Link></nav>
-    <div className="policy-workspace"><div><section className="policy-panel"><header><div><h2><Icon name="account_balance" />Official Multi-Currency Rates & RBZ Peg</h2><p>Interbank clearing references and regional cross-border parity</p></div><b>FEED: NOT CONNECTED</b></header><div className="policy-rates">{[['Anchor Unit', 'USD ($)', 'United States Dollar', 'GLOBAL ANCHOR'], ['Zimbabwe Gold', '26.8540', 'ZiG / USD', 'REFERENCE PEG'], ['South African Rand', '18.4210', 'ZAR / USD', 'REFERENCE PARITY']].map(([label, value, unit, badge]) => <article key={label}><small>{label}</small><strong>{value}</strong><p>{unit}</p><b>{badge}</b></article>)}</div><div className="policy-override"><h3>Manual Exchange Override & Cryptographic Stamp</h3><p>LOCAL DRAFT · NO SIGNATURE CONNECTED</p><div className="policy-field-grid">{numberField('zig', 'Target ZiG Override Rate', 'ZiG/USD')}{numberField('zar', 'Border ZAR Multiplier', 'ZAR/USD')}<label className="policy-field">Regional Corridor Scope<select value={draft.scope} onChange={event => update('scope', event.target.value)}><option>All 10 Provinces + Cross-Border Gateways</option><option>Harare & Bulawayo Metropolitan Only</option><option>Southern Border Enclave (Matabeleland South)</option></select></label></div><footer><span><Icon name="fingerprint" />Bank feed and signing gateway not connected</span><button disabled>Fetch Central Bank Feed</button><button disabled>Lock Daily Rate</button></footer></div></section>
-    <section className="policy-panel"><header><div><h2><Icon name="lock_clock" />Automated Escrow Hold Durations by Category</h2><p>Reference clearing windows and verification prerequisites</p></div><button disabled><Icon name="add" />Add Rule</button></header><div className="policy-holds">{holds.map(([icon, title, detail, badge, duration, note]) => <article key={title}><Icon name={icon} /><div><h3>{title}</h3><p>{detail}</p><b>{badge}</b></div><div><strong>{duration}</strong><small>{note}</small></div></article>)}</div></section></div>
-    <aside className="policy-sidebar"><section className="policy-panel"><header><h2><Icon name="shield" />AML & Risk Guardrails</h2><b>REFERENCE</b></header><div className="policy-controls">{numberField('unverified', 'Max Unverified Limit', 'USD')}<p>Reference volume limit per 24-hour cycle for unverified accounts.</p>{numberField('approval', 'Dual-Approval Ceiling', 'USD / ZiG EQ')}<p>Reference threshold for two-person approval.</p>{ceilingInvalid && <p className="policy-error" role="alert">Dual-approval ceiling must be at least the unverified limit.</p>}<label className="policy-field">Honeypot Trigger Sensitivity<select value={draft.sensitivity} onChange={event => update('sensitivity', event.target.value)}><option value="5">DEFCON-3 (5)</option><option value="3">DEFCON-2 (3)</option><option value="1">DEFCON-1 (1)</option></select></label><p>Draft threshold only. No session or network enforcement is performed.</p></div></section><section className="policy-panel"><header><h2><Icon name="fmd_bad" />Circuit Breakers & Overrides</h2></header><div className="policy-controls"><label className="policy-switch"><span>Platform Read-Only Mode<small>Local draft only</small></span><input type="checkbox" role="switch" aria-label="Platform Read-Only Mode" checked={draft.readOnly} onChange={event => update('readOnly', event.target.checked)} /></label><div className="policy-freeze"><h3><Icon name="crisis_alert" />Immediate Escrow Freeze</h3><p>Stops settlement queues when a protected backend operation is available.</p><small>Quorum: two hardware keys · Not connected</small><button disabled><Icon name="lock_reset" />Engage Escrow Freeze Protocol</button></div></div></section></aside></div>
-    <section className="policy-panel policy-audit"><header><h2><Icon name="terminal" />Configuration Audit Feed</h2><b>REFERENCE ENTRIES · NOT LIVE EVIDENCE</b></header>{[['14:12:04 UTC', 'RATE_SYNC', 'Sample rate ingest: ZiG reference adjusted from 26.8410 to 26.8540.'], ['12:08:51 UTC', 'POLICY_UP', 'Sample escrow duration for Real Estate Stands set to 336h.'], ['09:44:17 UTC', 'HONEYPOT', 'Sample probe detection under the DEFCON-2 rule.']].map(([time, type, detail]) => <article key={type}><time>{time}</time><b>{type}</b><span>{detail}</span></article>)}</section>
-    <footer className="policy-save"><div><strong>{dirty ? 'UNSAVED LOCAL DRAFT' : 'REFERENCE DEFAULTS'}</strong><p>No production configuration has been loaded or committed.</p></div><button disabled={!dirty} onClick={() => { setDraft(initial); setNotice('Local changes discarded.'); }}>Discard Changes</button><button disabled={!valid} onClick={exportDraft}><Icon name="file_download" />Export Draft (.JSON)</button><button disabled><Icon name="token" />Save & Sign with Hardware Token (AAL2)</button></footer><p role="status" className="policy-notice">{notice}</p>
+    {auth.mode === 'mock' && <div className="jobs-reference" role="note"><Icon name="science" /><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment.</span></div>}
+    <div className="jobs-breadcrumb">PAMARKET OPS / SECURITY & PLATFORM / <b>GENERAL SETTINGS</b></div>
+    <header className="jobs-hero"><div><small>PRODUCTION PLATFORM CONFIGURATION</small><h1>General Settings</h1><p>Real operating toggles from app_settings. Content (app store/social links) is managed separately and is not shown here.</p></div></header>
+
+    {phase === 'error' && <div className="jobs-reference" role="alert"><Icon name="error" /><b>Could not load settings</b><span>{error}</span></div>}
+
+    {phase === 'ready' && draft && <section className="policy-panel">
+      <header><div><h2><Icon name="tune" />Operational Toggles</h2><p>Changes write directly to production app_settings (admin/super_admin only, server-enforced).</p></div>{dirty && <b>UNSAVED CHANGES</b>}</header>
+      <div className="policy-controls">
+        <label className="policy-switch"><span>Pause new signups<small>signupPaused — consumed by the mobile/website auth flow</small></span><input type="checkbox" role="switch" checked={draft.signupPaused} onChange={(e) => update('signupPaused', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Free listings only<small>freeOnly</small></span><input type="checkbox" role="switch" checked={draft.freeOnly} onChange={(e) => update('freeOnly', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Show sponsored ads<small>showSponsoredAds</small></span><input type="checkbox" role="switch" checked={draft.showSponsoredAds} onChange={(e) => update('showSponsoredAds', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Allow image uploads<small>allowImageUploads</small></span><input type="checkbox" role="switch" checked={draft.allowImageUploads} onChange={(e) => update('allowImageUploads', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Auto-approve verified sellers<small>autoApproveVerified</small></span><input type="checkbox" role="switch" checked={draft.autoApproveVerified} onChange={(e) => update('autoApproveVerified', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Enable premium listings<small>enablePremiumListings</small></span><input type="checkbox" role="switch" checked={draft.enablePremiumListings} onChange={(e) => update('enablePremiumListings', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Require listing approval<small>requireListingApproval</small></span><input type="checkbox" role="switch" checked={draft.requireListingApproval} onChange={(e) => update('requireListingApproval', e.target.checked)} /></label>
+        <label className="policy-switch"><span>Require phone verification<small>requirePhoneVerification</small></span><input type="checkbox" role="switch" checked={draft.requirePhoneVerification} onChange={(e) => update('requirePhoneVerification', e.target.checked)} /></label>
+        <label className="policy-field">Support WhatsApp number<input value={draft.supportWhatsapp} onChange={(e) => update('supportWhatsapp', e.target.value)} placeholder="+263…" /></label>
+      </div>
+      <footer><span>{draft.fxRate != null ? `FX reference: ${draft.fxRate} (updated ${draft.fxRateUpdatedAt ?? '—'})` : 'No FX rate on record.'}</span>
+        <button disabled={!dirty || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save changes'}</button>
+        <button disabled={!dirty || saving} onClick={() => setDraft(current)}>Discard</button>
+      </footer>
+      {message && <p role="status">{message}</p>}
+    </section>}
   </div>;
 }

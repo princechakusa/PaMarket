@@ -84,6 +84,7 @@ export type QueueCounts = {
   activeSubscriptions: number;
   openErrors: number;
   criticalErrors: number;
+  openTickets: number;
 };
 
 /** Real status values confirmed live against the schema/check-constraints during the C2E-9 audit — not guessed. */
@@ -104,6 +105,7 @@ export async function getQueueCounts(): Promise<QueryResult<QueueCounts>> {
     client.from('business_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     client.from('app_error_events').select('*', { count: 'exact', head: true }).eq('status', 'open'),
     client.from('app_error_events').select('*', { count: 'exact', head: true }).eq('status', 'open').in('severity', ['fatal', 'error']),
+    client.from('support_tickets').select('*', { count: 'exact', head: true }).in('status', ['open', 'pending']),
   ] as const);
 
   const failed = results.find((r) => r.error);
@@ -112,7 +114,7 @@ export async function getQueueCounts(): Promise<QueryResult<QueueCounts>> {
   const [
     businesses, pendingVerifications, pendingBusinessVerifications, pendingListings,
     openReports, openAppeals, pendingApplications, totalRentals, pendingRentals,
-    activeSubscriptions, openErrors, criticalErrors,
+    activeSubscriptions, openErrors, criticalErrors, openTickets,
   ] = results;
 
   return {
@@ -129,6 +131,7 @@ export async function getQueueCounts(): Promise<QueryResult<QueueCounts>> {
       activeSubscriptions: activeSubscriptions.count ?? 0,
       openErrors: openErrors.count ?? 0,
       criticalErrors: criticalErrors.count ?? 0,
+      openTickets: openTickets.count ?? 0,
     },
     error: null,
   };
