@@ -39,7 +39,7 @@ export const rolePermissions: Readonly<Record<AdminRole, readonly Permission[]>>
   super_admin: permissions,
   admin: operationalAdmin,
   moderator: [
-    'dashboard.view', 'listings.view', 'listings.moderate', 'verifications.manage',
+    'dashboard.view', 'users.view', 'listings.view', 'listings.moderate', 'verifications.manage',
     'reports.view', 'reports.manage', 'moderation.manage', 'reviews.moderate',
   ],
   support: ['dashboard.view', 'users.view', 'users.assist', 'reports.view', 'reports.manage', 'chats.view', 'support.manage'],

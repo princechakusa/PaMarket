@@ -1,0 +1,51 @@
+-- C2E-19: reconcile the React Admin `users.view` permission with the
+-- `profiles` staff-read RLS policy.
+--
+-- Confirmed live before this change:
+--   - Client permissions.ts: users.view = admin, super_admin, support.
+--   - Server "profiles: owner or staff read" SELECT policy: is_moderator()
+--     = admin, super_admin, moderator.
+-- Neither side matched the other -- support passed the client permission
+-- check but got zero rows server-side; moderator got rows server-side
+-- despite no client-side users.view permission.
+--
+-- Business-rule determination (not a mechanical "make server match
+-- client"): inspected www/admin.html's shared ensureProfiles() helper
+-- (used globally to resolve "who is this user" for display -- reporter
+-- names, moderation subjects, listing sellers, etc.) and confirmed it is
+-- actively called from the Reports/Moderation/Moderation-Inbox screens
+-- that moderator-role staff already use live today, via the very
+-- is_moderator()-gated policy this migration touches. Removing moderator
+-- would break real, live legacy-Admin functionality for moderator-role
+-- staff. support's need (users.view + users.assist permissions already
+-- exist client-side, purpose-built for user-assistance workflows) is
+-- equally legitimate and was simply never reflected server-side.
+--
+-- Decision: the correct final boundary is the UNION of both existing
+-- staff groups -- admin, super_admin, moderator, support -- not either
+-- one alone. finance is deliberately excluded: no finance permission
+-- (monetization.view/revenue.view/ads.view/billing.view) touches any
+-- screen that resolves individual user profiles.
+--
+-- No existing single helper expresses exactly this 4-role set (is_admin_
+-- team() is 5 roles, including finance). Rather than inventing a new
+-- helper, this combines the two EXISTING helpers that already express
+-- each half of the union: is_moderator() (admin/super_admin/moderator,
+-- unchanged, already live) and is_support_team() (admin/super_admin/
+-- support, added in C2E-8, already live and already used for support_
+-- tickets/support_ticket_messages). This is a pure OR of two existing,
+-- already-audited predicates -- no new authorization surface.
+--
+-- Column set is untouched: `profiles`' actual selectable columns for
+-- `authenticated` are unchanged by this migration (C2E-6's anon column
+-- revokes, C2E-8's mfa_secret revoke, and C2E-13's two_factor_secret
+-- revoke are all independent, column-level grants that this row-level
+-- policy change cannot widen or narrow). A newly-authorized support
+-- caller gets exactly the same column visibility a moderator already
+-- has today -- neither mfa_secret nor two_factor_secret is selectable by
+-- either role, unchanged.
+
+drop policy if exists "profiles: owner or staff read" on "public"."profiles";
+create policy "profiles: owner or staff read" on "public"."profiles"
+  for select
+  using ((auth.uid() = id) or public.is_moderator() or public.is_support_team());
