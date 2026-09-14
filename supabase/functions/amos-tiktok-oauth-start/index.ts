@@ -25,7 +25,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Migrated to the shared allowlist (Stage 6).
 import { corsHeaders } from '../_shared/cors.ts'
 
-const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
+// C2E-5: narrowed to super_admin only, not just admin-tier — this starts a
+// TikTok OAuth connection flow (writes amos_oauth_states), which is
+// integration-credential material and must stay super_admin-only per the
+// same rule already applied to amos_set_integration_credential and the
+// amos_integrations/amos_oauth_states RLS policies.
+const ADMIN_TEAM_ROLES = new Set(['super_admin'])
 const TIKTOK_SCOPES = 'user.info.basic,video.upload'
 const STATE_TTL_MS = 10 * 60 * 1000 // 10 minutes — plenty for an admin to complete the TikTok login screen
 

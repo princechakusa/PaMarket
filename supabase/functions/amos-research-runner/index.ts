@@ -46,7 +46,10 @@ function corsHeaders(req: Request) {
 const SEARCH_GAP_WINDOW_DAYS = 14
 const SEARCH_GAP_MIN_OCCURRENCES = 2
 const CALENDAR_LOOKAHEAD_DAYS = 21
-const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
+// C2E-5: narrowed from all 5 admin-team roles to admin-tier only — none of
+// moderator/support/finance hold amos.view/amos.run/amos.publish in the
+// client permission matrix (admin/src/security/permissions.ts).
+const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin'])
 
 // Filters out QA/test noise before it can become a real content-generation
 // topic — caught live: "tester", "tester@pamarket.com", and a random

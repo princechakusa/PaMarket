@@ -38,7 +38,10 @@ function corsHeaders(req: Request) {
   return sharedCorsHeaders(req, { extraHeaders: ['x-automation-secret'] })
 }
 
-const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
+// C2E-5: narrowed from all 5 admin-team roles to admin-tier only — none of
+// moderator/support/finance hold amos.view/amos.run/amos.publish in the
+// client permission matrix (admin/src/security/permissions.ts).
+const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin'])
 const TREND_MIN_RECENT_COUNT = 3       // ignore noise: a term needs at least this many searches this week to be considered
 const TREND_MIN_GROWTH_RATIO = 2.0     // this week's volume must be at least 2x the prior-3-week weekly average
 const SUPPLY_GAP_MIN_SEARCHES = 5      // ignore noise on the supply-gap side too

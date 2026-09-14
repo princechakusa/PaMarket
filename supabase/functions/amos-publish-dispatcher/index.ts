@@ -47,7 +47,10 @@ function corsHeaders(req: Request) {
   return sharedCorsHeaders(req, { extraHeaders: ['x-automation-secret'] })
 }
 
-const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin', 'moderator', 'support', 'finance'])
+// C2E-5: narrowed from all 5 admin-team roles to admin-tier only — none of
+// moderator/support/finance hold amos.view/amos.run/amos.publish in the
+// client permission matrix (admin/src/security/permissions.ts).
+const ADMIN_TEAM_ROLES = new Set(['super_admin', 'admin'])
 const MAX_CLAIMS_PER_RUN = 25
 
 Deno.serve(async (req) => {
