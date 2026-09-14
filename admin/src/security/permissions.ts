@@ -38,8 +38,13 @@ const operationalAdmin: Permission[] = [
 export const rolePermissions: Readonly<Record<AdminRole, readonly Permission[]>> = {
   super_admin: permissions,
   admin: operationalAdmin,
+  // C2E-20: verifications.manage removed -- KYC/business verification
+  // approval stays an admin-tier compliance decision server-side
+  // (verifications/business_verifications RLS is deliberately still
+  // is_admin()-only); listings.moderate is retained and now matches a
+  // real server-side is_moderator() grant on the listings table.
   moderator: [
-    'dashboard.view', 'users.view', 'listings.view', 'listings.moderate', 'verifications.manage',
+    'dashboard.view', 'users.view', 'listings.view', 'listings.moderate',
     'reports.view', 'reports.manage', 'moderation.manage', 'reviews.moderate',
   ],
   support: ['dashboard.view', 'users.view', 'users.assist', 'reports.view', 'reports.manage', 'chats.view', 'support.manage'],
