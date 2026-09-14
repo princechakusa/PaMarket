@@ -244,9 +244,11 @@
         const code = (document.getElementById('twoFactorCode')?.value || '').trim();
         // Fetch current secret from Supabase (not localStorage) to verify before disabling
         const c = window.supabase;
-        if (!c || typeof c.from !== 'function') { H.toast('Connection error — try again'); return; }
-        const pr = await c.from('profiles').select('two_factor_secret').eq('id', u.id).single();
-        const serverSecret = pr.data && pr.data.two_factor_secret;
+        if (!c || typeof c.rpc !== 'function') { H.toast('Connection error — try again'); return; }
+        // Owner-scoped RPC (C2E-13) — two_factor_secret is no longer
+        // directly selectable, including for the caller's own row.
+        const sr = await c.rpc('get_my_two_factor_secret');
+        const serverSecret = sr.data;
         if (!serverSecret || !await H._twoFactorVerify(serverSecret, code)) {
           H.toast('Invalid authenticator code');
           return;

@@ -62,25 +62,33 @@ begin
   ) into v_ok;
   insert into c2e6_results values (5, 'anon has no SELECT/UPDATE on any MFA/2FA column', v_ok);
 
-  -- 6. authenticated still has its (unchanged, intentionally preserved)
-  -- SELECT/UPDATE on two_factor_secret/two_factor_enabled — the live
-  -- mobile 2FA feature must keep working.
+  -- 6. authenticated's two_factor_secret/two_factor_enabled access.
+  -- SUPERSEDED NOTE (C2E-13): direct SELECT on two_factor_secret was
+  -- intentionally revoked in C2E-13 (owner reads now go through
+  -- get_my_two_factor_secret()) — this assertion originally expected
+  -- SELECT=true; updated to expect SELECT=false so this test doesn't
+  -- permanently report a false regression against C2E-13's own change.
+  -- UPDATE and two_factor_enabled SELECT/UPDATE remain unchanged.
   select (
-    has_column_privilege('authenticated', 'public.profiles', 'two_factor_secret', 'SELECT') and
+    not has_column_privilege('authenticated', 'public.profiles', 'two_factor_secret', 'SELECT') and
     has_column_privilege('authenticated', 'public.profiles', 'two_factor_secret', 'UPDATE') and
     has_column_privilege('authenticated', 'public.profiles', 'two_factor_enabled', 'SELECT') and
     has_column_privilege('authenticated', 'public.profiles', 'two_factor_enabled', 'UPDATE')
   ) into v_ok;
-  insert into c2e6_results values (6, 'authenticated retains two_factor_secret/enabled access (mobile 2FA unaffected)', v_ok);
+  insert into c2e6_results values (6, 'authenticated: two_factor_secret SELECT revoked (C2E-13), UPDATE/enabled unaffected', v_ok);
 
-  -- 7. authenticated still has its (unchanged, intentionally preserved)
-  -- access to mfa_secret/mfa_enabled — www/admin.html's legacy MFA toggle
-  -- must keep working (out of scope to modify or break).
+  -- 7. authenticated's mfa_secret access.
+  -- SUPERSEDED NOTE (C2E-8, discovered stale while re-running this file for
+  -- C2E-13's regression pass): direct SELECT on mfa_secret was revoked in
+  -- C2E-8 (admin.html's own MFA toggle now goes through get_my_mfa_secret()
+  -- instead) — this assertion originally expected SELECT=true; updated to
+  -- expect false so this test doesn't permanently report a false
+  -- regression against C2E-8's already-shipped change. UPDATE is unaffected.
   select (
-    has_column_privilege('authenticated', 'public.profiles', 'mfa_secret', 'SELECT') and
+    not has_column_privilege('authenticated', 'public.profiles', 'mfa_secret', 'SELECT') and
     has_column_privilege('authenticated', 'public.profiles', 'mfa_secret', 'UPDATE')
   ) into v_ok;
-  insert into c2e6_results values (7, 'authenticated retains mfa_secret access (legacy admin.html MFA unaffected)', v_ok);
+  insert into c2e6_results values (7, 'authenticated: mfa_secret SELECT revoked (C2E-8), UPDATE unaffected', v_ok);
 
   -- 8. profiles_public grants are SELECT-only for both roles (the fresh
   -- CREATE VIEW picked up this project's default-privileges ALL grant;

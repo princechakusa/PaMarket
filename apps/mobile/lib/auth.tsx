@@ -64,18 +64,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("two_factor_enabled,two_factor_secret")
+      .select("two_factor_enabled")
       .eq("id", nextSession.user.id)
       .maybeSingle();
-    if (data?.two_factor_enabled && data?.two_factor_secret) {
-      setPendingSecret(data.two_factor_secret);
-      setPendingTwoFactor(true);
-      setSession(null);
-    } else {
-      setPendingTwoFactor(false);
-      setPendingSecret(null);
-      setSession(nextSession);
+    // The secret itself is never selected directly — cross-user reads of
+    // profiles.two_factor_secret are blocked at the column-grant level
+    // (C2E-13); this RPC is owner-scoped via auth.uid() and only ever
+    // returns the caller's own secret.
+    if (data?.two_factor_enabled) {
+      const { data: secret } = await supabase.rpc("get_my_two_factor_secret");
+      if (secret) {
+        setPendingSecret(secret);
+        setPendingTwoFactor(true);
+        setSession(null);
+        return;
+      }
     }
+    setPendingTwoFactor(false);
+    setPendingSecret(null);
+    setSession(nextSession);
   }
 
   useEffect(() => {

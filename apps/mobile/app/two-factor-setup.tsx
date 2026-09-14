@@ -92,12 +92,9 @@ export default function TwoFactorSetupScreen() {
       return;
     }
     setIsSubmitting(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select("two_factor_secret")
-      .eq("id", userId)
-      .single();
-    const serverSecret = data?.two_factor_secret;
+    // Owner-scoped RPC (C2E-13) — the column itself is no longer directly
+    // selectable by any authenticated caller, including for their own row.
+    const { data: serverSecret } = await supabase.rpc("get_my_two_factor_secret");
     if (!serverSecret || !(await verifyTotpCode(serverSecret, code))) {
       setIsSubmitting(false);
       toast("Invalid authenticator code", 3000, true);

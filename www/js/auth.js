@@ -233,12 +233,21 @@
     var c = sb();
     if (!c) { H.toast('Connection error — try again'); return; }
     // Always fetch 2FA status fresh from Supabase — never trust localStorage state
-    var pr = await c.from('profiles').select('two_factor_enabled,two_factor_secret').eq('id', userId).single();
-    if (pr.error || !pr.data || !pr.data.two_factor_enabled || !pr.data.two_factor_secret) {
+    var pr = await c.from('profiles').select('two_factor_enabled').eq('id', userId).single();
+    if (pr.error || !pr.data || !pr.data.two_factor_enabled) {
       H.toast('2FA setup not found');
       return;
     }
-    if (!H._twoFactorVerify || !await H._twoFactorVerify(pr.data.two_factor_secret, code)) {
+    // Owner-scoped RPC (C2E-13) — two_factor_secret is no longer directly
+    // selectable; this RPC derives ownership from auth.uid() server-side,
+    // which for this pending-2FA session is already the userId being
+    // verified (the Supabase session exists, just not yet "logged in" app-side).
+    var sr = await c.rpc('get_my_two_factor_secret');
+    if (sr.error || !sr.data) {
+      H.toast('2FA setup not found');
+      return;
+    }
+    if (!H._twoFactorVerify || !await H._twoFactorVerify(sr.data, code)) {
       H.toast('Invalid authentication code');
       return;
     }
@@ -581,11 +590,14 @@
   H.loadProfile = async function(userId) {
     try {
     var c = sb(); if (!c) return;
-    // Explicit column list — NOT select('*'). The admin-only `mfa_secret` column
-    // is REVOKEd from app roles for privacy, and select('*') pulls it, which
-    // makes the WHOLE query fail with 42501 and drops the user to a "User"/
+    // Explicit column list — NOT select('*'). The admin-only `mfa_secret`
+    // column and (as of C2E-13) `two_factor_secret` are both REVOKEd from
+    // app roles for privacy, and select('*') pulls them, which makes the
+    // WHOLE query fail with 42501 and drops the user to a "User"/
     // unverified stub. Every column the mapping below uses is listed here.
-    var res = await c.from('profiles').select('id,email,name,phone,avatar,verified,verification_pending,language,created_at,role,company_verified,company_verification_pending,job_title,job_types,sector,exp,city,bio,skills,open_to_work,expected_salary,whatsapp_number,phone_for_calls,contact_method,contact_availability,linkedin_url,github_url,website_url,cv_file_url,cv_file_name,cv,two_factor_enabled,two_factor_secret').eq('id',userId).single();
+    // two_factor_secret is fetched separately below via the owner-scoped
+    // get_my_two_factor_secret() RPC, not selected directly.
+    var res = await c.from('profiles').select('id,email,name,phone,avatar,verified,verification_pending,language,created_at,role,company_verified,company_verification_pending,job_title,job_types,sector,exp,city,bio,skills,open_to_work,expected_salary,whatsapp_number,phone_for_calls,contact_method,contact_availability,linkedin_url,github_url,website_url,cv_file_url,cv_file_name,cv,two_factor_enabled').eq('id',userId).single();
     if (res.error||!res.data) {
       var u = (H.state.users||[]).find(function(x){return x.id===userId;});
       if (!u) { u={id:userId,email:'',name:'User',phone:'',avatar:null,verified:false,language:'English',joinedAt:Date.now(),role:'user',status:'active',banReason:null,banUntil:null,blocked:[]}; (H.state.users = H.state.users || []).push(u); }
@@ -625,7 +637,14 @@
       if (profile.cv                != null) u.cv               = profile.cv;
       // 2FA state — always sourced from Supabase, never overridden by local state
       if (profile.two_factor_enabled != null) u.twoFactorEnabled = !!profile.two_factor_enabled;
-      if (profile.two_factor_secret  != null) u.twoFactorSecret  = profile.two_factor_secret;
+    }
+    // two_factor_secret (C2E-13): fetched only via the owner-scoped RPC,
+    // and only when actually enabled — never selected directly off profiles.
+    if (u.twoFactorEnabled) {
+      var sr2 = await c.rpc('get_my_two_factor_secret');
+      if (!sr2.error && sr2.data) u.twoFactorSecret = sr2.data;
+    } else {
+      u.twoFactorSecret = null;
     }
     H.saveState();
     } catch(e) { console.warn('loadProfile:', e && e.message); }

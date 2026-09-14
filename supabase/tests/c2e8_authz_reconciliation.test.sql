@@ -101,15 +101,20 @@ begin
   reset role;
   insert into c2e8_results values (5, 'E: super_admin blocked from selecting another user''s mfa_secret column', v_ok);
 
-  -- F. Existing 2FA self-service (two_factor_secret) still fully functional
-  -- (unchanged in this stage -- confirms it was not accidentally touched).
+  -- F. Existing 2FA self-service (two_factor_secret) still fully functional.
+  -- SUPERSEDED NOTE (C2E-13): this stage's write still goes through a plain
+  -- UPDATE (unaffected by C2E-13's read-only column revoke), but reading it
+  -- back now correctly goes through get_my_two_factor_secret() rather than
+  -- a direct SELECT -- a direct owner SELECT of this column is no longer
+  -- possible after C2E-13, by design. This assertion is updated accordingly
+  -- rather than left permanently failing against an outdated assumption.
   perform set_config('request.jwt.claims', jsonb_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', v_owner::text, true);
   set local role authenticated;
   update public.profiles set two_factor_secret = 'c2e8-owner-2fa' where id = v_owner;
-  select (two_factor_secret = 'c2e8-owner-2fa') into v_ok from public.profiles where id = v_owner;
+  select (public.get_my_two_factor_secret() = 'c2e8-owner-2fa') into v_ok;
   reset role;
-  insert into c2e8_results values (6, 'F: mobile two_factor_secret self-service unaffected (unchanged this stage)', v_ok);
+  insert into c2e8_results values (6, 'F: mobile two_factor_secret self-service functional via C2E-13 owner-scoped RPC', v_ok);
 
   -- ══════════════════ Wallet adjustment RPC ══════════════════
 
