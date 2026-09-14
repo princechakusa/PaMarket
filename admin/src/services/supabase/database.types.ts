@@ -33,12 +33,39 @@ export type Database = {
       // selfie / id_doc_path / selfie_path / reg_doc_path — raw document
       // paths are never selected by any C2E-10 query.
       businesses: { Row: { id: string; name: string | null; status: string | null; owner_user_id: string | null; province: string | null; created_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      verifications: { Row: { id: string; user_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      business_verifications: { Row: { id: string; business_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      listings: { Row: { id: string; status: string | null; province: string | null; seller_id: string | null }; Insert: { id?: string; status?: string | null; province?: string | null }; Update: { status?: string | null; province?: string | null }; Relationships: [] };
-      reports: { Row: { id: string; status: string | null; target_type: string | null; target_id: string | null; reason: string | null; severity: string | null; created_at: number | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      moderation_appeals: { Row: { id: string; status: string | null; requester_id: string | null; entity: string | null; reason: string | null; created_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
-      applications: { Row: { id: string; status: string | null; applicant_id: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };
+      // Batch 1: extended with review-workflow columns. Still excludes
+      // id_doc/selfie/id_doc_path/selfie_path/reg_doc_path — raw document
+      // paths are never selected anywhere in this codebase.
+      verifications: { Row: { id: string; user_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null; reviewed_by?: string | null }; Relationships: [] };
+      business_verifications: { Row: { id: string; business_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; level_requested: number | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null }; Relationships: [] };
+      // Batch 1: extended with the real Marketplace/Listings columns.
+      // Deliberately excludes nothing sensitive -- listings are a public
+      // marketplace entity, no PII beyond seller_name/seller_phone which
+      // the seller themselves chose to publish on the listing.
+      listings: {
+        Row: {
+          id: string; title: string | null; description: string | null; price: number | null; currency: string | null;
+          category: string | null; status: string | null; province: string | null; city: string | null; suburb: string | null;
+          photos: string[] | null; seller_id: string | null; seller_name: string | null; seller_phone: string | null;
+          condition: string | null; business_id: string | null; views: number | null;
+          created_at: string | null; updated_at: string | null; expires_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null; province?: string | null };
+        Update: { status?: string | null; province?: string | null };
+        Relationships: [];
+      };
+      reports: { Row: { id: string; status: string | null; target_type: string | null; target_id: string | null; reason: string | null; severity: string | null; created_at: number | null; reporter_id: string | null; reported_by: string | null; assigned_to: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; assigned_to?: string | null }; Relationships: [] };
+      moderation_appeals: { Row: { id: string; status: string | null; requester_id: string | null; entity: string | null; entity_id: string | null; reason: string | null; created_at: string | null; decided_by: string | null; decided_at: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; decided_at?: string | null; decided_by?: string | null }; Relationships: [] };
+      applications: {
+        Row: {
+          id: string; job_id: string | null; job_title: string | null; company: string | null;
+          applicant_id: string | null; applicant_name: string | null; applicant_phone: string | null; applicant_email: string | null;
+          message: string | null; status: string | null; employer_id: string | null; applied_at: string | null;
+        };
+        Insert: { id?: string; status?: string | null };
+        Update: { status?: string | null };
+        Relationships: [];
+      };
       rental_companies: { Row: { id: string; business_id: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       rental_vehicle_listings: { Row: { id: string; status: string | null; admin_status: string | null; company_id: string | null }; Insert: { id?: string; status?: string | null; admin_status?: string | null }; Update: { status?: string | null; admin_status?: string | null }; Relationships: [] };
       business_subscriptions: { Row: { id: string; business_id: string | null; status: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null }; Relationships: [] };

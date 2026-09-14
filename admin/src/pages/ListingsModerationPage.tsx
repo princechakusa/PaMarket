@@ -1,28 +1,180 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  listListings, getListing, getListingReports, updateListingStatus, listApplicationsForJob,
+  LISTINGS_PAGE_SIZE, LISTING_CATEGORIES, LISTING_STATUSES,
+  type ListingRow, type ListingDetail, type ListingReportRow, type ApplicationRow,
+} from '../services/marketplace/query';
+import { useAuth } from '../security/auth-context';
 
-type Listing = { id:string; title:string; meta:string; images:number; category:string; location:string; seller:string; sellerMeta:string; trust:string; price:string; terms:string; signal:string; signalDetail:string; risk:'clear'|'danger'; age:string; sla:string; image:string };
-const listings: Listing[] = [
-  {id:'ZW-LST-88491',title:'2018 Toyota Hilux D4D 2.8 GD-6 Double Cab',meta:'VIN: AHTFZ29G90...',images:8,category:'Vehicles > Bakkies',location:'Harare (Belvedere West)',seller:'Farai M. Chiweshe',sellerMeta:'+263 77 289 **** · ID: 63-2940182-K',trust:'Trust Score: 94% (4th Listing)',price:'$24,500',terms:'Cash / Escrow Bank',signal:'DUPLICATE PHOTO DETECTED',signalDetail:'Matched FB Marketplace SA (Durban)',risk:'danger',age:'14 mins ago',sla:'SLA: 46m remaining',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBtsP0hR3TAvT1evR_whJovlo72ohvTGRybCU7FoyeHSQ8fooZos5EpAGtqqibC1ynWetMJq1zHTw_gov4ECddD7gQLRQAAl4CELfg-RXEDbXlTltNkUWCzeENlHLqgnvcoqVu3B81hFH0yUBB92V6nTQ_l_e4aQpNHfyLpiwj65ygQLJJcdvy6dqeM7-YX9lg5y2y99yF0DwDUOkl4I_KbJLKwRKdMdcUgGHSMiUkHZvew3aNGjBfj4Q'},
-  {id:'ZW-LST-88492',title:'3 Bedroom House in Glen Lorne, Harare East',meta:'Deed No: 4892/2014',images:16,category:'Real Estate > Residential',location:'Harare (Glen Lorne)',seller:'Dawn Properties Agent',sellerMeta:'+263 24 278 **** · REA Cert #104',trust:'Trust Score: 99% (Agency)',price:'$185,000',terms:'Title Deeds Available',signal:'DEEDS REGISTRY MATCHED',signalDetail:'Survey diagram attached (PDF)',risk:'clear',age:'32 mins ago',sla:'SLA: 28m remaining',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuA4EajQIMTiyGVm3fgSR3nOy-n-2UicTEDExD31JJPnaffc35ERBXRIesw6c2uOAdJeJttXGNL7govbqJxUOo6YLOcscbnwGXjuywyb6pffctTddaYcvRDeszKBwHs38Yp5x16bCkgW55_OPcmxfzd2CD9xw-v6JuwUaLge59t-yLVxxk7S5XmI58Ub_enK6d6IyvazBhU8t0BmmYhtVBCqsLRrvqfC5RSW6WwcpvRsJYxRn7pL3AX6BQ'},
-  {id:'ZW-LST-88493',title:'John Deere 5075E 4WD Tractor (620 Hours)',meta:'Hourmeter Verified',images:6,category:'Farming > Tractors & Implements',location:'Mash Central (Mazowe)',seller:'Simbarashe Ndoro',sellerMeta:'+263 71 455 **** · ID: 44-1928371-R',trust:'Trust Score: 98% (EcoCash KYC Level 3)',price:'$22,000',terms:'Negotiable / Bank Transfer',signal:'LOW RISK (SCORE 08)',signalDetail:'Original invoice verified',risk:'clear',age:'41 mins ago',sla:'SLA: 19m remaining',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuCneYyKvB8GtLerxfIlovvenVca1rJVHrby_-V9XSgevtaT-j8FrjcY7xO43258OxlW8W7HJrKAISSUP3zy0VrLJG2kKddxo61jydVZVV8S7WjdmwIVua5QscLqu7VAGneMrkglO_IzB49TpemIkPtxh0pEc7fYuX8iPqzHsls7XT0zsNDyU46CDheXeO31fxQtezRdfmmNW6uU8-bjuX0_6wymagHjNIS3nTtLaGyzHMg_Tz86m4DGjA'},
-  {id:'ZW-LST-88494',title:'Apple iPhone 15 Pro Max 256GB Sealed',meta:'IMEI: Pending Input',images:3,category:'Electronics > Mobile Phones',location:'Bulawayo (CBD)',seller:'Kudzi_Gadgets_ZW',sellerMeta:'+263 78 991 **** · Age: 2 days',trust:'Trust Score: 31% (Unverified ID)',price:'$420',terms:'-68% Under Market ($1,250)',signal:'PRICE COLLAPSE ANOMALY',signalDetail:'Likely advance-fee fraud vector',risk:'danger',age:'5 mins ago',sla:'SLA: 55m remaining',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBLZRqk4n_0S9lysZfkD_UhYmtdDKFIJ2pYWsat9Pwd_7rQD_Alyx5VrRhQP76KdosQwo0FiesdxLwMC_rcTI1ugNNDQz8BLkwuz1XZWC_OOq98xJTFXG_ZVdVt7YJgPNAMp8U2bK6dte0EKYOCXENHQb3vaL_9e9LyraUTUT3Q4yzeHNc_N06zB2TVpz6a-M_OXvdGcsmlrwryTqNRy8CJgzSddSJBXGAiV6peV43jbOu0XcPfXchwGg'},
-  {id:'ZW-LST-88495',title:'Deye 10kW Hybrid Inverter + Felicity 15kWh Lithium',meta:'Serial Barcode OK',images:5,category:'Solar & Power > Inverters',location:'Harare (Msasa Industrial)',seller:'ZimPower Systems Ltd',sellerMeta:'+263 77 100 **** · TIN: 2000847192',trust:'Trust Score: 97% (Verified Store)',price:'$3,850',terms:'Direct Bank / ZiG Equivalent',signal:'AUTHORIZED DISTRIBUTOR',signalDetail:'Warranty SLA attached',risk:'clear',age:'18 mins ago',sla:'SLA: 42m remaining',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuCpV2E_jrFym3467qIs0-ky_dDdUHdMosuYbLWZLcMVD3mU2GgomThCm4mietGdar7oD1WooQHiH7CFWRMlD8z3JCaWdZgwl1kta1Ss5-abDlXR1-_pVY0d9eCb27fXNF58XOhNaVSzW8smGxtgNVghEd4WI7p9AixFbzkG7MirE3t7d48Cd7zRhL73tMW2WrcXf2iEHDTYMxL5ntqevpt3i4nSe7a06dau4OW-kpJ4MDzoCCPq6QMRHw'}
+const provinces = ['Harare', 'Bulawayo', 'Manicaland', 'Midlands', 'Masvingo', 'Mashonaland East', 'Mashonaland West', 'Mashonaland Central', 'Matabeleland North', 'Matabeleland South'];
+const categoryTabs = [
+  { label: 'All', value: '' },
+  { label: 'Jobs', value: 'jobs' },
+  { label: 'Services', value: 'services' },
+  { label: 'Property', value: 'property' },
+  { label: 'Vehicle Sales', value: 'vehicles' },
 ];
-const tabs = [['Pending Review','384'],['Flagged / Reported','19'],['Requires Changes','42'],['Approved','41,200'],['Rejected','1,150']];
+const moreCategories = LISTING_CATEGORIES.filter((c) => !['jobs', 'services', 'property', 'vehicles'].includes(c));
 
-export function ListingsModerationPage() {
-  const [activeTab,setActiveTab]=useState('Pending Review'); const [query,setQuery]=useState(''); const [province,setProvince]=useState('All Provinces'); const [risk,setRisk]=useState('All Risk Signals');
-  const [selected,setSelected]=useState(()=>new Set(['ZW-LST-88491','ZW-LST-88492'])); const [inspected,setInspected]=useState<Listing|null>(null);
-  const shown=useMemo(()=>listings.filter(item=>`${item.id} ${item.title} ${item.seller}`.toLowerCase().includes(query.toLowerCase())&&(province==='All Provinces'||item.location.startsWith(province))&&(risk==='All Risk Signals'||item.risk===risk)),[query,province,risk]);
-  const toggle=(id:string)=>setSelected(current=>{const next=new Set(current);if(next.has(id)) next.delete(id); else next.add(id);return next});
-  return <div className="listing-ops">
-    <div className="listing-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE CASE DATA</b><span>This screen matches the approved operations design. Server-side moderation actions remain locked until audited handlers are connected.</span></div>
-    <section className="listing-kpis"><article><span>HARARE QUEUE VELOCITY</span><strong>384</strong><b>+18/hr</b><small>Avg Triage Wait <em>8.4m</em></small></article><article><span>ESCROW COMPLIANCE SLA</span><strong>99.1%</strong><b>ON TARGET</b><small>Target threshold <em>98.0%</em></small></article><article><span>AI FORENSIC FLAGGED</span><strong className="warn">19</strong><b>ITEMS</b><small>Critical review <em>4</em></small></article><article><span>ZIM-ID AUTO-MATCH</span><strong>92.4%</strong><b>VERIFIED</b><small>Manual fallback <em>7.6%</em></small></article></section>
-    <nav className="listing-tabs" aria-label="Listing states">{tabs.map(([label,count])=><button key={label} className={activeTab===label?'active':''} onClick={()=>setActiveTab(label)}>{label}<b>{count}</b></button>)}</nav>
-    <section className="listing-filter" aria-label="Moderation filters"><label className="filter-search"><span className="material-symbols-outlined">search</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Listing ID, title, phone or National ID" /></label><select value={province} onChange={e=>setProvince(e.target.value)} aria-label="Province"><option>All Provinces</option><option>Harare</option><option>Bulawayo</option><option>Mash Central</option></select><select aria-label="Category"><option>All Categories</option><option>Vehicles</option><option>Property</option><option>Electronics</option></select><select value={risk} onChange={e=>setRisk(e.target.value)} aria-label="Risk Matrix"><option>All Risk Signals</option><option value="danger">Critical / Suspicious</option><option value="clear">Verified / Low Risk</option></select><button className="query-button"><span className="material-symbols-outlined">manage_search</span>Query</button><button onClick={()=>{setQuery('');setProvince('All Provinces');setRisk('All Risk Signals')}}>Reset</button></section>
-    <section className="bulk-strip"><div><span className="material-symbols-outlined">checklist</span><strong>{selected.size} / 384 SELECTED</strong><span>BATCH ID: PM-HRE-0912</span></div><div><button disabled>Approve Selected</button><button disabled>Reject Selected</button><button disabled>Request Seller Changes</button><button disabled>Escalate to Senior</button></div></section>
-    <section className="moderation-grid"><div className="listing-table-scroll"><table aria-label="Pending Listings Moderation Grid"><thead><tr><th aria-label="Selection"/><th>Listing Spec & Artifacts</th><th>Classification & Geo</th><th>Seller Ledger & KYC</th><th>Price Valuation</th><th>Forensic Signal Matrix</th><th>SLA Wait Clock</th><th>Triage Action</th></tr></thead><tbody>{shown.map((item,index)=><tr key={item.id} className={index%2?'alternate':''}><td><input type="checkbox" aria-label={`Select listing ${item.id}`} checked={selected.has(item.id)} onChange={()=>toggle(item.id)} /></td><td><div className="listing-spec"><div className="listing-thumb"><img src={item.image} alt="" /><span>{item.images} img</span></div><div><strong>{item.title}</strong><small><b>#{item.id}</b> · {item.meta}</small></div></div></td><td><strong>{item.category}</strong><small><span className="material-symbols-outlined">location_on</span>{item.location}</small></td><td><strong>{item.seller} <span className="verified material-symbols-outlined">verified</span></strong><small>{item.sellerMeta}</small><small className={item.risk==='danger'?'danger-text':'trust'}>{item.trust}</small></td><td><strong className={`price ${item.risk==='danger'?'danger-text':''}`}>{item.price} <small>USD</small></strong><small>{item.terms}</small></td><td><b className={`signal ${item.risk}`}>{item.signal}</b><small className={item.risk==='danger'?'danger-text':''}>{item.signalDetail}</small></td><td><strong>{item.age}</strong><small className="sla"><span className="material-symbols-outlined">alarm</span>{item.sla}</small></td><td><div className="triage"><button disabled>Approve</button><button disabled>Reject</button><button onClick={()=>setInspected(item)} title="Inspect Full Dossier"><span className="material-symbols-outlined">visibility</span></button></div></td></tr>)}</tbody></table></div>
-    <footer className="listing-pagination"><span>SHOWING {shown.length?`1 - ${shown.length}`:'0'} OF 384 RECORDS</span><span>BATCH BUFFER: <b>2.4 MB (FAST)</b></span><div><button disabled>‹</button><b>1</b><button>2</button><button>3</button><span>…</span><button>16</button><button>›</button></div></footer></section>
-    {inspected&&<><button className="drawer-scrim" aria-label="Close forensic dossier" onClick={()=>setInspected(null)} /><aside className="forensic-drawer" aria-label="Forensic dossier"><header><div><span className="material-symbols-outlined">biotech</span><span><strong>FORENSIC DOSSIER</strong><small>#{inspected.id}</small></span></div><button onClick={()=>setInspected(null)} aria-label="Close"><span className="material-symbols-outlined">close</span></button></header><div className="drawer-body"><div className="drawer-image"><img src={inspected.image} alt=""/><span>GEO / EXIF EVIDENCE · REFERENCE RECORD</span></div><section><label>KYC IDENTITY RECORD</label><div className="dossier-grid"><p><small>SELLER</small><strong>{inspected.seller}</strong></p><p><small>LISTING ID</small><strong>#{inspected.id}</strong></p><p><small>LOCATION</small><strong>{inspected.location}</strong></p><p><small>SECURITY SIGNAL</small><strong>{inspected.signal}</strong></p></div></section><section><label>AUTOMATED FORENSIC TELEMETRY</label><p className={`forensic-signal ${inspected.risk}`}><span>{inspected.signalDetail}</span><b>{inspected.risk==='danger'?'REVIEW':'CLEAR'}</b></p></section></div><footer><button disabled>Reject with Reason</button><button disabled>Approve Listing</button></footer></aside></>}
+function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
+function fmtMoney(price: number | null, currency: string | null) { return price === null ? '—' : `${currency ?? 'USD'} ${price.toLocaleString('en-ZW')}`; }
+
+export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: string } = {}) {
+  const auth = useAuth();
+  const [category, setCategory] = useState(fixedCategory ?? '');
+  const [status, setStatus] = useState('');
+  const [province, setProvince] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [rows, setRows] = useState<ListingRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [listPhase, setListPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [listError, setListError] = useState<string | null>(null);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<ListingDetail | null>(null);
+  const [reports, setReports] = useState<ListingReportRow[]>([]);
+  const [applications, setApplications] = useState<ApplicationRow[]>([]);
+  const [detailPhase, setDetailPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (auth.mode !== 'live') { setListPhase('ready'); return; }
+    setListPhase('loading');
+    setListError(null);
+    const result = await listListings({ category: category || undefined, status: status || undefined, province: province || undefined, search: search || undefined }, page);
+    if (result.error) { setListError(result.error.message); setListPhase('error'); return; }
+    setRows(result.data.rows);
+    setTotal(result.data.total);
+    setListPhase('ready');
+  }, [auth.mode, category, status, province, search, page]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const loadDetail = useCallback(async (id: string) => {
+    setSelectedId(id);
+    setDetailPhase('loading');
+    setDetailError(null);
+    setActionMessage(null);
+    const listingResult = await getListing(id);
+    if (listingResult.error) { setDetailError(listingResult.error.message); setDetailPhase('error'); return; }
+    const reportsResult = await getListingReports(id);
+    if (reportsResult.error) { setDetailError(reportsResult.error.message); setDetailPhase('error'); return; }
+    let apps: ApplicationRow[] = [];
+    if (listingResult.data?.category === 'jobs') {
+      const appsResult = await listApplicationsForJob(id);
+      if (appsResult.error) { setDetailError(appsResult.error.message); setDetailPhase('error'); return; }
+      apps = appsResult.data ?? [];
+    }
+    setDetail(listingResult.data);
+    setReports(reportsResult.data ?? []);
+    setApplications(apps);
+    setDetailPhase('ready');
+  }, []);
+
+  async function applyStatus(newStatus: string) {
+    if (!selectedId) return;
+    setActionMessage(null);
+    const result = await updateListingStatus(selectedId, newStatus);
+    if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
+    setActionMessage(`Status updated to "${newStatus}".`);
+    void loadDetail(selectedId);
+    void load();
+  }
+
+  function resetFilters() { setCategory(fixedCategory ?? ''); setStatus(''); setProvince(''); setSearch(''); setPage(1); }
+  const pageCount = Math.max(1, Math.ceil(total / LISTINGS_PAGE_SIZE));
+
+  return <div className="directory-page">
+    {auth.mode === 'mock' && <div className="directory-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment; the Marketplace cannot load real data here.</span></div>}
+    <div className="directory-breadcrumb">PAMARKET OPS / MARKETPLACE / <b>{fixedCategory ? 'JOBS' : 'LISTINGS'}</b></div>
+    <header className="directory-hero"><div><small>PRODUCTION MARKETPLACE</small><h1>{fixedCategory === 'jobs' ? 'Jobs' : 'Listings'}</h1><p>Search, filter, and review real PaMarket listings. Actions are enforced server-side by your actual role.</p></div></header>
+
+    {!fixedCategory && <nav className="listing-tabs" aria-label="Category"><div>{categoryTabs.map((tab) => <button key={tab.label} className={category === tab.value ? 'active' : ''} onClick={() => { setCategory(tab.value); setPage(1); }}>{tab.label}</button>)}
+      <select aria-label="More categories" value={moreCategories.includes(category as typeof moreCategories[number]) ? category : ''} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
+        <option value="">More categories…</option>
+        {moreCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+    </div></nav>}
+
+    <section className="directory-filters" aria-label="Listing filters"><div>
+      <label className="directory-search"><span className="material-symbols-outlined">search</span><input aria-label="Search listings" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search title, seller, or listing ID" /></label>
+      <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>{LISTING_STATUSES.map((s) => <option key={s} value={s}>{s.replaceAll('_', ' ').toUpperCase()}</option>)}</select>
+      <select aria-label="Province" value={province} onChange={(e) => { setProvince(e.target.value); setPage(1); }}><option value="">PROVINCE: ALL</option>{provinces.map((p) => <option key={p} value={p}>{p}</option>)}</select>
+      <button onClick={resetFilters} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+    </div></section>
+
+    <div className="directory-workspace">
+      <section className="directory-ledger">
+        <header><span aria-live="polite">{listPhase === 'loading' ? 'Loading…' : `${total.toLocaleString('en-ZW')} listing(s) match`}</span>
+          <div><button disabled={page <= 1 || listPhase === 'loading'} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><span>Page {page} of {pageCount}</span><button disabled={page >= pageCount || listPhase === 'loading'} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
+        </header>
+        <div className="directory-table-scroll">
+          {listPhase === 'error' && <div className="directory-empty" role="alert">Could not load listings: {listError}</div>}
+          {listPhase !== 'error' && <table aria-label="Listings"><thead><tr><th>Listing</th><th>Category</th><th>Seller</th><th>Location</th><th>Price</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody>{rows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => void loadDetail(row.id)} style={{ cursor: 'pointer' }}>
+              <td><strong>{row.title ?? 'Untitled'}</strong><br /><code>{row.id.slice(0, 8)}…</code></td>
+              <td>{row.category ?? '—'}</td>
+              <td>{row.seller_name ?? '—'}</td>
+              <td>{row.city ?? '—'}{row.province ? `, ${row.province}` : ''}</td>
+              <td>{fmtMoney(row.price, row.currency)}</td>
+              <td>{row.status ?? '—'}</td>
+              <td>{fmtDate(row.created_at)}</td>
+            </tr>)}</tbody></table>}
+          {listPhase === 'ready' && rows.length === 0 && <div className="directory-empty" role="status">No listings match these filters. <button onClick={resetFilters}>Clear filters</button></div>}
+        </div>
+      </section>
+
+      <aside className="directory-inspector" aria-label="Listing detail">
+        {!selectedId && <p>Select a listing to view real production detail.</p>}
+        {selectedId && detailPhase === 'loading' && <p>Loading…</p>}
+        {selectedId && detailPhase === 'error' && <p role="alert">Could not load listing detail: {detailError}</p>}
+        {selectedId && detailPhase === 'ready' && detail && <>
+          <header><span className="material-symbols-outlined">sell</span><div><small>LISTING DETAIL</small><strong>{detail.title ?? 'Untitled'}</strong></div><b>{detail.status?.toUpperCase() ?? '—'}</b></header>
+
+          <section className="directory-identity"><h3>Listing</h3><dl>
+            <div><dt>Category</dt><dd>{detail.category ?? '—'}</dd></div>
+            <div><dt>Price</dt><dd>{fmtMoney(detail.price, detail.currency)}</dd></div>
+            <div><dt>Condition</dt><dd>{detail.condition ?? '—'}</dd></div>
+            <div><dt>Location</dt><dd>{detail.city ?? '—'}{detail.suburb ? `, ${detail.suburb}` : ''}{detail.province ? `, ${detail.province}` : ''}</dd></div>
+            <div><dt>Views</dt><dd>{detail.views ?? 0}</dd></div>
+            <div><dt>Created</dt><dd>{fmtDate(detail.created_at)}</dd></div>
+            <div><dt>Updated</dt><dd>{fmtDate(detail.updated_at)}</dd></div>
+            <div><dt>Expires</dt><dd>{fmtDate(detail.expires_at)}</dd></div>
+          </dl></section>
+
+          <section><h3>Seller</h3><dl>
+            <div><dt>Name</dt><dd>{detail.seller_name ?? '—'}</dd></div>
+            <div><dt>Phone</dt><dd>{detail.seller_phone ?? '—'}</dd></div>
+          </dl></section>
+
+          {detail.description && <section><h3>Description</h3><p>{detail.description}</p></section>}
+
+          {detail.photos && detail.photos.length > 0 && <section><h3>Photos ({detail.photos.length})</h3>
+            <div className="listing-photo-grid">{detail.photos.slice(0, 6).map((url) => <img key={url} src={url} alt="" loading="lazy" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, marginRight: 8 }} />)}</div>
+          </section>}
+
+          <section><h3>Reports ({reports.length})</h3>
+            {reports.length === 0 ? <p>None</p> : <ul>{reports.map((r) => <li key={r.id}>{r.status} · {r.reason ?? 'No reason given'} · severity: {r.severity ?? '—'}</li>)}</ul>}
+          </section>
+
+          {detail.category === 'jobs' && <section><h3>Applications ({applications.length})</h3>
+            {applications.length === 0 ? <p>None</p> : <ul>{applications.map((a) => <li key={a.id}>{a.applicant_name ?? 'Applicant'} · {a.status} · {fmtDate(a.applied_at)}</li>)}</ul>}
+          </section>}
+
+          <section><h3>Moderation actions</h3>
+            <div className="jobs-actions">
+              <button onClick={() => void applyStatus('active')}>Approve (active)</button>
+              <button onClick={() => void applyStatus('flagged')}>Flag</button>
+              <button onClick={() => void applyStatus('under_review')}>Send to review</button>
+              <button onClick={() => void applyStatus('removed')}>Remove</button>
+            </div>
+            {actionMessage && <p role="status">{actionMessage}</p>}
+            <p><small>Actions use the existing admin-scoped update policy. If your role is not admin/super_admin, the server will reject the change.</small></p>
+          </section>
+        </>}
+      </aside>
+    </div>
   </div>;
 }

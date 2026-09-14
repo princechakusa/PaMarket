@@ -1,24 +1,132 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../security/auth-context';
+import {
+  listVerifications, updateVerificationStatus, listBusinessVerifications, updateBusinessVerificationStatus,
+  VERIFICATIONS_PAGE_SIZE, type VerificationRow, type BusinessVerificationRow,
+} from '../services/verifications/query';
 
-type Business = { key:string; name:string; tier:string; reg:string; category:string; address:string; director:string; identity:string; phone:string; auth:string; docs:string[]; products:string; storefront:string[]; age:string; sla:string; assigned:string; tone:'clear'|'pending'|'danger'; image:string };
-const businesses: Business[] = [
-  {key:'chitungwiza',name:'Chitungwiza Agro Supplies Pvt Ltd',tier:'GOLD',reg:'REG: CR-2021/89402B · VAT: 10094812',category:'Agricultural Yields & Seeds',address:'Unit 4, Seke Industrial Park',director:'Tawanda Mutasa',identity:'63-189201-B-42 [MATCHED]',phone:'+263 772 491 802',auth:'Biometrics Linked',docs:['CR14 (Doc# 0038914) Validated','ZIMRA ITF263: Exp. 31-DEC-2024','ZESA Bill (Jan 2024) Physical Match','Director National ID Verified'],products:'14 Products',storefront:['Banner Configured','Pickup Depot Approved'],age:'4h ago',sla:'20h rem (SLA 98%)',assigned:'Assigned: Moyo, T.',tone:'clear',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBXdqxWneuCpepEOz-4WyyeZXl0dH-8phvqidePJovbIB5bRsCXxY7VKwxXTRTmqoTgUZHQz-06mlnytYreT0ZhqNWNAqwmKKZvZgmJb9Zm9JLfF0Sv4zgx1eDvkOiSF8HzIuHWIsVACnr2_8-_feRWPWQ8Y_1pjS_9Ff9PC_76k5xUWhzjuJqf7kH-BxjUmecJQcFFcaHEw04QSHnKueL-0NqrfDzh-ipHV9FCGJVVnvs1EWAZBMtauQ'},
-  {key:'avondale',name:'Avondale Mobile Tech & Repair',tier:'RESUBMISSION',reg:'REG: PBC-2023/44120 · VAT: PENDING',category:'Consumer Electronics & Solar',address:'Shop 12, Avondale Flea/Mall',director:'Blessed Sibanda',identity:'29-082419-M-11 [MATCHED]',phone:'+263 712 900 124',auth:'Phone OTP Verified',docs:['PBC Reg Document Attached','ZIMRA ITF263 Resubmitted (Evaluating)','Commercial Lease Agreement','Metal ID Scan (Clear Hologram)'],products:'39 Products',storefront:['Banner Verified','Walk-in Counter Awaiting Photo'],age:'18h ago (Resub)',sla:'6h remaining (EXPEDITE)',assigned:'Unassigned',tone:'pending',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuCc5CCYJfhKeN5GjJnO4p-ZyHWRNJIM-F2Dz823XpaEwr7rWYq26ZUhp8F6-3b6Z8a808jXVkgTNPmqRPU_rzwpYrK3NqHoBlL-bQZwY0G5KIIPcUqB-3nIUBCzHMZizkXzq6YJupd3ALVxLT9PKDotUqxUpX8I9euxuaxEfUFA61j29gQ1gF1nznB5xOfTGRM5ZW3XEcxT436ttnyspKAooM9gxtfgJtRrK4fOjnEjaHyr9sh2AK0J0A'},
-  {key:'matabeleland',name:'Matabeleland Heavy Equipment Ltd',tier:'FLEET / ENTERPRISE',reg:'REG: CR-2018/10492 · VAT: 90284102',category:'Earthmoving & Mining Yellow Metals',address:'Belmont Industrial, Bulawayo',director:'Nkosana Dlodlo',identity:'08-209381-R-08 [MATCHED]',phone:'+263 774 219 090',auth:'Co-Director Auth Attached',docs:['Full CR14 List of 3 Directors','ZIMRA ITF263: Valid (Exp Nov 2025)','Title Deeds Belmont Yard #4','3x Director IDs Certified'],products:'5 Fleet Items',storefront:['Machinery Serial IDs Ready','GPS Geofence Configured'],age:'1d ago',sla:'4h rem (Normal Triage)',assigned:'Assigned: Moyo, T.',tone:'clear',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuDMNf3SUcaHNZC5YWH6w6z3xk9VJdmxcF1E1T7B2n8cJZIUE_wPXAmZ4tV7Y1JDOEvoNvbUMXb65Xve71tM_0SW8jX9OxsLne2TH_nwwsJXI5lHh0kir69IzukdrFPbj3O6LpT02jIKsBjkXcKK7x7HPnSa9a2UD-iW3pywQvTi49Mxb79XVNabaaMmaTgf6q81u12Z9rTbCi0VO7HgtazFzxcSEFFYhJO1BwqHEBRqkdYlJr-ZCRqMDw'},
-  {key:'borrowdale',name:'Borrowdale Auto Exchange',tier:'ESCALATED',reg:'REG: CR-2024/00192 · TAX MISMATCH',category:'Vehicle Dealership & Consignment',address:'Borrowdale Road, Harare',director:'Farai Tagwirei',identity:'63-991204-Q-63 [NAME MISMATCH]',phone:'+263 788 120 449',auth:'Legal Hold Triggered',docs:["CR14 Lists 'F. Tagwireyi' (Spelling Diff)",'ITF263 Revoked on ZIMRA Portal','Showroom Lease Valid','ID Authenticated via Registrar'],products:'12 Vehicles',storefront:['Listings Frozen','Escrow Lock Active'],age:'2d ago',sla:'SLA BREACH (+12h)',assigned:'Legal Counsel Reviewing',tone:'danger',image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBIx9Sawa0TULwPjmVQOHNNCYYPgMz8Rjh5c9Ha1L9TkXEqxD3xQM-72Yjx3G0wr8KMdXmlrnsW6uBHAkwGq_JApsLP2dzLiOKmHcoyf-l6hn-MkvEqtx4Ynfl8_l9CvkskGaH9aHgIJZaeb_eJRKWL1sxOElp7tWxoBKtr9fSStVvBk965TAO2cOeTT0LWv6rKbdvyyGz2Uov9HbEmqWlH-JcprUGSh1en5e3IBABK-WaxRKDVms1QZw'}
-];
+const statuses = ['pending', 'approved', 'rejected'];
 
-export function BusinessVerificationsPage(){
-  const [selectedKey,setSelectedKey]=useState('chitungwiza'); const [status,setStatus]=useState('review'); const [province,setProvince]=useState('Harare Metropolitan'); const [tier,setTier]=useState('Gold Verified Storefront'); const [document,setDocument]=useState('CR14 Form');
-  const selected=businesses.find(item=>item.key===selectedKey)??businesses[0];
-  const shown=useMemo(()=>businesses.filter(item=>(status!=='escalated'||item.tone==='danger')&&(province==='All Jurisdictions'||province==='Harare Metropolitan'&&!item.address.includes('Bulawayo')||province==='Bulawayo Province'&&item.address.includes('Bulawayo'))),[status,province]);
-  return <div className="verification-page">
-    <div className="verification-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE DOSSIERS</b><span>KYC case content is a design fixture. Sensitive decisions remain server-locked.</span></div>
-    <header className="verification-hero"><div><small>PAMARKET OPS / TRUST & MODERATION / <b>BUSINESS VERIFICATIONS</b></small><div><h1>Business Verification & KYC Queue</h1><span>SL-V2 PROTOCOL</span></div><p>Review ZIMRA tax clearance certificates, CR14/CR6 company registration deeds, and biometric director verifications across Zimbabwean commercial nodes.</p></div><aside><span>QUEUE VELOCITY</span><strong>14.2 min avg triage</strong><i><b/><b/><b/><b/><b/></i></aside></header>
-    <section className="verification-kpis"><article><span>PENDING VERIFICATION</span><strong>28</strong><b>6 Critical SLA</b><small>Awaiting inspector sign-off</small><i className="material-symbols-outlined">pending_actions</i></article><article><span>VERIFIED ACTIVE MERCHANTS</span><strong>1,420</strong><b>+18 today</b><small>USD & ZiG Escrow Enabled</small><i className="material-symbols-outlined">verified</i></article><article><span>DOCUMENTS RESUBMITTED</span><strong>7</strong><b>Priority Triage</b><small>CR14 rectified by company</small><i className="material-symbols-outlined">replay</i></article><article><span>REJECTED / INCOMPLETE</span><strong className="danger-text">43</strong><b className="danger-text">Past 30d</b><small>Failed KYC or ZIMRA revoked</small><i className="material-symbols-outlined">rule_folder</i></article></section>
-    <section className="verification-filters"><div><label><span className="material-symbols-outlined">filter_alt</span><small>STATUS:</small><select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All (28)</option><option value="review">Awaiting Initial Review (18)</option><option value="resubmitted">Resubmitted (7)</option><option value="escalated">Escalated to Legal (3)</option></select></label><label><small>PROVINCE:</small><select value={province} onChange={e=>setProvince(e.target.value)}><option>All Jurisdictions</option><option>Harare Metropolitan</option><option>Bulawayo Province</option></select></label><label><small>TIER:</small><select value={tier} onChange={e=>setTier(e.target.value)}><option>All Tiers</option><option>Basic Merchant</option><option>Gold Verified Storefront</option><option>Enterprise Fleet / Equipment</option></select></label><span className="active-filter">TAX EXPIRY &gt; 60 DAYS</span></div><div><small>SORT:</small><button>SLA Critical First ↓</button><button disabled>Batch Action</button></div></section>
-    <div className="verification-workspace"><section className="dossier-table-panel"><header><div><strong>Active Dossiers</strong><b>LIVE STREAM</b></div><span>Showing 1-{shown.length} of 28 Records · <b>ZIMRA Node Online (Reference)</b></span></header><div className="verification-table-scroll"><table aria-label="Business verification dossiers"><thead><tr><th>Business Info</th><th>Director / KYC</th><th>Document Integrity Checklist</th><th>Storefront</th><th>SLA & Age</th><th>Action Terminal</th></tr></thead><tbody>{shown.map((item,index)=><tr key={item.key} className={`${item.tone} ${selectedKey===item.key?'selected':''}`} onClick={()=>setSelectedKey(item.key)}><td><div className="business-cell"><img src={item.image} alt=""/><div><strong>{item.name}</strong><b>{item.tier}</b><small>{item.reg}</small><small>{item.category} · {item.address}</small></div></div></td><td><strong className={item.tone==='danger'?'danger-text':''}>{item.director}</strong><small className={item.tone==='danger'?'danger-text':'trust'}>{item.identity}</small><small>{item.phone}</small><small className={item.tone==='danger'?'danger-text':'trust'}>{item.auth}</small></td><td><div className="document-checks">{item.docs.map((doc,i)=><span key={doc} className={item.tone==='danger'&&i<2?'danger':item.tone==='pending'&&i===1?'pending':''}><i className="material-symbols-outlined">{item.tone==='danger'&&i<2?'error':'task_alt'}</i>{doc}</span>)}</div></td><td><strong>{item.products}</strong>{item.storefront.map(line=><small key={line} className={line.includes('Frozen')?'danger-text':'trust'}>{line}</small>)}</td><td><strong className={item.tone==='danger'?'danger-text':''}>{item.age}</strong><small className={item.tone==='danger'?'danger-text':item.tone==='pending'?'pending-text':'trust'}>{item.sla}</small><small>{item.assigned}</small></td><td><div className="verification-actions"><button disabled>{index===3?'Freeze Store':index===2?'Grant Enterprise':index===1?'Approve Resub':'Grant Badge'}</button><span><button disabled>Request Doc</button><button disabled>{index===3?'Escalate':'Reject'}</button></span></div></td></tr>)}</tbody></table></div><footer><span><i/>ZIM-REGISTRY FEDERATION LINK: REFERENCE · PING: 14ms</span><div><button disabled>‹</button><b>1</b><button>2</button><button>3</button><button>4</button><button>›</button></div></footer></section>
-      <aside className="kyc-inspector" aria-label="Forensic KYC Inspector"><header><div><span className="material-symbols-outlined">security_update_good</span><span><strong>Forensic KYC Inspector</strong><small>NODE: ZW-REG-AUDIT-98</small></span></div><b>LEVEL 3 AUDIT</b></header><section className="dossier-heading"><small>SELECTED DOSSIER: <b>PAM-KYC-2024-88301</b></small><h2>{selected.name}</h2><p>Director: {selected.director} · Secure document review</p></section><section className="document-viewer"><header><span>ACTIVE DOCUMENT: {document.toUpperCase()}</span><b>256-BIT WATERMARKED</b></header><div className="document-canvas"><header><i>ZW</i><span><strong>REGISTRAR OF COMPANIES</strong><small>COMPANIES & OTHER BUSINESS ENTITIES ACT [24:31]</small></span><b>CR-14 CERTIFICATE</b></header><div><i/><i/><p>DIRECTOR 01: <b>{selected.director.toUpperCase()} — CITIZEN ZIMBABWE</b></p><p>REGISTERED OFFICE: <b>{selected.address.toUpperCase()}</b></p><i/><span>SEAL: REGISTRAR-HARARE-PROD</span></div><footer>SECURITY HASH: 8f4a1c90...3b17 <span>PAGE 1 OF 3</span></footer><strong className="watermark">INTERNAL USE ONLY<small>NOT FOR DISTRIBUTION</small></strong></div><nav>{['CR14 Form','ZIMRA Tax','ZESA Bill','Director ID'].map((name,i)=><button key={name} className={document===name?'active':''} onClick={()=>setDocument(name)}>{i+1}. {name}</button>)}</nav></section><section className="decision-terminal"><label>FAST ESCALATION & REJECTION TERMINAL</label><small>REJECTION / RE-SUBMISSION REASON CODE:</small><select><option>Select standard notice code...</option><option>Expired Tax Clearance (ITF 263)</option><option>Name Mismatch between National ID & CR14/CR6</option><option>Unverifiable Physical Premises</option></select><div><button disabled>Send Defect Notice</button><button disabled>Reject Dossier</button></div><button disabled>Authorize & Issue Merchant Badge</button></section><section className="internal-audit"><header><span>INTERNAL ADMINISTRATIVE AUDIT LOG</span><b>AAL2 VERIFIED</b></header><article><b>T. MOYO (SUPER ADMIN)</b><time>Today 11:42</time><p>Validated ZIMRA ITF263 tax token via government gateway. Reference evidence only.</p></article><article><b>SYSTEM BOT (GEO-LOC)</b><time>Today 09:15</time><p>Premises coordinates cross-referenced against the reference dossier.</p></article><div><input placeholder="Append immutable forensic note..." disabled/><button disabled>Post</button></div></section></aside>
+function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
+
+export function BusinessVerificationsPage() {
+  const auth = useAuth();
+  const [tab, setTab] = useState<'individual' | 'business'>('individual');
+  const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [individualRows, setIndividualRows] = useState<VerificationRow[]>([]);
+  const [businessRows, setBusinessRows] = useState<BusinessVerificationRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [note, setNote] = useState('');
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (auth.mode !== 'live') { setPhase('ready'); return; }
+    setPhase('loading');
+    setError(null);
+    if (tab === 'individual') {
+      const result = await listVerifications(status || undefined, page);
+      if (result.error) { setError(result.error.message); setPhase('error'); return; }
+      setIndividualRows(result.data.rows);
+      setTotal(result.data.total);
+    } else {
+      const result = await listBusinessVerifications(status || undefined, page);
+      if (result.error) { setError(result.error.message); setPhase('error'); return; }
+      setBusinessRows(result.data.rows);
+      setTotal(result.data.total);
+    }
+    setPhase('ready');
+  }, [auth.mode, tab, status, page]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function decide(newStatus: string) {
+    if (!selectedId) return;
+    setActionMessage(null);
+    const result = tab === 'individual'
+      ? await updateVerificationStatus(selectedId, newStatus, note || undefined)
+      : await updateBusinessVerificationStatus(selectedId, newStatus, note || undefined);
+    if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
+    setActionMessage(`Status updated to "${newStatus}".`);
+    setNote('');
+    void load();
+  }
+
+  const pageCount = Math.max(1, Math.ceil(total / VERIFICATIONS_PAGE_SIZE));
+  const selectedIndividual = individualRows.find((r) => r.id === selectedId);
+  const selectedBusiness = businessRows.find((r) => r.id === selectedId);
+
+  return <div className="directory-page">
+    {auth.mode === 'mock' && <div className="directory-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment; Verifications cannot load real data here.</span></div>}
+    <div className="directory-breadcrumb">PAMARKET OPS / TRUST & MODERATION / <b>VERIFICATIONS</b></div>
+    <header className="directory-hero"><div><small>PRODUCTION VERIFICATION QUEUE</small><h1>Verifications</h1><p>Individual KYC and business verification review, in one workspace.</p></div></header>
+
+    <nav className="listing-tabs" aria-label="Verification type"><div>
+      <button className={tab === 'individual' ? 'active' : ''} onClick={() => { setTab('individual'); setSelectedId(null); setPage(1); }}>Individual (KYC)</button>
+      <button className={tab === 'business' ? 'active' : ''} onClick={() => { setTab('business'); setSelectedId(null); setPage(1); }}>Business</button>
+    </div></nav>
+
+    <section className="directory-filters" aria-label="Verification filters"><div>
+      <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>{statuses.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}</select>
+      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+    </div></section>
+
+    <div className="directory-workspace">
+      <section className="directory-ledger">
+        <header><span aria-live="polite">{phase === 'loading' ? 'Loading…' : `${total.toLocaleString('en-ZW')} record(s)`}</span>
+          <div><button disabled={page <= 1 || phase === 'loading'} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><span>Page {page} of {pageCount}</span><button disabled={page >= pageCount || phase === 'loading'} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
+        </header>
+        <div className="directory-table-scroll">
+          {phase === 'error' && <div className="directory-empty" role="alert">Could not load verifications: {error}</div>}
+          {phase !== 'error' && tab === 'individual' && <table aria-label="Individual verifications"><thead><tr><th>User</th><th>Status</th><th>Submitted</th><th>Reviewed</th></tr></thead>
+            <tbody>{individualRows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => { setSelectedId(row.id); setActionMessage(null); setNote(''); }} style={{ cursor: 'pointer' }}>
+              <td><code>{row.user_id?.slice(0, 8) ?? '—'}…</code></td><td>{row.status ?? '—'}</td><td>{fmtDate(row.submitted_at)}</td><td>{fmtDate(row.reviewed_at)}</td>
+            </tr>)}</tbody></table>}
+          {phase !== 'error' && tab === 'business' && <table aria-label="Business verifications"><thead><tr><th>Business</th><th>Level</th><th>Status</th><th>Submitted</th></tr></thead>
+            <tbody>{businessRows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => { setSelectedId(row.id); setActionMessage(null); setNote(''); }} style={{ cursor: 'pointer' }}>
+              <td><code>{row.business_id?.slice(0, 8) ?? '—'}…</code></td><td>{row.level_requested ?? '—'}</td><td>{row.status ?? '—'}</td><td>{fmtDate(row.submitted_at)}</td>
+            </tr>)}</tbody></table>}
+          {phase === 'ready' && (tab === 'individual' ? individualRows.length === 0 : businessRows.length === 0) && <div className="directory-empty" role="status">No records match these filters.</div>}
+        </div>
+      </section>
+
+      <aside className="directory-inspector" aria-label="Verification detail">
+        {!selectedId && <p>Select a record to review.</p>}
+        {selectedId && tab === 'individual' && selectedIndividual && <>
+          <header><span className="material-symbols-outlined">badge</span><div><small>INDIVIDUAL VERIFICATION</small><strong>{selectedIndividual.user_id?.slice(0, 8)}…</strong></div><b>{selectedIndividual.status?.toUpperCase() ?? '—'}</b></header>
+          <section><h3>Details</h3><dl>
+            <div><dt>Status</dt><dd>{selectedIndividual.status ?? '—'}</dd></div>
+            <div><dt>Submitted</dt><dd>{fmtDate(selectedIndividual.submitted_at)}</dd></div>
+            <div><dt>Reviewed</dt><dd>{fmtDate(selectedIndividual.reviewed_at)}</dd></div>
+            {selectedIndividual.admin_note && <div><dt>Note</dt><dd>{selectedIndividual.admin_note}</dd></div>}
+          </dl></section>
+          <p><small>Raw ID documents are not shown here — status/timeline review only.</small></p>
+          <section><h3>Decision</h3>
+            <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
+            <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
+            {actionMessage && <p role="status">{actionMessage}</p>}
+          </section>
+        </>}
+        {selectedId && tab === 'business' && selectedBusiness && <>
+          <header><span className="material-symbols-outlined">storefront</span><div><small>BUSINESS VERIFICATION</small><strong>{selectedBusiness.business_id?.slice(0, 8)}…</strong></div><b>{selectedBusiness.status?.toUpperCase() ?? '—'}</b></header>
+          <section><h3>Details</h3><dl>
+            <div><dt>Level requested</dt><dd>{selectedBusiness.level_requested ?? '—'}</dd></div>
+            <div><dt>Status</dt><dd>{selectedBusiness.status ?? '—'}</dd></div>
+            <div><dt>Submitted</dt><dd>{fmtDate(selectedBusiness.submitted_at)}</dd></div>
+            <div><dt>Reviewed</dt><dd>{fmtDate(selectedBusiness.reviewed_at)}</dd></div>
+            {selectedBusiness.admin_note && <div><dt>Note</dt><dd>{selectedBusiness.admin_note}</dd></div>}
+          </dl></section>
+          <p><small>Raw registration/ID documents are not shown here — status/timeline review only.</small></p>
+          <section><h3>Decision</h3>
+            <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
+            <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
+            {actionMessage && <p role="status">{actionMessage}</p>}
+          </section>
+        </>}
+      </aside>
     </div>
   </div>;
 }
