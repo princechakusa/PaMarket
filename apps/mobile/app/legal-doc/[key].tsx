@@ -18,11 +18,17 @@ const CONTENT_SLUG_BY_KEY: Partial<Record<LegalDocKey, string>> = {
   fraud_prevention_policy: "public-safety",
   // Stage 2: these 12 have no competing website wording (they only ever
   // existed in this app), so their content_pages row is byte-identical to
-  // the static doc below — connecting them is zero-risk. cookie_data_policy
-  // is deliberately NOT here: its content_pages row was published from the
-  // website's differing wording, and connecting it would silently change
-  // what this screen shows — left on the static doc until an admin
-  // resolves that conflict (see the admin Legal & Policies "Compare" tool).
+  // the static doc below — connecting them is zero-risk.
+  //
+  // Stage 3: cookie_data_policy connects to a DIFFERENT slug than the
+  // website's own cookie-policy row -- this app's Cookie & Data Policy is a
+  // genuinely distinct document (device local storage/Supabase/R2/FCM),
+  // not competing wording for the website's browser-cookie policy. It was
+  // previously staged as a "variant" of cookie-policy (a reconciliation
+  // mechanism for alternate wordings of the SAME document) which a real DB
+  // constraint correctly blocked from ever publishing; recategorized and
+  // published under its own identity once that was confirmed.
+  cookie_data_policy: "cookie-policy-variant-mobile-app",
   acceptable_use_policy: "acceptable-use-policy",
   buying_selling_terms: "buying-selling-terms",
   job_platform_terms: "job-platform-terms",
