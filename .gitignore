@@ -13,6 +13,8 @@ android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.config.json
 android/app/src/main/assets/capacitor.plugins.json
 .env
+# Contains a real Supabase access token locally — never commit
+.mcp.json
 *.txt
 !robots.txt
 backup.sql

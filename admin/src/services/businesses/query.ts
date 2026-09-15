@@ -34,16 +34,13 @@ export async function listBusinesses(filters: { status?: string; search?: string
   return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
-export type BusinessDetail = BusinessRow & { owner_user_id: string | null; biz_type: string | null; phone: string | null; email: string | null; verification_level: number | null; verification_pending: boolean | null; suburb: string | null };
+export type BusinessDetail = BusinessRow & { owner_user_id: string | null; biz_type: string | null; phone: string | null; email: string | null; verification_level: number | null; verification_pending: boolean | null; suburb: string | null; latitude: number | null; longitude: number | null };
 export async function getBusiness(id: string): Promise<QueryResult<BusinessDetail | null>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const { data, error } = await client
     .from('businesses')
-    // businesses has no latitude/longitude columns (confirmed live against
-    // the schema) -- unlike listings, which does. Selecting them here
-    // would fail with a real Postgres "column does not exist" error.
-    .select('id, name, status, category, city, province, suburb, plan_id, created_at, owner_user_id, biz_type, phone, email, verification_level, verification_pending')
+    .select('id, name, status, category, city, province, suburb, plan_id, created_at, owner_user_id, biz_type, phone, email, verification_level, verification_pending, latitude, longitude')
     .eq('id', id)
     .maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
