@@ -23,6 +23,7 @@ import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { friendlyError } from "../../lib/safety";
 import { notifyPositiveAction } from "../../lib/store-review";
 import { useTaxonomy } from "../../lib/taxonomy";
+import { roundApproxCoord } from "../../lib/useCurrentLocation";
 import { formatPrice } from "../../lib/listings";
 import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "../../lib/listing-form";
 import { CategoryPicker } from "../../components/post/CategoryPicker";
@@ -537,8 +538,11 @@ export default function PostScreen() {
                 citiesByProvince={citiesByProvince}
                 onResolved={(loc) =>
                   update({
-                    latitude: loc.latitude,
-                    longitude: loc.longitude,
+                    // Rounded to ~100m before it ever lands in state/DB — see
+                    // roundApproxCoord for why (personal listings only get an
+                    // approximate point, unlike businesses).
+                    latitude: roundApproxCoord(loc.latitude),
+                    longitude: roundApproxCoord(loc.longitude),
                     province: loc.province ?? state.province,
                     city: loc.city ?? state.city,
                     suburb: loc.suburb ?? state.suburb,

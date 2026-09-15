@@ -872,7 +872,14 @@ window.doSearch = window.doSearch || function(){
         title,description:desc,price:Number(price),currency:'USD',
         category:cat,province:prov,city:$('pfCity').value.trim(),
         suburb:$('pfSuburb').value.trim(),
-        latitude:pickedLat,longitude:pickedLng,
+        // Rounded to ~100m (3 decimal places) before it ever reaches the
+        // database — the public listing API selects the raw row (select=*),
+        // so an exact GPS point saved here would be exactly as exposed as
+        // the jittered map circle is supposed to prevent. Businesses are
+        // allowed exact coordinates (see business-onboarding.tsx); personal
+        // listings are not.
+        latitude:pickedLat==null?null:Math.round(pickedLat*1000)/1000,
+        longitude:pickedLng==null?null:Math.round(pickedLng*1000)/1000,
         photos:photos.filter(p=>p.url).map(p=>p.url)
       };
       const res=editingId?await PM.updateListing(editingId,payload):await PM.createListing(payload);

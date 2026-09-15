@@ -39,7 +39,7 @@ export type Database = {
           id: string; name: string | null; status: string | null; owner_user_id: string | null;
           province: string | null; city: string | null; suburb: string | null; category: string | null; biz_type: string | null;
           phone: string | null; email: string | null; plan_id: string | null; verification_level: number | null;
-          verification_pending: boolean | null; created_at: string | null;
+          verification_pending: boolean | null; created_at: string | null; latitude: number | null; longitude: number | null;
         };
         Insert: { id?: string; status?: string | null };
         Update: { status?: string | null };
