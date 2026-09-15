@@ -34,7 +34,16 @@
 const PRODUCTION_ORIGINS = [
   'https://pamarketzw.com',
   'https://www.pamarketzw.com',
-  'https://pamarket.chakusaprince.workers.dev', // the live admin panel
+  'https://pamarket.chakusaprince.workers.dev', // the legacy www/admin.html panel
+  // The React Admin (admin/) Cloudflare Pages deployment -- was missing
+  // here entirely, so every browser call it made to any Edge Function
+  // (get-r2-upload-url, admin-sentry-issues, etc.) was silently blocked by
+  // the browser's CORS check, regardless of that function's own
+  // auth/role checks succeeding. No custom domain is configured for this
+  // project (confirmed via `wrangler pages project list`), so both the
+  // bare project domain and the `main` branch alias are listed.
+  'https://pamarket-admin-react.pages.dev',
+  'https://main.pamarket-admin-react.pages.dev',
 ] as const;
 
 // Native-app / legacy WebView origins. These are not "websites" — a

@@ -3,18 +3,22 @@
 // the existing "verif admin select/update" and "biz_verif: admin all"
 // RLS policies (both is_admin()) directly — no new RPC.
 //
-// id_doc_path/selfie_path/reg_doc_path (storage object paths, not raw
-// files) ARE selected below so the review UI can request a short-lived
-// signed URL for each document on demand via getSignedDocumentUrl() --
-// nothing beyond the path string is ever fetched by this file itself.
-// The private verification-docs bucket's "verifdocs admin select" storage
-// policy previously checked profiles.role = 'admin' literally, which
-// silently blocked every super_admin session (the only staff role that
-// exists in production) from generating a signed URL at all -- fixed in
-// supabase/migrations/20260915090000_fix_verifdocs_admin_select_super_admin.sql
-// to use is_admin() instead.
+// id_doc_path/selfie_path/reg_doc_path are Cloudflare R2 object keys, NOT
+// Supabase Storage paths -- the mobile app's verification upload
+// (apps/mobile/lib/verification.ts) has always gone through the
+// get-r2-upload-url Edge Function to R2, never through Supabase Storage.
+// That function already has a dedicated, already-secure admin bypass for
+// exactly this read ("Admin can access any verification path" -- see its
+// isGet && isVerification branch), including evidence logging via
+// record_security_event, so getSignedDocumentUrl() calls it directly
+// instead of inventing a second signing path. An earlier attempt at this
+// fix pointed at a private "verification-docs" Supabase Storage bucket,
+// which turned out to be an unrelated/unused legacy bucket -- real
+// documents were never written there, so no signed URL from it could ever
+// resolve to a real file.
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
+import { invokeAdminFunction } from '../edge/invoke';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -31,15 +35,16 @@ export type VerificationRow = {
   id_doc_path: string | null; selfie_path: string | null;
 };
 
-/** Generates a short-lived (2 minute) signed URL for a private document
- * path in the verification-docs bucket. Never returns/stores the URL
- * beyond component state; the caller re-requests on each detail view. */
-export async function getSignedDocumentUrl(path: string): Promise<QueryResult<string>> {
-  const client = getSupabaseClient();
-  if (!client) return unavailable();
-  const { data, error } = await client.storage.from('verification-docs').createSignedUrl(path, 120);
-  if (error) return { data: null, error: normalizeError(error) };
-  return { data: data.signedUrl, error: null };
+/** Requests a short-lived (5 minute) signed R2 GET URL for a verification
+ * document key via the existing get-r2-upload-url Edge Function's admin
+ * read path. Never returns/stores the URL beyond component state. */
+export async function getSignedDocumentUrl(key: string, accessToken: string): Promise<QueryResult<string>> {
+  const result = await invokeAdminFunction<{ signedUrl?: string; error?: string }>('get-r2-upload-url', accessToken, {
+    body: { key, verb: 'GET', expiresIn: 300 },
+  });
+  if (result.error) return { data: null, error: result.error };
+  if (!result.data.signedUrl) return { data: null, error: { code: result.data.error ?? 'not_found', message: result.data.error ?? 'This document could not be located in storage.', retryable: false } };
+  return { data: result.data.signedUrl, error: null };
 }
 
 export async function listVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<VerificationRow>>> {

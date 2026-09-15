@@ -5,15 +5,16 @@ import {
   getSignedDocumentUrl, VERIFICATIONS_PAGE_SIZE, type VerificationRow, type BusinessVerificationRow,
 } from '../services/verifications/query';
 
-type DocUrls = Record<string, string | 'loading' | 'error'>;
+type DocUrls = Record<string, string | 'loading' | 'error' | 'missing'>;
 
-function DocumentPreview({ label, path, urls }: { label: string; path: string | null; urls: DocUrls }) {
+function DocumentPreview({ label, path, urls, onMissing }: { label: string; path: string | null; urls: DocUrls; onMissing: (path: string) => void }) {
   if (!path) return <div className="verif-doc"><span>{label}</span><p>Not submitted.</p></div>;
   const state = urls[path];
   return <div className="verif-doc"><span>{label}</span>
     {state === 'loading' && <p>Loading…</p>}
-    {state === 'error' && <p role="alert">Could not load this document.</p>}
-    {state && state !== 'loading' && state !== 'error' && <a href={state} target="_blank" rel="noreferrer"><img src={state} alt={label} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8 }} /></a>}
+    {state === 'error' && <p role="alert">Could not request this document (check your session/permissions).</p>}
+    {state === 'missing' && <p role="alert">This file could not be found in storage. The upload may have failed or the record predates a since-fixed upload bug — ask the applicant to resubmit.</p>}
+    {state && state !== 'loading' && state !== 'error' && state !== 'missing' && <a href={state} target="_blank" rel="noreferrer"><img src={state} alt={label} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8 }} onError={() => onMissing(path)} /></a>}
   </div>;
 }
 
@@ -59,7 +60,7 @@ export function BusinessVerificationsPage() {
   const selectedIndividualForDocs = individualRows.find((r) => r.id === selectedId);
   const selectedBusinessForDocs = businessRows.find((r) => r.id === selectedId);
   useEffect(() => {
-    if (auth.mode !== 'live' || !selectedId) return;
+    if (auth.mode !== 'live' || !selectedId || !auth.accessToken) return;
     const paths = tab === 'individual'
       ? [selectedIndividualForDocs?.id_doc_path, selectedIndividualForDocs?.selfie_path]
       : [selectedBusinessForDocs?.id_doc_path, selectedBusinessForDocs?.reg_doc_path];
@@ -67,12 +68,14 @@ export function BusinessVerificationsPage() {
     if (wanted.length === 0) return;
     setDocUrls((prev) => { const next = { ...prev }; wanted.forEach((p) => { next[p] = 'loading'; }); return next; });
     wanted.forEach((path) => {
-      void getSignedDocumentUrl(path).then((result) => {
+      void getSignedDocumentUrl(path, auth.accessToken!).then((result) => {
         setDocUrls((prev) => ({ ...prev, [path]: result.error ? 'error' : result.data }));
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.mode, selectedId, tab]);
+  }, [auth.mode, selectedId, tab, auth.accessToken]);
+
+  function markDocMissing(path: string) { setDocUrls((prev) => ({ ...prev, [path]: 'missing' })); }
 
   async function decide(newStatus: string) {
     if (!selectedId) return;
@@ -135,8 +138,8 @@ export function BusinessVerificationsPage() {
             {selectedIndividual.admin_note && <div><dt>Note</dt><dd>{selectedIndividual.admin_note}</dd></div>}
           </dl></section>
           <section className="verif-docs"><h3>Submitted Documents</h3>
-            <DocumentPreview label="ID document" path={selectedIndividual.id_doc_path} urls={docUrls} />
-            <DocumentPreview label="Selfie" path={selectedIndividual.selfie_path} urls={docUrls} />
+            <DocumentPreview label="ID document" path={selectedIndividual.id_doc_path} urls={docUrls} onMissing={markDocMissing} />
+            <DocumentPreview label="Selfie" path={selectedIndividual.selfie_path} urls={docUrls} onMissing={markDocMissing} />
           </section>
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
@@ -154,8 +157,8 @@ export function BusinessVerificationsPage() {
             {selectedBusiness.admin_note && <div><dt>Note</dt><dd>{selectedBusiness.admin_note}</dd></div>}
           </dl></section>
           <section className="verif-docs"><h3>Submitted Documents</h3>
-            <DocumentPreview label="Owner ID document" path={selectedBusiness.id_doc_path} urls={docUrls} />
-            <DocumentPreview label="Business registration" path={selectedBusiness.reg_doc_path} urls={docUrls} />
+            <DocumentPreview label="Owner ID document" path={selectedBusiness.id_doc_path} urls={docUrls} onMissing={markDocMissing} />
+            <DocumentPreview label="Business registration" path={selectedBusiness.reg_doc_path} urls={docUrls} onMissing={markDocMissing} />
           </section>
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
