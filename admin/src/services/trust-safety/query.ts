@@ -6,6 +6,7 @@
 // read/update" (both is_moderator(), narrowed in C2E-8) — no new RPC.
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
+import { notifyDecision } from '../notify/decision';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -68,16 +69,26 @@ export async function listAppeals(status: string | undefined, page: number, page
   return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
-export async function updateAppealStatus(id: string, status: string): Promise<QueryResult<{ id: string }>> {
+function appealDecisionCopy(status: string): { title: string; body: string } | null {
+  if (status === 'approved') return { title: 'Your appeal was approved', body: 'Your appeal has been reviewed and approved.' };
+  if (status === 'rejected') return { title: 'Your appeal was not approved', body: 'Your appeal has been reviewed and was not approved.' };
+  return null;
+}
+
+export async function updateAppealStatus(id: string, status: string): Promise<QueryResult<{ id: string; notified: boolean }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const { data, error } = await client
     .from('moderation_appeals')
     .update({ status, decided_at: new Date().toISOString() })
     .eq('id', id)
-    .select('id')
+    .select('id, requester_id')
     .maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this appeal, or it no longer exists.', retryable: false } };
-  return { data, error: null };
+
+  const copy = appealDecisionCopy(status);
+  if (!copy || !data.requester_id) return { data: { id: data.id, notified: false }, error: null };
+  const notifyResult = await notifyDecision(data.requester_id, { kind: 'none' }, copy.title, copy.body);
+  return { data: { id: data.id, notified: !notifyResult.error }, error: null };
 }

@@ -19,6 +19,7 @@
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
 import { invokeAdminFunction } from '../edge/invoke';
+import { notifyDecision } from '../notify/decision';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -61,15 +62,30 @@ export async function listVerifications(status: string | undefined, page: number
   return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
-export async function updateVerificationStatus(id: string, status: string, note?: string): Promise<QueryResult<{ id: string }>> {
+/** Individual-KYC wording. "pending" always means the admin is asking the
+ * applicant to act again -- that's the only reason a reviewed verification
+ * ever goes back to pending -- so it always tells them to resubmit, note
+ * or not. */
+function individualDecisionCopy(status: string, note?: string): { title: string; body: string } | null {
+  if (status === 'approved') return { title: 'Identity verification approved', body: note ? `Your identity verification has been approved. ${note}` : 'Your identity verification has been approved.' };
+  if (status === 'rejected') return { title: 'Identity verification not approved', body: note ? `Your identity verification was not approved: ${note}` : 'Your identity verification was not approved. Please open the app to review and resubmit your documents.' };
+  if (status === 'pending') return { title: 'Please resubmit your verification documents', body: note ? `Your identity verification needs another look: ${note} Please resubmit your ID and selfie in the app.` : 'Your identity verification needs another look. Please resubmit your ID and selfie in the app.' };
+  return null;
+}
+
+export async function updateVerificationStatus(id: string, status: string, note?: string): Promise<QueryResult<{ id: string; notified: boolean }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const update: { status: string; reviewed_at: string; admin_note?: string } = { status, reviewed_at: new Date().toISOString() };
   if (note) update.admin_note = note;
-  const { data, error } = await client.from('verifications').update(update).eq('id', id).select('id').maybeSingle();
+  const { data, error } = await client.from('verifications').update(update).eq('id', id).select('id, user_id').maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this verification, or it no longer exists.', retryable: false } };
-  return { data, error: null };
+
+  const copy = data.user_id ? individualDecisionCopy(status, note) : null;
+  if (!copy) return { data: { id: data.id, notified: false }, error: null };
+  const notifyResult = await notifyDecision(data.user_id!, { kind: 'verify' }, copy.title, copy.body);
+  return { data: { id: data.id, notified: !notifyResult.error }, error: null };
 }
 
 export type BusinessVerificationRow = {
@@ -92,13 +108,26 @@ export async function listBusinessVerifications(status: string | undefined, page
   return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
-export async function updateBusinessVerificationStatus(id: string, status: string, note?: string): Promise<QueryResult<{ id: string }>> {
+function businessDecisionCopy(status: string, note?: string): { title: string; body: string } | null {
+  if (status === 'approved') return { title: 'Business verification approved', body: note ? `Your business verification has been approved. ${note}` : 'Your business verification has been approved.' };
+  if (status === 'rejected') return { title: 'Business verification not approved', body: note ? `Your business verification was not approved: ${note}` : 'Your business verification was not approved. Please open the app to review and resubmit your documents.' };
+  if (status === 'pending') return { title: 'Please resubmit your business documents', body: note ? `Your business verification needs another look: ${note} Please resubmit your documents in the app.` : 'Your business verification needs another look. Please resubmit your documents in the app.' };
+  return null;
+}
+
+export async function updateBusinessVerificationStatus(id: string, status: string, note?: string): Promise<QueryResult<{ id: string; notified: boolean }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const update: { status: string; reviewed_at: string; admin_note?: string } = { status, reviewed_at: new Date().toISOString() };
   if (note) update.admin_note = note;
-  const { data, error } = await client.from('business_verifications').update(update).eq('id', id).select('id').maybeSingle();
+  const { data, error } = await client.from('business_verifications').update(update).eq('id', id).select('id, business_id').maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this verification, or it no longer exists.', retryable: false } };
-  return { data, error: null };
+
+  const copy = businessDecisionCopy(status, note);
+  if (!copy || !data.business_id) return { data: { id: data.id, notified: false }, error: null };
+  const { data: business } = await client.from('businesses').select('owner_user_id').eq('id', data.business_id).maybeSingle();
+  if (!business?.owner_user_id) return { data: { id: data.id, notified: false }, error: null };
+  const notifyResult = await notifyDecision(business.owner_user_id, { kind: 'businessverify', businessId: data.business_id }, copy.title, copy.body);
+  return { data: { id: data.id, notified: !notifyResult.error }, error: null };
 }

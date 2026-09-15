@@ -84,7 +84,11 @@ export function BusinessVerificationsPage() {
       ? await updateVerificationStatus(selectedId, newStatus, note || undefined)
       : await updateBusinessVerificationStatus(selectedId, newStatus, note || undefined);
     if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
-    setActionMessage(`Status updated to "${newStatus}".`);
+    setActionMessage(
+      result.data.notified
+        ? `Status updated to "${newStatus}" and the applicant was notified.`
+        : `Status updated to "${newStatus}". The applicant was NOT notified — check the notifications feed or notify them another way.`,
+    );
     setNote('');
     void load();
   }

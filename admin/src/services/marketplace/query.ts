@@ -8,6 +8,7 @@
 // report, not fixed here).
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
+import { notifyDecision } from '../notify/decision';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -86,13 +87,23 @@ export async function getListingReports(listingId: string): Promise<QueryResult<
 /** Uses the existing "listings: admin update" RLS policy (is_admin()) directly
  * — no new RPC. Fails closed (a 403 from Postgres) for any caller that
  * policy doesn't cover, including moderator (see module header note). */
-export async function updateListingStatus(id: string, status: string): Promise<QueryResult<{ id: string }>> {
+function listingDecisionCopy(status: string): { title: string; body: string } | null {
+  if (status === 'active') return { title: 'Listing approved', body: 'Your listing has been approved and is now live.' };
+  if (status === 'rejected') return { title: 'Listing not approved', body: 'Your listing was not approved. Open the app to review and edit it.' };
+  return null;
+}
+
+export async function updateListingStatus(id: string, status: string): Promise<QueryResult<{ id: string; notified: boolean }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
-  const { data, error } = await client.from('listings').update({ status }).eq('id', id).select('id').maybeSingle();
+  const { data, error } = await client.from('listings').update({ status }).eq('id', id).select('id, seller_id').maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this listing, or it no longer exists.', retryable: false } };
-  return { data, error: null };
+
+  const copy = listingDecisionCopy(status);
+  if (!copy || !data.seller_id) return { data: { id: data.id, notified: false }, error: null };
+  const notifyResult = await notifyDecision(data.seller_id, { kind: 'listing', listingId: data.id }, copy.title, copy.body);
+  return { data: { id: data.id, notified: !notifyResult.error }, error: null };
 }
 
 export type ApplicationRow = {

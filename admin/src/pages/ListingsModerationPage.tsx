@@ -78,7 +78,7 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
     setActionMessage(null);
     const result = await updateListingStatus(selectedId, newStatus);
     if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
-    setActionMessage(`Status updated to "${newStatus}".`);
+    setActionMessage(result.data.notified ? `Status updated to "${newStatus}" and the seller was notified.` : `Status updated to "${newStatus}".`);
     void loadDetail(selectedId);
     void load();
   }

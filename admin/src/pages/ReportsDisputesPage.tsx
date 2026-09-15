@@ -47,7 +47,8 @@ export function ReportsDisputesPage() {
     setActionMessage(null);
     const result = tab === 'reports' ? await updateReportStatus(selectedId, newStatus) : await updateAppealStatus(selectedId, newStatus);
     if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
-    setActionMessage(`Status updated to "${newStatus}".`);
+    const notified = 'notified' in result.data && result.data.notified;
+    setActionMessage(notified ? `Status updated to "${newStatus}" and the requester was notified.` : `Status updated to "${newStatus}".`);
     void load();
   }
 
