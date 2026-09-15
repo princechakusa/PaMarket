@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../security/auth-context';
 import {
   listTickets, getTicket, listTicketMessages, sendTicketMessage, updateTicketStatus,
@@ -9,10 +10,12 @@ import {
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
 
 type Tab = 'tickets' | 'contacts';
+const tabFromPath: Record<string, Tab> = { '/trust/support': 'tickets', '/trust/contacts': 'contacts' };
 
 export function SupportCenterPage() {
   const auth = useAuth();
-  const [tab, setTab] = useState<Tab>('tickets');
+  const location = useLocation();
+  const [tab, setTab] = useState<Tab>(tabFromPath[location.pathname] ?? 'tickets');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [tickets, setTickets] = useState<TicketRow[]>([]);

@@ -9,9 +9,9 @@ export type OpsNavigationGroup = { label: string; items: OpsNavigationItem[] };
 export const opsNavigationGroups: OpsNavigationGroup[] = [
   { label: 'Overview', items: [{ label: 'Operations Dashboard', path: '/', permission: 'dashboard.view', icon: 'monitoring' }] },
   { label: 'Trust & Moderation', items: [
-    { label: 'Listings Queue', path: '/marketplace/listings', permission: 'listings.view', icon: 'fact_check', badge: '42', badgeTone: 'warning' },
-    { label: 'Verifications', path: '/marketplace/verifications', permission: 'verifications.manage', icon: 'verified', badge: '9', badgeTone: 'neutral' },
-    { label: 'Reports & Disputes', path: '/trust/reports', permission: 'reports.view', icon: 'gavel', badge: '18', badgeTone: 'danger' },
+    { label: 'Listings Queue', path: '/marketplace/listings', permission: 'listings.view', icon: 'fact_check' },
+    { label: 'Verifications', path: '/marketplace/verifications', permission: 'verifications.manage', icon: 'verified' },
+    { label: 'Reports & Disputes', path: '/trust/reports', permission: 'reports.view', icon: 'gavel' },
   ] },
   { label: 'Directory & Commerce', items: [
     { label: 'User Directory', path: '/marketplace/users', permission: 'users.view', icon: 'group' },
@@ -77,12 +77,14 @@ export const navigationGroups: NavigationGroup[] = [
   ] },
   { label: 'Marketing / AMOS', items: [
     { label: 'Dashboard', path: '/amos', permission: 'amos.view' }, { label: 'Approval queue', path: '/amos/approval', permission: 'amos.view' },
-    { label: 'Content calendar', path: '/amos/calendar', permission: 'amos.view' }, { label: 'Campaigns', path: '/amos/campaigns', permission: 'amos.view' },
-    { label: 'Intelligence', path: '/amos/intelligence', permission: 'amos.view' }, { label: 'AI learning', path: '/amos/learning', permission: 'amos.view' },
-    { label: 'System health', path: '/amos/health', permission: 'amos.view' }, { label: 'Audit trail', path: '/amos/audit', permission: 'audit.view' },
-    { label: 'AI configuration', path: '/amos/settings', permission: 'amos.view' }, { label: 'Analytics & growth', path: '/amos/analytics', permission: 'analytics.view' },
-    { label: 'SEO manager', path: '/amos/seo', permission: 'amos.view' },
+    { label: 'Intelligence', path: '/amos/intelligence', permission: 'amos.view' }, { label: 'SEO manager', path: '/amos/seo', permission: 'amos.view' },
+    { label: 'Integrations', path: '/amos/integrations', permission: 'amos.view' },
   ] },
+  // Reality audit: removed Content calendar/Campaigns/AI learning/System
+  // health/AI configuration -- these had no distinct implemented view and
+  // silently fell through to the AMOS Overview tab under a misleading
+  // label. Audit trail/Analytics & growth were removed as true duplicates
+  // of the real Audit Center and Analytics pages under Shared & Advanced.
   { label: 'Rentals', items: [
     { label: 'Rental dashboard', path: '/rentals', permission: 'rentals.view' }, { label: 'Approvals', path: '/rentals/approvals', permission: 'rentals.moderate' },
     { label: 'Companies', path: '/rentals/companies', permission: 'rentals.view' }, { label: 'Listings', path: '/rentals/listings', permission: 'rentals.view' },
@@ -92,9 +94,12 @@ export const navigationGroups: NavigationGroup[] = [
   ] },
   { label: 'Observability', items: [
     { label: 'Analytics', path: '/observability/analytics', permission: 'analytics.view' }, { label: 'Audit center', path: '/observability/audit', permission: 'audit.view' },
-    { label: 'Errors', path: '/observability/errors', permission: 'errors.view' }, { label: 'Operations', path: '/observability/operations', permission: 'operations.view' },
+    { label: 'Errors', path: '/observability/errors', permission: 'errors.view' },
     { label: 'Security events', path: '/security/events', permission: 'audit.view' },
   ] },
+  // Reality audit: removed the "Operations" item (/observability/operations)
+  // -- it duplicated the real Operations Dashboard at "/" with no distinct
+  // backing view, and always fell through to MockSectionPage.
   { label: 'Security', items: [
     { label: 'Connection check', path: '/security', permission: 'security.view' },
     { label: 'Security center', path: '/security/center', permission: 'security.view' },
@@ -102,9 +107,12 @@ export const navigationGroups: NavigationGroup[] = [
     { label: 'Security settings', path: '/settings/security', permission: 'security.view' },
   ] },
   { label: 'Settings', items: [
-    { label: 'Notifications', path: '/settings/notifications', permission: 'settings.view' }, { label: 'Automation', path: '/settings/automation', permission: 'settings.view' },
+    { label: 'Notifications', path: '/settings/notifications', permission: 'settings.view' },
     { label: 'Maintenance', path: '/settings/maintenance', permission: 'settings.manage' }, { label: 'Settings', path: '/settings/general', permission: 'settings.view' },
   ] },
+  // Reality audit: removed "Automation" (/settings/automation) -- it
+  // duplicated the real AMOS dashboard/schedule with no distinct backing
+  // view of its own, and always fell through to MockSectionPage.
 ];
 
 export const mockRoutes = navigationGroups

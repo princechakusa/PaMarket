@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../security/auth-context';
 import {
   listContentPages, getContentPage, updateContentPage,
@@ -10,10 +11,12 @@ import {
 function Icon({ name }: { name: string }) { return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>; }
 
 type Tab = 'legal' | 'faq' | 'videos' | 'contact';
+const tabFromPath: Record<string, Tab> = { '/content/legal': 'legal', '/content/faq': 'faq', '/content/videos': 'videos', '/content/contact': 'contact' };
 
 export function ContentPage() {
   const auth = useAuth();
-  const [tab, setTab] = useState<Tab>('legal');
+  const location = useLocation();
+  const [tab, setTab] = useState<Tab>(tabFromPath[location.pathname] ?? 'legal');
 
   const [pages, setPages] = useState<ContentPageRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);

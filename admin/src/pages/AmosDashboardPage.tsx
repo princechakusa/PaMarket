@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../security/auth-context';
 import {
   getAmosCounts, listPendingDrafts, decideDraft, listMarketIntelligence, listSeoRecommendations, listIntegrations,
@@ -10,10 +11,15 @@ function Icon({ name }: { name: string }) { return <span className="material-sym
 function fmt(v: number | null | undefined) { return v == null ? '—' : v.toLocaleString('en-ZW'); }
 
 type Tab = 'overview' | 'approvals' | 'intelligence' | 'seo' | 'integrations';
+const tabFromPath: Record<string, Tab> = {
+  '/amos': 'overview', '/amos/approval': 'approvals', '/amos/intelligence': 'intelligence',
+  '/amos/seo': 'seo', '/amos/integrations': 'integrations',
+};
 
 export function AmosDashboardPage() {
   const auth = useAuth();
-  const [tab, setTab] = useState<Tab>('overview');
+  const location = useLocation();
+  const [tab, setTab] = useState<Tab>(tabFromPath[location.pathname] ?? 'overview');
   const [counts, setCounts] = useState<AmosCounts | null>(null);
   const [drafts, setDrafts] = useState<DraftRow[]>([]);
   const [intel, setIntel] = useState<MarketIntelRow[]>([]);
