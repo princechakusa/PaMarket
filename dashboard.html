@@ -153,6 +153,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
 <script src="js/services/businesses.js"></script>
 <script src="js/services/rentals.js"></script>
 <script src="js/site-announcements.js" defer></script>
+<script src="js/seller-location-reminder.js" defer></script>
 <script src="js/taxonomy.js" defer></script>
 
 <header id="hdr">
@@ -256,7 +257,7 @@ window.doSearch = window.doSearch || function(){
 
   <div id="dbContent" class="hidden">
     <div class="db-tiles" id="dbTiles"></div>
-
+    <div id="dbLocBannerSlot"></div>
 
     <div class="db-section">
       <h2>My Listings</h2>
@@ -559,6 +560,7 @@ window.doSearch = window.doSearch || function(){
     renderListings();
     renderPayments();
     if(apps.length){$('dbApplyWrap').style.display='';$('dbApplyCount').textContent=apps.length;}
+    PMSellerLocationReminder&&PMSellerLocationReminder.render(LISTINGS);
   }).catch(function(){
     $('dbLoading').textContent='Could not load your dashboard. Please refresh.';
   });

@@ -681,7 +681,7 @@
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/listings?seller_id=eq.' + esc(s.user.id) +
-      '&status=neq.deleted&select=id,title,category,price,currency,status,views,boost,featured_until,created_at,photos&order=created_at.desc&limit=200', {
+      '&status=neq.deleted&select=id,title,category,price,currency,status,views,boost,featured_until,created_at,photos,latitude,longitude&order=created_at.desc&limit=200', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
   }

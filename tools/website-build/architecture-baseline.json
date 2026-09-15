@@ -39,9 +39,9 @@
       "inlineCss": 0
     },
     "dashboard.html": {
-      "bytes": 36389,
-      "lines": 569,
-      "inlineJs": 11509,
+      "bytes": 36561,
+      "lines": 571,
+      "inlineJs": 11583,
       "inlineCss": 7103
     },
     "delete-account.html": {
@@ -99,7 +99,7 @@
       "inlineCss": 0
     },
     "js/marketplace-data.js": {
-      "bytes": 49964,
+      "bytes": 49983,
       "lines": 952,
       "inlineJs": 0,
       "inlineCss": 0
