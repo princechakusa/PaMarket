@@ -87,8 +87,8 @@ export type Database = {
       // Batch 1: extended with review-workflow columns. Still excludes
       // id_doc/selfie/id_doc_path/selfie_path/reg_doc_path — raw document
       // paths are never selected anywhere in this codebase.
-      verifications: { Row: { id: string; user_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null; reviewed_by?: string | null }; Relationships: [] };
-      business_verifications: { Row: { id: string; business_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; level_requested: number | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null }; Relationships: [] };
+      verifications: { Row: { id: string; user_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null; id_doc_path: string | null; selfie_path: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null; reviewed_by?: string | null }; Relationships: [] };
+      business_verifications: { Row: { id: string; business_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; level_requested: number | null; id_doc_path: string | null; reg_doc_path: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null }; Relationships: [] };
       // Batch 1: extended with the real Marketplace/Listings columns.
       // Deliberately excludes nothing sensitive -- listings are a public
       // marketplace entity, no PII beyond seller_name/seller_phone which

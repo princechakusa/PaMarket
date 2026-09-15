@@ -1,8 +1,18 @@
 // Batch 1: Verifications — one merged workspace for individual KYC
 // (`verifications`) and business KYC (`business_verifications`). Reuses
 // the existing "verif admin select/update" and "biz_verif: admin all"
-// RLS policies (both is_admin()) directly — no new RPC. Never selects
-// id_doc/selfie/id_doc_path/selfie_path/reg_doc_path (raw document paths).
+// RLS policies (both is_admin()) directly — no new RPC.
+//
+// id_doc_path/selfie_path/reg_doc_path (storage object paths, not raw
+// files) ARE selected below so the review UI can request a short-lived
+// signed URL for each document on demand via getSignedDocumentUrl() --
+// nothing beyond the path string is ever fetched by this file itself.
+// The private verification-docs bucket's "verifdocs admin select" storage
+// policy previously checked profiles.role = 'admin' literally, which
+// silently blocked every super_admin session (the only staff role that
+// exists in production) from generating a signed URL at all -- fixed in
+// supabase/migrations/20260915090000_fix_verifdocs_admin_select_super_admin.sql
+// to use is_admin() instead.
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
 
@@ -18,14 +28,26 @@ export const VERIFICATIONS_PAGE_SIZE = 20;
 export type VerificationRow = {
   id: string; user_id: string | null; status: string | null; admin_note: string | null;
   submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null;
+  id_doc_path: string | null; selfie_path: string | null;
 };
+
+/** Generates a short-lived (2 minute) signed URL for a private document
+ * path in the verification-docs bucket. Never returns/stores the URL
+ * beyond component state; the caller re-requests on each detail view. */
+export async function getSignedDocumentUrl(path: string): Promise<QueryResult<string>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.storage.from('verification-docs').createSignedUrl(path, 120);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data.signedUrl, error: null };
+}
 
 export async function listVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<VerificationRow>>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   let query = client
     .from('verifications')
-    .select('id, user_id, status, admin_note, submitted_at, reviewed_at, reviewed_by', { count: 'exact' })
+    .select('id, user_id, status, admin_note, submitted_at, reviewed_at, reviewed_by, id_doc_path, selfie_path', { count: 'exact' })
     .order('submitted_at', { ascending: false });
   if (status) query = query.eq('status', status);
   const from = Math.max(0, page - 1) * pageSize;
@@ -48,6 +70,7 @@ export async function updateVerificationStatus(id: string, status: string, note?
 export type BusinessVerificationRow = {
   id: string; business_id: string | null; status: string | null; admin_note: string | null;
   submitted_at: string | null; reviewed_at: string | null; level_requested: number | null;
+  id_doc_path: string | null; reg_doc_path: string | null;
 };
 
 export async function listBusinessVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<BusinessVerificationRow>>> {
@@ -55,7 +78,7 @@ export async function listBusinessVerifications(status: string | undefined, page
   if (!client) return unavailable();
   let query = client
     .from('business_verifications')
-    .select('id, business_id, status, admin_note, submitted_at, reviewed_at, level_requested', { count: 'exact' })
+    .select('id, business_id, status, admin_note, submitted_at, reviewed_at, level_requested, id_doc_path, reg_doc_path', { count: 'exact' })
     .order('submitted_at', { ascending: false });
   if (status) query = query.eq('status', status);
   const from = Math.max(0, page - 1) * pageSize;

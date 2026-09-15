@@ -2,8 +2,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
   listVerifications, updateVerificationStatus, listBusinessVerifications, updateBusinessVerificationStatus,
-  VERIFICATIONS_PAGE_SIZE, type VerificationRow, type BusinessVerificationRow,
+  getSignedDocumentUrl, VERIFICATIONS_PAGE_SIZE, type VerificationRow, type BusinessVerificationRow,
 } from '../services/verifications/query';
+
+type DocUrls = Record<string, string | 'loading' | 'error'>;
+
+function DocumentPreview({ label, path, urls }: { label: string; path: string | null; urls: DocUrls }) {
+  if (!path) return <div className="verif-doc"><span>{label}</span><p>Not submitted.</p></div>;
+  const state = urls[path];
+  return <div className="verif-doc"><span>{label}</span>
+    {state === 'loading' && <p>Loading…</p>}
+    {state === 'error' && <p role="alert">Could not load this document.</p>}
+    {state && state !== 'loading' && state !== 'error' && <a href={state} target="_blank" rel="noreferrer"><img src={state} alt={label} style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8 }} /></a>}
+  </div>;
+}
 
 const statuses = ['pending', 'approved', 'rejected'];
 
@@ -22,6 +34,7 @@ export function BusinessVerificationsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [docUrls, setDocUrls] = useState<DocUrls>({});
 
   const load = useCallback(async () => {
     if (auth.mode !== 'live') { setPhase('ready'); return; }
@@ -42,6 +55,24 @@ export function BusinessVerificationsPage() {
   }, [auth.mode, tab, status, page]);
 
   useEffect(() => { void load(); }, [load]);
+
+  const selectedIndividualForDocs = individualRows.find((r) => r.id === selectedId);
+  const selectedBusinessForDocs = businessRows.find((r) => r.id === selectedId);
+  useEffect(() => {
+    if (auth.mode !== 'live' || !selectedId) return;
+    const paths = tab === 'individual'
+      ? [selectedIndividualForDocs?.id_doc_path, selectedIndividualForDocs?.selfie_path]
+      : [selectedBusinessForDocs?.id_doc_path, selectedBusinessForDocs?.reg_doc_path];
+    const wanted = paths.filter((p): p is string => Boolean(p));
+    if (wanted.length === 0) return;
+    setDocUrls((prev) => { const next = { ...prev }; wanted.forEach((p) => { next[p] = 'loading'; }); return next; });
+    wanted.forEach((path) => {
+      void getSignedDocumentUrl(path).then((result) => {
+        setDocUrls((prev) => ({ ...prev, [path]: result.error ? 'error' : result.data }));
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.mode, selectedId, tab]);
 
   async function decide(newStatus: string) {
     if (!selectedId) return;
@@ -103,7 +134,10 @@ export function BusinessVerificationsPage() {
             <div><dt>Reviewed</dt><dd>{fmtDate(selectedIndividual.reviewed_at)}</dd></div>
             {selectedIndividual.admin_note && <div><dt>Note</dt><dd>{selectedIndividual.admin_note}</dd></div>}
           </dl></section>
-          <p><small>Raw ID documents are not shown here — status/timeline review only.</small></p>
+          <section className="verif-docs"><h3>Submitted Documents</h3>
+            <DocumentPreview label="ID document" path={selectedIndividual.id_doc_path} urls={docUrls} />
+            <DocumentPreview label="Selfie" path={selectedIndividual.selfie_path} urls={docUrls} />
+          </section>
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
             <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
@@ -119,7 +153,10 @@ export function BusinessVerificationsPage() {
             <div><dt>Reviewed</dt><dd>{fmtDate(selectedBusiness.reviewed_at)}</dd></div>
             {selectedBusiness.admin_note && <div><dt>Note</dt><dd>{selectedBusiness.admin_note}</dd></div>}
           </dl></section>
-          <p><small>Raw registration/ID documents are not shown here — status/timeline review only.</small></p>
+          <section className="verif-docs"><h3>Submitted Documents</h3>
+            <DocumentPreview label="Owner ID document" path={selectedBusiness.id_doc_path} urls={docUrls} />
+            <DocumentPreview label="Business registration" path={selectedBusiness.reg_doc_path} urls={docUrls} />
+          </section>
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
             <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
