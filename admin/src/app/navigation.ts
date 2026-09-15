@@ -41,7 +41,16 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
   { label: 'Shared & Advanced', items: [
     { label: 'Analytics', path: '/observability/analytics', permission: 'analytics.view', icon: 'query_stats' },
     { label: 'Audit Center', path: '/observability/audit', permission: 'audit.view', icon: 'history' },
-    { label: 'Content', path: '/content/legal', permission: 'content.view', icon: 'article' },
+    // Reality-audit finding: this used to be one generic "Content" entry
+    // pointing at /content/legal -- an administrator scanning the sidebar
+    // for "Legal & Policies" would never recognize it. ContentPage.tsx
+    // already has four real, working tabs (matching the full
+    // navigationGroups "Content" group below); each now gets its own
+    // clearly-labeled sidebar entry instead of being buried behind one.
+    { label: 'Legal & Policies', path: '/content/legal', permission: 'legal.view', icon: 'gavel' },
+    { label: 'Help & FAQ', path: '/content/faq', permission: 'content.view', icon: 'quiz' },
+    { label: 'Blog Videos', path: '/content/videos', permission: 'content.view', icon: 'smart_display' },
+    { label: 'Contact & Social', path: '/content/contact', permission: 'content.view', icon: 'contact_mail' },
     { label: 'Taxonomy', path: '/taxonomy', permission: 'taxonomy.view', icon: 'category' },
     { label: 'AMOS', path: '/amos', permission: 'amos.view', icon: 'smart_toy' },
   ] },
