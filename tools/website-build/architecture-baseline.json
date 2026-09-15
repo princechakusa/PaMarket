@@ -21,10 +21,10 @@
       "inlineCss": 4013
     },
     "business.html": {
-      "bytes": 40828,
-      "lines": 629,
-      "inlineJs": 17847,
-      "inlineCss": 4604
+      "bytes": 42144,
+      "lines": 644,
+      "inlineJs": 18948,
+      "inlineCss": 4819
     },
     "chats.html": {
       "bytes": 36687,
@@ -93,7 +93,7 @@
       "inlineCss": 0
     },
     "js/listing-schema.js": {
-      "bytes": 19354,
+      "bytes": 19413,
       "lines": 331,
       "inlineJs": 0,
       "inlineCss": 0
