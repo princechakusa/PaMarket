@@ -20,6 +20,19 @@
 html, body, #root { min-height: 100%; background: var(--ops-bg); }
 body { color: var(--ops-text); background: var(--ops-bg); font: 12px/18px "JetBrains Mono", ui-monospace, monospace; overscroll-behavior: none; }
 button, input, select { font-family: inherit; }
+/* Root-cause fix: color-scheme:dark (tokens.css) makes any input/select/
+   textarea WITHOUT explicit color+background fall back to the browser's
+   native dark-mode form-control rendering (pale blue/gray text) even
+   though every other piece of ops UI uses the --ops-* palette. Several
+   container-scoped rules already set color+background correctly
+   (.directory-filters input, .search-shell input, .panel input, etc.)
+   but bare inputs/textareas/selects outside those containers -- e.g. the
+   Legal/FAQ section editors and video forms in ContentPage.tsx -- had no
+   fallback. This base rule covers every bare control app-wide; the more
+   specific rules above still apply identically since they use the same
+   token values, so nothing visually changes there. */
+input, select, textarea { color: var(--ops-text); background: var(--ops-container); border: 1px solid var(--ops-border); }
+input::placeholder, textarea::placeholder { color: var(--ops-muted); opacity: 1; }
 h1, h2, h3 { color: var(--ops-text); font-family: "Space Grotesk", sans-serif; }
 p { color: var(--ops-muted); }
 .material-symbols-outlined { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; font-size: 18px; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; word-wrap: normal; direction: ltr; -webkit-font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; font-feature-settings: 'liga'; }
