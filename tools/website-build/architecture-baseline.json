@@ -51,10 +51,10 @@
       "inlineCss": 2332
     },
     "detail.html": {
-      "bytes": 85396,
-      "lines": 1332,
-      "inlineJs": 35996,
-      "inlineCss": 18873
+      "bytes": 87225,
+      "lines": 1357,
+      "inlineJs": 37066,
+      "inlineCss": 19047
     },
     "help.html": {
       "bytes": 51687,
@@ -99,8 +99,8 @@
       "inlineCss": 0
     },
     "js/marketplace-data.js": {
-      "bytes": 49743,
-      "lines": 950,
+      "bytes": 49964,
+      "lines": 952,
       "inlineJs": 0,
       "inlineCss": 0
     },
@@ -123,10 +123,10 @@
       "inlineCss": 5830
     },
     "post-ad.html": {
-      "bytes": 48105,
-      "lines": 854,
-      "inlineJs": 15278,
-      "inlineCss": 8477
+      "bytes": 54361,
+      "lines": 944,
+      "inlineJs": 19319,
+      "inlineCss": 9316
     },
     "post-job.html": {
       "bytes": 45392,
