@@ -44,23 +44,38 @@ export async function getContentPage(id: string): Promise<QueryResult<ContentPag
   return { data: data ?? null, error: null };
 }
 
-/** Publishing a content edit creates a new version row (preserving history)
- * and bumps the live row -- it never overwrites version history in place. */
+/** content_pages has a real BEFORE UPDATE trigger
+ * (content_pages_before_update()) that already archives the pre-edit row
+ * into content_page_versions and bumps `version` itself on every UPDATE --
+ * confirmed live via pg_get_functiondef and a reversible end-to-end test
+ * against a real draft row. An earlier version of this function also
+ * manually inserted a version row and set `version` explicitly, which
+ * fought the trigger and produced a duplicate/off-by-one history row on
+ * every save (caught before it ever ran against a real edited document --
+ * no production duplicates existed). This just sends the plain UPDATE and
+ * lets the trigger own versioning entirely. */
 export async function updateContentPage(page: ContentPageDetail, updatedBy: string): Promise<QueryResult<true>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
-  const nextVersion = (page.version ?? 0) + 1;
-  const { error: versionError } = await client.from('content_page_versions').insert({
-    content_page_id: page.id, version: nextVersion, title: page.title, short_description: page.short_description,
-    body: page.body as never, status: page.status, effective_date: page.effective_date, updated_by: updatedBy,
-  });
-  if (versionError) return { data: null, error: normalizeError(versionError) };
   const { error } = await client.from('content_pages').update({
     title: page.title, short_description: page.short_description, body: page.body as never,
-    status: page.status, version: nextVersion, effective_date: page.effective_date, updated_by: updatedBy,
+    status: page.status, effective_date: page.effective_date, updated_by: updatedBy,
   }).eq('id', page.id);
   if (error) return { data: null, error: normalizeError(error) };
   return { data: true, error: null };
+}
+
+export type ContentPageVersionRow = { id: string; version: number | null; title: string | null; status: string | null; updated_by: string | null };
+export async function listContentPageVersions(contentPageId: string): Promise<QueryResult<ContentPageVersionRow[]>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client
+    .from('content_page_versions')
+    .select('id, version, title, status, updated_by')
+    .eq('content_page_id', contentPageId)
+    .order('version', { ascending: false });
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data ?? [], error: null };
 }
 
 // ── Blog videos ──────────────────────────────────────────────────────────
@@ -86,6 +101,14 @@ export async function createBlogVideo(title: string, provider: string, embedId: 
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const { error } = await client.from('blog_videos').insert({ title, provider, embed_id: embedId, video_url: videoUrl, description, is_published: false });
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}
+
+export async function updateBlogVideo(id: string, patch: { title?: string; description?: string; provider?: string; embed_id?: string; sort_order?: number }): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { error } = await client.from('blog_videos').update(patch).eq('id', id);
   if (error) return { data: null, error: normalizeError(error) };
   return { data: true, error: null };
 }
