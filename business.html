@@ -68,6 +68,8 @@
 .biz-about p{font-size:15px;color:var(--sub);line-height:1.8;white-space:pre-line}
 .cat-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+.biz-photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.biz-photos-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
 .rev-list{display:flex;flex-direction:column;gap:12px}
 .rev{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
 .rev-top{display:flex;align-items:center;gap:10px}
@@ -401,7 +403,7 @@ function bizCard(b){
 function setMeta(b, url){
   var title = b.name + ' — PaMarket Zimbabwe';
   var desc = (b.description ? b.description.slice(0,155) : 'Browse products from ' + b.name + ' on PaMarket, Zimbabwe\'s free marketplace.');
-  var img = b.cover || b.logo || 'https://pamarketzw.com/img/icon-512.png';
+  var img = b.cover || (Array.isArray(b.photos) && b.photos[0]) || b.logo || 'https://pamarketzw.com/img/icon-512.png';
   document.title = title;
   document.getElementById('pageTitle').textContent = title;
   var set = function(id, attr, val){ var el=document.getElementById(id); if(el) el.setAttribute(attr, val); };
@@ -441,7 +443,16 @@ function render(b, extras){
   var cats = (b.category || '').split('|').filter(Boolean);
   var verified = b.verification_level > 0;
 
-  var cover = b.cover ? '<img src="'+esc(b.cover)+'" alt="'+esc(b.name)+' cover" fetchpriority="high" decoding="async">' : '';
+  // Shop photos (businesses.photos) is what the mobile Create Shop /
+  // Manage Shop flow actually uploads — a real array the owner picks
+  // during onboarding. b.cover/b.logo are separate, older columns that
+  // flow sets neither, so falling back to photos[0] for the cover is
+  // what makes a newly-approved shop's own images ever appear here at
+  // all instead of a blank navy banner. Keep this fallback and the
+  // gallery below in sync with tools/prerender.js's renderBusiness().
+  var photos = Array.isArray(b.photos) ? b.photos.filter(Boolean) : [];
+  var cover = b.cover ? '<img src="'+esc(b.cover)+'" alt="'+esc(b.name)+' cover" fetchpriority="high" decoding="async">'
+    : (photos.length ? '<img src="'+esc(photos[0])+'" alt="'+esc(b.name)+' cover" fetchpriority="high" decoding="async">' : '');
   var logo = b.logo ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+' logo" loading="eager" decoding="async">' : esc(initials(b.name));
 
   // Owner-only: buy extra featured slots for this shop (Paynow).
@@ -504,6 +515,10 @@ function render(b, extras){
       ownerPanel+
       (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>'+esc(b.description)+'</p>'+
         (cats.length?'<div class="cat-chips">'+cats.map(function(c){return '<span class="pm-chip">'+esc(CAT_LABEL[c]||c)+'</span>';}).join('')+'</div>':'')+'</div>' : '')+
+
+      (photos.length ? '<div class="biz-section"><h2>Shop Photos</h2><div class="sub">Photos '+esc(b.name)+' added about their business</div>'+
+        '<div class="biz-photos-grid">'+photos.map(function(p,i){return '<img src="'+esc(p)+'" alt="'+esc(b.name)+' photo '+(i+1)+'" loading="lazy" decoding="async">';}).join('')+
+        '</div></div>' : '')+
 
       '<div class="biz-section"><h2>Listings</h2><div class="sub">Products &amp; services from '+esc(b.name)+'</div>'+
         (listings.length

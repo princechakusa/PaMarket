@@ -263,7 +263,7 @@
     var store = {
       '@context': 'https://schema.org', '@type': 'Store', '@id': url + '#store',
       name: b.name, url: url,
-      image: b.cover || b.logo || (SITE + '/img/icon-512.png'),
+      image: b.cover || (Array.isArray(b.photos) && b.photos[0]) || b.logo || (SITE + '/img/icon-512.png'),
       address: address, areaServed: { '@type': 'Country', name: 'Zimbabwe' },
       isPartOf: { '@type': 'WebSite', name: 'PaMarket', url: SITE + '/' },
       publisher: { '@type': 'Organization', name: 'PaMarket', url: SITE + '/' }

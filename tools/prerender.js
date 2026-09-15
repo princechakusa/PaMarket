@@ -358,7 +358,12 @@ function renderBusiness(b, chrome) {
   const avg = avgRating(reviews);
   const year = b.created_at ? new Date(b.created_at).getFullYear() : '';
   const cats = (b.category || '').split('|').filter(Boolean);
-  const cover = b.cover ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.name) + ' cover">' : '';
+  // Mirrors business.html's render() -- see its comment on this same
+  // fallback for why photos[0] matters: the mobile Create/Manage Shop flow
+  // only ever writes businesses.photos, never .cover/.logo.
+  const photos = Array.isArray(b.photos) ? b.photos.filter(Boolean) : [];
+  const cover = b.cover ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.name) + ' cover">'
+    : (photos.length ? '<img src="' + esc(photos[0]) + '" alt="' + esc(b.name) + ' cover">' : '');
   const logo = b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + ' logo">' : initialsOf(b.name);
 
   // This static page has no client-side identity check (it's baked at build
@@ -398,6 +403,9 @@ function renderBusiness(b, chrome) {
     '<div class="biz-body">' +
       (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>' + esc(b.description) + '</p>' +
         (cats.length ? '<div class="cat-chips">' + cats.map(function (c) { return '<span class="pm-chip">' + esc(CAT_LABEL[c] || c) + '</span>'; }).join('') + '</div>' : '') + '</div>' : '') +
+      (photos.length ? '<div class="biz-section"><h2>Shop Photos</h2><div class="sub">Photos ' + esc(b.name) + ' added about their business</div>' +
+        '<div class="biz-photos-grid">' + photos.map(function (p, i) { return '<img src="' + esc(p) + '" alt="' + esc(b.name) + ' photo ' + (i + 1) + '" loading="lazy" decoding="async">'; }).join('') +
+        '</div></div>' : '') +
       '<div class="biz-section"><h2>Listings</h2><div class="sub">Products &amp; services from ' + esc(b.name) + '</div>' +
         (products.length
           ? '<div class="prod-grid">' + products.slice(0, 12).map(bizProdCard).join('') + '</div>'
@@ -410,7 +418,7 @@ function renderBusiness(b, chrome) {
   const desc = b.description ? String(b.description).slice(0, 155) : (b.name + ' — a verified business storefront on PaMarket, Zimbabwe.');
   return shell({
     url: url, pageTitle: b.name + ' — Verified Shop on PaMarket Zimbabwe', desc: desc,
-    ogImg: b.cover || b.logo || (SITE + '/img/icon-512.png'), ogType: 'website',
+    ogImg: b.cover || photos[0] || b.logo || (SITE + '/img/icon-512.png'), ogType: 'website',
     schema: PMSchema.buildBusinessSchema(b, url, reviews, products),
     crumb: crumb, main: main, chrome: chrome, style: chrome.bizStyle
   });
