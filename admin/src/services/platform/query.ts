@@ -141,3 +141,47 @@ export async function sendNotification(userId: string, title: string, body: stri
   if (error) return { data: null, error: normalizeError(error) };
   return { data, error: null };
 }
+
+// ── Site announcements (public.site_announcements, is_admin() RLS) ──────
+// The same table and admin-write policy the old Admin's "Announce" tool
+// already used in production (www/admin.html) -- reused here, not
+// duplicated. The public website renders the active row via
+// js/site-announcements.js.
+
+export type SiteAnnouncementRow = { id: string; message: string; link_url: string | null; link_label: string | null; is_active: boolean; created_at: string };
+
+export async function getActiveAnnouncement(): Promise<QueryResult<SiteAnnouncementRow | null>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client
+    .from('site_announcements')
+    .select('id, message, link_url, link_label, is_active, created_at')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data ?? null, error: null };
+}
+
+export async function publishAnnouncement(message: string, linkUrl?: string, linkLabel?: string): Promise<QueryResult<{ id: string }>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client
+    .from('site_announcements')
+    .insert({ message, link_url: linkUrl || null, link_label: linkLabel || null, is_active: true })
+    .select('id')
+    .single();
+  if (error) return { data: null, error: normalizeError(error) };
+  // Matches the old Admin's behaviour: only one announcement is ever live.
+  await client.from('site_announcements').update({ is_active: false }).eq('is_active', true).neq('id', data.id);
+  return { data, error: null };
+}
+
+export async function deactivateAnnouncement(id: string): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { error } = await client.from('site_announcements').update({ is_active: false }).eq('id', id);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}

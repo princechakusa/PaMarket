@@ -15,7 +15,14 @@ const tabFromPath: Record<string, Tab> = { '/trust/support': 'tickets', '/trust/
 export function SupportCenterPage() {
   const auth = useAuth();
   const location = useLocation();
-  const [tab, setTab] = useState<Tab>(tabFromPath[location.pathname] ?? 'tickets');
+  // contact_requests RLS is is_admin()-only (admin/super_admin) -- narrower
+  // than the support.manage permission that unlocks this whole page/route,
+  // which the support role also holds. Gating the tab itself on the real
+  // server authorization (instead of leaving support-role users able to
+  // click into a tab that will only ever come back empty/denied) replaces
+  // the previous silent mismatch with an honest, correctly-scoped UI.
+  const canSeeContacts = auth.identity?.role === 'admin' || auth.identity?.role === 'super_admin';
+  const [tab, setTab] = useState<Tab>(tabFromPath[location.pathname] === 'contacts' && canSeeContacts ? 'contacts' : 'tickets');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [tickets, setTickets] = useState<TicketRow[]>([]);
@@ -92,9 +99,9 @@ export function SupportCenterPage() {
 
     <nav className="listing-tabs" aria-label="Support section"><div>
       <button className={tab === 'tickets' ? 'active' : ''} onClick={() => { setTab('tickets'); setPage(1); setSelectedId(null); setMessage(null); }}>Tickets</button>
-      <button className={tab === 'contacts' ? 'active' : ''} onClick={() => { setTab('contacts'); setPage(1); setSelectedId(null); setMessage(null); }}>Contact Requests</button>
+      {canSeeContacts && <button className={tab === 'contacts' ? 'active' : ''} onClick={() => { setTab('contacts'); setPage(1); setSelectedId(null); setMessage(null); }}>Contact Requests</button>}
     </div></nav>
-    {tab === 'contacts' && <p><small>Contact Requests require admin/super_admin server-side, regardless of the support.manage permission shown in navigation — a pre-existing mismatch, not fixed in this batch.</small></p>}
+    {!canSeeContacts && <p role="note"><small>Contact Requests is an admin/super_admin-only workflow (recruiter-candidate approvals) and is not shown for the {auth.identity?.role ?? 'current'} role.</small></p>}
 
     <section className="directory-filters" aria-label="Filters"><div>
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>

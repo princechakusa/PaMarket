@@ -75,6 +75,7 @@ p { color: var(--ops-muted); }
 .topbar-actions { gap: 2px; }
 .topbar-actions button { display: flex; height: 28px; align-items: center; gap: 4px; padding: 0 8px; border: 1px solid var(--ops-border); border-radius: 0; color: var(--ops-text); background: var(--ops-high); font-size: 9px; font-weight: 600; }
 .topbar-actions button.freeze { border-color: var(--ops-red); color: #ffdad6; background: var(--ops-red-dark); text-transform: uppercase; }
+.freeze.active { border-color: var(--ops-orange); background: #40301a; color: var(--ops-orange); }
 .topbar-actions button:disabled, .ops-dashboard button:disabled { opacity: 1; cursor: not-allowed; }
 .topbar-actions button:disabled { filter: saturate(.75); }
 .topbar-actions .material-symbols-outlined { font-size: 14px; }

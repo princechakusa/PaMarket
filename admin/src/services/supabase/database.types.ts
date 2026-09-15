@@ -60,6 +60,12 @@ export type Database = {
         Relationships: [];
       };
       app_settings: { Row: { id: number; settings: Json; updated_at: string | null }; Insert: { id?: number; settings?: Json }; Update: { settings?: Json }; Relationships: [] };
+      site_announcements: {
+        Row: { id: string; message: string; link_url: string | null; link_label: string | null; is_active: boolean; starts_at: string | null; ends_at: string | null; created_by: string | null; created_at: string };
+        Insert: { id?: string; message: string; link_url?: string | null; link_label?: string | null; is_active?: boolean; starts_at?: string | null; ends_at?: string | null; created_by?: string | null };
+        Update: { is_active?: boolean };
+        Relationships: [];
+      };
       notifications: {
         Row: { id: string; user_id: string | null; title: string | null; body: string | null; read: boolean | null; created_at: number | null; type: string | null; category: string | null; push_sent: boolean | null; push_status: string | null; meta: Json | null };
         Insert: { id?: string; user_id: string; title: string; body?: string | null; type?: string | null; category?: string | null; meta?: Json | null; created_at?: number };
