@@ -192,19 +192,10 @@ export async function getRentalAnalyticsSummary(): Promise<QueryResult<RentalAna
 // audit, not evidence-grade (same distinction as admin_audit_logs vs
 // security_events; not merged into either).
 
-export type RentalAuditLogRow = { id: string; actor_role: string | null; action: string | null; target_table: string | null; target_id: string | null; created_at: string | null };
-export async function listRentalAuditLogs(page: number, pageSize = RENTALS_PAGE_SIZE): Promise<QueryResult<Page<RentalAuditLogRow>>> {
-  const client = getSupabaseClient();
-  if (!client) return unavailable();
-  const from = Math.max(0, page - 1) * pageSize;
-  const { data, error, count } = await client
-    .from('rental_audit_logs')
-    .select('id, actor_role, action, target_table, target_id, created_at', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(from, from + pageSize - 1);
-  if (error) return { data: null, error: normalizeError(error) };
-  return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
-}
+// rental_audit_logs reads now go through services/audit/query.ts's
+// listRentalAuditLogs() (the Audit Center's version) -- this file used to
+// have its own near-identical copy of the same query (found during the
+// final production audit).
 
 // ── Lookups ─────────────────────────────────────────────────────────────
 

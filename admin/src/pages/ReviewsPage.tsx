@@ -47,6 +47,7 @@ export function ReviewsPage() {
   useEffect(() => { void load(); }, [load]);
 
   async function removeMarketplace(id: string) {
+    if (!confirm('Permanently delete this review? This cannot be undone.')) return;
     const result = await deleteMarketplaceReview(id);
     setMessage(result.error ? `Failed: ${result.error.message}` : 'Review removed.');
     void load();

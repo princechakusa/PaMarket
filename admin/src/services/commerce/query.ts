@@ -154,27 +154,9 @@ export async function listPlayPurchases(status: string | undefined, page: number
 // No refund/void RPC exists for play_purchases — none is exposed here.
 
 // ── Finance ─────────────────────────────────────────────────────────────
-// Reuses the existing C2E-9 analytics RPCs directly — now finance-tier
-// accessible (Batch 2 fix), not a new query path.
-
-export type RevenueSummary = { subs_paid: number; subs_failed: number; subs_pending: number; other_paid: number; ads_revenue: number; txn_count: number };
-export async function getRevenueSummary(days = 30): Promise<QueryResult<RevenueSummary>> {
-  const client = getSupabaseClient();
-  if (!client) return unavailable();
-  const { data, error } = await client.rpc('admin_revenue_summary', { days });
-  if (error) return { data: null, error: normalizeError(error) };
-  if (!data) return { data: null, error: { code: 'empty_response', message: 'No revenue summary returned.', retryable: false } };
-  return { data, error: null };
-}
-
-export type TopPayerRow = { business_id: string; total: number; payments: number };
-export async function getTopPayers(days = 90, lim = 10): Promise<QueryResult<TopPayerRow[]>> {
-  const client = getSupabaseClient();
-  if (!client) return unavailable();
-  const { data, error } = await client.rpc('admin_top_payers', { days, lim });
-  if (error) return { data: null, error: normalizeError(error) };
-  return { data: data ?? [], error: null };
-}
+// getRevenueSummary/getTopPayers now live in services/dashboard/query.ts
+// only -- this file used to have its own byte-identical copies of both
+// (found during the final production audit).
 
 export type SubscriptionRow = { id: string; business_id: string | null; status: string | null; plan_id: string | null; billing_cycle: string | null; current_period_end: string | null; auto_renew: boolean | null };
 export async function listSubscriptions(status: string | undefined, page: number, pageSize = COMMERCE_PAGE_SIZE): Promise<QueryResult<Page<SubscriptionRow>>> {

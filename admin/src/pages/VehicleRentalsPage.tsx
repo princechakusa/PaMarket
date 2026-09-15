@@ -4,12 +4,16 @@ import { useAuth } from '../security/auth-context';
 import {
   listRentalCompanies, decideRentalCompany, listRentalListings, decideRentalListing,
   listRentalReports, resolveRentalReport, listFeaturedListings, setFeaturedActive,
-  getRentalAnalyticsSummary, listRentalAuditLogs, listRentalBrands, listRentalCategories, listRentalLocations,
+  getRentalAnalyticsSummary, listRentalBrands, listRentalCategories, listRentalLocations,
   setBrandActive, setCategoryActive, setLocationActive, RENTALS_PAGE_SIZE,
   type RentalCompanyRow, type RentalListingRow, type RentalReportRow, type FeaturedListingRow,
-  type RentalAnalyticsSummary, type RentalAuditLogRow, type LookupRow, type RentalLocationRow,
+  type RentalAnalyticsSummary, type LookupRow, type RentalLocationRow,
 } from '../services/rentals/query';
 import { listRentalReviews, updateRentalReviewStatus, type RentalReviewRow } from '../services/reviews/query';
+// Reuses the Audit Center's rental_audit_logs query directly -- this tab
+// and Audit Center were independently querying the same table with
+// near-identical code (found during the final production audit).
+import { listRentalAuditLogs, type RentalAuditRow } from '../services/audit/query';
 
 type Tab = 'dashboard' | 'approvals' | 'companies' | 'listings' | 'reports' | 'reviews' | 'featured' | 'analytics' | 'audit' | 'lookups';
 const tabFromPath: Record<string, Tab> = {
@@ -233,7 +237,7 @@ function RentalsAnalytics({ mode }: { mode: string }) {
 }
 
 function RentalsAudit({ mode }: { mode: string }) {
-  const [rows, setRows] = useState<RentalAuditLogRow[]>([]);
+  const [rows, setRows] = useState<RentalAuditRow[]>([]);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   useEffect(() => { if (mode !== 'live') { setPhase('ready'); return; } void listRentalAuditLogs(1).then((r) => { if (r.error) setPhase('error'); else { setRows(r.data.rows); setPhase('ready'); } }); }, [mode]);
   return <section className="ops-panel"><header className="panel-title"><h2>Rental Audit Logs</h2><span>Operational — not evidence-grade</span></header>

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
-import { getRevenueSummary, getTopPayers, listSubscriptions, COMMERCE_PAGE_SIZE, type RevenueSummary, type TopPayerRow, type SubscriptionRow } from '../services/commerce/query';
+import { listSubscriptions, COMMERCE_PAGE_SIZE, type SubscriptionRow } from '../services/commerce/query';
+// Reuses the Dashboard's revenue/top-payers queries directly -- this page
+// and the Dashboard were independently wrapping the same admin_revenue_
+// summary/admin_top_payers RPCs with byte-identical code (found during
+// the final production audit).
+import { getRevenueSummary, getTopPayers, type RevenueSummary, type TopPayerRow } from '../services/dashboard/query';
 
 function money(value: number | null | undefined) { return value === null || value === undefined ? '—' : `$${Number(value).toLocaleString('en-ZW', { maximumFractionDigits: 0 })}`; }
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }

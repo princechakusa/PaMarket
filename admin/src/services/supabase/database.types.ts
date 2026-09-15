@@ -37,7 +37,7 @@ export type Database = {
       businesses: {
         Row: {
           id: string; name: string | null; status: string | null; owner_user_id: string | null;
-          province: string | null; city: string | null; category: string | null; biz_type: string | null;
+          province: string | null; city: string | null; suburb: string | null; category: string | null; biz_type: string | null;
           phone: string | null; email: string | null; plan_id: string | null; verification_level: number | null;
           verification_pending: boolean | null; created_at: string | null;
         };
@@ -100,6 +100,7 @@ export type Database = {
           photos: string[] | null; seller_id: string | null; seller_name: string | null; seller_phone: string | null;
           condition: string | null; business_id: string | null; views: number | null;
           created_at: string | null; updated_at: string | null; expires_at: string | null;
+          latitude: number | null; longitude: number | null;
         };
         Insert: { id?: string; status?: string | null; province?: string | null };
         Update: { status?: string | null; province?: string | null };
