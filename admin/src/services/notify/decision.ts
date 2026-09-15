@@ -68,7 +68,7 @@ export async function notifyDecision(userId: string, link: DecisionLink, title: 
   const id = crypto.randomUUID();
   const deepLink = deepLinkString(link);
   const { error } = await client.from('notifications').insert({
-    id, user_id: userId, title, body, type: 'admin_decision', meta: deepLink ? { deepLink } : {},
+    id, user_id: userId, title, body, type: 'admin_decision', meta: deepLink ? { deepLink } : {}, created_at: Date.now(),
   });
   if (error) return { data: null, error: normalizeError(error) };
   return { data: true, error: null };

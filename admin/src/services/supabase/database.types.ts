@@ -62,7 +62,7 @@ export type Database = {
       app_settings: { Row: { id: number; settings: Json; updated_at: string | null }; Insert: { id?: number; settings?: Json }; Update: { settings?: Json }; Relationships: [] };
       notifications: {
         Row: { id: string; user_id: string | null; title: string | null; body: string | null; read: boolean | null; created_at: number | null; type: string | null; category: string | null; push_sent: boolean | null; push_status: string | null; meta: Json | null };
-        Insert: { id?: string; user_id: string; title: string; body?: string | null; type?: string | null; category?: string | null; meta?: Json | null };
+        Insert: { id?: string; user_id: string; title: string; body?: string | null; type?: string | null; category?: string | null; meta?: Json | null; created_at?: number };
         Update: { read?: boolean | null };
         Relationships: [];
       };

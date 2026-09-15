@@ -137,7 +137,7 @@ export async function sendNotification(userId: string, title: string, body: stri
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const id = crypto.randomUUID();
-  const { data, error } = await client.from('notifications').insert({ id, user_id: userId, title, body, type }).select('id').single();
+  const { data, error } = await client.from('notifications').insert({ id, user_id: userId, title, body, type, created_at: Date.now() }).select('id').single();
   if (error) return { data: null, error: normalizeError(error) };
   return { data, error: null };
 }
