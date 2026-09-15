@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { S3Client, PutObjectCommand, GetObjectCommand } from 'npm:@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } from 'npm:@aws-sdk/client-s3'
 import { getSignedUrl } from 'npm:@aws-sdk/s3-request-presigner'
 import { checkAmosRateLimit } from '../_shared/amos-rate-limit.ts'
 
@@ -189,6 +189,38 @@ Deno.serve(async (req) => {
     const isAmos = key.startsWith('amos/manual-media/')
     const isBusiness = key.startsWith('businesses/')
     const isGet = verb === 'GET'
+    const isList = verb === 'LIST'
+
+    // Admin-only recovery path: list the real objects under a user's
+    // verification/ prefix. Exists specifically for the case where the
+    // path recorded in `verifications`/`business_verifications` doesn't
+    // match any real object (an old app build guessed its own key instead
+    // of using the server-generated one -- see
+    // project_verification_doc_key_mismatch memory) but the actual
+    // uploaded file still exists in R2 under its real, randomized name.
+    // `key` here must be the prefix itself (verification/<userId>/), not
+    // a specific object key. No upload-URL issuance happens on this path,
+    // so it deliberately skips the rate limiter below (reads, not writes).
+    if (isList) {
+      if (!isVerification || !key.endsWith('/')) throw new Error('Forbidden path')
+      const role = await loadActorRole()
+      if (!role || !ADMIN_ROLES.has(role)) {
+        await recordEvidence('admin_r2_access_denied', 'blocked', 'insufficient_role', 'verification_list')
+        throw new Error('Forbidden')
+      }
+      const s3List = new S3Client({
+        region: 'auto',
+        endpoint: `https://${Deno.env.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: Deno.env.get('R2_ACCESS_KEY_ID')!,
+          secretAccessKey: Deno.env.get('R2_SECRET_ACCESS_KEY')!,
+        },
+      })
+      const listed = await s3List.send(new ListObjectsV2Command({ Bucket: Deno.env.get('R2_PUBLIC_BUCKET')!, Prefix: key, MaxKeys: 50 }))
+      await recordEvidence('admin_r2_verification_list_issued', 'success', null, 'verification_list')
+      const objects = (listed.Contents ?? []).map(o => ({ key: o.Key, size: o.Size ?? null, lastModified: o.LastModified ? o.LastModified.toISOString() : null }))
+      return new Response(JSON.stringify({ objects }), { headers: { ...cors, 'Content-Type': 'application/json' } })
+    }
 
     // Populated below (upload/PUT path only) with whichever prefix the
     // request validated against, so the actual object key written to R2 is

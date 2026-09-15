@@ -2,8 +2,47 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
   listVerifications, updateVerificationStatus, listBusinessVerifications, updateBusinessVerificationStatus,
-  getSignedDocumentUrl, VERIFICATIONS_PAGE_SIZE, type VerificationRow, type BusinessVerificationRow,
+  getSignedDocumentUrl, listUserVerificationDocuments, VERIFICATIONS_PAGE_SIZE,
+  type VerificationRow, type BusinessVerificationRow, type StorageObject,
 } from '../services/verifications/query';
+
+function StorageSearch({ userId, accessToken }: { userId: string; accessToken: string }) {
+  const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [objects, setObjects] = useState<StorageObject[]>([]);
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | 'loading' | 'error' | null>(null);
+
+  async function search() {
+    setPhase('loading');
+    const result = await listUserVerificationDocuments(userId, accessToken);
+    if (result.error) { setPhase('error'); return; }
+    setObjects(result.data);
+    setPhase('ready');
+  }
+
+  async function preview(key: string) {
+    setPreviewKey(key);
+    setPreviewUrl('loading');
+    const result = await getSignedDocumentUrl(key, accessToken);
+    setPreviewUrl(result.error ? 'error' : result.data);
+  }
+
+  return <div className="verif-doc-search">
+    <button onClick={() => void search()} disabled={phase === 'loading'}>{phase === 'loading' ? 'Searching storage…' : 'Search storage for this user\'s real files'}</button>
+    {phase === 'error' && <p role="alert">Could not search storage.</p>}
+    {phase === 'ready' && objects.length === 0 && <p role="status">No files found under this user's verification folder. The upload never reached storage.</p>}
+    {phase === 'ready' && objects.length > 0 && <ul>{objects.map((o) => <li key={o.key}>
+      <code style={{ fontSize: '0.7em' }}>{o.key.split('/').pop()}</code>
+      {o.lastModified && <small> · {new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(o.lastModified))}</small>}
+      <button onClick={() => void preview(o.key)}>Preview</button>
+    </li>)}</ul>}
+    {previewKey && <div>
+      {previewUrl === 'loading' && <p>Loading preview…</p>}
+      {previewUrl === 'error' && <p role="alert">Could not load this file.</p>}
+      {previewUrl && previewUrl !== 'loading' && previewUrl !== 'error' && <img src={previewUrl} alt="Recovered upload" style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8 }} />}
+    </div>}
+  </div>;
+}
 
 type DocUrls = Record<string, string | 'loading' | 'error' | 'missing'>;
 
@@ -144,6 +183,7 @@ export function BusinessVerificationsPage() {
           <section className="verif-docs"><h3>Submitted Documents</h3>
             <DocumentPreview label="ID document" path={selectedIndividual.id_doc_path} urls={docUrls} onMissing={markDocMissing} />
             <DocumentPreview label="Selfie" path={selectedIndividual.selfie_path} urls={docUrls} onMissing={markDocMissing} />
+            {selectedIndividual.user_id && auth.accessToken && <StorageSearch userId={selectedIndividual.user_id} accessToken={auth.accessToken} />}
           </section>
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />

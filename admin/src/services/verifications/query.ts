@@ -48,6 +48,23 @@ export async function getSignedDocumentUrl(key: string, accessToken: string): Pr
   return { data: result.data.signedUrl, error: null };
 }
 
+export type StorageObject = { key: string; size: number | null; lastModified: string | null };
+
+/** Recovery path for the exact class of bug documented in
+ * project_verification_doc_key_mismatch: the path recorded on the row
+ * doesn't match any real object because an old app build guessed its own
+ * key. Lists whatever actually exists under this user's real
+ * verification/<userId>/ folder in R2, so the admin can find and view the
+ * real upload even when the recorded path is wrong. */
+export async function listUserVerificationDocuments(userId: string, accessToken: string): Promise<QueryResult<StorageObject[]>> {
+  const result = await invokeAdminFunction<{ objects?: StorageObject[]; error?: string }>('get-r2-upload-url', accessToken, {
+    body: { key: `verification/${userId}/`, verb: 'LIST' },
+  });
+  if (result.error) return { data: null, error: result.error };
+  if (result.data.error) return { data: null, error: { code: result.data.error, message: result.data.error, retryable: false } };
+  return { data: result.data.objects ?? [], error: null };
+}
+
 export async function listVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<VerificationRow>>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
