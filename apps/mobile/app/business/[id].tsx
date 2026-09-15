@@ -72,7 +72,7 @@ export default function BusinessShopScreen() {
     const businessRes = await supabase
       .from("businesses")
       .select(
-        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at"
+        "id,owner_user_id,name,logo,cover,photos,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at"
       )
       .eq("id", id)
       .maybeSingle();
@@ -222,6 +222,14 @@ export default function BusinessShopScreen() {
   }
 
   const isVerified = (business.verification_level ?? 0) >= 2;
+  // Shop Photos (business.photos) is what Create Shop / Manage Shop
+  // actually collects from the owner -- .cover/.logo are separate columns
+  // that flow never writes to. Falling back to photos[0] for the cover
+  // banner, and showing the full array below, is what makes a shop's own
+  // photos ever appear here -- mirrors the same fix in business.html/
+  // tools/prerender.js on the website. See project memory on this bug.
+  const shopPhotos = (business.photos ?? []).filter((p): p is string => Boolean(p));
+  const coverImageUri = business.cover || shopPhotos[0] || null;
 
   return (
     <View style={styles.container}>
@@ -244,8 +252,8 @@ export default function BusinessShopScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: isOwner ? 24 : 90 }}>
         <View style={styles.cover}>
-          {business.cover ? (
-            <Image source={{ uri: business.cover }} style={styles.coverImage} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+          {coverImageUri ? (
+            <Image source={{ uri: coverImageUri }} style={styles.coverImage} contentFit="cover" transition={150} cachePolicy="memory-disk" />
           ) : null}
         </View>
 
@@ -269,6 +277,14 @@ export default function BusinessShopScreen() {
           ) : null}
 
           {business.description ? <Text style={styles.description}>{business.description}</Text> : null}
+
+          {shopPhotos.length ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shopPhotosRow}>
+              {shopPhotos.map((uri, index) => (
+                <Image key={uri + index} source={{ uri }} style={styles.shopPhoto} contentFit="cover" cachePolicy="memory-disk" transition={100} />
+              ))}
+            </ScrollView>
+          ) : null}
 
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
@@ -573,6 +589,16 @@ function buildStyles(color: ColorPalette) {
       color: color.textSub,
       lineHeight: 19,
       marginTop: 10,
+    },
+    shopPhotosRow: {
+      gap: 8,
+      marginTop: 12,
+    },
+    shopPhoto: {
+      width: 96,
+      height: 96,
+      borderRadius: 12,
+      backgroundColor: color.surfaceAlt,
     },
     statsRow: {
       flexDirection: "row",
