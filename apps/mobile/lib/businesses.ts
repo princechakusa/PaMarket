@@ -13,6 +13,8 @@ export type Business = {
   province?: string | null;
   city?: string | null;
   suburb?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   status: string;
   plan_id?: string | null;
   verification_level?: number | null;

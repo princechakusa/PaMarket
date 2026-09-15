@@ -10,6 +10,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <meta id="ogTitle" property="og:title" content="Listing — PaMarket Zimbabwe">
 <meta id="ogDesc" property="og:description" content="View listing details on PaMarket — Zimbabwe's free marketplace.">
 <meta id="ogImage" property="og:image" content="https://pamarketzw.com/img/icon-512.png">
@@ -100,6 +101,8 @@ button{font-family:inherit;cursor:pointer}
 .d-section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:20px}
 .d-section h3{font-size:15px;font-weight:800;margin-bottom:12px}
 .d-desc{font-size:14.5px;color:var(--sub);line-height:1.8;white-space:pre-wrap}
+.d-loc-map{width:100%;height:240px;border-radius:12px;border:1px solid var(--line);background:var(--paper)}
+.d-loc-note{font-size:12.5px;color:var(--mute);margin-top:10px}
 
 /* ══ SIDEBAR ══ */
 .sidebar{position:sticky;top:82px;display:flex;flex-direction:column;gap:16px}
@@ -473,6 +476,11 @@ window.doSearch = window.doSearch || function(){
         <h3>About this listing</h3>
         <div class="d-desc" id="dDesc"></div>
       </div>
+      <div class="d-section hidden" id="locSection">
+        <h3>Location</h3>
+        <div id="dLocMap" class="d-loc-map"></div>
+        <div class="d-loc-note">Exact address isn't shown for the seller's privacy — the pin marks the general area.</div>
+      </div>
       <div class="d-section hidden" id="revSection">
         <h3>Seller Reviews</h3>
         <div class="rating-hero" id="revHero"></div>
@@ -751,6 +759,7 @@ window.doSearch = window.doSearch || function(){
 <script src="js/listing-schema.js"></script>
 <script src="js/listing-extras.js"></script>
 <script src="js/nav-dropdowns.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
 const CLOCK='<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
@@ -1018,6 +1027,22 @@ function renderListing(l,reviews){
   const special=(l.category==='vehicles'&&(attrs.mileage||l.mileage))?{value:String(attrs.mileage||l.mileage),label:'Mileage'}:null;
   const stats=[special||{value:condition,label:'Condition'},{value:catLabel,label:'Category'},{value:Number(l.views||0).toLocaleString(),label:'Views'}];
   document.getElementById('dStats').innerHTML=stats.map(function(s){return '<div class="d-stat"><b>'+esc(s.value)+'</b><span>'+esc(s.label)+'</span></div>';}).join('');
+
+  // Approximate location map — jittered ~150-400m from the seller's real pin
+  // (deterministic per listing, so it doesn't jump around on reload) to keep
+  // the exact address private, matching Facebook Marketplace/Dubizzle style.
+  if(l.latitude!=null&&l.longitude!=null&&typeof L!=='undefined'){
+    var seed=String(l.id||'');
+    var h=0;for(var i=0;i<seed.length;i++){h=(h*31+seed.charCodeAt(i))>>>0;}
+    var h2=(h*2654435761)>>>0;
+    var dLat=((h%1000)/1000-0.5)*0.006;
+    var dLng=((h2%1000)/1000-0.5)*0.006;
+    var approxLat=Number(l.latitude)+dLat, approxLng=Number(l.longitude)+dLng;
+    document.getElementById('locSection').classList.remove('hidden');
+    var locMap=L.map('dLocMap',{scrollWheelZoom:false,zoomControl:true}).setView([approxLat,approxLng],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(locMap);
+    L.circle([approxLat,approxLng],{radius:400,color:'#1A3A8F',fillColor:'#1A3A8F',fillOpacity:.12,weight:1.5}).addTo(locMap);
+  }
 
   const seller=l.seller_name||'PaMarket Seller';
   document.getElementById('sellerName').textContent=seller;

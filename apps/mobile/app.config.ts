@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.16",
+  version: "1.29.17",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -134,7 +134,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 130,
+    versionCode: 131,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
@@ -222,6 +222,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // Android for a capability the binary never exercises. `false` makes
         // the plugin delete the key and block the Android permission.
         microphonePermission: false,
+      },
+    ],
+    [
+      "expo-location",
+      {
+        // One-shot foreground location only ("Use my current location" when
+        // posting a listing/business) — never background, so the
+        // background-mode keys are explicitly left off.
+        locationWhenInUsePermission:
+          "PaMarket uses your location to help fill in your area when posting a listing or business. Your exact location is never shown to buyers.",
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: false,
       },
     ],
     [

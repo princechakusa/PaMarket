@@ -28,7 +28,7 @@ import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "
 import { CategoryPicker } from "../../components/post/CategoryPicker";
 import { AttrFields, type AttrValues } from "../../components/post/AttrFields";
 import { PhotoGrid } from "../../components/post/PhotoGrid";
-import { Button, Card, Chip, GlassBackButton, ProvinceCityFields } from "../../components/ui";
+import { Button, Card, Chip, GlassBackButton, ProvinceCityFields, UseCurrentLocationButton } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -57,6 +57,8 @@ type PostState = {
   province: string;
   city: string;
   suburb: string;
+  latitude: number | null;
+  longitude: number | null;
   photos: string[];
   condition: ListingCondition | null;
   attrs: AttrValues;
@@ -72,6 +74,8 @@ const INITIAL_STATE: PostState = {
   province: "",
   city: "",
   suburb: "",
+  latitude: null,
+  longitude: null,
   photos: [],
   condition: null,
   attrs: {},
@@ -323,6 +327,8 @@ export default function PostScreen() {
         province: state.province,
         city: state.city,
         suburb: state.suburb.trim() || null,
+        latitude: state.latitude,
+        longitude: state.longitude,
         photos: photoUrls,
         status: "active",
         condition: state.condition,
@@ -524,6 +530,22 @@ export default function PostScreen() {
               placeholder="e.g. Avondale West"
               placeholderTextColor={color.textMuted}
             />
+
+            <View style={{ marginTop: space.md }}>
+              <UseCurrentLocationButton
+                provinces={provinces}
+                citiesByProvince={citiesByProvince}
+                onResolved={(loc) =>
+                  update({
+                    latitude: loc.latitude,
+                    longitude: loc.longitude,
+                    province: loc.province ?? state.province,
+                    city: loc.city ?? state.city,
+                    suburb: loc.suburb ?? state.suburb,
+                  })
+                }
+              />
+            </View>
           </Card>
         ) : null}
 

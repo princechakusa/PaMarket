@@ -10,6 +10,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <meta id="ogTitle" property="og:title" content="Post a Free Ad — PaMarket">
 <meta id="ogDesc" property="og:description" content="Sell anything. Reach all of Zimbabwe. No fees, no commissions.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
@@ -185,6 +186,14 @@ button{font-family:inherit;cursor:pointer}
 .pf-photo img{width:100%;height:100%;object-fit:cover}
 .pf-photo .pf-cover{position:absolute;bottom:0;left:0;right:0;background:rgba(26,58,143,.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:2px;letter-spacing:.04em}
 .pf-photo .pf-rm{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;line-height:1;padding:0}
+.pf-loc-tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.pf-loc-btn{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;padding:9px 14px;white-space:nowrap}
+.pf-loc-search{flex:1;min-width:180px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit}
+.pf-loc-map{width:100%;height:220px;border-radius:14px;border:1.5px solid var(--line);margin-bottom:8px;background:var(--paper)}
+.pf-loc-suggestions{position:relative}
+.pf-loc-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--line);border-radius:10px;margin-top:4px;max-height:200px;overflow:auto;z-index:5;box-shadow:0 10px 24px rgba(15,36,96,.1)}
+.pf-loc-list div{padding:9px 12px;font-size:13.5px;cursor:pointer}
+.pf-loc-list div:hover{background:var(--navy-tint)}
 .pf-photo.pf-uploading{opacity:.55}
 .pf-photo .pf-spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .pf-photo .pf-spin::after{content:'';width:22px;height:22px;border:2.5px solid rgba(26,58,143,.25);border-top-color:var(--navy);border-radius:50%;animation:pfspin .7s linear infinite}
@@ -450,6 +459,22 @@ window.doSearch = window.doSearch || function(){
       </div>
 
       <div class="pf-field">
+        <label>Pin your location <span class="pf-hint-inline">(helps buyers see roughly where this is)</span></label>
+        <div class="pf-loc-tools">
+          <button type="button" class="btn btn-outline pf-loc-btn" id="pfUseGps">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            Use my current location
+          </button>
+          <div class="pf-loc-suggestions" style="flex:1;min-width:180px">
+            <input type="text" id="pfLocSearch" class="pf-loc-search" style="width:100%" placeholder="Or type an address to search…">
+            <div class="pf-loc-list hidden" id="pfLocResults"></div>
+          </div>
+        </div>
+        <div id="pfLocMap" class="pf-loc-map"></div>
+        <div class="pf-hint" id="pfLocHint">Drag the pin to fine-tune the exact spot. This is never shown to buyers — only your suburb area is public.</div>
+      </div>
+
+      <div class="pf-field">
         <label>Photos <span class="pf-hint-inline">(up to 8 — first is the cover)</span></label>
         <div class="pf-photos" id="pfPhotos"></div>
         <label class="pf-addphoto" id="pfAddPhoto">
@@ -617,6 +642,7 @@ window.doSearch = window.doSearch || function(){
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 // ══════════════════════════════════════════════════════════════════
 //  POSTING FORM CONTROLLER — real listing creation from the website.
@@ -655,6 +681,61 @@ window.doSearch = window.doSearch || function(){
   const CAT_HINT={vehicles:'Include make, model, year and mileage.',property:'State whether it is for sale or rent, and the number of rooms.',electronics:'Mention brand, model and condition.',jobs:''};
   $('pfCat').addEventListener('change',()=>{$('pfCatHint').textContent=CAT_HINT[$('pfCat').value]||'';});
 
+  // ── Location picker (Leaflet + OpenStreetMap, free — no API key) ──
+  let pickedLat=null, pickedLng=null, locMap=null, locMarker=null;
+  const HARARE=[-17.8292,31.0522];
+  function initLocMap(){
+    if(locMap||typeof L==='undefined')return;
+    locMap=L.map('pfLocMap',{scrollWheelZoom:false}).setView(pickedLat!=null?[pickedLat,pickedLng]:HARARE,pickedLat!=null?15:11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(locMap);
+    locMarker=L.marker(pickedLat!=null?[pickedLat,pickedLng]:HARARE,{draggable:true}).addTo(locMap);
+    locMarker.on('dragend',()=>{const p=locMarker.getLatLng();pickedLat=p.lat;pickedLng=p.lng;});
+    locMap.on('click',e=>{pickedLat=e.latlng.lat;pickedLng=e.latlng.lng;locMarker.setLatLng(e.latlng);});
+  }
+  function setLocPin(lat,lng,zoom){
+    pickedLat=lat;pickedLng=lng;
+    if(!locMap){initLocMap();}
+    locMarker.setLatLng([lat,lng]);
+    locMap.setView([lat,lng],zoom||15);
+  }
+  // Initialise once the map field scrolls into view isn't required here — the
+  // form is short, so we just init on first paint (map tiles lazy-load anyway).
+  setTimeout(initLocMap,0);
+
+  $('pfUseGps').addEventListener('click',()=>{
+    if(!navigator.geolocation){$('pfLocHint').textContent='Your browser does not support location access. Use the search box or drag the pin instead.';return;}
+    const btn=$('pfUseGps');btn.disabled=true;const prevText=btn.innerHTML;btn.innerHTML='Locating…';
+    navigator.geolocation.getCurrentPosition(
+      pos=>{setLocPin(pos.coords.latitude,pos.coords.longitude,16);btn.disabled=false;btn.innerHTML=prevText;$('pfLocHint').textContent='Location set from your device. Drag the pin to fine-tune, or edit it below.';},
+      ()=>{btn.disabled=false;btn.innerHTML=prevText;$('pfLocHint').textContent='Could not access your location — please search an address or drag the pin instead.';},
+      {enableHighAccuracy:true,timeout:10000}
+    );
+  });
+
+  let locSearchTimer=null;
+  $('pfLocSearch').addEventListener('input',()=>{
+    const q=$('pfLocSearch').value.trim();
+    clearTimeout(locSearchTimer);
+    const list=$('pfLocResults');
+    if(q.length<3){list.classList.add('hidden');list.innerHTML='';return;}
+    locSearchTimer=setTimeout(async()=>{
+      try{
+        const res=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=zw&limit=5&q='+encodeURIComponent(q));
+        const results=await res.json();
+        if(!results.length){list.innerHTML='<div>No matches found</div>';list.classList.remove('hidden');return;}
+        list.innerHTML=results.map((r,i)=>'<div data-i="'+i+'">'+r.display_name+'</div>').join('');
+        list.classList.remove('hidden');
+        list.querySelectorAll('div[data-i]').forEach(el=>el.addEventListener('click',()=>{
+          const r=results[Number(el.dataset.i)];
+          setLocPin(Number(r.lat),Number(r.lon),16);
+          $('pfLocSearch').value=r.display_name;
+          list.classList.add('hidden');
+        }));
+      }catch(e){/* search is a convenience — silently ignore network hiccups */}
+    },500);
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.pf-loc-suggestions'))$('pfLocResults').classList.add('hidden');});
+
   // ── Image compression (canvas → JPEG blob), mirrors the app's approach ──
   function compress(file,maxDim=1200,q=0.8){
     return new Promise((resolve,reject)=>{
@@ -689,6 +770,7 @@ window.doSearch = window.doSearch || function(){
       if(!listing||String(listing.seller_id)!==String(session.user.id)){showError('This listing was not found, or you do not have permission to edit it.');$('pfSubmit').disabled=true;return;}
       $('pfCat').value=listing.category||'';$('pfTitle').value=listing.title||'';$('pfDesc').value=listing.description||'';
       $('pfPrice').value=listing.price==null?'':listing.price;$('pfProv').value=listing.province||'';$('pfCity').value=listing.city||'';$('pfSuburb').value=listing.suburb||'';
+      if(listing.latitude!=null&&listing.longitude!=null)setLocPin(Number(listing.latitude),Number(listing.longitude),15);
       (listing.photos||[]).slice(0,MAX_PHOTOS).forEach(url=>photos.push({url:url}));renderPhotos();
       $('pfTitle').dispatchEvent(new Event('input'));$('pfDesc').dispatchEvent(new Event('input'));$('pfCat').dispatchEvent(new Event('change'));
     }).catch(()=>{showError('Could not load this listing. Please return to your dashboard and try again.');$('pfSubmit').disabled=true;});
@@ -790,6 +872,7 @@ window.doSearch = window.doSearch || function(){
         title,description:desc,price:Number(price),currency:'USD',
         category:cat,province:prov,city:$('pfCity').value.trim(),
         suburb:$('pfSuburb').value.trim(),
+        latitude:pickedLat,longitude:pickedLng,
         photos:photos.filter(p=>p.url).map(p=>p.url)
       };
       const res=editingId?await PM.updateListing(editingId,payload):await PM.createListing(payload);

@@ -14,7 +14,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../lib/auth";
-import { GlassBackButton, ProvinceCityFields } from "../components/ui";
+import { ProvinceCityFields, UseCurrentLocationButton } from "../components/ui";
 import { PhotoGrid } from "../components/post/PhotoGrid";
 import { supabase } from "../lib/supabase";
 import { uploadImageUriToR2 } from "../lib/uploadToR2";
@@ -53,6 +53,8 @@ type Draft = {
   province: string;
   city: string;
   suburb: string;
+  latitude: number | null;
+  longitude: number | null;
   categories: string[];
   // Local file:// URIs while picking; already-uploaded https R2 URLs when
   // resuming an existing business. activate() uploads any local ones.
@@ -71,6 +73,8 @@ function blankDraft(phone?: string, email?: string): Draft {
     province: "",
     city: "",
     suburb: "",
+    latitude: null,
+    longitude: null,
     categories: [],
     photos: [],
     planId: "free",
@@ -88,6 +92,8 @@ function fromBusiness(b: Business): Draft {
     province: b.province ?? "",
     city: b.city ?? "",
     suburb: b.suburb ?? "",
+    latitude: b.latitude ?? null,
+    longitude: b.longitude ?? null,
     categories: (b.category ?? "").split("|").filter(Boolean),
     photos: Array.isArray(b.photos) ? b.photos : [],
     planId: "free",
@@ -253,6 +259,8 @@ export default function BusinessOnboardingScreen() {
       province: draft.province || null,
       city: draft.city || null,
       suburb: draft.suburb || null,
+      latitude: draft.latitude,
+      longitude: draft.longitude,
       status,
       updated_at: new Date().toISOString(),
     };
@@ -456,6 +464,17 @@ export default function BusinessOnboardingScreen() {
             <Field label="Suburb / Area (optional)" styles={styles}>
               <TextInput style={styles.input} value={draft.suburb} onChangeText={(v) => update("suburb", v)} placeholder="e.g. Avondale" placeholderTextColor={tones.textMuted} />
             </Field>
+            <UseCurrentLocationButton
+              provinces={provinces}
+              citiesByProvince={citiesByProvince}
+              onResolved={(loc) => {
+                update("latitude", loc.latitude);
+                update("longitude", loc.longitude);
+                if (loc.province) update("province", loc.province);
+                if (loc.city) update("city", loc.city);
+                if (loc.suburb) update("suburb", loc.suburb);
+              }}
+            />
             <Pressable style={styles.primaryButton} onPress={goNext}>
               <Text style={styles.primaryButtonText}>Continue</Text>
             </Pressable>
@@ -510,9 +529,13 @@ export default function BusinessOnboardingScreen() {
               <ReviewRow label="Plan" value="Free" last styles={styles} />
             </View>
             <View style={styles.rowGap}>
-              <View style={[styles.backNavSlot, isSubmitting && styles.disabledNav]}>
-                <GlassBackButton onPress={goBack} flat />
-              </View>
+              <Pressable
+                style={[styles.secondaryButton, isSubmitting && styles.disabledNav]}
+                onPress={goBack}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.secondaryButtonText}>Back</Text>
+              </Pressable>
               <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={activate} disabled={isSubmitting}>
                 {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryButtonText}>{existingStatus === "active" ? "Save Changes" : "Activate Business"}</Text>}
               </Pressable>
@@ -547,9 +570,9 @@ function ReviewRow({ label, value, last, styles }: { label: string; value: strin
 function StepNav({ onBack, onNext, styles }: { onBack: () => void; onNext: () => void; styles: Styles }) {
   return (
     <View style={styles.rowGap}>
-      <View style={styles.backNavSlot}>
-        <GlassBackButton onPress={onBack} flat />
-      </View>
+      <Pressable style={styles.secondaryButton} onPress={onBack}>
+        <Text style={styles.secondaryButtonText}>Back</Text>
+      </Pressable>
       <Pressable style={[styles.primaryButton, styles.flexButton]} onPress={onNext}>
         <Text style={styles.primaryButtonText}>Continue</Text>
       </Pressable>
@@ -611,7 +634,6 @@ function buildStyles(color: ColorPalette) {
     primaryButton: { backgroundColor: color.brand, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 4 },
     flexButton: { flex: 2, marginTop: 0 },
     primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
-    backNavSlot: { flex: 1, justifyContent: "center" },
     disabledNav: { opacity: 0.45, pointerEvents: "none" },
     secondaryButton: { flex: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", backgroundColor: color.surfaceAlt },
     secondaryButtonText: { fontSize: 14, fontWeight: "700", color: color.text },

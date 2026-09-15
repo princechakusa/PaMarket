@@ -138,6 +138,9 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
             <div><dt>Price</dt><dd>{fmtMoney(detail.price, detail.currency)}</dd></div>
             <div><dt>Condition</dt><dd>{detail.condition ?? '—'}</dd></div>
             <div><dt>Location</dt><dd>{detail.city ?? '—'}{detail.suburb ? `, ${detail.suburb}` : ''}{detail.province ? `, ${detail.province}` : ''}</dd></div>
+            {detail.latitude != null && detail.longitude != null && (
+              <div><dt>Map</dt><dd><a href={`https://www.openstreetmap.org/?mlat=${detail.latitude}&mlon=${detail.longitude}#map=16/${detail.latitude}/${detail.longitude}`} target="_blank" rel="noreferrer noopener">View on OpenStreetMap ↗</a></dd></div>
+            )}
             <div><dt>Views</dt><dd>{detail.views ?? 0}</dd></div>
             <div><dt>Created</dt><dd>{fmtDate(detail.created_at)}</dd></div>
             <div><dt>Updated</dt><dd>{fmtDate(detail.updated_at)}</dd></div>

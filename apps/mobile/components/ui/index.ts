@@ -16,6 +16,7 @@ export { FeatureIcon } from "./FeatureIcon";
 export { CollapsibleCard } from "./CollapsibleCard";
 export { FieldRow, FieldCol, FieldLabel, CountedTextArea } from "./FormField";
 export { SelectField, ProvinceCityFields } from "./LocationField";
+export { UseCurrentLocationButton } from "./UseCurrentLocationButton";
 export {
   BriefcaseIcon,
   DocumentIcon,
@@ -29,4 +30,8 @@ export {
   PinIcon,
   CalendarIcon,
   DollarIcon,
+  MailIcon,
+  LockIcon,
+  PersonIcon,
+  CallIcon,
 } from "./SectionIcons";

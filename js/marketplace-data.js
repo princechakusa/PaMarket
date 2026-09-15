@@ -524,6 +524,8 @@
       city: opts.city || '',
       suburb: opts.suburb || '',
       photos: Array.isArray(opts.photos) ? opts.photos : [],
+      latitude: (opts.latitude != null && opts.latitude !== '') ? Number(opts.latitude) : null,
+      longitude: (opts.longitude != null && opts.longitude !== '') ? Number(opts.longitude) : null,
       status: 'active',
       views: 0,
       created_at: new Date().toISOString(),
@@ -713,7 +715,7 @@
   function updateListing(listingId, patch) {
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.reject(new Error('not-authenticated'));
-    var allowed = ['title','description','category','subcategory','price','currency','condition','province','city','suburb','phone','whatsapp','photos','attributes','custom_questions','status'];
+    var allowed = ['title','description','category','subcategory','price','currency','condition','province','city','suburb','latitude','longitude','phone','whatsapp','photos','attributes','custom_questions','status'];
     var body = {};
     allowed.forEach(function (key) { if (Object.prototype.hasOwnProperty.call(patch || {}, key)) body[key] = patch[key]; });
     if (!Object.keys(body).length) return Promise.reject(new Error('no-valid-fields'));

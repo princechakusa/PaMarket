@@ -17,7 +17,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { toast } from "../../components/ui/Toast";
-import { ProvinceCityFields } from "../../components/ui";
+import { ProvinceCityFields, UseCurrentLocationButton } from "../../components/ui";
 import { useTaxonomy, withSelectedValue } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
@@ -47,6 +47,8 @@ export default function BusinessEditScreen() {
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [suburb, setSuburb] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [logo, setLogo] = useState<string | null>(null);
   const [cover, setCover] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function BusinessEditScreen() {
     const { data } = await supabase
       .from("businesses")
       .select(
-        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status"
+        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,latitude,longitude,status"
       )
       .eq("id", id)
       .maybeSingle();
@@ -82,6 +84,8 @@ export default function BusinessEditScreen() {
     setProvince(b.province ?? "");
     setCity(b.city ?? "");
     setSuburb(b.suburb ?? "");
+    setLatitude(b.latitude ?? null);
+    setLongitude(b.longitude ?? null);
     setLogo(b.logo ?? null);
     setCover(b.cover ?? null);
   }, [id]);
@@ -144,6 +148,8 @@ export default function BusinessEditScreen() {
         province: province || null,
         city: city || null,
         suburb: suburb.trim() || null,
+        latitude,
+        longitude,
         logo,
         cover,
         updated_at: new Date().toISOString(),
@@ -262,6 +268,17 @@ export default function BusinessEditScreen() {
         <Field label="Suburb / Area" styles={styles}>
           <TextInput style={styles.input} value={suburb} onChangeText={setSuburb} />
         </Field>
+        <UseCurrentLocationButton
+          provinces={provinces}
+          citiesByProvince={citiesByProvince}
+          onResolved={(loc) => {
+            setLatitude(loc.latitude);
+            setLongitude(loc.longitude);
+            if (loc.province) setProvince(loc.province);
+            if (loc.city) setCity(loc.city);
+            if (loc.suburb) setSuburb(loc.suburb);
+          }}
+        />
 
         <Pressable style={styles.primaryButton} onPress={save} disabled={isSaving}>
           {isSaving ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryButtonText}>Save Profile</Text>}

@@ -90,6 +90,7 @@ export function BusinessesPage() {
             <div><dt>Type</dt><dd>{detail.biz_type ?? '—'}</dd></div>
             <div><dt>Phone</dt><dd>{detail.phone ?? '—'}</dd></div>
             <div><dt>Email</dt><dd>{detail.email ?? '—'}</dd></div>
+            <div><dt>Location</dt><dd>{detail.city ?? '—'}{detail.suburb ? `, ${detail.suburb}` : ''}{detail.province ? `, ${detail.province}` : ''}</dd></div>
             <div><dt>Plan</dt><dd>{detail.plan_id ?? 'free'}</dd></div>
             <div><dt>Verification level</dt><dd>{detail.verification_level ?? 0}{detail.verification_pending ? ' (pending review)' : ''}</dd></div>
             <div><dt>Created</dt><dd>{fmtDate(detail.created_at)}</dd></div>

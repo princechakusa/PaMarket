@@ -13,6 +13,8 @@ export type Listing = {
   province?: string | null;
   city?: string | null;
   suburb?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   photos?: string[] | null;
   status: string;
   boost?: boolean | null;

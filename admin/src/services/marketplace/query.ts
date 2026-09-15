@@ -55,6 +55,7 @@ export async function listListings(filters: ListingFilters, page: number, pageSi
 export type ListingDetail = ListingRow & {
   description: string | null; suburb: string | null; photos: string[] | null; seller_phone: string | null;
   condition: string | null; business_id: string | null; views: number | null; expires_at: string | null;
+  latitude: number | null; longitude: number | null;
 };
 
 export async function getListing(id: string): Promise<QueryResult<ListingDetail | null>> {
@@ -62,7 +63,7 @@ export async function getListing(id: string): Promise<QueryResult<ListingDetail 
   if (!client) return unavailable();
   const { data, error } = await client
     .from('listings')
-    .select('id, title, description, category, status, province, city, suburb, price, currency, photos, seller_id, seller_name, seller_phone, condition, business_id, views, created_at, updated_at, expires_at')
+    .select('id, title, description, category, status, province, city, suburb, price, currency, photos, seller_id, seller_name, seller_phone, condition, business_id, views, created_at, updated_at, expires_at, latitude, longitude')
     .eq('id', id)
     .maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
