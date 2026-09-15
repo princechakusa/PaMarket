@@ -29,6 +29,7 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
     { label: 'Contact Requests', path: '/trust/contacts', permission: 'support.manage', icon: 'contact_mail' },
   ] },
   { label: 'Security & Platform', items: [
+    { label: 'Security Center', path: '/security/center', permission: 'security.view', icon: 'security' },
     { label: 'Security & Honeypot', path: '/security/events', permission: 'audit.view', icon: 'shield_with_heart' },
     { label: 'Roles & Permissions', path: '/security/permissions', permission: 'security.view', icon: 'admin_panel_settings' },
     { label: 'Errors & Health', path: '/observability/errors', permission: 'errors.view', icon: 'vital_signs' },
@@ -36,6 +37,13 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
     { label: 'General Settings', path: '/settings/general', permission: 'settings.view', icon: 'tune' },
     { label: 'Maintenance', path: '/settings/maintenance', permission: 'settings.manage', icon: 'construction' },
     { label: 'Notifications', path: '/settings/notifications', permission: 'settings.view', icon: 'notifications' },
+  ] },
+  { label: 'Shared & Advanced', items: [
+    { label: 'Analytics', path: '/observability/analytics', permission: 'analytics.view', icon: 'query_stats' },
+    { label: 'Audit Center', path: '/observability/audit', permission: 'audit.view', icon: 'history' },
+    { label: 'Content', path: '/content/legal', permission: 'content.view', icon: 'article' },
+    { label: 'Taxonomy', path: '/taxonomy', permission: 'taxonomy.view', icon: 'category' },
+    { label: 'AMOS', path: '/amos', permission: 'amos.view', icon: 'smart_toy' },
   ] },
 ];
 
@@ -89,6 +97,7 @@ export const navigationGroups: NavigationGroup[] = [
   ] },
   { label: 'Security', items: [
     { label: 'Connection check', path: '/security', permission: 'security.view' },
+    { label: 'Security center', path: '/security/center', permission: 'security.view' },
     { label: 'Permission preview', path: '/security/permissions', permission: 'security.view' },
     { label: 'Security settings', path: '/settings/security', permission: 'security.view' },
   ] },

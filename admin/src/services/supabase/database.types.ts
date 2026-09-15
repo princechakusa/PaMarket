@@ -213,8 +213,55 @@ export type Database = {
       business_payments: { Row: { id: string; business_id: string | null; amount: number | null; status: string | null; type: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       // C2E-14: admin-read-only business_staff (is_admin()).
       business_staff: { Row: { id: string; business_id: string | null; user_id: string | null; role: string | null; status: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      // Batch 4: Shared + Advanced -- Audit, Content, Taxonomy, AMOS. All
+      // already admin-gated RLS (has_admin_privilege('admin') / admin write
+      // + public read on published/active rows), verified live before use.
+      role_audit_log: {
+        Row: { id: number; actor_id: string | null; target_id: string | null; old_role: string | null; new_role: string | null; changed_at: string | null };
+        Insert: { id?: number }; Update: Record<string, never>; Relationships: [];
+      };
+      categories: {
+        Row: { id: string; legacy_key: string | null; slug: string | null; name: string | null; description: string | null; icon: string | null; color: string | null; sort_order: number | null; is_active: boolean | null; country_code: string | null; updated_by: string | null; updated_at: string | null };
+        Insert: { id?: string };
+        Update: { is_active?: boolean | null; name?: string | null; description?: string | null; icon?: string | null; color?: string | null; sort_order?: number | null; updated_by?: string | null; updated_at?: string | null };
+        Relationships: [];
+      };
+      content_pages: {
+        Row: { id: string; slug: string | null; content_type: string | null; locale: string | null; title: string | null; short_description: string | null; body: Json; status: string | null; version: number | null; effective_date: string | null; parent_id: string | null; metadata: Json; updated_by: string | null };
+        Insert: { id?: string };
+        Update: { title?: string | null; short_description?: string | null; body?: Json; status?: string | null; version?: number | null; effective_date?: string | null; updated_by?: string | null };
+        Relationships: [];
+      };
+      content_page_versions: {
+        Row: { id: string; content_page_id: string | null; version: number | null; title: string | null; short_description: string | null; body: Json; status: string | null; effective_date: string | null; metadata: Json; updated_by: string | null };
+        Insert: { id?: string; content_page_id: string; version: number; title?: string | null; short_description?: string | null; body: Json; status?: string | null; effective_date?: string | null; updated_by?: string | null };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      blog_videos: {
+        Row: { id: string; title: string | null; description: string | null; provider: string | null; embed_id: string | null; video_url: string | null; is_published: boolean | null; sort_order: number | null; created_by: string | null };
+        Insert: { id?: string; title: string; description?: string | null; provider?: string | null; embed_id?: string | null; video_url: string; is_published?: boolean | null; sort_order?: number | null; created_by?: string | null };
+        Update: { title?: string | null; description?: string | null; provider?: string | null; embed_id?: string | null; is_published?: boolean | null; sort_order?: number | null };
+        Relationships: [];
+      };
+      amos_content_drafts: {
+        Row: { id: string; content_item_id: string | null; channel: string | null; draft_type: string | null; body: string | null; status: string | null; reviewed_by: string | null; reviewed_at: string | null; created_at: string | null; relevance_score: number | null; brand_alignment_score: number | null; engagement_prediction_score: number | null; seo_value_score: number | null };
+        Insert: { id?: string };
+        Update: { status?: string | null; reviewed_by?: string | null; reviewed_at?: string | null };
+        Relationships: [];
+      };
+      amos_schedule: { Row: { id: string; draft_id: string | null; scheduled_for: string | null; status: string | null; attempts: number | null; last_error: string | null; platform: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      amos_market_intelligence: { Row: { id: string; country_code: string | null; signal_type: string | null; topic: string | null; score: number | null; rationale: string | null; collected_at: string | null; expires_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      amos_seo_recommendations: { Row: { id: string; country_code: string | null; page_type: string | null; page_ref: string | null; recommendation_type: string | null; current_value: string | null; suggested_value: string | null; status: string | null; impact_estimate: string | null; created_at: string | null }; Insert: { id?: string }; Update: { status?: string | null }; Relationships: [] };
+      amos_integrations: { Row: { id: string; provider: string | null; status: string | null; last_success_at: string | null; last_error: string | null; consecutive_failures: number | null; auto_disabled: boolean | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      amos_settings: {
+        Row: { country_code: string; approval_required: boolean | null; daily_batch_enabled: boolean | null; ai_provider: string | null; video_provider: string | null; budget_monthly_cents: number | null; brand_voice: string | null; ai_spend_cents_this_month: number | null; ai_budget_cents_limit: number | null; updated_by: string | null; updated_at: string | null };
+        Insert: { country_code: string };
+        Update: { approval_required?: boolean | null; daily_batch_enabled?: boolean | null; budget_monthly_cents?: number | null; ai_budget_cents_limit?: number | null; updated_by?: string | null; updated_at?: string | null };
+        Relationships: [];
+      };
       admin_audit_logs: {
-        Row: { id: string; action: string; entity: string; entity_id: string | null; actor_role: string | null; reason: string | null; created_at: string };
+        Row: { id: string; action: string; entity: string; entity_id: string | null; actor_role: string | null; actor_email: string | null; reason: string | null; created_at: string };
         Insert: { id?: string; action: string; entity: string; entity_id?: string | null; actor_role?: string | null; reason?: string | null; created_at?: string };
         Update: { action?: string; entity?: string; entity_id?: string | null; actor_role?: string | null; reason?: string | null; created_at?: string };
         Relationships: [];

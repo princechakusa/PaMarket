@@ -21,6 +21,17 @@ export async function getDailyGrowth(days = 14): Promise<QueryResult<GrowthPoint
   return { data: data ?? [], error: null };
 }
 
+// Batch 4: Shared Analytics reuses this RPC directly -- no separate
+// analytics engine/service was created.
+export type CohortRow = { cohort: string; signups: number; verified: number };
+export async function getCohorts(weeks = 8): Promise<QueryResult<CohortRow[]>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.rpc('admin_cohorts', { weeks });
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data ?? [], error: null };
+}
+
 export type CategoryRow = { category: string; n: number };
 export async function getCategoryBreakdown(): Promise<QueryResult<CategoryRow[]>> {
   const client = getSupabaseClient();
