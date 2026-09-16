@@ -75,7 +75,7 @@ export function ReportsDisputesPage() {
         </>}
       </select>
       {tab === 'reports' && <select aria-label="Target type" value={targetType} onChange={(e) => { setTargetType(e.target.value); setPage(1); }}><option value="">TARGET: ALL</option>{REPORT_TARGET_TYPES.map((t) => <option key={t} value={t}>{t.toUpperCase()}</option>)}</select>}
-      <button onClick={() => { setStatus(''); setTargetType(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+      <button onClick={() => { setStatus(''); setTargetType(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
     <div className="directory-workspace">

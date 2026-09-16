@@ -42,7 +42,7 @@ export type Database = {
           verification_pending: boolean | null; created_at: string | null; latitude: number | null; longitude: number | null;
         };
         Insert: { id?: string; status?: string | null };
-        Update: { status?: string | null };
+        Update: { status?: string | null; verification_level?: number | null };
         Relationships: [];
       };
       // Batch 3: Platform + Operations tables. All already admin/support-

@@ -70,7 +70,7 @@ export function ShopOrdersPage() {
 
     <section className="directory-filters" aria-label="Order filters"><div>
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>{SHOP_ORDER_STATUSES.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}</select>
-      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+      <button onClick={() => { setStatus(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
     <div className="directory-workspace">

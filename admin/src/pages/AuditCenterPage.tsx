@@ -59,7 +59,7 @@ export function AuditCenterPage() {
 
     {tab === 'admin' && <section className="directory-filters" aria-label="Search"><div>
       <label className="directory-search"><Icon name="search" /><input aria-label="Search audit log" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search action, entity, entity ID" /></label>
-      <button onClick={() => { setSearch(''); setPage(1); }} aria-label="Reset"><Icon name="restart_alt" /></button>
+      <button onClick={() => { setSearch(''); setPage(1); void load(); }} aria-label="Reset"><Icon name="restart_alt" /></button>
     </div></section>}
 
     <section className="directory-ledger">

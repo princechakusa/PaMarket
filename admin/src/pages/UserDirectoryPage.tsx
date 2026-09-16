@@ -118,7 +118,7 @@ export function UserDirectoryPage() {
     URL.revokeObjectURL(url);
   }, [rows, page]);
 
-  function resetFilters() { setSearch(''); setRole(''); setStatus(''); setProvince(''); setPage(1); }
+  function resetFilters() { setSearch(''); setRole(''); setStatus(''); setProvince(''); setPage(1); void load(); }
 
   const pageCount = Math.max(1, Math.ceil(total / USER_PAGE_SIZE));
   const selectedUser = useMemo(() => rows.find((r) => r.id === selectedId) ?? detail?.user ?? null, [rows, selectedId, detail]);

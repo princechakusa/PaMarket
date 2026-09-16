@@ -61,6 +61,11 @@ const statuses = ['pending', 'approved', 'rejected'];
 
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
 
+// Matches supabase/schema/businesses.sql's business_verifications comment:
+// "1 = phone verified, 2 = owner ID verified, 3 = business document verified".
+const LEVEL_LABEL: Record<number, string> = { 1: 'Phone', 2: 'Owner ID', 3: 'Business document' };
+function levelLabel(level: number | null): string { return level == null ? '—' : (LEVEL_LABEL[level] ?? `Level ${level}`); }
+
 export function BusinessVerificationsPage() {
   const auth = useAuth();
   const [tab, setTab] = useState<'individual' | 'business'>('individual');
@@ -148,7 +153,7 @@ export function BusinessVerificationsPage() {
 
     <section className="directory-filters" aria-label="Verification filters"><div>
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>{statuses.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}</select>
-      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+      <button onClick={() => { setStatus(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
     <div className="directory-workspace">
@@ -160,11 +165,16 @@ export function BusinessVerificationsPage() {
           {phase === 'error' && <div className="directory-empty" role="alert">Could not load verifications: {error}</div>}
           {phase !== 'error' && tab === 'individual' && <table aria-label="Individual verifications"><thead><tr><th>User</th><th>Status</th><th>Submitted</th><th>Reviewed</th></tr></thead>
             <tbody>{individualRows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => { setSelectedId(row.id); setActionMessage(null); setNote(''); }} style={{ cursor: 'pointer' }}>
-              <td><code>{row.user_id?.slice(0, 8) ?? '—'}…</code></td><td>{row.status ?? '—'}</td><td>{fmtDate(row.submitted_at)}</td><td>{fmtDate(row.reviewed_at)}</td>
+              <td><code>{row.user_id?.slice(0, 8) ?? '—'}…</code></td><td><span className={`status-pill ${row.status ?? 'neutral'}`}>{row.status ?? '—'}</span></td><td>{fmtDate(row.submitted_at)}</td><td>{fmtDate(row.reviewed_at)}</td>
             </tr>)}</tbody></table>}
-          {phase !== 'error' && tab === 'business' && <table aria-label="Business verifications"><thead><tr><th>Business</th><th>Level</th><th>Status</th><th>Submitted</th></tr></thead>
+          {phase !== 'error' && tab === 'business' && <table aria-label="Business verifications"><thead><tr><th>Business</th><th>Category</th><th>Level</th><th>Status</th><th>Business status</th><th>Submitted</th></tr></thead>
             <tbody>{businessRows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => { setSelectedId(row.id); setActionMessage(null); setNote(''); }} style={{ cursor: 'pointer' }}>
-              <td><code>{row.business_id?.slice(0, 8) ?? '—'}…</code></td><td>{row.level_requested ?? '—'}</td><td>{row.status ?? '—'}</td><td>{fmtDate(row.submitted_at)}</td>
+              <td>{row.businesses?.name ?? <code>{row.business_id?.slice(0, 8) ?? '—'}…</code>}</td>
+              <td>{row.businesses?.category ?? '—'}{row.businesses?.biz_type ? ` · ${row.businesses.biz_type}` : ''}</td>
+              <td>{levelLabel(row.level_requested)}</td>
+              <td><span className={`status-pill ${row.status ?? 'neutral'}`}>{row.status ?? '—'}</span></td>
+              <td><span className={`status-pill ${row.businesses?.status === 'active' ? 'approved' : 'pending'}`}>{row.businesses?.status ?? 'unknown'}</span></td>
+              <td>{fmtDate(row.submitted_at)}</td>
             </tr>)}</tbody></table>}
           {phase === 'ready' && (tab === 'individual' ? individualRows.length === 0 : businessRows.length === 0) && <div className="directory-empty" role="status">No records match these filters.</div>}
         </div>
@@ -173,7 +183,7 @@ export function BusinessVerificationsPage() {
       <aside className="directory-inspector" aria-label="Verification detail">
         {!selectedId && <p>Select a record to review.</p>}
         {selectedId && tab === 'individual' && selectedIndividual && <>
-          <header><span className="material-symbols-outlined">badge</span><div><small>INDIVIDUAL VERIFICATION</small><strong>{selectedIndividual.user_id?.slice(0, 8)}…</strong></div><b>{selectedIndividual.status?.toUpperCase() ?? '—'}</b></header>
+          <header><span className="material-symbols-outlined">badge</span><div><small>INDIVIDUAL VERIFICATION</small><strong>{selectedIndividual.user_id?.slice(0, 8)}…</strong></div><span className={`status-pill ${selectedIndividual.status ?? 'neutral'}`}>{selectedIndividual.status?.toUpperCase() ?? '—'}</span></header>
           <section><h3>Details</h3><dl>
             <div><dt>Status</dt><dd>{selectedIndividual.status ?? '—'}</dd></div>
             <div><dt>Submitted</dt><dd>{fmtDate(selectedIndividual.submitted_at)}</dd></div>
@@ -188,13 +198,15 @@ export function BusinessVerificationsPage() {
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
             <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
-            {actionMessage && <p role="status">{actionMessage}</p>}
+            {actionMessage && <div className={`preview-notice ${actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? '' : 'success'}`} role="status"><span className="material-symbols-outlined">{actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? 'error' : 'check_circle'}</span><strong>{actionMessage}</strong></div>}
           </section>
         </>}
         {selectedId && tab === 'business' && selectedBusiness && <>
-          <header><span className="material-symbols-outlined">storefront</span><div><small>BUSINESS VERIFICATION</small><strong>{selectedBusiness.business_id?.slice(0, 8)}…</strong></div><b>{selectedBusiness.status?.toUpperCase() ?? '—'}</b></header>
+          <header><span className="material-symbols-outlined">storefront</span><div><small>BUSINESS VERIFICATION</small><strong>{selectedBusiness.businesses?.name ?? `${selectedBusiness.business_id?.slice(0, 8) ?? '—'}…`}</strong></div><span className={`status-pill ${selectedBusiness.status ?? 'neutral'}`}>{selectedBusiness.status?.toUpperCase() ?? '—'}</span></header>
           <section><h3>Details</h3><dl>
-            <div><dt>Level requested</dt><dd>{selectedBusiness.level_requested ?? '—'}</dd></div>
+            <div><dt>Business category</dt><dd>{selectedBusiness.businesses?.category ?? '—'}{selectedBusiness.businesses?.biz_type ? ` (${selectedBusiness.businesses.biz_type})` : ''}</dd></div>
+            <div><dt>Business status</dt><dd><span className={`status-pill ${selectedBusiness.businesses?.status === 'active' ? 'approved' : 'pending'}`}>{selectedBusiness.businesses?.status ?? 'unknown'}</span>{selectedBusiness.businesses?.status !== 'active' && <small style={{ display: 'block', marginTop: 4 }}>Approving this verification raises the business's verification badge only — it does not publish the business. Publishing happens when the owner completes their own activation step in the app.</small>}</dd></div>
+            <div><dt>Level requested</dt><dd>{levelLabel(selectedBusiness.level_requested)}</dd></div>
             <div><dt>Status</dt><dd>{selectedBusiness.status ?? '—'}</dd></div>
             <div><dt>Submitted</dt><dd>{fmtDate(selectedBusiness.submitted_at)}</dd></div>
             <div><dt>Reviewed</dt><dd>{fmtDate(selectedBusiness.reviewed_at)}</dd></div>
@@ -207,7 +219,7 @@ export function BusinessVerificationsPage() {
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
             <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
-            {actionMessage && <p role="status">{actionMessage}</p>}
+            {actionMessage && <div className={`preview-notice ${actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? '' : 'success'}`} role="status"><span className="material-symbols-outlined">{actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? 'error' : 'check_circle'}</span><strong>{actionMessage}</strong></div>}
           </section>
         </>}
       </aside>

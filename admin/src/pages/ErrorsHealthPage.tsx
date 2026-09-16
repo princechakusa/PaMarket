@@ -74,7 +74,7 @@ export function ErrorsHealthPage() {
 
     <section className="directory-filters" aria-label="Filters"><div>
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option><option value="open">OPEN</option><option value="investigating">INVESTIGATING</option><option value="resolved">RESOLVED</option><option value="ignored">IGNORED</option></select>
-      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><Icon name="restart_alt" /></button>
+      <button onClick={() => { setStatus(''); setPage(1); void load(); }} aria-label="Reset filters"><Icon name="restart_alt" /></button>
       <button onClick={() => void loadSentry()} disabled={sentryPhase === 'loading' || auth.mode !== 'live'}><Icon name="bug_report" />Load Sentry Issues (14d)</button>
     </div></section>
 

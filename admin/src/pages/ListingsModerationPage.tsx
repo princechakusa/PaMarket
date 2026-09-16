@@ -83,7 +83,7 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
     void load();
   }
 
-  function resetFilters() { setCategory(fixedCategory ?? ''); setStatus(''); setProvince(''); setSearch(''); setPage(1); }
+  function resetFilters() { setCategory(fixedCategory ?? ''); setStatus(''); setProvince(''); setSearch(''); setPage(1); void load(); }
   const pageCount = Math.max(1, Math.ceil(total / LISTINGS_PAGE_SIZE));
 
   return <div className="directory-page">

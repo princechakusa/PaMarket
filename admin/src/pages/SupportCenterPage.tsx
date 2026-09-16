@@ -107,7 +107,7 @@ export function SupportCenterPage() {
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>
         {tab === 'tickets' ? <><option value="open">OPEN</option><option value="pending">PENDING</option><option value="resolved">RESOLVED</option><option value="closed">CLOSED</option></> : <><option value="pending">PENDING</option><option value="approved">APPROVED</option><option value="declined">DECLINED</option></>}
       </select>
-      <button onClick={() => { setStatus(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+      <button onClick={() => { setStatus(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
     <div className="directory-workspace">

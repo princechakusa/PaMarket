@@ -22,5 +22,6 @@ code { padding: 2px 5px; border-radius: 5px; background: #eef1f6; }
 .status-pill.neutral { color: #536075; background: #edf0f5; }
 .status-pill.pending { color: #885b05; background: var(--gold-100); }
 .status-pill.review { color: var(--blue); background: var(--blue-bg); }
-.status-pill.escalated { color: var(--red); background: var(--red-bg); }
+.status-pill.escalated, .status-pill.rejected { color: var(--red); background: var(--red-bg); }
+.status-pill.approved { color: var(--green); background: var(--green-bg); }
 .honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }

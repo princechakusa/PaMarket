@@ -61,7 +61,7 @@ export function BusinessesPage() {
     <section className="directory-filters" aria-label="Business filters"><div>
       <label className="directory-search"><span className="material-symbols-outlined">search</span><input aria-label="Search businesses" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search name or business ID" /></label>
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option><option value="draft">DRAFT</option><option value="pending_activation">PENDING ACTIVATION</option><option value="active">ACTIVE</option><option value="suspended">SUSPENDED</option></select>
-      <button onClick={() => { setStatus(''); setSearch(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+      <button onClick={() => { setStatus(''); setSearch(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
     <div className="directory-workspace">

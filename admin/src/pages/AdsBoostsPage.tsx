@@ -52,7 +52,7 @@ export function AdsBoostsPage() {
 
     <section className="directory-filters" aria-label="Ad filters"><div>
       <select aria-label="Active" value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value as typeof activeFilter); setPage(1); }}><option value="">ACTIVE: ALL</option><option value="true">ACTIVE</option><option value="false">INACTIVE</option></select>
-      <button onClick={() => { setActiveFilter(''); setPage(1); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
+      <button onClick={() => { setActiveFilter(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
     <div className="directory-workspace">

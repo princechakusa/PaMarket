@@ -65,6 +65,22 @@ export async function listUserVerificationDocuments(userId: string, accessToken:
   return { data: result.data.objects ?? [], error: null };
 }
 
+// Sidebar badge only needs the two pending counts, not the full queue
+// snapshot dashboard/query.ts's getQueueCounts() computes (13 queries) --
+// this runs on every page mount via the shell, so it stays to the two
+// counts actually needed here.
+export async function getPendingVerificationsCount(): Promise<QueryResult<number>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const [individual, business] = await Promise.all([
+    client.from('verifications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    client.from('business_verifications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+  ]);
+  const failed = individual.error ?? business.error;
+  if (failed) return { data: null, error: normalizeError(failed) };
+  return { data: (individual.count ?? 0) + (business.count ?? 0), error: null };
+}
+
 export async function listVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<VerificationRow>>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
@@ -109,6 +125,14 @@ export type BusinessVerificationRow = {
   id: string; business_id: string | null; status: string | null; admin_note: string | null;
   submitted_at: string | null; reviewed_at: string | null; level_requested: number | null;
   id_doc_path: string | null; reg_doc_path: string | null;
+  // The admin previously had no way to see what the request was actually
+  // for -- only a truncated business_id. Joining the business's own name/
+  // category/biz_type/status directly answers "is this a car rental, a
+  // shop, a recruiter agency" and "is the business itself even live yet"
+  // without needing a second lookup or touching the separate
+  // rental_companies system (car rental verification is its own flow,
+  // reviewed under Vehicle Rentals -- not part of this table at all).
+  businesses: { name: string | null; category: string | null; biz_type: string | null; status: string | null } | null;
 };
 
 export async function listBusinessVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<BusinessVerificationRow>>> {
@@ -122,7 +146,26 @@ export async function listBusinessVerifications(status: string | undefined, page
   const from = Math.max(0, page - 1) * pageSize;
   const { data, error, count } = await query.range(from, from + pageSize - 1);
   if (error) return { data: null, error: normalizeError(error) };
-  return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
+  const rows = data ?? [];
+
+  // No table in this codebase's hand-maintained database.types.ts declares a
+  // real Relationships entry, so an embedded `businesses(...)` select can't
+  // be typed correctly here -- a second plain query, merged client-side,
+  // matches every other query in this file instead of being a one-off.
+  const businessIds = [...new Set(rows.map((r) => r.business_id).filter((id): id is string => Boolean(id)))];
+  const businessById = new Map<string, { name: string | null; category: string | null; biz_type: string | null; status: string | null }>();
+  if (businessIds.length) {
+    const { data: businesses } = await client.from('businesses').select('id,name,category,biz_type,status').in('id', businessIds);
+    (businesses ?? []).forEach((b) => businessById.set(b.id, { name: b.name, category: b.category, biz_type: b.biz_type, status: b.status }));
+  }
+
+  return {
+    data: {
+      rows: rows.map((r) => ({ ...r, businesses: r.business_id ? businessById.get(r.business_id) ?? null : null })),
+      total: count ?? 0, page: Math.max(1, page), pageSize,
+    },
+    error: null,
+  };
 }
 
 function businessDecisionCopy(status: string, note?: string): { title: string; body: string } | null {
@@ -137,14 +180,27 @@ export async function updateBusinessVerificationStatus(id: string, status: strin
   if (!client) return unavailable();
   const update: { status: string; reviewed_at: string; admin_note?: string } = { status, reviewed_at: new Date().toISOString() };
   if (note) update.admin_note = note;
-  const { data, error } = await client.from('business_verifications').update(update).eq('id', id).select('id, business_id').maybeSingle();
+  const { data, error } = await client.from('business_verifications').update(update).eq('id', id).select('id, business_id, level_requested').maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this verification, or it no longer exists.', retryable: false } };
 
+  // Approving a verification previously only updated this row -- the
+  // actual businesses.verification_level (what every public/owner surface
+  // in the app actually reads to show a "Verified" badge) never moved, so
+  // an approved business looked exactly as unverified as before. This is
+  // the verification badge only; businesses.status (draft/pending_activation
+  // /active/suspended) is a separate, owner-driven activation step and is
+  // deliberately left untouched here.
   const copy = businessDecisionCopy(status, note);
-  if (!copy || !data.business_id) return { data: { id: data.id, notified: false }, error: null };
-  const { data: business } = await client.from('businesses').select('owner_user_id').eq('id', data.business_id).maybeSingle();
-  if (!business?.owner_user_id) return { data: { id: data.id, notified: false }, error: null };
+  if (!data.business_id) return { data: { id: data.id, notified: false }, error: null };
+  const { data: business } = await client.from('businesses').select('owner_user_id, verification_level').eq('id', data.business_id).maybeSingle();
+  if (status === 'approved' && business) {
+    const requestedLevel = data.level_requested ?? 1;
+    if ((business.verification_level ?? 0) < requestedLevel) {
+      await client.from('businesses').update({ verification_level: requestedLevel }).eq('id', data.business_id);
+    }
+  }
+  if (!copy || !business?.owner_user_id) return { data: { id: data.id, notified: false }, error: null };
   const notifyResult = await notifyDecision(business.owner_user_id, { kind: 'businessverify', businessId: data.business_id }, copy.title, copy.body);
   return { data: { id: data.id, notified: !notifyResult.error }, error: null };
 }
