@@ -17,14 +17,14 @@ import { supabase } from "../../lib/supabase";
 import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
 import { logClientError } from "../../lib/error-log";
-import { BrandSymbol, BrandWordmark } from "../../components/BrandLogo";
+import { BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
-import { GlassBackButton } from "../../components/ui";
+import { GlassBackButton, MailIcon, LockIcon } from "../../components/ui";
 import { AppleIcon, GoogleIcon, SocialButton, SocialDivider } from "../../components/SocialAuthButtons";
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { useLegalDocUpgrade } from "../../lib/content";
-import { font, space, type ColorPalette } from "../../lib/theme";
+import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
 
@@ -34,7 +34,7 @@ export default function SignInScreen() {
   const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { message } = useLocalSearchParams<{ message?: string }>();
+  const { message, redirectHome } = useLocalSearchParams<{ message?: string; redirectHome?: string }>();
   const { session, isLoading: sessionLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,6 +43,7 @@ export default function SignInScreen() {
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   // Stage 2: silently upgraded to the published content_pages wording in
   // the background — falls back to the bundled TERMS/PRIVACY on any
   // failure, and never blocks or delays sign-in.
@@ -56,9 +57,16 @@ export default function SignInScreen() {
   // doing. router.back() only has somewhere to go back to when sign-in was
   // pushed on top of another screen; a direct/deep-linked visit falls back
   // to Home since there's no prior screen in this stack.
+  //
+  // Exception: the guest Account tab pushes sign-in from its own inline
+  // "Sign In / Sign Up" prompt, so back() just pops right back to that same
+  // guest prompt — reading as "login always dumps me on Account" even
+  // though it's technically returning to where sign-in was opened from.
+  // Those callers pass redirectHome to explicitly ask for Home instead.
   useEffect(() => {
     if (sessionLoading || !session) return;
-    if (router.canGoBack()) router.back();
+    if (redirectHome) router.replace("/(tabs)");
+    else if (router.canGoBack()) router.back();
     else router.replace("/(tabs)");
 
     // Guaranteed escape hatch. This screen renders no form once a session
@@ -71,7 +79,7 @@ export default function SignInScreen() {
     // moved us off this screen and unmounted it.
     const escapeHatch = setTimeout(() => router.replace("/(tabs)"), 700);
     return () => clearTimeout(escapeHatch);
-  }, [sessionLoading, session]);
+  }, [sessionLoading, session, redirectHome]);
 
   // Signed in — the form is gone, but never render nothing: an empty render
   // is an all-white screen, which is exactly what the blank-screen-after-
@@ -158,47 +166,86 @@ export default function SignInScreen() {
     }
   }
 
+  const showBanner = !!message && !bannerDismissed;
+
   return (
     <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <GlassBackButton onPress={handleBack} tone="dark" style={[styles.backButton, { marginTop: insets.top + space.sm }]} flat />
+      <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
+        <GlassBackButton onPress={handleBack} tone="dark" flat />
+        <Text style={styles.headerTitle}>Sign In</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, space.lg) + space.xl }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.logoShell}>
-          <BrandSymbol size={32} monochrome />
+        <View style={styles.brandBlock}>
+          <BrandWordmark size={26} />
+          <View style={styles.tagline}>
+            <Text style={styles.taglineText}>Zimbabwe&apos;s Marketplace</Text>
+            <Text style={styles.taglineFlag}> 🇿🇼</Text>
+          </View>
         </View>
-        <View style={styles.wordmarkRow}>
-          <BrandWordmark size={17} />
+
+        {showBanner ? (
+          <View style={styles.banner}>
+            <Text style={styles.bannerText}>{message}</Text>
+            <Pressable onPress={() => setBannerDismissed(true)} hitSlop={8}>
+              <Text style={styles.bannerDismiss}>✕</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to buy, sell, and manage your account</Text>
         </View>
-        <Text style={styles.title}>{message || "Welcome Back"}</Text>
 
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email address"
-            placeholderTextColor={tones.textMuted}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <PasswordField value={password} onChangeText={setPassword} placeholder="Password" inputStyle={styles.passwordInput} />
+          <Text style={styles.fieldLabel}>Email Address</Text>
+          <View style={styles.inputRow}>
+            <View style={styles.leadingIcon}>
+              <MailIcon c={tones.textMuted} size={18} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. tanaka@gmail.com"
+              placeholderTextColor={tones.textMuted}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
 
-          <Pressable onPress={() => router.push("/(auth)/forgot-password")} style={styles.forgotLink}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </Pressable>
+          <View style={styles.passwordLabelRow}>
+            <Text style={styles.fieldLabel}>Password</Text>
+            <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          </View>
+          <PasswordField
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Enter your password"
+            icon={<LockIcon c={tones.textMuted} size={18} />}
+            inputStyle={styles.passwordInput}
+          />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Pressable style={[styles.button, isSubmitting && styles.disabled]} onPress={handleSignIn} disabled={isSubmitting}>
-            {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.buttonText}>Sign In</Text>}
+            {isSubmitting ? (
+              <ActivityIndicator color={tones.textOnBrand} />
+            ) : (
+              <Text style={styles.buttonText}>Sign In  →</Text>
+            )}
           </Pressable>
 
-          <SocialDivider />
+          <SocialDivider label="or continue with" />
 
           <View style={styles.socialStack}>
             {Platform.OS === "ios" ? (
@@ -218,6 +265,13 @@ export default function SignInScreen() {
             />
           </View>
 
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
+            <Link href="/(auth)/sign-up">
+              <Text style={styles.footerLink}>Sign Up</Text>
+            </Link>
+          </View>
+
           {/* Google/Apple sign-in silently creates a new account for a
               first-time user — unlike the email/password Sign Up screen,
               there's no separate consent step to gate on, so this notice is
@@ -226,7 +280,7 @@ export default function SignInScreen() {
           <Text style={styles.consentText}>
             By continuing, you agree to our{" "}
             <Text style={styles.consentLink} onPress={() => setLegalDoc(termsDoc)}>
-              Terms &amp; Conditions
+              Terms of Service
             </Text>{" "}
             and{" "}
             <Text style={styles.consentLink} onPress={() => setLegalDoc(privacyDoc)}>
@@ -234,13 +288,6 @@ export default function SignInScreen() {
             </Text>
             .
           </Text>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
-            <Link href="/(auth)/sign-up">
-              <Text style={styles.footerLink}>Sign Up</Text>
-            </Link>
-          </View>
         </View>
       </ScrollView>
 
@@ -269,82 +316,142 @@ function buildStyles(color: ColorPalette) {
       justifyContent: "center",
       backgroundColor: color.surface,
     },
-    backButton: {
-      marginLeft: space.lg,
-      marginBottom: 0,
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: space.lg,
+      paddingBottom: space.sm,
+    },
+    headerTitle: {
+      flex: 1,
+      textAlign: "center",
+      ...font.h3,
+      color: color.text,
+      marginRight: 44,
+    },
+    headerSpacer: {
+      width: 0,
     },
     scroll: {
       paddingHorizontal: space.xl,
-      paddingTop: space.xl,
-      alignItems: "center",
+      paddingTop: space.md,
     },
-    logoShell: {
-      width: 60,
-      height: 60,
-      borderRadius: 16,
-      backgroundColor: color.brand,
+    brandBlock: {
       alignItems: "center",
-      justifyContent: "center",
-      marginBottom: space.sm,
+      marginBottom: space.lg,
     },
-    wordmarkRow: {
+    tagline: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: space.xxs,
+    },
+    taglineText: {
+      ...font.caption,
+      color: color.textMuted,
+    },
+    taglineFlag: {
+      fontSize: 12,
+    },
+    banner: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: color.goldTint,
+      borderRadius: radius.lg,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.md,
+      marginBottom: space.lg,
+    },
+    bannerText: {
+      ...font.sub,
+      color: color.goldDark,
+      flex: 1,
+      marginRight: space.sm,
+    },
+    bannerDismiss: {
+      ...font.caption,
+      color: color.goldDark,
+    },
+    titleBlock: {
       marginBottom: space.xl,
     },
     title: {
       ...font.h2,
       color: color.text,
-      marginBottom: space.xl,
+    },
+    subtitle: {
+      ...font.body,
+      color: color.textSub,
+      marginTop: space.xxs,
     },
     form: {
       width: "100%",
     },
-    input: {
-      width: "100%",
-      minHeight: 50,
-      borderWidth: 1.5,
-      borderColor: color.border,
-      borderRadius: 10,
-      paddingHorizontal: space.md,
-      fontSize: 14,
+    fieldLabel: {
+      ...font.caption,
       color: color.text,
-      backgroundColor: color.surface,
-      marginBottom: space.md,
+      fontWeight: "700",
+      marginBottom: space.xs,
     },
-    passwordInput: {
-      minHeight: 50,
-      borderWidth: 1.5,
-      borderColor: color.border,
-      borderRadius: 10,
-      paddingHorizontal: space.md,
-      paddingVertical: 0,
-      paddingRight: 60,
-      fontSize: 14,
-      color: color.text,
-      backgroundColor: color.surface,
-    },
-    forgotLink: {
-      alignSelf: "flex-end",
-      marginTop: space.sm,
-      marginBottom: space.md,
+    passwordLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: space.md,
+      marginBottom: space.xs,
     },
     forgotText: {
       ...font.caption,
       fontWeight: "700",
       color: color.brand,
     },
+    inputRow: {
+      position: "relative",
+      justifyContent: "center",
+    },
+    leadingIcon: {
+      position: "absolute",
+      left: space.md,
+      zIndex: 1,
+    },
+    input: {
+      width: "100%",
+      minHeight: 50,
+      borderRadius: radius.lg,
+      paddingHorizontal: space.md,
+      paddingLeft: 44,
+      fontSize: 15,
+      color: color.text,
+      backgroundColor: color.surfaceAlt,
+      ...shadow.sm,
+    },
+    passwordInput: {
+      minHeight: 50,
+      borderRadius: radius.lg,
+      paddingHorizontal: space.md,
+      paddingVertical: 0,
+      paddingRight: 60,
+      fontSize: 15,
+      color: color.text,
+      backgroundColor: color.surfaceAlt,
+      borderWidth: 0,
+      ...shadow.sm,
+    },
     error: {
       ...font.caption,
       color: color.danger,
-      marginBottom: space.sm,
+      marginTop: space.sm,
     },
     button: {
       width: "100%",
       minHeight: 52,
       backgroundColor: color.brand,
-      borderRadius: 10,
+      borderRadius: radius.pill,
       alignItems: "center",
       justifyContent: "center",
+      marginTop: space.lg,
       marginBottom: space.lg,
+      ...shadow.sm,
     },
     disabled: {
       opacity: 0.6,
@@ -354,79 +461,34 @@ function buildStyles(color: ColorPalette) {
       color: color.textOnBrand,
       fontSize: 15,
     },
-    divider: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.sm,
-      marginBottom: space.lg,
-    },
-    dividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: color.border,
-    },
-    dividerText: {
-      ...font.caption,
-      fontWeight: "700",
-      color: color.textMuted,
-    },
     socialStack: {
       gap: space.sm,
       marginBottom: space.lg,
-    },
-    consentText: {
-      fontSize: 12.5,
-      lineHeight: 18,
-      color: color.textMuted,
-      textAlign: "center",
-      marginBottom: space.lg,
-    },
-    consentLink: {
-      color: color.brand,
-      fontWeight: "600",
-    },
-    socialButton: {
-      minHeight: 48,
-      borderRadius: 10,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: space.sm,
-      paddingHorizontal: space.lg,
-      borderWidth: 1.5,
-    },
-    socialButtonDark: {
-      backgroundColor: "#111827",
-      borderColor: "#111827",
-    },
-    socialButtonLight: {
-      backgroundColor: color.surface,
-      borderColor: color.border,
-    },
-    socialText: {
-      ...font.caption,
-      fontWeight: "700",
-      fontSize: 13.5,
-    },
-    socialTextDark: {
-      color: "#FFFFFF",
-    },
-    socialTextLight: {
-      color: color.text,
     },
     footer: {
       flexDirection: "row",
       justifyContent: "center",
       flexWrap: "wrap",
+      marginBottom: space.lg,
     },
     footerText: {
-      ...font.caption,
+      ...font.body,
       color: color.textSub,
     },
     footerLink: {
-      ...font.caption,
+      ...font.body,
       color: color.brand,
       fontWeight: "900",
+    },
+    consentText: {
+      fontSize: 12,
+      lineHeight: 17,
+      color: color.textMuted,
+      textAlign: "center",
+    },
+    consentLink: {
+      color: color.brand,
+      fontWeight: "600",
     },
   });
 }

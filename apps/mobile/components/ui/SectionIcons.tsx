@@ -112,3 +112,44 @@ export function SendIcon({ c, size = 18 }: P) {
     </Svg>
   );
 }
+
+// Auth-form field glyphs (sign-in / sign-up leading icons).
+export function MailIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke={c} strokeWidth={2} strokeLinejoin="round" />
+      <Path d="M3.5 6.5l8.5 6.5 8.5-6.5" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function LockIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 11V8a6 6 0 1112 0v3" stroke={c} strokeWidth={2} strokeLinecap="round" />
+      <Path d="M5 11h14a1 1 0 011 1v8a1 1 0 01-1 1H5a1 1 0 01-1-1v-8a1 1 0 011-1z" stroke={c} strokeWidth={2} strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function PersonIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={8} r={3.6} stroke={c} strokeWidth={2} />
+      <Path d="M4.5 20a7.5 7.5 0 0115 0" stroke={c} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function CallIcon({ c, size = 18 }: P) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2a1 1 0 011-.25c1.2.4 2.5.6 3.8.6a1 1 0 011 1V20a1 1 0 01-1 1C10.8 21 3 13.2 3 3.8a1 1 0 011-1h3.1a1 1 0 011 1c0 1.3.2 2.6.6 3.8a1 1 0 01-.25 1l-2.2 2.2z"
+        stroke={c}
+        strokeWidth={2}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
