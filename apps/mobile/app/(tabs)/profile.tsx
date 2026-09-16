@@ -12,7 +12,7 @@ import {
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path, Polyline } from "react-native-svg";
+import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
@@ -24,7 +24,6 @@ import { clearPushToken } from "../../lib/push";
 import { clearIAPUserContext } from "../../lib/iap";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { Avatar, Badge, Card, SectionHeader, VerifiedBadge } from "../../components/ui";
-import { BrandWordmark } from "../../components/BrandLogo";
 import type { EdgeInsets } from "react-native-safe-area-context";
 
 function ChevronRight({ color }: { color: ColorPalette }) {
@@ -180,23 +179,58 @@ function GuestAccountScreen({
   insets: EdgeInsets;
   router: ReturnType<typeof useRouter>;
 }) {
+  // redirectHome tells sign-in to land on Home after a successful login
+  // instead of popping back to this same guest Account prompt — see the
+  // comment in (auth)/sign-in.tsx for why that distinction matters here.
   function goToSignIn() {
-    router.push({ pathname: "/(auth)/sign-in", params: { message: "Login to continue" } });
+    router.push({ pathname: "/(auth)/sign-in", params: { message: "Login to continue", redirectHome: "1" } });
+  }
+  function goToSignUp() {
+    router.push("/(auth)/sign-up");
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 58 + insets.bottom + space.xxxl }}>
-      <View style={[styles.guestHeader, { paddingTop: insets.top + space.xl }]}>
-        <BrandWordmark size={22} />
+      <View style={[styles.guestHero, { paddingTop: insets.top + space.xl }]}>
+        <View style={styles.guestHeroBadge}>
+          <Svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={1.6}>
+            <Circle cx={12} cy={8} r={4} />
+            <Path d="M4.5 20.5a7.5 7.5 0 0115 0" />
+          </Svg>
+        </View>
+        <Text style={styles.guestHeroTitle}>Welcome to PaMarket</Text>
+        <Text style={styles.guestHeroSubtitle}>Sign in to buy, sell, and manage your account across Zimbabwe</Text>
+      </View>
+
+      <View style={[styles.sidePad, styles.guestCtaWrap]}>
+        <Card style={styles.guestSignInCard}>
+          <Pressable style={styles.signInButton} onPress={goToSignIn}>
+            <Text style={styles.signInButtonText}>Log In</Text>
+          </Pressable>
+          <View style={styles.guestSignUpRow}>
+            <Text style={styles.guestSignUpText}>Don&apos;t have an account? </Text>
+            <Pressable onPress={goToSignUp}>
+              <Text style={styles.guestSignUpLink}>Sign Up</Text>
+            </Pressable>
+          </View>
+        </Card>
       </View>
 
       <View style={styles.sidePad}>
-        <Card style={styles.guestSignInCard}>
-          <Text style={styles.guestSignInTitle}>Login to continue</Text>
-          <Pressable style={styles.signInButton} onPress={goToSignIn}>
-            <Text style={styles.signInButtonText}>Sign In / Sign Up</Text>
-          </Pressable>
-        </Card>
+        <View style={styles.valuePropRow}>
+          <View style={styles.valuePropCard}>
+            <Text style={styles.valuePropTitle}>Sell Items</Text>
+            <Text style={styles.valuePropSub}>List &amp; manage ads</Text>
+          </View>
+          <View style={styles.valuePropCard}>
+            <Text style={styles.valuePropTitle}>Track Orders</Text>
+            <Text style={styles.valuePropSub}>Buyer &amp; seller ratings</Text>
+          </View>
+          <View style={styles.valuePropCard}>
+            <Text style={styles.valuePropTitle}>Message Sellers</Text>
+            <Text style={styles.valuePropSub}>Direct &amp; secure chat</Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.sidePad}>
@@ -248,6 +282,7 @@ export default function AccountScreen() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [bizProductCount, setBizProductCount] = useState(0);
   const [companyVerified, setCompanyVerified] = useState(false);
+  const [mode, setMode] = useState<"selling" | "buying">("selling");
   const loadedUserIdRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
@@ -437,54 +472,101 @@ export default function AccountScreen() {
         </Pressable>
       </View>
 
-      <View style={styles.sectionSpace}>
-        <SectionHeader title="My Business" />
-      </View>
-      <BizCard businesses={businesses} productCount={bizProductCount} router={router} color={color} styles={styles} />
-      {businesses.length ? (
-        <View style={[styles.sidePad, { marginTop: space.sm }]}>
-          <Card padded={false} style={styles.menuGroup}>
-            <MenuRow label="My Rental Fleet" last onPress={() => router.push("/rental-fleet")}  color={color} styles={styles} />
-          </Card>
+      {/* Selling / Buying — a visual grouping of the existing menu, not a
+          second identity: PaMarket only has one rating today (the seller
+          rating shown in the hero above, from get_seller_rating_summary).
+          There's no buyer-rating data source yet, so this toggle switches
+          which real menu items are shown rather than fabricating a second
+          rating number. */}
+      <View style={styles.sidePad}>
+        <View style={styles.roleToggle}>
+          <Pressable
+            style={[styles.roleToggleBtn, mode === "selling" && styles.roleToggleBtnActive]}
+            onPress={() => setMode("selling")}
+          >
+            <Text style={[styles.roleToggleText, mode === "selling" && styles.roleToggleTextActive]}>Selling</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.roleToggleBtn, mode === "buying" && styles.roleToggleBtnActive]}
+            onPress={() => setMode("buying")}
+          >
+            <Text style={[styles.roleToggleText, mode === "buying" && styles.roleToggleTextActive]}>Buying</Text>
+          </Pressable>
         </View>
-      ) : null}
-
-      <View style={styles.sectionSpace}>
-        <SectionHeader title="Selling" />
-      </View>
-      <View style={styles.sidePad}>
-        <Card padded={false} style={styles.menuGroup}>
-          <MenuRow label="My Listings" badge={activeCount || undefined} onPress={() => router.push("/my-listings")}  color={color} styles={styles} />
-          <MenuRow label="Browse Rentals" onPress={() => router.push("/rentals")}  color={color} styles={styles} />
-          <MenuRow label="Saved & Favourites" badge={savedCount || undefined} onPress={() => router.push("/favourites")}  color={color} styles={styles} />
-          <MenuRow label="Saved Searches" onPress={() => router.push("/saved-searches")}  color={color} styles={styles} />
-          <MenuRow label="Order Requests" last onPress={() => router.push("/my-orders")}  color={color} styles={styles} />
-        </Card>
       </View>
 
-      <View style={styles.sectionSpace}>
-        <SectionHeader title="Jobs" />
-      </View>
-      <View style={styles.sidePad}>
-        <Card padded={false} style={styles.menuGroup}>
-          <MenuRow
-            label="My Applications"
-            badge={applicationsCount || undefined}
-            onPress={() => router.push("/jobs/applications")}
-           color={color} styles={styles} />
-          <MenuRow label="My Job Profile / CV" onPress={() => router.push("/jobs/cv-profile")}  color={color} styles={styles} />
-          {companyVerified ? (
-            <>
-              <MenuRow label="Post a Job" onPress={() => router.push("/jobs/post")}  color={color} styles={styles} />
-              <MenuRow label="Hire Talent" onPress={() => router.push("/jobs/hire-talent")}  color={color} styles={styles} />
-              <MenuRow label="My Contact Requests" onPress={() => router.push("/jobs/contact-requests")}  color={color} styles={styles} />
-              <MenuRow label="Recruiter Plan" last onPress={() => router.push("/jobs/recruiter-subscription")}  color={color} styles={styles} />
-            </>
-          ) : (
-            <MenuRow label="Post a Job (Get Verified)" last onPress={() => router.push("/company-verify")}  color={color} styles={styles} />
-          )}
-        </Card>
-      </View>
+      {mode === "selling" ? (
+        <>
+          <View style={styles.sectionSpace}>
+            <SectionHeader title="My Business" />
+          </View>
+          <BizCard businesses={businesses} productCount={bizProductCount} router={router} color={color} styles={styles} />
+          {businesses.length ? (
+            <View style={[styles.sidePad, { marginTop: space.sm }]}>
+              <Card padded={false} style={styles.menuGroup}>
+                <MenuRow label="My Rental Fleet" last onPress={() => router.push("/rental-fleet")} color={color} styles={styles} />
+              </Card>
+            </View>
+          ) : null}
+
+          <View style={styles.sectionSpace}>
+            <SectionHeader title="Selling" />
+          </View>
+          <View style={styles.sidePad}>
+            <Card padded={false} style={styles.menuGroup}>
+              <MenuRow label="My Listings" badge={activeCount || undefined} onPress={() => router.push("/my-listings")} color={color} styles={styles} />
+              <MenuRow label="Browse Rentals" onPress={() => router.push("/rentals")} color={color} styles={styles} />
+              <MenuRow label="Order Requests" last onPress={() => router.push("/my-orders")} color={color} styles={styles} />
+            </Card>
+          </View>
+
+          <View style={styles.sectionSpace}>
+            <SectionHeader title="Recruiting" />
+          </View>
+          <View style={styles.sidePad}>
+            <Card padded={false} style={styles.menuGroup}>
+              {companyVerified ? (
+                <>
+                  <MenuRow label="Post a Job" onPress={() => router.push("/jobs/post")} color={color} styles={styles} />
+                  <MenuRow label="Hire Talent" onPress={() => router.push("/jobs/hire-talent")} color={color} styles={styles} />
+                  <MenuRow label="My Contact Requests" onPress={() => router.push("/jobs/contact-requests")} color={color} styles={styles} />
+                  <MenuRow label="Recruiter Plan" last onPress={() => router.push("/jobs/recruiter-subscription")} color={color} styles={styles} />
+                </>
+              ) : (
+                <MenuRow label="Post a Job (Get Verified)" last onPress={() => router.push("/company-verify")} color={color} styles={styles} />
+              )}
+            </Card>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.sectionSpace}>
+            <SectionHeader title="Buying" />
+          </View>
+          <View style={styles.sidePad}>
+            <Card padded={false} style={styles.menuGroup}>
+              <MenuRow label="Saved & Favourites" badge={savedCount || undefined} onPress={() => router.push("/favourites")} color={color} styles={styles} />
+              <MenuRow label="Saved Searches" last onPress={() => router.push("/saved-searches")} color={color} styles={styles} />
+            </Card>
+          </View>
+
+          <View style={styles.sectionSpace}>
+            <SectionHeader title="Jobs" />
+          </View>
+          <View style={styles.sidePad}>
+            <Card padded={false} style={styles.menuGroup}>
+              <MenuRow
+                label="My Applications"
+                badge={applicationsCount || undefined}
+                onPress={() => router.push("/jobs/applications")}
+                color={color}
+                styles={styles}
+              />
+              <MenuRow label="My Job Profile / CV" last onPress={() => router.push("/jobs/cv-profile")} color={color} styles={styles} />
+            </Card>
+          </View>
+        </>
+      )}
 
       <View style={styles.sectionSpace}>
         <SectionHeader title="Account" />
@@ -530,22 +612,62 @@ function buildStyles(color: ColorPalette) {
   centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.xxxl, backgroundColor: color.bg },
   signInTitle: { ...font.title, color: color.text, marginBottom: space.lg },
   signInButton: {
+    width: "100%",
     backgroundColor: color.brand,
-    borderRadius: radius.md,
-    paddingHorizontal: space.xxl,
+    borderRadius: radius.pill,
     paddingVertical: space.md,
+    alignItems: "center",
   },
   signInButtonText: { ...font.bodyStrong, color: color.textOnBrand },
 
-  guestHeader: {
+  guestHero: {
     alignItems: "center",
-    paddingBottom: space.xl,
+    backgroundColor: color.brand,
+    paddingHorizontal: space.xxl,
+    paddingBottom: space.xxxl + space.md,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
   },
+  guestHeroBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: space.md,
+  },
+  guestHeroTitle: { ...font.h2, color: color.textOnBrand, textAlign: "center" },
+  guestHeroSubtitle: {
+    ...font.sub,
+    color: color.textOnBrandSub,
+    textAlign: "center",
+    marginTop: space.xs,
+    maxWidth: 280,
+  },
+  guestCtaWrap: { marginTop: -space.xxl },
   guestSignInCard: {
     alignItems: "center",
-    gap: space.md,
+    gap: space.sm,
   },
-  guestSignInTitle: { ...font.bodyStrong, color: color.text },
+  guestSignUpRow: { flexDirection: "row", alignItems: "center" },
+  guestSignUpText: { ...font.sub, color: color.textSub },
+  guestSignUpLink: { ...font.sub, fontWeight: "800", color: color.brand },
+
+  valuePropRow: { flexDirection: "row", gap: space.sm, marginTop: space.md },
+  valuePropCard: {
+    flex: 1,
+    backgroundColor: color.surface,
+    borderRadius: radius.lg,
+    paddingVertical: space.md,
+    paddingHorizontal: space.sm,
+    alignItems: "center",
+    ...shadow.sm,
+  },
+  valuePropTitle: { ...font.caption, fontWeight: "800", color: color.text, textAlign: "center" },
+  valuePropSub: { ...font.micro, color: color.textMuted, textAlign: "center", marginTop: 2 },
 
   hero: {
     alignItems: "center",
@@ -591,6 +713,24 @@ function buildStyles(color: ColorPalette) {
   },
   statValue: { ...font.h2, color: color.text },
   statLabel: { ...font.caption, color: color.textMuted, marginTop: 2 },
+
+  roleToggle: {
+    flexDirection: "row",
+    backgroundColor: color.surface,
+    borderRadius: radius.pill,
+    padding: 4,
+    marginTop: space.xl,
+    ...shadow.sm,
+  },
+  roleToggleBtn: {
+    flex: 1,
+    paddingVertical: space.sm + 2,
+    borderRadius: radius.pill,
+    alignItems: "center",
+  },
+  roleToggleBtnActive: { backgroundColor: color.brand },
+  roleToggleText: { ...font.caption, fontWeight: "700", color: color.textMuted },
+  roleToggleTextActive: { color: color.textOnBrand },
 
   sectionSpace: { marginTop: space.xxl, marginBottom: space.xs },
   sidePad: { paddingHorizontal: space.lg },
