@@ -8,6 +8,17 @@ import {
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
 function fmtReportDate(value: number | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
 
+// Exported so it's testable independently of rendering the page (and so
+// the confirmation text lives in exactly one place, next to the statuses
+// it applies to) -- Resolve/Dismiss/Approve/Reject each get action-specific
+// wording; Reopen ('open') intentionally has no entry.
+export const DECISION_CONFIRM_TEXT: Record<string, string> = {
+  resolved: 'Resolve this report? The reporter will be notified.',
+  dismissed: 'Dismiss this report? The reporter will be notified.',
+  approved: 'Approve this appeal? The requester will be notified.',
+  rejected: 'Reject this appeal? The requester will be notified.',
+};
+
 export function ReportsDisputesPage() {
   const auth = useAuth();
   const [tab, setTab] = useState<'reports' | 'appeals'>('reports');
@@ -44,6 +55,12 @@ export function ReportsDisputesPage() {
 
   async function decide(newStatus: string) {
     if (!selectedId) return;
+    // Only the four high-impact decisions confirm -- Reopen ('open') is a
+    // reversal/undo action and deliberately keeps its existing one-click
+    // behavior. Confirmation happens here, before either mutation call
+    // below, so a cancel never reaches the database.
+    const confirmText = DECISION_CONFIRM_TEXT[newStatus];
+    if (confirmText && !confirm(confirmText)) return;
     setActionMessage(null);
     const result = tab === 'reports' ? await updateReportStatus(selectedId, newStatus) : await updateAppealStatus(selectedId, newStatus);
     if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }

@@ -9,6 +9,7 @@
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
 import { notifyDecision } from '../notify/decision';
+import { escapePostgrestValue } from '../search/escape-postgrest-value';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -43,7 +44,11 @@ export async function listListings(filters: ListingFilters, page: number, pageSi
   if (filters.province) query = query.eq('province', filters.province);
   if (filters.search) {
     const term = filters.search.trim();
-    if (term) query = query.or(`title.ilike.%${term}%,seller_name.ilike.%${term}%,id.eq.${term}`);
+    if (term) {
+      const like = escapePostgrestValue(`%${term}%`);
+      const eq = escapePostgrestValue(term);
+      query = query.or(`title.ilike.${like},seller_name.ilike.${like},id.eq.${eq}`);
+    }
   }
 
   const from = Math.max(0, page - 1) * pageSize;

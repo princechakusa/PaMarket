@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { openExternalUrl } from "../../lib/open-url";
 import {
   ActivityIndicator,
+  InteractionManager,
   Platform,
   Pressable,
   ScrollView,
@@ -136,6 +137,15 @@ export default function RecruiterSubscriptionScreen() {
           await load();
           if (returnCandidateId && session?.user?.id && session.user.id === returnInitiatorId.current) {
             router.replace({ pathname: "/jobs/candidate/[id]", params: { id: returnCandidateId } });
+            // Reset after the navigation transition finishes, not in the
+            // same tick as router.replace -- same Fabric same-tick-
+            // navigation crash class as post.tsx's submit() (Sentry
+            // REACT-NATIVE-7, a native "child already has a parent"
+            // IllegalStateException). Previously this reset lived in a
+            // `finally` block, which always runs immediately after
+            // router.replace regardless of which branch was taken.
+            InteractionManager.runAfterInteractions(() => setPurchasingPlan(null));
+            return;
           }
         } else if (result.code === "user-cancelled") {
           toast("Purchase cancelled");
@@ -144,9 +154,8 @@ export default function RecruiterSubscriptionScreen() {
         }
       } catch {
         toast("The purchase couldn't be completed. Please try again.");
-      } finally {
-        setPurchasingPlan(null);
       }
+      setPurchasingPlan(null);
     },
     [availableProductIds, displayPrices, load]
   );
@@ -299,15 +308,18 @@ export default function RecruiterSubscriptionScreen() {
                 await load();
                 if (returnCandidateId && session?.user?.id && session.user.id === returnInitiatorId.current) {
                   router.replace({ pathname: "/jobs/candidate/[id]", params: { id: returnCandidateId } });
+                  // Same deferred-reset pattern as handleUpgrade above --
+                  // see its comment for the full story.
+                  InteractionManager.runAfterInteractions(() => setIsRestoring(false));
+                  return;
                 }
               } else {
                 toast("No previous purchases found to restore");
               }
             } catch {
               toast("Couldn't restore purchases. Try again.");
-            } finally {
-              setIsRestoring(false);
             }
+            setIsRestoring(false);
           }}
         >
           {isRestoring ? (

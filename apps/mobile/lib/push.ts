@@ -117,7 +117,7 @@ export async function registerForPushNotifications(
     if (error) {
       console.warn("[push] push_tokens upsert failed:", error.message);
     } else {
-      console.log("[push] token registered:", token.slice(0, 12) + "...");
+      if (__DEV__) console.log("[push] token registered:", token.slice(0, 12) + "...");
     }
     return "granted";
   } catch (e) {

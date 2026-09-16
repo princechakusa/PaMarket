@@ -1,0 +1,25 @@
+-- P1-1 (Final Pre-Release Repository Audit): the "reports" table had three
+-- overlapping authenticated INSERT policies. Two correctly require
+-- reporter_id = auth.uid(). The third, "authenticated users can submit
+-- reports", additionally permitted reporter_id IS NULL. Postgres RLS
+-- combines multiple permissive policies with OR, so that third policy alone
+-- let any authenticated user insert an unattributed (reporter_id = NULL)
+-- report -- which also completely defeated enforce_report_rate_limit()'s
+-- abuse guard, since its count query compares
+-- `reporter_id::text = new.reporter_id::text` and NULL = NULL is never true
+-- in SQL, so the count was always zero for a null-reporter report.
+--
+-- Fix: drop only the overly-permissive policy. The two correctly-scoped
+-- policies ("reports: reporter insert", "reports: authenticated insert")
+-- already cover every legitimate authenticated report-submission path and
+-- are left untouched, as is the rate-limit trigger/function itself --
+-- neither needed to change once the loophole policy is gone.
+-- Safe to run more than once (idempotent via `if exists`).
+--
+-- Applied live via mcp__supabase__apply_migration on 2026-09-16 and
+-- verified: the policy is gone, both remaining INSERT policies require
+-- reporter_id = auth.uid(), all other reports policies and
+-- trg_report_rate_limit are untouched, a reporter_id=NULL insert is now
+-- rejected, and a normal self-attributed insert still succeeds.
+
+drop policy if exists "authenticated users can submit reports" on public.reports;

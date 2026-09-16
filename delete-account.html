@@ -567,7 +567,17 @@ document.addEventListener('click',e=>{
       } else {
         return res.json().catch(function () { return {}; }).then(function (body) {
           statusEl.className = 'da-status err';
-          statusEl.textContent = 'Could not submit your request (' + (body.message || res.status) + '). Please email support@pamarketzw.com instead.';
+          // The rate-limit trigger's own message (enforce_account_deletion_
+          // request_rate_limit, Supabase) is already clear on its own --
+          // showing it plain, instead of wrapped in the generic
+          // "Could not submit... email support instead" fallback, avoids
+          // telling someone who just hit a normal retry limit to go email
+          // support right away.
+          if (body.message && body.message.indexOf('rate_limited:') === 0) {
+            statusEl.textContent = body.message.replace('rate_limited: ', '');
+          } else {
+            statusEl.textContent = 'Could not submit your request (' + (body.message || res.status) + '). Please email support@pamarketzw.com instead.';
+          }
         });
       }
     }).catch(function () {

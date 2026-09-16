@@ -354,7 +354,7 @@ export function resolveNotifRoute(n: {
     const parsed = parseDeepLinkString(meta.deepLink);
     if (parsed) return parsed;
     if (meta.jobId) return { pathname: "/jobs/[id]", params: { id: String(meta.jobId) } };
-    return { pathname: "/jobs/index" };
+    return { pathname: "/jobs" };
   }
 
   // 4. Verification

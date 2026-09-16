@@ -445,6 +445,8 @@ export default function HomeScreen() {
               categories={categories}
             />
 
+            <InstitutionsEntry onPress={() => router.push("/institutions")} />
+
             <AdCarousel ads={ads} />
 
             <ListingRail
@@ -477,8 +479,6 @@ export default function HomeScreen() {
               onPressShop={(b) => router.push({ pathname: "/business/[id]", params: { id: b.id } })}
               onSeeAll={() => router.push("/shops")}
             />
-
-            <InstitutionsEntry onPress={() => router.push("/institutions")} />
 
             <ListingRail
               title="Recently Posted"

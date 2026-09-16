@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.17",
+  version: "1.29.18",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -134,7 +134,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 131,
+    versionCode: 132,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
@@ -239,7 +239,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "@sentry/react-native/expo",
       {
-        organization: "pamrk",
+        organization: "pamarket",
         project: "react-native",
         // Auth token is deliberately NOT here — never commit it. It comes
         // from the SENTRY_AUTH_TOKEN CI environment variable at build time,

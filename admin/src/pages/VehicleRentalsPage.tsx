@@ -9,7 +9,7 @@ import {
   type RentalCompanyRow, type RentalListingRow, type RentalReportRow, type FeaturedListingRow,
   type RentalAnalyticsSummary, type LookupRow, type RentalLocationRow, type RentalLeadRow,
 } from '../services/rentals/query';
-import { listRentalReviews, updateRentalReviewStatus, type RentalReviewRow } from '../services/reviews/query';
+import { listRentalReviews, updateRentalReviewStatus, REVIEWS_PAGE_SIZE, type RentalReviewRow } from '../services/reviews/query';
 // Reuses the Audit Center's rental_audit_logs query directly -- this tab
 // and Audit Center were independently querying the same table with
 // near-identical code (found during the final production audit).
@@ -64,52 +64,62 @@ function RentalsDashboard({ mode }: { mode: string }) {
 
 function RentalsApprovals({ mode, onMessage }: { mode: string; onMessage: (m: string) => void }) {
   const [rows, setRows] = useState<RentalListingRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const load = useCallback(async () => {
     if (mode !== 'live') { setPhase('ready'); return; }
     setPhase('loading');
-    const result = await listRentalListings({ adminStatus: 'pending_review' }, 1);
+    const result = await listRentalListings({ adminStatus: 'pending_review' }, page);
     if (result.error) { setPhase('error'); return; }
     setRows(result.data.rows);
+    setTotal(result.data.total);
     setPhase('ready');
-  }, [mode]);
+  }, [mode, page]);
   useEffect(() => { void load(); }, [load]);
+  const pageCount = Math.max(1, Math.ceil(total / RENTALS_PAGE_SIZE));
   async function decide(id: string, status: 'approved' | 'rejected') {
     const result = await decideRentalListing(id, status);
     onMessage(result.error ? `Failed: ${result.error.message}` : `Listing ${status}.`);
     void load();
   }
-  return <section className="ops-panel"><header className="panel-title"><h2>Pending Listing Approvals</h2></header>
+  return <section className="ops-panel"><header className="panel-title"><h2>Pending Listing Approvals</h2><span>Page {page} of {pageCount}</span></header>
     <div className="directory-table-scroll"><table aria-label="Pending rental listings"><thead><tr><th>Model</th><th>Year</th><th>Daily rate</th><th>Submitted</th><th>Actions</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id}><td>{r.model ?? '—'}</td><td>{r.year ?? '—'}</td><td>{r.daily_rate !== null ? `$${r.daily_rate}` : '—'}</td><td>{fmtDate(r.created_at)}</td>
         <td><div className="jobs-actions"><button onClick={() => void decide(r.id, 'approved')}>Approve</button><button onClick={() => void decide(r.id, 'rejected')}>Reject</button></div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No pending approvals.</p>}{phase === 'error' && <p role="alert">Could not load approvals.</p>}</div>
+    <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
 }
 
 function RentalsCompanies({ mode, actorId, onMessage }: { mode: string; actorId: string; onMessage: (m: string) => void }) {
   const [rows, setRows] = useState<RentalCompanyRow[]>([]);
   const [status, setStatus] = useState('');
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const load = useCallback(async () => {
     if (mode !== 'live') { setPhase('ready'); return; }
     setPhase('loading');
-    const result = await listRentalCompanies(status || undefined, 1);
+    const result = await listRentalCompanies(status || undefined, page);
     if (result.error) { setPhase('error'); return; }
     setRows(result.data.rows);
+    setTotal(result.data.total);
     setPhase('ready');
-  }, [mode, status]);
+  }, [mode, status, page]);
   useEffect(() => { void load(); }, [load]);
+  const pageCount = Math.max(1, Math.ceil(total / RENTALS_PAGE_SIZE));
   async function decide(id: string, next: 'active' | 'rejected') {
     const result = await decideRentalCompany(id, next, actorId);
     onMessage(result.error ? `Failed: ${result.error.message}` : `Company ${next}.`);
     void load();
   }
-  return <section className="ops-panel"><header className="panel-title"><h2>Rental Companies</h2><select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">ALL</option><option value="pending">PENDING</option><option value="active">ACTIVE</option><option value="rejected">REJECTED</option></select></header>
+  return <section className="ops-panel"><header className="panel-title"><h2>Rental Companies</h2><span>Page {page} of {pageCount}</span><select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">ALL</option><option value="pending">PENDING</option><option value="active">ACTIVE</option><option value="rejected">REJECTED</option></select></header>
     <div className="directory-table-scroll"><table aria-label="Rental companies"><thead><tr><th>Company</th><th>Status</th><th>Fleet</th><th>Rating</th><th>Actions</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id}><td>{r.trading_name ?? '—'}</td><td>{r.status ?? '—'}</td><td>{r.fleet_count ?? 0}</td><td>{r.avg_rating ?? '—'} ({r.review_count ?? 0})</td>
         <td><div className="jobs-actions">{r.status === 'pending' && <><button onClick={() => void decide(r.id, 'active')}>Approve</button><button onClick={() => void decide(r.id, 'rejected')}>Reject</button></>}</div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No companies match.</p>}{phase === 'error' && <p role="alert">Could not load companies.</p>}</div>
+    <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
 }
 
@@ -152,98 +162,118 @@ function RentalsListings({ mode, onMessage }: { mode: string; onMessage: (m: str
 function RentalsLeads({ mode }: { mode: string }) {
   const [rows, setRows] = useState<RentalLeadRow[]>([]);
   const [status, setStatus] = useState('');
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const load = useCallback(async () => {
     if (mode !== 'live') { setPhase('ready'); return; }
     setPhase('loading');
-    const result = await listRentalLeads(status || undefined, 1);
+    const result = await listRentalLeads(status || undefined, page);
     if (result.error) { setPhase('error'); return; }
     setRows(result.data.rows);
+    setTotal(result.data.total);
     setPhase('ready');
-  }, [mode, status]);
+  }, [mode, status, page]);
   useEffect(() => { void load(); }, [load]);
-  return <section className="ops-panel"><header className="panel-title"><h2>Rental Vehicle Leads</h2><select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">ALL</option><option value="new">NEW</option><option value="contacted">CONTACTED</option><option value="converted">CONVERTED</option><option value="lost">LOST</option></select></header>
+  const pageCount = Math.max(1, Math.ceil(total / RENTALS_PAGE_SIZE));
+  return <section className="ops-panel"><header className="panel-title"><h2>Rental Vehicle Leads</h2><span>Page {page} of {pageCount}</span><select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">ALL</option><option value="new">NEW</option><option value="contacted">CONTACTED</option><option value="converted">CONVERTED</option><option value="lost">LOST</option></select></header>
     <p style={{ fontSize: 12, margin: '0 0 8px' }}>Customer inquiries against rental vehicle listings. The company owner already manages these in the app — this is oversight visibility only, nothing here is actionable.</p>
     <div className="directory-table-scroll"><table aria-label="Rental vehicle leads"><thead><tr><th>Listing</th><th>Source</th><th>Status</th><th>Created</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id}><td><code>{r.listing_id?.slice(0, 8) ?? '—'}…</code></td><td>{r.lead_source ?? '—'}</td><td>{r.status ?? '—'}</td><td>{fmtDate(r.created_at)}</td></tr>)}</tbody>
     </table>{phase === 'ready' && rows.length === 0 && <p>No leads match (or the admin-read policy for rental_vehicle_leads hasn't been added yet).</p>}{phase === 'error' && <p role="alert">Could not load leads.</p>}</div>
+    <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
 }
 
 function RentalsReports({ mode, actorId, onMessage }: { mode: string; actorId: string; onMessage: (m: string) => void }) {
   const [rows, setRows] = useState<RentalReportRow[]>([]);
   const [status, setStatus] = useState('');
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const load = useCallback(async () => {
     if (mode !== 'live') { setPhase('ready'); return; }
     setPhase('loading');
-    const result = await listRentalReports(status || undefined, 1);
+    const result = await listRentalReports(status || undefined, page);
     if (result.error) { setPhase('error'); return; }
     setRows(result.data.rows);
+    setTotal(result.data.total);
     setPhase('ready');
-  }, [mode, status]);
+  }, [mode, status, page]);
   useEffect(() => { void load(); }, [load]);
+  const pageCount = Math.max(1, Math.ceil(total / RENTALS_PAGE_SIZE));
   async function resolve(id: string, next: string) {
     const result = await resolveRentalReport(id, next, actorId);
     onMessage(result.error ? `Failed: ${result.error.message}` : `Report ${next}.`);
     void load();
   }
-  return <section className="ops-panel"><header className="panel-title"><h2>Rental Reports</h2><select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">ALL</option><option value="open">OPEN</option><option value="resolved">RESOLVED</option><option value="dismissed">DISMISSED</option></select></header>
+  return <section className="ops-panel"><header className="panel-title"><h2>Rental Reports</h2><span>Page {page} of {pageCount}</span><select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">ALL</option><option value="open">OPEN</option><option value="resolved">RESOLVED</option><option value="dismissed">DISMISSED</option></select></header>
     <div className="directory-table-scroll"><table aria-label="Rental reports"><thead><tr><th>Listing</th><th>Reason</th><th>Severity</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id}><td><code>{r.listing_id?.slice(0, 8) ?? '—'}…</code></td><td>{r.reason ?? '—'}</td><td>{r.severity ?? '—'}</td><td>{r.status ?? '—'}</td><td>{fmtDate(r.created_at)}</td>
         <td><div className="jobs-actions"><button onClick={() => void resolve(r.id, 'resolved')}>Resolve</button><button onClick={() => void resolve(r.id, 'dismissed')}>Dismiss</button></div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No reports match.</p>}{phase === 'error' && <p role="alert">Could not load reports.</p>}</div>
+    <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
 }
 
 function RentalsReviews({ mode, onMessage }: { mode: string; onMessage: (m: string) => void }) {
   const [rows, setRows] = useState<RentalReviewRow[]>([]);
   const [status, setStatus] = useState('');
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const load = useCallback(async () => {
     if (mode !== 'live') { setPhase('ready'); return; }
     setPhase('loading');
-    const result = await listRentalReviews(status || undefined, 1);
+    const result = await listRentalReviews(status || undefined, page);
     if (result.error) { setPhase('error'); return; }
     setRows(result.data.rows);
+    setTotal(result.data.total);
     setPhase('ready');
-  }, [mode, status]);
+  }, [mode, status, page]);
   useEffect(() => { void load(); }, [load]);
+  const pageCount = Math.max(1, Math.ceil(total / REVIEWS_PAGE_SIZE));
   async function decide(id: string, next: string) {
     const result = await updateRentalReviewStatus(id, next);
     onMessage(result.error ? `Failed: ${result.error.message}` : `Review ${next}.`);
     void load();
   }
-  return <section className="ops-panel"><header className="panel-title"><h2>Rental Reviews</h2><select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">ALL</option><option value="published">PUBLISHED</option><option value="pending">PENDING</option><option value="hidden">HIDDEN</option></select></header>
+  return <section className="ops-panel"><header className="panel-title"><h2>Rental Reviews</h2><span>Page {page} of {pageCount}</span><select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">ALL</option><option value="published">PUBLISHED</option><option value="pending">PENDING</option><option value="hidden">HIDDEN</option></select></header>
     <div className="directory-table-scroll"><table aria-label="Rental reviews"><thead><tr><th>Reviewer</th><th>Rating</th><th>Title</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id}><td>{r.reviewer_name ?? '—'}</td><td>{r.rating ?? '—'}</td><td>{r.title ?? '—'}</td><td>{r.status ?? '—'}</td>
         <td><div className="jobs-actions"><button onClick={() => void decide(r.id, 'published')}>Publish</button><button onClick={() => void decide(r.id, 'hidden')}>Hide</button></div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No reviews match.</p>}{phase === 'error' && <p role="alert">Could not load reviews.</p>}</div>
+    <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
 }
 
 function RentalsFeatured({ mode, onMessage }: { mode: string; onMessage: (m: string) => void }) {
   const [rows, setRows] = useState<FeaturedListingRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const load = useCallback(async () => {
     if (mode !== 'live') { setPhase('ready'); return; }
     setPhase('loading');
-    const result = await listFeaturedListings(1);
+    const result = await listFeaturedListings(page);
     if (result.error) { setPhase('error'); return; }
     setRows(result.data.rows);
+    setTotal(result.data.total);
     setPhase('ready');
-  }, [mode]);
+  }, [mode, page]);
   useEffect(() => { void load(); }, [load]);
+  const pageCount = Math.max(1, Math.ceil(total / RENTALS_PAGE_SIZE));
   async function toggle(id: string, next: boolean) {
     const result = await setFeaturedActive(id, next);
     onMessage(result.error ? `Failed: ${result.error.message}` : `Featured slot ${next ? 'activated' : 'deactivated'}.`);
     void load();
   }
-  return <section className="ops-panel"><header className="panel-title"><h2>Featured Listings</h2></header>
+  return <section className="ops-panel"><header className="panel-title"><h2>Featured Listings</h2><span>Page {page} of {pageCount}</span></header>
     <div className="directory-table-scroll"><table aria-label="Featured rental listings"><thead><tr><th>Listing</th><th>Window</th><th>Priority</th><th>Active</th><th>Actions</th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id}><td><code>{r.listing_id?.slice(0, 8) ?? '—'}…</code></td><td>{fmtDate(r.starts_at)} – {fmtDate(r.ends_at)}</td><td>{r.priority ?? '—'}</td><td>{r.is_active ? 'Yes' : 'No'}</td>
         <td><div className="jobs-actions">{r.is_active ? <button onClick={() => void toggle(r.id, false)}>Deactivate</button> : <button onClick={() => void toggle(r.id, true)}>Activate</button>}</div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No featured listings.</p>}{phase === 'error' && <p role="alert">Could not load featured listings.</p>}</div>
+    <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
 }
 

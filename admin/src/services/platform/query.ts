@@ -8,6 +8,7 @@
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
 import { invokeAdminFunction } from '../edge/invoke';
+import { getUser } from '../users/query';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -136,6 +137,16 @@ export async function listRecentNotifications(page: number, pageSize = PLATFORM_
 export async function sendNotification(userId: string, title: string, body: string, type = 'admin'): Promise<QueryResult<{ id: string }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
+  // Reuses the existing users/query.ts profile lookup (same RLS-authorized
+  // read path User Directory already uses) to confirm the recipient
+  // actually exists before creating a notification row for them -- a
+  // typo'd/nonexistent UUID previously either silently orphaned a
+  // notification or surfaced a raw Postgres error with no clear "user not
+  // found" signal. Checked here (not by attempting the insert first) so a
+  // bad ID never reaches the notifications table at all.
+  const userResult = await getUser(userId);
+  if (userResult.error) return { data: null, error: userResult.error };
+  if (!userResult.data) return { data: null, error: { code: 'not_found', message: 'No user found with that ID.', retryable: false } };
   const id = crypto.randomUUID();
   const { data, error } = await client.from('notifications').insert({ id, user_id: userId, title, body, type, created_at: Date.now() }).select('id').single();
   if (error) return { data: null, error: normalizeError(error) };

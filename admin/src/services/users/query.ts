@@ -4,6 +4,7 @@
 // two_factor_secret, or any raw KYC document path/column.
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
+import { escapePostgrestValue } from '../search/escape-postgrest-value';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -40,7 +41,11 @@ export async function listUsers(filters: UserFilters, page: number, pageSize = U
 
   if (filters.search) {
     const term = filters.search.trim();
-    if (term) query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%,id.eq.${term}`);
+    if (term) {
+      const like = escapePostgrestValue(`%${term}%`);
+      const eq = escapePostgrestValue(term);
+      query = query.or(`name.ilike.${like},email.ilike.${like},phone.ilike.${like},id.eq.${eq}`);
+    }
   }
   if (filters.role) query = query.eq('role', filters.role);
   if (filters.status) query = query.eq('status', filters.status);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,6 +14,8 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { clearIAPUserContext } from "../lib/iap";
+import { activeSubscription } from "../lib/plan-entitlements";
+import { BILLING_NAME, MANAGE_SUBSCRIPTION_PATH } from "../lib/store-info";
 import { toast } from "../components/ui/Toast";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -66,6 +68,39 @@ export default function DeleteAccountScreen() {
   const kavResetKey = useKeyboardAvoidingReset();
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+
+  // Uses the same authoritative, expiry-aware source plan-entitlements.ts
+  // already relies on elsewhere (business-manage, rental-fleet) rather than
+  // a cached plan_id column -- a lapsed subscription whose plan_id was
+  // never reset would otherwise show this warning forever. Only covers
+  // shop/business subscriptions (business_subscriptions): recruiter plans
+  // are tracked by recruiter_profiles.plan_id alone, which -- like
+  // businesses.plan_id -- is a display cache with no expiry/status column
+  // to check against, so it is deliberately not treated as a reliable
+  // "active" signal here rather than guessed.
+  useEffect(() => {
+    if (!session?.user) return;
+    let cancelled = false;
+    supabase
+      .from("businesses")
+      .select("id")
+      .eq("owner_user_id", session.user.id)
+      .then(async ({ data }) => {
+        const businesses = data ?? [];
+        for (const b of businesses) {
+          if (cancelled) return;
+          const sub = await activeSubscription(b.id);
+          if (sub) {
+            if (!cancelled) setHasActiveSubscription(true);
+            return;
+          }
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   async function confirm() {
     if (confirmText.trim() !== "DELETE") {
@@ -113,6 +148,16 @@ export default function DeleteAccountScreen() {
           <Text style={styles.warnSub}>This permanently deletes your account, listings and messages. Cannot be undone.</Text>
         </View>
 
+        {hasActiveSubscription ? (
+          <View style={styles.subscriptionNotice}>
+            <Text style={styles.subscriptionNoticeTitle}>You have an active subscription</Text>
+            <Text style={styles.subscriptionNoticeText}>
+              Deleting your PaMarket account does not automatically cancel a subscription billed through {BILLING_NAME}.
+              To stop being charged, cancel it separately from {MANAGE_SUBSCRIPTION_PATH}.
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.box}>
           <Text style={styles.boxTitle}>What will be deleted</Text>
           {DELETED_ITEMS.map((item) => (
@@ -157,6 +202,14 @@ function buildStyles(color: ColorPalette) {
     },
     warnTitle: { fontSize: 18, fontWeight: "800", color: color.danger, marginBottom: 8 },
     warnSub: { fontSize: 13, color: color.textSub, textAlign: "center", lineHeight: 19 },
+    subscriptionNotice: {
+      backgroundColor: color.goldTint,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 16,
+    },
+    subscriptionNoticeTitle: { fontSize: 14, fontWeight: "700", color: color.goldDark, marginBottom: 4 },
+    subscriptionNoticeText: { fontSize: 13, color: color.goldDark, lineHeight: 19 },
     box: {
       backgroundColor: color.surface,
       borderRadius: 14,

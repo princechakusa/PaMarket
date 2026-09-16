@@ -4,6 +4,7 @@
 // via list_security_events -- see security-events/query.ts).
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
+import { escapePostgrestValue } from '../search/escape-postgrest-value';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -19,7 +20,10 @@ export async function listAdminAuditLogs(page: number, search?: string): Promise
   const client = getSupabaseClient();
   if (!client) return unavailable();
   let query = client.from('admin_audit_logs').select('id, action, entity, entity_id, actor_role, actor_email, reason, created_at', { count: 'exact' }).order('created_at', { ascending: false });
-  if (search) query = query.or(`action.ilike.%${search}%,entity.ilike.%${search}%,entity_id.ilike.%${search}%`);
+  if (search) {
+    const like = escapePostgrestValue(`%${search}%`);
+    query = query.or(`action.ilike.${like},entity.ilike.${like},entity_id.ilike.${like}`);
+  }
   const from = Math.max(0, page - 1) * AUDIT_PAGE_SIZE;
   const { data, error, count } = await query.range(from, from + AUDIT_PAGE_SIZE - 1);
   if (error) return { data: null, error: normalizeError(error) };

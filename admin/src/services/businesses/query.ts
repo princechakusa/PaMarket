@@ -4,6 +4,7 @@
 // for that business, rather than re-implementing either.
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
+import { escapePostgrestValue } from '../search/escape-postgrest-value';
 
 export type QueryResult<T> = { data: T; error: null } | { data: null; error: NormalizedError };
 export type Page<T> = { rows: T[]; total: number; page: number; pageSize: number };
@@ -26,7 +27,7 @@ export async function listBusinesses(filters: { status?: string; search?: string
   if (filters.status) query = query.eq('status', filters.status);
   if (filters.search) {
     const term = filters.search.trim();
-    if (term) query = query.or(`name.ilike.%${term}%,id.eq.${term}`);
+    if (term) query = query.or(`name.ilike.${escapePostgrestValue(`%${term}%`)},id.eq.${escapePostgrestValue(term)}`);
   }
   const from = Math.max(0, page - 1) * pageSize;
   const { data, error, count } = await query.range(from, from + pageSize - 1);

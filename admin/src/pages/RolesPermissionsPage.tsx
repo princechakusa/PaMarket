@@ -20,7 +20,7 @@ const roleMeta: Record<AdminRole, { label: string; tier: string }> = {
 const domains: [string, string, Permission[]][] = [
   ['fact_check', 'Trust & Moderation', ['listings.view', 'listings.moderate', 'verifications.manage', 'reports.view', 'reports.manage', 'moderation.manage', 'reviews.moderate']],
   ['account_balance', 'Commerce & Revenue', ['orders.view', 'orders.manage', 'monetization.view', 'revenue.view', 'ads.view', 'ads.manage', 'billing.view']],
-  ['security', 'Platform Governance', ['audit.view', 'audit.export', 'errors.view', 'errors.resolve', 'operations.view', 'security.view', 'security.manage', 'admins.manage', 'mfa_policy.manage', 'settings.manage']],
+  ['security', 'Platform Governance', ['audit.view', 'errors.view', 'errors.resolve', 'operations.view', 'security.view', 'security.manage', 'admins.manage', 'mfa_policy.manage', 'settings.manage']],
   ['domain', 'Marketplace Operations', ['users.view', 'users.assist', 'businesses.view', 'rentals.view', 'rentals.moderate', 'rentals.manage', 'taxonomy.view', 'taxonomy.manage']],
 ];
 function Icon({ name }: { name: string }) { return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>; }

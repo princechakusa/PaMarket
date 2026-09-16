@@ -6,7 +6,7 @@ import { normalizeError } from '../src/services/errors/normalize-error';
 
 describe('Stage C authorization foundation', () => {
   it('reserves owner-level controls for super_admin', () => {
-    const ownerOnly = ['admins.manage', 'mfa_policy.manage', 'security.manage', 'integrations.manage', 'audit.export'] as const;
+    const ownerOnly = ['admins.manage', 'mfa_policy.manage', 'security.manage', 'integrations.manage'] as const;
     for (const permission of ownerOnly) {
       expect(rolePermissions.super_admin).toContain(permission);
       expect(rolePermissions.admin).not.toContain(permission);

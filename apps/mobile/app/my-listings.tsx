@@ -71,7 +71,11 @@ export default function MyListingsScreen() {
         text: "Delete",
         style: "destructive",
         onPress: async () => {
-          await supabase.from("listings").delete().eq("id", listing.id);
+          const { error } = await supabase.from("listings").delete().eq("id", listing.id);
+          if (error) {
+            Alert.alert("Couldn't delete listing", friendlyError(error).message);
+            return;
+          }
           setListings((prev) => prev.filter((l) => l.id !== listing.id));
         },
       },

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -259,6 +259,28 @@ export default function RentalFleetDashboard() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
+  // Redirect to company setup once state has actually settled (never
+  // during render -- was previously called inline in the JSX below, which
+  // mutates navigation state as a side effect of rendering; React warns
+  // against this and it's the same crash family the Fabric-navigation
+  // fixes elsewhere in this codebase guard against). hasRedirectedRef stops
+  // a second router.replace() firing if this effect re-runs (e.g. a
+  // background refetch) before the navigation away actually unmounts the
+  // screen.
+  const hasRedirectedToSetupRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || !businesses.length) return;
+    const needsSetup = !access || (access.has_rental_company === false && !company);
+    if (needsSetup) {
+      if (!hasRedirectedToSetupRef.current) {
+        hasRedirectedToSetupRef.current = true;
+        router.replace(`/rental-fleet/setup?bizId=${businesses[0].id}`);
+      }
+    } else {
+      hasRedirectedToSetupRef.current = false;
+    }
+  }, [isLoading, businesses, access, company, router]);
+
   async function onRefresh() {
     setIsRefreshing(true);
     await load();
@@ -324,7 +346,8 @@ export default function RentalFleetDashboard() {
   const biz = businesses[0];
 
   if (!access || (access.has_rental_company === false && !company)) {
-    router.replace(`/rental-fleet/setup?bizId=${biz.id}`);
+    // Navigation itself happens in the effect above; this branch only
+    // renders the loading placeholder while that redirect is in flight.
     return (
       <View style={styles.container}>
         {Platform.OS !== "ios" ? (

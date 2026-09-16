@@ -171,7 +171,7 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
               <button onClick={() => void applyStatus('active')}>Approve (active)</button>
               <button onClick={() => void applyStatus('flagged')}>Flag</button>
               <button onClick={() => void applyStatus('under_review')}>Send to review</button>
-              <button onClick={() => void applyStatus('removed')}>Remove</button>
+              <button onClick={() => { if (confirm('Remove this listing? The seller will be notified immediately.')) void applyStatus('removed'); }}>Remove</button>
             </div>
             {actionMessage && <p role="status">{actionMessage}</p>}
             <p><small>Actions use the existing admin-scoped update policy. If your role is not admin/super_admin, the server will reject the change.</small></p>

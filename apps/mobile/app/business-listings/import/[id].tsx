@@ -77,7 +77,8 @@ export default function BusinessImportListingsScreen() {
         await supabase.from("listings").update({ business_id: id }).eq("id", listingId);
       }
     }
-    setIsApplying(false);
+    // Not resetting isApplying here — router.replace below unmounts this
+    // screen; see project_fabric_navigation_crash memory.
     toast(mode === "copy" ? `${selectedIds.length} product(s) copied` : `${selectedIds.length} product(s) moved`);
     router.replace({ pathname: "/business-listings/[id]", params: { id: id! } });
   }

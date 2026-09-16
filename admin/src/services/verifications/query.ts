@@ -213,7 +213,13 @@ export async function updateCompanyVerificationStatus(userId: string, status: st
   const { data, error } = await client.from('company_verifications').update({ status, reviewed_at: new Date().toISOString() }).eq('user_id', userId).select('user_id').maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this verification, or it no longer exists.', retryable: false } };
-  await client.from('profiles').update({ company_verified: status === 'approved' }).eq('id', userId);
+  // Must not tell the applicant "you can now post jobs" (below) if this
+  // write didn't actually land -- profiles.company_verified is the real
+  // gate the app checks before letting someone post a job, so a silent
+  // failure here would leave the applicant told they're verified while
+  // still blocked.
+  const { error: profileError } = await client.from('profiles').update({ company_verified: status === 'approved' }).eq('id', userId);
+  if (profileError) return { data: null, error: normalizeError(profileError) };
   const copy = companyDecisionCopy(status);
   if (!copy) return { data: { userId, notified: false }, error: null };
   const notifyResult = await notifyDecision(userId, { kind: 'companyverify' }, copy.title, copy.body);
@@ -242,7 +248,12 @@ export async function updateBusinessVerificationStatus(id: string, status: strin
   if (status === 'approved' && business) {
     const requestedLevel = data.level_requested ?? 1;
     if ((business.verification_level ?? 0) < requestedLevel) {
-      await client.from('businesses').update({ verification_level: requestedLevel }).eq('id', data.business_id);
+      // Must not tell the owner "approved" (notification below) if this
+      // write didn't actually land -- verification_level is the real gate
+      // the public/owner "Verified" badge reads, mirroring the same fix
+      // already applied to updateCompanyVerificationStatus above.
+      const { error: levelError } = await client.from('businesses').update({ verification_level: requestedLevel }).eq('id', data.business_id);
+      if (levelError) return { data: null, error: normalizeError(levelError) };
     }
   }
   if (!copy || !business?.owner_user_id) return { data: { id: data.id, notified: false }, error: null };
