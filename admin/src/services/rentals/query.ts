@@ -249,3 +249,31 @@ export async function setLocationActive(id: string, isActive: boolean): Promise<
   if (error) return { data: null, error: normalizeError(error) };
   return { data: { id }, error: null };
 }
+
+// ── Leads (customer inquiries against a rental vehicle listing) ──────────
+// rental_vehicle_leads previously had NO admin-read RLS policy at all --
+// only owns_rental_company() -- so even after adding this query, it needs
+// this migration run once before any rows will actually appear:
+//   create policy "rental_leads_admin_select" on public.rental_vehicle_leads
+//     for select using (public.is_admin());
+// Read-only oversight, matching business_leads: the rental company owner
+// already manages/converts their own leads in the app.
+
+export type RentalLeadRow = {
+  id: string; listing_id: string | null; company_id: string | null;
+  lead_source: string | null; status: string | null; created_at: string | null;
+};
+
+export async function listRentalLeads(status: string | undefined, page: number, pageSize = RENTALS_PAGE_SIZE): Promise<QueryResult<Page<RentalLeadRow>>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  let query = client
+    .from('rental_vehicle_leads')
+    .select('id, listing_id, company_id, lead_source, status, created_at', { count: 'exact' })
+    .order('created_at', { ascending: false });
+  if (status) query = query.eq('status', status);
+  const from = Math.max(0, page - 1) * pageSize;
+  const { data, error, count } = await query.range(from, from + pageSize - 1);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
+}

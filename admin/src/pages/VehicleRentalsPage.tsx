@@ -5,9 +5,9 @@ import {
   listRentalCompanies, decideRentalCompany, listRentalListings, decideRentalListing,
   listRentalReports, resolveRentalReport, listFeaturedListings, setFeaturedActive,
   getRentalAnalyticsSummary, listRentalBrands, listRentalCategories, listRentalLocations,
-  setBrandActive, setCategoryActive, setLocationActive, RENTALS_PAGE_SIZE,
+  setBrandActive, setCategoryActive, setLocationActive, listRentalLeads, RENTALS_PAGE_SIZE,
   type RentalCompanyRow, type RentalListingRow, type RentalReportRow, type FeaturedListingRow,
-  type RentalAnalyticsSummary, type LookupRow, type RentalLocationRow,
+  type RentalAnalyticsSummary, type LookupRow, type RentalLocationRow, type RentalLeadRow,
 } from '../services/rentals/query';
 import { listRentalReviews, updateRentalReviewStatus, type RentalReviewRow } from '../services/reviews/query';
 // Reuses the Audit Center's rental_audit_logs query directly -- this tab
@@ -15,13 +15,13 @@ import { listRentalReviews, updateRentalReviewStatus, type RentalReviewRow } fro
 // near-identical code (found during the final production audit).
 import { listRentalAuditLogs, type RentalAuditRow } from '../services/audit/query';
 
-type Tab = 'dashboard' | 'approvals' | 'companies' | 'listings' | 'reports' | 'reviews' | 'featured' | 'analytics' | 'audit' | 'lookups';
+type Tab = 'dashboard' | 'approvals' | 'companies' | 'listings' | 'leads' | 'reports' | 'reviews' | 'featured' | 'analytics' | 'audit' | 'lookups';
 const tabFromPath: Record<string, Tab> = {
   '/rentals': 'dashboard', '/rentals/approvals': 'approvals', '/rentals/companies': 'companies',
   '/rentals/listings': 'listings', '/rentals/reports': 'reports', '/rentals/reviews': 'reviews',
   '/rentals/featured': 'featured', '/rentals/analytics': 'analytics', '/rentals/audit': 'audit', '/rentals/lookups': 'lookups',
 };
-const tabLabels: [Tab, string][] = [['dashboard', 'Dashboard'], ['approvals', 'Approvals'], ['companies', 'Companies'], ['listings', 'All Listings'], ['reports', 'Reports'], ['reviews', 'Reviews'], ['featured', 'Featured'], ['analytics', 'Analytics'], ['audit', 'Audit Logs'], ['lookups', 'Lookups']];
+const tabLabels: [Tab, string][] = [['dashboard', 'Dashboard'], ['approvals', 'Approvals'], ['companies', 'Companies'], ['listings', 'All Listings'], ['leads', 'Leads'], ['reports', 'Reports'], ['reviews', 'Reviews'], ['featured', 'Featured'], ['analytics', 'Analytics'], ['audit', 'Audit Logs'], ['lookups', 'Lookups']];
 
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
 
@@ -41,6 +41,7 @@ export function VehicleRentalsPage() {
     {tab === 'approvals' && <RentalsApprovals mode={auth.mode} onMessage={setMessage} />}
     {tab === 'companies' && <RentalsCompanies mode={auth.mode} actorId={auth.identity?.id ?? ''} onMessage={setMessage} />}
     {tab === 'listings' && <RentalsListings mode={auth.mode} onMessage={setMessage} />}
+    {tab === 'leads' && <RentalsLeads mode={auth.mode} />}
     {tab === 'reports' && <RentalsReports mode={auth.mode} actorId={auth.identity?.id ?? ''} onMessage={setMessage} />}
     {tab === 'reviews' && <RentalsReviews mode={auth.mode} onMessage={setMessage} />}
     {tab === 'featured' && <RentalsFeatured mode={auth.mode} onMessage={setMessage} />}
@@ -139,6 +140,33 @@ function RentalsListings({ mode, onMessage }: { mode: string; onMessage: (m: str
         <td><div className="jobs-actions">{r.admin_status !== 'approved' && <button onClick={() => void decide(r.id, 'approved')}>Approve</button>}{r.admin_status !== 'rejected' && <button onClick={() => void decide(r.id, 'rejected')}>Reject</button>}</div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No listings.</p>}{phase === 'error' && <p role="alert">Could not load listings.</p>}</div>
     <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
+  </section>;
+}
+
+// Read-only oversight -- rental_vehicle_leads previously had NO admin-read
+// RLS policy at all (only owns_rental_company()), so this table was
+// completely invisible to platform operators even though the rental
+// company owner has always been able to see and act on their own leads in
+// the app. Requires a one-time migration (see services/rentals/query.ts)
+// before rows will actually appear here.
+function RentalsLeads({ mode }: { mode: string }) {
+  const [rows, setRows] = useState<RentalLeadRow[]>([]);
+  const [status, setStatus] = useState('');
+  const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const load = useCallback(async () => {
+    if (mode !== 'live') { setPhase('ready'); return; }
+    setPhase('loading');
+    const result = await listRentalLeads(status || undefined, 1);
+    if (result.error) { setPhase('error'); return; }
+    setRows(result.data.rows);
+    setPhase('ready');
+  }, [mode, status]);
+  useEffect(() => { void load(); }, [load]);
+  return <section className="ops-panel"><header className="panel-title"><h2>Rental Vehicle Leads</h2><select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">ALL</option><option value="new">NEW</option><option value="contacted">CONTACTED</option><option value="converted">CONVERTED</option><option value="lost">LOST</option></select></header>
+    <p style={{ fontSize: 12, margin: '0 0 8px' }}>Customer inquiries against rental vehicle listings. The company owner already manages these in the app — this is oversight visibility only, nothing here is actionable.</p>
+    <div className="directory-table-scroll"><table aria-label="Rental vehicle leads"><thead><tr><th>Listing</th><th>Source</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>{rows.map((r) => <tr key={r.id}><td><code>{r.listing_id?.slice(0, 8) ?? '—'}…</code></td><td>{r.lead_source ?? '—'}</td><td>{r.status ?? '—'}</td><td>{fmtDate(r.created_at)}</td></tr>)}</tbody>
+    </table>{phase === 'ready' && rows.length === 0 && <p>No leads match (or the admin-read policy for rental_vehicle_leads hasn't been added yet).</p>}{phase === 'error' && <p role="alert">Could not load leads.</p>}</div>
   </section>;
 }
 

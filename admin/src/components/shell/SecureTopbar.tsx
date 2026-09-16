@@ -84,7 +84,6 @@ export function SecureTopbar({ onMenu }: { onMenu: () => void }) {
           </div>
           {announceStatus && <p role="status" style={{ marginTop: 8 }}><small>{announceStatus}</small></p>}
         </div>}
-        <button type="button" disabled title="Export requires per-workspace implementation — not yet available from the header"><span className="material-symbols-outlined">download</span>Export</button>
         <button type="button" className={`freeze ${signupPaused ? 'active' : ''}`} disabled={!live || !canFreeze || !freezeLoaded || freezeBusy} title={!canFreeze ? 'Requires settings.manage permission' : signupPaused ? 'New signups are currently PAUSED platform-wide — click to resume' : 'Pauses new account signups platform-wide (app_settings.signupPaused)'} onClick={() => void toggleFreeze()}><span className="material-symbols-outlined">lock_reset</span>{signupPaused ? 'Signups Paused' : 'Emergency Freeze'}</button>
       </div>
       <div className="operator"><span><strong>{admin?.name ?? 'Administrator'}</strong><small>{(admin?.role ?? 'unverified').replace('_', ' ').toUpperCase()}</small></span><span className="avatar" aria-hidden="true">{initials}</span><button type="button" className="signout material-symbols-outlined" aria-label="Sign out session" onClick={() => void auth.signOut()} disabled={auth.mode !== 'live'} title={auth.mode === 'live' ? 'Sign out session' : 'Sign-out is inactive in preview mode'}>power_settings_new</button></div>

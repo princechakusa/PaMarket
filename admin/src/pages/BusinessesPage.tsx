@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
-  listBusinesses, getBusiness, getBusinessListingsCount, getBusinessStaff, getBusinessPaymentsTotal,
-  BUSINESSES_PAGE_SIZE, type BusinessRow, type BusinessDetail, type BusinessStaffRow,
+  listBusinesses, getBusiness, getBusinessListingsCount, getBusinessStaff, getBusinessPaymentsTotal, getBusinessLeads,
+  BUSINESSES_PAGE_SIZE, type BusinessRow, type BusinessDetail, type BusinessStaffRow, type BusinessLeadRow,
 } from '../services/businesses/query';
 
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
@@ -21,6 +21,7 @@ export function BusinessesPage() {
   const [listingsCount, setListingsCount] = useState(0);
   const [staff, setStaff] = useState<BusinessStaffRow[]>([]);
   const [payments, setPayments] = useState<{ count: number; totalPaid: number } | null>(null);
+  const [leads, setLeads] = useState<BusinessLeadRow[]>([]);
   const [detailPhase, setDetailPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
   const load = useCallback(async () => {
@@ -41,13 +42,14 @@ export function BusinessesPage() {
     setDetailPhase('loading');
     const businessResult = await getBusiness(id);
     if (businessResult.error) { setDetailPhase('error'); return; }
-    const [listingsResult, staffResult, paymentsResult] = await Promise.all([
-      getBusinessListingsCount(id), getBusinessStaff(id), getBusinessPaymentsTotal(id),
+    const [listingsResult, staffResult, paymentsResult, leadsResult] = await Promise.all([
+      getBusinessListingsCount(id), getBusinessStaff(id), getBusinessPaymentsTotal(id), getBusinessLeads(id),
     ]);
     setDetail(businessResult.data);
     setListingsCount(listingsResult.data ?? 0);
     setStaff(staffResult.data ?? []);
     setPayments(paymentsResult.data);
+    setLeads(leadsResult.data ?? []);
     setDetailPhase('ready');
   }, []);
 
@@ -103,8 +105,17 @@ export function BusinessesPage() {
             <div><dt>Listings</dt><dd>{listingsCount}</dd></div>
             <div><dt>Staff</dt><dd>{staff.length}</dd></div>
             <div><dt>Payments (paid)</dt><dd>{payments ? `$${payments.totalPaid.toLocaleString('en-ZW')} across ${payments.count} record(s)` : '—'}</dd></div>
+            <div><dt>Recent leads</dt><dd>{leads.length} shown (most recent 20)</dd></div>
           </dl></section>
           {staff.length > 0 && <section><h3>Staff</h3><ul>{staff.map((s) => <li key={s.id}><code>{s.user_id?.slice(0, 8) ?? '—'}…</code> — {s.role} ({s.status})</li>)}</ul></section>}
+          <section><h3>Customer Leads</h3>
+            <p style={{ fontSize: 12 }}>Call/WhatsApp/Chat inquiries from buyers. The business owner already manages these in the app — this is oversight visibility only.</p>
+            {leads.length === 0 && <p><small>No leads yet for this business.</small></p>}
+            {leads.length > 0 && <ul>{leads.map((l) => <li key={l.id}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle' }}>{l.type === 'whatsapp' ? 'chat' : l.type === 'call' ? 'call' : 'forum'}</span>
+              {' '}{l.user_name ?? 'A buyer'} · <span className={`status-pill ${l.status === 'closed' ? 'approved' : 'pending'}`}>{l.status ?? '—'}</span> · {fmtDate(l.created_at)}
+            </li>)}</ul>}
+          </section>
           <p><small>Business verification status and reviews are managed in the Verifications and Reviews workspaces — not duplicated here.</small></p>
         </>}
       </aside>

@@ -158,6 +158,12 @@ export type Database = {
         Update: { status?: string | null; admin_status?: string | null; admin_note?: string | null };
         Relationships: [];
       };
+      rental_vehicle_leads: {
+        Row: { id: string; listing_id: string | null; company_id: string | null; user_id: string | null; lead_source: string | null; status: string | null; conversation_id: string | null; session_id: string | null; device_hint: string | null; contacted_at: string | null; converted_at: string | null; created_at: string | null; updated_at: string | null };
+        Insert: { id?: string; listing_id: string; company_id: string; lead_source: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       rental_vehicle_states: {
         Row: { listing_id: string; current_state: string | null; changed_by: string | null; change_reason: string | null; previous_state: string | null; state_entered_at: string | null; auto_return_at: string | null };
         Insert: { listing_id: string };
@@ -225,6 +231,7 @@ export type Database = {
       business_payments: { Row: { id: string; business_id: string | null; amount: number | null; status: string | null; type: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       // C2E-14: admin-read-only business_staff (is_admin()).
       business_staff: { Row: { id: string; business_id: string | null; user_id: string | null; role: string | null; status: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
+      business_leads: { Row: { id: string; business_id: string | null; listing_id: string | null; user_id: string | null; user_name: string | null; type: string | null; status: string | null; created_at: string | null }; Insert: { id?: string }; Update: Record<string, never>; Relationships: [] };
       // Batch 4: Shared + Advanced -- Audit, Content, Taxonomy, AMOS. All
       // already admin-gated RLS (has_admin_privilege('admin') / admin write
       // + public read on published/active rows), verified live before use.

@@ -76,3 +76,23 @@ export async function getBusinessPaymentsTotal(businessId: string): Promise<Quer
   const rows = (data ?? []) as { amount: number | null; status: string | null }[];
   return { data: { count: rows.length, totalPaid: rows.filter((r) => r.status === 'paid').reduce((sum, r) => sum + (r.amount ?? 0), 0) }, error: null };
 }
+
+/** business_leads: customer inquiries (call/whatsapp/chat clicks) against a
+ * business. Already has an admin-read RLS policy ("biz_leads: admin read",
+ * is_admin()) but no admin page ever selected from it -- these inquiries
+ * were completely invisible to platform operators. Read-only here, same as
+ * staff/payments above: the business owner already manages/closes their own
+ * leads in the app, this is oversight, not a review queue. */
+export type BusinessLeadRow = { id: string; listing_id: string | null; user_name: string | null; type: string | null; status: string | null; created_at: string | null };
+export async function getBusinessLeads(businessId: string, limit = 20): Promise<QueryResult<BusinessLeadRow[]>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client
+    .from('business_leads')
+    .select('id, listing_id, user_name, type, status, created_at')
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data ?? [], error: null };
+}
