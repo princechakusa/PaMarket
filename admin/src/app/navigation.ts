@@ -51,6 +51,7 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
     { label: 'Help & FAQ', path: '/content/faq', permission: 'content.view', icon: 'quiz' },
     { label: 'Blog Videos', path: '/content/videos', permission: 'content.view', icon: 'smart_display' },
     { label: 'Contact & Social', path: '/content/contact', permission: 'content.view', icon: 'contact_mail' },
+    { label: 'Institutions', path: '/institutions', permission: 'institutions.view', icon: 'school' },
     { label: 'Taxonomy', path: '/taxonomy', permission: 'taxonomy.view', icon: 'category' },
     { label: 'AMOS', path: '/amos', permission: 'amos.view', icon: 'smart_toy' },
   ] },
@@ -79,6 +80,7 @@ export const navigationGroups: NavigationGroup[] = [
     { label: 'Blog videos', path: '/content/videos', permission: 'content.view' }, { label: 'Contact & social', path: '/content/contact', permission: 'content.view' },
   ] },
   { label: 'Taxonomy', items: [{ label: 'Marketplace taxonomy', path: '/taxonomy', permission: 'taxonomy.view' }] },
+  { label: 'Institutions', items: [{ label: 'Institutions', path: '/institutions', permission: 'institutions.view' }] },
   { label: 'Monetization', items: [
     { label: 'Ads & boosts', path: '/monetization/ads', permission: 'ads.view' },
     { label: 'Finance center', path: '/monetization/finance', permission: 'revenue.view' },

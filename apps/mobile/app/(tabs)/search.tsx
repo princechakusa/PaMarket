@@ -154,6 +154,10 @@ export default function SearchScreen() {
       .select(LISTING_COLUMNS)
       .eq("status", "active")
       .or(publicListingExpiryFilter())
+      // Institutions Phase 4: same exclusion as Home's feed query -- see
+      // that file's comment for why this must be an explicit is.null/neq
+      // OR, not a bare not-equal.
+      .or("attributes->>institution_visibility.is.null,attributes->>institution_visibility.neq.institution_only")
       .neq("category", "jobs");
 
     if (filters.categories.length === 1) {

@@ -188,6 +188,10 @@ Deno.serve(async (req) => {
     const isAd = key.startsWith('ads/')
     const isAmos = key.startsWith('amos/manual-media/')
     const isBusiness = key.startsWith('businesses/')
+    // Institution logos (Admin-managed reference data, Institutions Phase
+    // 2) -- same shared-public-namespace, admin-only pattern as ads/amos
+    // above, not a new upload architecture.
+    const isInstitution = key.startsWith('institutions/')
     const isGet = verb === 'GET'
     const isList = verb === 'LIST'
 
@@ -242,10 +246,10 @@ Deno.serve(async (req) => {
       // Ad creatives and AMOS marketing media use shared public
       // namespaces, but only administrators may request upload URLs for
       // either.
-      if (isAd || isAmos) {
+      if (isAd || isAmos || isInstitution) {
         const role = await loadActorRole()
         if (!role || !ADMIN_ROLES.has(role)) {
-          await recordEvidence('admin_r2_access_denied', 'blocked', 'insufficient_role', isAd ? 'ads_upload' : 'amos_media_upload')
+          await recordEvidence('admin_r2_access_denied', 'blocked', 'insufficient_role', isAd ? 'ads_upload' : isAmos ? 'amos_media_upload' : 'institution_logo_upload')
           throw new Error('Forbidden')
         }
       }
@@ -276,13 +280,14 @@ Deno.serve(async (req) => {
         `profiles/${user.id}/`,
         `rentals/${user.id}/`,
       ]
-      if (!isAd && !isAmos && !isBusiness) {
+      if (!isAd && !isAmos && !isBusiness && !isInstitution) {
         const matched = allowed.find(p => key.startsWith(p))
         if (!matched) throw new Error('Forbidden path')
         keyPrefix = matched
       }
       if (isAd) keyPrefix = 'ads/'
       if (isAmos) keyPrefix = 'amos/manual-media/'
+      if (isInstitution) keyPrefix = 'institutions/'
       if (!contentType) throw new Error('contentType required for upload')
 
       // Validate content type against allowlist (AMOS additionally allows video)
@@ -357,6 +362,8 @@ Deno.serve(async (req) => {
       await recordEvidence('admin_r2_upload_issued', 'success', null, 'ads_upload')
     } else if (!isGet && isAmos && actorRole && ADMIN_ROLES.has(actorRole)) {
       await recordEvidence('admin_r2_upload_issued', 'success', null, 'amos_media_upload')
+    } else if (!isGet && isInstitution && actorRole && ADMIN_ROLES.has(actorRole)) {
+      await recordEvidence('admin_r2_upload_issued', 'success', null, 'institution_logo_upload')
     }
 
     // `key` is the actual object key the PUT will land at (server-generated,

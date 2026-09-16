@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
@@ -135,6 +135,7 @@ function buildDescription(opts: {
 export default function PostJobScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const params = useLocalSearchParams<{ institutionId?: string }>();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
   // Section icons are stroke-only, so they need the raw brand colour rather
@@ -151,6 +152,37 @@ export default function PostJobScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verified, setVerified] = useState(false);
   const [pending, setPending] = useState(false);
+
+  // Institutions Phase 5C. institutionId travels from app/(tabs)/post.tsx's
+  // Jobs redirect but was never read here until now. Same re-validation
+  // pattern as the general Post Ad screen: the route param is never trusted
+  // as proof of anything, only ever as a hint to re-fetch the real,
+  // currently-active row. Invalid/inactive/failed-fetch all collapse to the
+  // same "no institution context" state -- no error, no partial info shown.
+  // Part 8's UI (banner + visibility choice) is not implemented yet -- see
+  // the render section below -- this is the data/validation layer only.
+  const [institutionContext, setInstitutionContext] = useState<{ id: string; official_name: string } | null>(null);
+  const [institutionVisibility, setInstitutionVisibility] = useState<"public" | "institution_only">("public");
+
+  useEffect(() => {
+    if (!params.institutionId) {
+      setInstitutionContext(null);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("institutions")
+      .select("id, official_name")
+      .eq("id", params.institutionId)
+      .eq("is_active", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setInstitutionContext(data ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params.institutionId]);
 
   const [company, setCompany] = useState("");
   const [title, setTitle] = useState("");
@@ -387,6 +419,11 @@ export default function PostJobScreen() {
     // then fired spend_job_credit in an unawaited .then(), so a failed spend
     // left the job published and unpaid. The server also owns seller_id, and a
     // direct insert to `listings` with category='jobs' is now rejected.
+    // institution_id/institution_visibility are only ever included when
+    // institutionContext is non-null -- i.e. already independently
+    // re-verified active above, never the raw route param. Omitting them
+    // entirely for a normal post relies on the RPC's own defaults
+    // (null / 'public'), matching today's behavior exactly.
     const { data, error } = await supabase.rpc("create_job_listing", {
       p_title: title.trim(),
       p_description: fullDescription,
@@ -396,6 +433,9 @@ export default function PostJobScreen() {
       p_province: province.trim(),
       p_seller_name: company.trim(),
       p_seller_phone: phone.trim(),
+      ...(institutionContext
+        ? { p_institution_id: institutionContext.id, p_institution_visibility: institutionVisibility }
+        : {}),
     });
 
     if (error) {
@@ -509,6 +549,60 @@ export default function PostJobScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.introWrap}>
+          {institutionContext ? (
+            <Card style={styles.institutionCard}>
+              <Text style={styles.institutionLabel}>Posting to</Text>
+              <View style={styles.institutionRow}>
+                <View style={styles.institutionRowLeft}>
+                  <View style={styles.institutionIconWrap}>
+                    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color.brand} strokeWidth={2}>
+                      <Path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                  </View>
+                  <Text style={styles.institutionName} numberOfLines={1}>{institutionContext.official_name}</Text>
+                </View>
+                <Pressable onPress={() => router.back()} hitSlop={8}>
+                  <Text style={styles.institutionChange}>Change</Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.institutionDivider} />
+
+              <View style={styles.visibilityHeaderRow}>
+                <Text style={styles.visibilityLabel}>Visibility</Text>
+                <Text style={styles.visibilityHint}>Audience reach</Text>
+              </View>
+              <View style={styles.visibilitySegment}>
+                <Pressable
+                  style={[styles.visibilityOption, institutionVisibility === "public" && styles.visibilityOptionActive]}
+                  onPress={() => setInstitutionVisibility("public")}
+                >
+                  {institutionVisibility === "public" ? (
+                    <Svg width={13} height={13} viewBox="0 0 20 20" fill="#fff">
+                      <Path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+                    </Svg>
+                  ) : null}
+                  <Text style={[styles.visibilityOptionText, institutionVisibility === "public" && styles.visibilityOptionTextActive]} numberOfLines={1}>
+                    PaMarket + Institution
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.visibilityOption, institutionVisibility === "institution_only" && styles.visibilityOptionActive]}
+                  onPress={() => setInstitutionVisibility("institution_only")}
+                >
+                  {institutionVisibility === "institution_only" ? (
+                    <Svg width={13} height={13} viewBox="0 0 20 20" fill="#fff">
+                      <Path fillRule="evenodd" clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+                    </Svg>
+                  ) : null}
+                  <Text style={[styles.visibilityOptionText, institutionVisibility === "institution_only" && styles.visibilityOptionTextActive]} numberOfLines={1}>
+                    Institution only
+                  </Text>
+                </Pressable>
+              </View>
+            </Card>
+          ) : null}
+
           <Card style={styles.introCard}>
             <Text style={styles.introTitle}>
               Reach candidates across Zimbabwe
@@ -936,6 +1030,25 @@ function buildStyles(color: ColorPalette) {
 
     padded: { paddingHorizontal: space.lg, marginBottom: space.xl },
     introWrap: { padding: space.lg, paddingBottom: space.sm, gap: space.md },
+    institutionCard: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, padding: space.md },
+    institutionLabel: { fontSize: 11, fontWeight: "800", color: color.textMuted, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 },
+    institutionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.sm, marginBottom: space.sm },
+    institutionRowLeft: { flexDirection: "row", alignItems: "center", gap: space.sm, flexShrink: 1, minWidth: 0 },
+    institutionIconWrap: { width: 32, height: 32, borderRadius: radius.md, backgroundColor: color.brandTint, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    institutionName: { ...font.bodyStrong, color: color.text, flexShrink: 1 },
+    institutionChange: { ...font.caption, fontWeight: "700", color: color.brand },
+    institutionDivider: { height: 1, backgroundColor: color.border, marginBottom: space.sm },
+    visibilityHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 },
+    visibilityLabel: { fontSize: 12, fontWeight: "700", color: color.textSub },
+    visibilityHint: { fontSize: 11, color: color.textMuted },
+    visibilitySegment: { flexDirection: "row", gap: 4, padding: 4, borderRadius: radius.lg, backgroundColor: color.surfaceAlt, borderWidth: 1, borderColor: color.border },
+    visibilityOption: {
+      flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5,
+      paddingVertical: 9, paddingHorizontal: 8, borderRadius: radius.md, backgroundColor: color.surface, borderWidth: 1, borderColor: color.brand,
+    },
+    visibilityOptionActive: { backgroundColor: color.brand, borderColor: color.brand },
+    visibilityOptionText: { fontSize: 11.5, fontWeight: "700", color: color.brand },
+    visibilityOptionTextActive: { color: "#fff" },
     introCard: { backgroundColor: color.brandTint },
     introTitle: { ...font.bodyStrong, color: color.brand },
     introText: {

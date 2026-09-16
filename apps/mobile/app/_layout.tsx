@@ -295,6 +295,8 @@ function RootNavigator() {
       <Stack.Screen name="listing/[id]" options={{ headerShown: Platform.OS === "ios", title: "Listing" }} />
       <Stack.Screen name="listing/edit/[id]" options={{ headerShown: true, title: "Edit Listing" }} />
       <Stack.Screen name="business/[id]" options={{ headerShown: Platform.OS === "ios", title: "Shop" }} />
+      <Stack.Screen name="institutions/index" options={{ headerShown: Platform.OS === "ios", title: "Institutions" }} />
+      <Stack.Screen name="institutions/[id]" options={{ headerShown: Platform.OS === "ios", title: "Institution" }} />
       <Stack.Screen name="business-onboarding" options={{ headerShown: true, title: "Create Business" }} />
       <Stack.Screen name="business-manage/[id]" options={{ headerShown: true, title: "Seller Center" }} />
       <Stack.Screen name="business-edit/[id]" options={{ headerShown: true, title: "Edit Business" }} />

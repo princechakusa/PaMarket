@@ -104,7 +104,7 @@ export type Database = {
           id: string; title: string | null; description: string | null; price: number | null; currency: string | null;
           category: string | null; status: string | null; province: string | null; city: string | null; suburb: string | null;
           photos: string[] | null; seller_id: string | null; seller_name: string | null; seller_phone: string | null;
-          condition: string | null; business_id: string | null; views: number | null;
+          condition: string | null; business_id: string | null; institution_id: string | null; views: number | null;
           created_at: string | null; updated_at: string | null; expires_at: string | null;
           latitude: number | null; longitude: number | null;
         };
@@ -231,6 +231,44 @@ export type Database = {
         Row: { id: string; legacy_key: string | null; slug: string | null; name: string | null; description: string | null; icon: string | null; color: string | null; sort_order: number | null; is_active: boolean | null; country_code: string | null; updated_by: string | null; updated_at: string | null };
         Insert: { id?: string };
         Update: { is_active?: boolean | null; name?: string | null; description?: string | null; icon?: string | null; color?: string | null; sort_order?: number | null; updated_by?: string | null; updated_at?: string | null };
+        Relationships: [];
+      };
+      // Institutions Phase 2: first Admin-side consumption of provinces/
+      // cities -- these tables already existed (Stage 4 taxonomy) but were
+      // never read from Admin before now. Read-only here; province/city
+      // records themselves are managed only via direct SQL/seed, not this UI.
+      provinces: {
+        Row: { id: string; code: string | null; name: string | null; sort_order: number | null; is_active: boolean | null };
+        Insert: { id?: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      cities: {
+        Row: { id: string; slug: string | null; name: string | null; province_id: string | null; sort_order: number | null; is_active: boolean | null };
+        Insert: { id?: string };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      // Institutions Phase 1 (database foundation, already deployed):
+      // public.institutions. province_id/city_id reuse the provinces/cities
+      // tables above via FK -- no parallel location system.
+      institutions: {
+        Row: {
+          id: string; type: string | null; official_name: string | null; short_name: string | null;
+          search_aliases: string[] | null; province_id: string | null; city_id: string | null; suburb: string | null;
+          logo_url: string | null; description: string | null; is_active: boolean | null; sort_order: number | null;
+          created_by: string | null; created_at: string | null; updated_by: string | null; updated_at: string | null;
+        };
+        Insert: {
+          id?: string; type: string; official_name: string; short_name?: string | null; search_aliases?: string[];
+          province_id: string; city_id: string; suburb?: string | null; logo_url?: string | null; description?: string | null;
+          is_active?: boolean; sort_order?: number; created_by?: string | null;
+        };
+        Update: {
+          type?: string; official_name?: string; short_name?: string | null; search_aliases?: string[];
+          province_id?: string; city_id?: string; suburb?: string | null; logo_url?: string | null; description?: string | null;
+          is_active?: boolean; sort_order?: number; updated_by?: string | null; updated_at?: string | null;
+        };
         Relationships: [];
       };
       content_pages: {

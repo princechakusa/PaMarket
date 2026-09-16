@@ -34,6 +34,15 @@ import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } fro
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
+// Institutions Phase 4. "public"/"institution_only" is stored inside the
+// existing attributes jsonb column -- the smallest existing mechanism
+// (already used for subcat/condition) -- rather than a new listings
+// column. Absent/undefined (a normal, non-institution listing) behaves
+// identically to "public": every existing query that doesn't know about
+// this key keeps working unchanged.
+type InstitutionVisibility = "public" | "institution_only";
+type InstitutionContext = { id: string; official_name: string };
+
 const TITLE_PLACEHOLDERS: Record<string, string> = {
   property: "e.g. 3 Bedroom House in Borrowdale",
   vehicles: "e.g. 2015 Toyota Hilux D4D",
@@ -63,6 +72,7 @@ type PostState = {
   photos: string[];
   condition: ListingCondition | null;
   attrs: AttrValues;
+  institutionVisibility: InstitutionVisibility;
 };
 
 const INITIAL_STATE: PostState = {
@@ -80,6 +90,7 @@ const INITIAL_STATE: PostState = {
   photos: [],
   condition: null,
   attrs: {},
+  institutionVisibility: "public",
 };
 
 export default function PostScreen() {
@@ -89,8 +100,9 @@ export default function PostScreen() {
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
-  const params = useLocalSearchParams<{ businessId?: string }>();
+  const params = useLocalSearchParams<{ businessId?: string; institutionId?: string }>();
   const [state, setState] = useState<PostState>(INITIAL_STATE);
+  const [institutionContext, setInstitutionContext] = useState<InstitutionContext | null>(null);
   // headerLeft stays custom (not the OS default) — this "back" button steps
   // back one wizard stage at a time (see handleHeaderBack below), which the
   // real native back action (pop the navigation stack) can't express. Uses
@@ -129,6 +141,34 @@ export default function PostScreen() {
     province: state.province,
     city: state.city,
   });
+
+  // Step 3: never trust the route param as proof the institution exists or
+  // is active -- the same public.institutions row (Phase 1 RLS: public read
+  // only where is_active=true) is re-fetched here. If it's missing, inactive,
+  // or the fetch fails, this silently behaves exactly like "no institution
+  // context" -- no error banner naming the institution, since surfacing
+  // "this institution is inactive" would itself leak information about an
+  // institution a non-admin isn't supposed to see, matching how
+  // app/institutions/[id].tsx treats nonexistent/inactive identically.
+  useEffect(() => {
+    if (!params.institutionId) {
+      setInstitutionContext(null);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("institutions")
+      .select("id, official_name")
+      .eq("id", params.institutionId)
+      .eq("is_active", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setInstitutionContext((data as InstitutionContext) ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params.institutionId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -311,10 +351,15 @@ export default function PostScreen() {
         .eq("id", session.user.id)
         .maybeSingle();
 
-      // condition is written to both the real column and attributes.condition
-      const attributes = state.condition
-        ? { ...state.attrs, condition: state.condition }
-        : state.attrs;
+      // condition is written to both the real column and attributes.condition.
+      // institution_visibility only ever gets written when there's a real,
+      // validated institution context -- a normal listing's attributes never
+      // gains this key at all (not even set to "public"), so nothing about a
+      // non-institution post changes.
+      const attributes = {
+        ...(state.condition ? { ...state.attrs, condition: state.condition } : state.attrs),
+        ...(institutionContext ? { institution_visibility: state.institutionVisibility } : {}),
+      };
 
       const { error: insertError } = await supabase.from("listings").insert({
         seller_id: session.user.id,
@@ -335,6 +380,12 @@ export default function PostScreen() {
         condition: state.condition,
         attributes,
         business_id: params.businessId || null,
+        // Step 7: exactly one listing row either way -- institution_id is
+        // simply null for a normal post. The FK itself (Phase 1) is what
+        // actually rejects a bogus id; institutionContext being non-null here
+        // already proves it was independently re-verified active (see the
+        // effect above), never trusted from the raw route param.
+        institution_id: institutionContext?.id ?? null,
       });
 
       if (insertError) throw insertError;
@@ -409,6 +460,34 @@ export default function PostScreen() {
         ))}
       </View>
 
+      {institutionContext ? (
+        <Card style={styles.institutionBanner}>
+          <Text style={styles.institutionBannerLabel}>Posting to</Text>
+          <Text style={styles.institutionBannerName}>{institutionContext.official_name}</Text>
+          <Text style={[styles.fieldLabel, { marginTop: space.sm }]}>Choose visibility</Text>
+          <View style={styles.currencyToggle}>
+            {(
+              [
+                { value: "public" as const, label: "PaMarket + Institution" },
+                { value: "institution_only" as const, label: "Institution only" },
+              ]
+            ).map((opt) => (
+              <Pressable
+                key={opt.value}
+                style={[styles.visibilityOption, state.institutionVisibility === opt.value && styles.currencyOptionActive]}
+                onPress={() => update({ institutionVisibility: opt.value })}
+              >
+                <Text
+                  style={[styles.currencyOptionText, state.institutionVisibility === opt.value && styles.currencyOptionTextActive]}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Card>
+      ) : null}
+
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {state.step === 1 && !state.category ? (
           <CategoryPicker
@@ -418,7 +497,14 @@ export default function PostScreen() {
               // recruiter entitlements, company verification) — it was never
               // meant to go through the generic marketplace listing form.
               if (id === "jobs") {
-                router.push("/jobs/post");
+                // Forwarded for forward-compatibility only -- the existing
+                // Jobs posting flow (app/jobs/post.tsx) submits through its
+                // own create_job_listing RPC (credits/subscription
+                // entitlement logic), which this phase does not modify. See
+                // the Phase 4 report's Jobs section: institution association
+                // for job listings is an explicitly unresolved gap, not
+                // silently implemented here.
+                router.push(institutionContext ? { pathname: "/jobs/post", params: { institutionId: institutionContext.id } } : "/jobs/post");
                 return;
               }
               update({ category: id });
@@ -709,6 +795,10 @@ function buildStyles(color: ColorPalette) {
   currencyOptionActive: { backgroundColor: color.brand },
   currencyOptionText: { ...font.caption, color: color.text },
   currencyOptionTextActive: { color: color.textOnBrand },
+  visibilityOption: { flex: 1, paddingHorizontal: space.md, paddingVertical: space.sm, justifyContent: "center", alignItems: "center", backgroundColor: color.surface },
+  institutionBanner: { marginHorizontal: space.lg, marginBottom: space.sm, padding: space.lg },
+  institutionBannerLabel: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
+  institutionBannerName: { ...font.title, color: color.text, marginTop: 2 },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   tipBox: { backgroundColor: color.goldTint, borderRadius: radius.md, padding: space.lg, marginTop: space.lg },
   phoneReminder: { backgroundColor: color.brandTint, borderRadius: radius.md, padding: space.md, marginTop: space.lg },

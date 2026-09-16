@@ -298,5 +298,11 @@
       "key": "school",
       "label": "School Items"
     }
+  ],
+  "other": [
+    {
+      "key": "study-materials",
+      "label": "Study Materials"
+    }
   ]
 }

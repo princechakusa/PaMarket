@@ -28,6 +28,7 @@ import { HomeHeader } from "../../components/home/HomeHeader";
 import { CityPicker } from "../../components/home/CityPicker";
 import { CategoryGrid } from "../../components/home/CategoryGrid";
 import { ShopsRail } from "../../components/home/ShopsRail";
+import { InstitutionsEntry } from "../../components/home/InstitutionsEntry";
 import { CategoryRail } from "../../components/home/CategoryRail";
 import { AdCarousel } from "../../components/home/AdCarousel";
 import { ListingCard } from "../../components/ListingCard";
@@ -170,6 +171,14 @@ export default function HomeScreen() {
       .select(LISTING_COLUMNS)
       .eq("status", "active")
       .or(publicListingExpiryFilter())
+      // Institutions Phase 4: excludes "Institution only" listings from the
+      // normal marketplace feed. Explicit is.null/neq OR (not a bare
+      // .not(...,'eq',...)) -- a plain not-equal against a NULL jsonb path
+      // (true for every ordinary, non-institution listing) evaluates to
+      // NULL in SQL and would silently drop every normal listing from
+      // Home. Same defensive is-null-or-not-equal shape search.tsx already
+      // uses for nullable currency values.
+      .or("attributes->>institution_visibility.is.null,attributes->>institution_visibility.neq.institution_only")
       .order("created_at", { ascending: false })
       .limit(60)
       .then((result) => result);
@@ -468,6 +477,8 @@ export default function HomeScreen() {
               onPressShop={(b) => router.push({ pathname: "/business/[id]", params: { id: b.id } })}
               onSeeAll={() => router.push("/shops")}
             />
+
+            <InstitutionsEntry onPress={() => router.push("/institutions")} />
 
             <ListingRail
               title="Recently Posted"

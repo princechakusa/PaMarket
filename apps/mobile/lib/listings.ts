@@ -22,6 +22,7 @@ export type Listing = {
   expires_at?: string | null;
   views?: number | null;
   business_id?: string | null;
+  institution_id?: string | null;
   created_at: string;
   updated_at?: string | null;
   attributes?: Record<string, unknown> | null;
