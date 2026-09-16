@@ -106,14 +106,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     if (adminEnvironment.mode !== 'live') return;
-    const client = getSupabaseClient();
-    if (!client) return;
     // Report before the token is invalidated — the Edge Function requires
     // an authenticated caller for admin_logout. Best-effort, bounded, and
     // never blocks the actual sign-out below.
     if (state.accessToken) void reportLoginSecurityEvent('admin_logout', { accessToken: state.accessToken });
-    const { error } = await client.auth.signOut();
-    if (error) setState((current) => ({ ...current, error: normalizeError(error).message }));
+    try {
+      const client = getSupabaseClient();
+      if (client) {
+        // Bounded so a hung network call can never trap the operator inside
+        // an authenticated-looking Admin UI — the Cloudflare Access logout
+        // below always runs, Supabase sign-out or not.
+        await Promise.race([client.auth.signOut(), new Promise((resolve) => window.setTimeout(resolve, 3000))]);
+      }
+    } catch {
+      // Falls through to the Access logout regardless — see below.
+    } finally {
+      // Cloudflare Access gates every request to this origin, including the
+      // SPA shell itself. Clearing only the Supabase session leaves the
+      // Access session intact, so a signed-out operator (or anyone sharing
+      // the browser) could still reach the login screen without Access
+      // re-prompting. /cdn-cgi/access/logout is Cloudflare's own logout
+      // endpoint for this application; it has no documented return-URL
+      // parameter and revokes the session across the whole Access org, so
+      // this has to be the final navigation — a real page load, not SPA
+      // routing, since leaving Access engaged means actually leaving the
+      // page. window.location.origin (never external input) keeps this
+      // strictly same-origin.
+      window.location.href = `${window.location.origin}/cdn-cgi/access/logout`;
+    }
   }
 
   async function signInWithPassword(email: string, password: string): Promise<SignInResult> {
