@@ -150,6 +150,11 @@ export function BusinessVerificationsPage() {
       <button className={tab === 'individual' ? 'active' : ''} onClick={() => { setTab('individual'); setSelectedId(null); setPage(1); }}>Individual (KYC)</button>
       <button className={tab === 'business' ? 'active' : ''} onClick={() => { setTab('business'); setSelectedId(null); setPage(1); }}>Business</button>
     </div></nav>
+    <p style={{ margin: '4px 0 10px', fontSize: 13 }}>
+      {tab === 'individual'
+        ? 'Confirms one person’s real-world identity (ID document + selfie match) for the buyer/seller trust badge across the marketplace. Not linked to any business — approving this never creates or changes a business.'
+        : 'Confirms a business’s own documents (owner ID, registration) and raises its verification badge. Does not publish the business — the business only becomes visible in the app once its owner completes their own separate activation step. Car rental company verification is a different system entirely, reviewed under Vehicle Rentals.'}
+    </p>
 
     <section className="directory-filters" aria-label="Verification filters"><div>
       <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option>{statuses.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}</select>
