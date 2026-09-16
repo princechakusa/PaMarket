@@ -15,7 +15,7 @@ export type Database = {
           last_seen: string | null; last_active_at: string | null; mfa_enabled: boolean | null;
         };
         Insert: { id: string; name?: string | null; role?: string | null };
-        Update: { name?: string | null; role?: string | null };
+        Update: { name?: string | null; role?: string | null; company_verified?: boolean | null };
         Relationships: [];
       };
       // C2D-FIX: the browser no longer has any grant on security_events or
@@ -95,6 +95,11 @@ export type Database = {
       // paths are never selected anywhere in this codebase.
       verifications: { Row: { id: string; user_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; reviewed_by: string | null; id_doc_path: string | null; selfie_path: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null; reviewed_by?: string | null }; Relationships: [] };
       business_verifications: { Row: { id: string; business_id: string | null; status: string | null; admin_note: string | null; submitted_at: string | null; reviewed_at: string | null; level_requested: number | null; id_doc_path: string | null; reg_doc_path: string | null }; Insert: { id?: string; status?: string | null }; Update: { status?: string | null; admin_note?: string | null; reviewed_at?: string | null }; Relationships: [] };
+      // Job-posting eligibility ("required to post jobs") -- a third, fully
+      // separate verification concept from personal KYC (verifications) and
+      // business document verification (business_verifications) above. PK is
+      // user_id, not id -- one row per user, upserted by the app.
+      company_verifications: { Row: { user_id: string; company_name: string | null; reg_cert_path: string | null; owner_id_path: string | null; tax_cert_path: string | null; premises_path: string | null; status: string | null; submitted_at: string | null; reviewed_at: string | null }; Insert: { user_id: string; status?: string | null }; Update: { status?: string | null; reviewed_at?: string | null }; Relationships: [] };
       // Batch 1: extended with the real Marketplace/Listings columns.
       // Deliberately excludes nothing sensitive -- listings are a public
       // marketplace entity, no PII beyond seller_name/seller_phone which

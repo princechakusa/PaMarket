@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
   listVerifications, updateVerificationStatus, listBusinessVerifications, updateBusinessVerificationStatus,
+  listCompanyVerifications, updateCompanyVerificationStatus,
   getSignedDocumentUrl, listUserVerificationDocuments, VERIFICATIONS_PAGE_SIZE,
-  type VerificationRow, type BusinessVerificationRow, type StorageObject,
+  type VerificationRow, type BusinessVerificationRow, type CompanyVerificationRow, type StorageObject,
 } from '../services/verifications/query';
 
 function StorageSearch({ userId, accessToken }: { userId: string; accessToken: string }) {
@@ -68,11 +69,12 @@ function levelLabel(level: number | null): string { return level == null ? '—'
 
 export function BusinessVerificationsPage() {
   const auth = useAuth();
-  const [tab, setTab] = useState<'individual' | 'business'>('individual');
+  const [tab, setTab] = useState<'individual' | 'business' | 'company'>('individual');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [individualRows, setIndividualRows] = useState<VerificationRow[]>([]);
   const [businessRows, setBusinessRows] = useState<BusinessVerificationRow[]>([]);
+  const [companyRows, setCompanyRows] = useState<CompanyVerificationRow[]>([]);
   const [total, setTotal] = useState(0);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -90,10 +92,15 @@ export function BusinessVerificationsPage() {
       if (result.error) { setError(result.error.message); setPhase('error'); return; }
       setIndividualRows(result.data.rows);
       setTotal(result.data.total);
-    } else {
+    } else if (tab === 'business') {
       const result = await listBusinessVerifications(status || undefined, page);
       if (result.error) { setError(result.error.message); setPhase('error'); return; }
       setBusinessRows(result.data.rows);
+      setTotal(result.data.total);
+    } else {
+      const result = await listCompanyVerifications(status || undefined, page);
+      if (result.error) { setError(result.error.message); setPhase('error'); return; }
+      setCompanyRows(result.data.rows);
       setTotal(result.data.total);
     }
     setPhase('ready');
@@ -103,11 +110,14 @@ export function BusinessVerificationsPage() {
 
   const selectedIndividualForDocs = individualRows.find((r) => r.id === selectedId);
   const selectedBusinessForDocs = businessRows.find((r) => r.id === selectedId);
+  const selectedCompanyForDocs = companyRows.find((r) => r.user_id === selectedId);
   useEffect(() => {
     if (auth.mode !== 'live' || !selectedId || !auth.accessToken) return;
     const paths = tab === 'individual'
       ? [selectedIndividualForDocs?.id_doc_path, selectedIndividualForDocs?.selfie_path]
-      : [selectedBusinessForDocs?.id_doc_path, selectedBusinessForDocs?.reg_doc_path];
+      : tab === 'business'
+      ? [selectedBusinessForDocs?.id_doc_path, selectedBusinessForDocs?.reg_doc_path]
+      : [selectedCompanyForDocs?.reg_cert_path, selectedCompanyForDocs?.owner_id_path, selectedCompanyForDocs?.tax_cert_path, selectedCompanyForDocs?.premises_path];
     const wanted = paths.filter((p): p is string => Boolean(p));
     if (wanted.length === 0) return;
     setDocUrls((prev) => { const next = { ...prev }; wanted.forEach((p) => { next[p] = 'loading'; }); return next; });
@@ -126,7 +136,9 @@ export function BusinessVerificationsPage() {
     setActionMessage(null);
     const result = tab === 'individual'
       ? await updateVerificationStatus(selectedId, newStatus, note || undefined)
-      : await updateBusinessVerificationStatus(selectedId, newStatus, note || undefined);
+      : tab === 'business'
+      ? await updateBusinessVerificationStatus(selectedId, newStatus, note || undefined)
+      : await updateCompanyVerificationStatus(selectedId, newStatus);
     if (result.error) { setActionMessage(`Failed: ${result.error.message}`); return; }
     setActionMessage(
       result.data.notified
@@ -140,20 +152,24 @@ export function BusinessVerificationsPage() {
   const pageCount = Math.max(1, Math.ceil(total / VERIFICATIONS_PAGE_SIZE));
   const selectedIndividual = individualRows.find((r) => r.id === selectedId);
   const selectedBusiness = businessRows.find((r) => r.id === selectedId);
+  const selectedCompany = companyRows.find((r) => r.user_id === selectedId);
 
   return <div className="directory-page">
     {auth.mode === 'mock' && <div className="directory-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment; Verifications cannot load real data here.</span></div>}
     <div className="directory-breadcrumb">PAMARKET OPS / TRUST & MODERATION / <b>VERIFICATIONS</b></div>
-    <header className="directory-hero"><div><small>PRODUCTION VERIFICATION QUEUE</small><h1>Verifications</h1><p>Individual KYC and business verification review, in one workspace.</p></div></header>
+    <header className="directory-hero"><div><small>PRODUCTION VERIFICATION QUEUE</small><h1>Verifications</h1><p>Individual KYC, business, and job-posting eligibility review, in one workspace.</p></div></header>
 
     <nav className="listing-tabs" aria-label="Verification type"><div>
       <button className={tab === 'individual' ? 'active' : ''} onClick={() => { setTab('individual'); setSelectedId(null); setPage(1); }}>Individual (KYC)</button>
       <button className={tab === 'business' ? 'active' : ''} onClick={() => { setTab('business'); setSelectedId(null); setPage(1); }}>Business</button>
+      <button className={tab === 'company' ? 'active' : ''} onClick={() => { setTab('company'); setSelectedId(null); setPage(1); }}>Company (Job Posting)</button>
     </div></nav>
     <p style={{ margin: '4px 0 10px', fontSize: 13 }}>
       {tab === 'individual'
         ? 'Confirms one person’s real-world identity (ID document + selfie match) for the buyer/seller trust badge across the marketplace. Not linked to any business — approving this never creates or changes a business.'
-        : 'Confirms a business’s own documents (owner ID, registration) and raises its verification badge. Does not publish the business — the business only becomes visible in the app once its owner completes their own separate activation step. Car rental company verification is a different system entirely, reviewed under Vehicle Rentals.'}
+        : tab === 'business'
+        ? 'Confirms a business’s own documents (owner ID, registration) and raises its verification badge. Does not publish the business — the business only becomes visible in the app once its owner completes their own separate activation step. Car rental company verification is a different system entirely, reviewed under Vehicle Rentals.'
+        : 'Confirms an employer/company’s documents (registration, tax clearance, premises photo, owner ID) so they can post job listings. Approving this sets profiles.company_verified — it does not touch any business record.'}
     </p>
 
     <section className="directory-filters" aria-label="Verification filters"><div>
@@ -181,7 +197,11 @@ export function BusinessVerificationsPage() {
               <td><span className={`status-pill ${row.businesses?.status === 'active' ? 'approved' : 'pending'}`}>{row.businesses?.status ?? 'unknown'}</span></td>
               <td>{fmtDate(row.submitted_at)}</td>
             </tr>)}</tbody></table>}
-          {phase === 'ready' && (tab === 'individual' ? individualRows.length === 0 : businessRows.length === 0) && <div className="directory-empty" role="status">No records match these filters.</div>}
+          {phase !== 'error' && tab === 'company' && <table aria-label="Company verifications"><thead><tr><th>Company / applicant</th><th>Status</th><th>Submitted</th><th>Reviewed</th></tr></thead>
+            <tbody>{companyRows.map((row) => <tr key={row.user_id} className={selectedId === row.user_id ? 'selected' : ''} onClick={() => { setSelectedId(row.user_id); setActionMessage(null); setNote(''); }} style={{ cursor: 'pointer' }}>
+              <td>{row.company_name ?? <code>{row.user_id.slice(0, 8)}…</code>}</td><td><span className={`status-pill ${row.status ?? 'neutral'}`}>{row.status ?? '—'}</span></td><td>{fmtDate(row.submitted_at)}</td><td>{fmtDate(row.reviewed_at)}</td>
+            </tr>)}</tbody></table>}
+          {phase === 'ready' && ((tab === 'individual' && individualRows.length === 0) || (tab === 'business' && businessRows.length === 0) || (tab === 'company' && companyRows.length === 0)) && <div className="directory-empty" role="status">No records match these filters.</div>}
         </div>
       </section>
 
@@ -223,6 +243,26 @@ export function BusinessVerificationsPage() {
           </section>
           <section><h3>Decision</h3>
             <textarea placeholder="Admin note (optional)" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: '100%', minHeight: 60 }} />
+            <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
+            {actionMessage && <div className={`preview-notice ${actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? '' : 'success'}`} role="status"><span className="material-symbols-outlined">{actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? 'error' : 'check_circle'}</span><strong>{actionMessage}</strong></div>}
+          </section>
+        </>}
+        {selectedId && tab === 'company' && selectedCompany && <>
+          <header><span className="material-symbols-outlined">work</span><div><small>COMPANY VERIFICATION (JOB POSTING)</small><strong>{selectedCompany.company_name ?? `${selectedCompany.user_id.slice(0, 8)}…`}</strong></div><span className={`status-pill ${selectedCompany.status ?? 'neutral'}`}>{selectedCompany.status?.toUpperCase() ?? '—'}</span></header>
+          <section><h3>Details</h3><dl>
+            <div><dt>Status</dt><dd>{selectedCompany.status ?? '—'}</dd></div>
+            <div><dt>Submitted</dt><dd>{fmtDate(selectedCompany.submitted_at)}</dd></div>
+            <div><dt>Reviewed</dt><dd>{fmtDate(selectedCompany.reviewed_at)}</dd></div>
+          </dl></section>
+          <section className="verif-docs"><h3>Submitted Documents</h3>
+            <DocumentPreview label="Certificate of Incorporation" path={selectedCompany.reg_cert_path} urls={docUrls} onMissing={markDocMissing} />
+            <DocumentPreview label="Owner ID / Passport" path={selectedCompany.owner_id_path} urls={docUrls} onMissing={markDocMissing} />
+            <DocumentPreview label="Tax Clearance Certificate" path={selectedCompany.tax_cert_path} urls={docUrls} onMissing={markDocMissing} />
+            <DocumentPreview label="Business Premises Photo" path={selectedCompany.premises_path} urls={docUrls} onMissing={markDocMissing} />
+            {auth.accessToken && <StorageSearch userId={selectedCompany.user_id} accessToken={auth.accessToken} />}
+          </section>
+          <section><h3>Decision</h3>
+            <p style={{ fontSize: 12 }}>No admin note field exists for this verification type.</p>
             <div className="jobs-actions"><button onClick={() => void decide('approved')}>Approve</button><button onClick={() => void decide('rejected')}>Reject</button><button onClick={() => void decide('pending')}>Reset to pending</button></div>
             {actionMessage && <div className={`preview-notice ${actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? '' : 'success'}`} role="status"><span className="material-symbols-outlined">{actionMessage.startsWith('Failed') || actionMessage.includes('NOT notified') ? 'error' : 'check_circle'}</span><strong>{actionMessage}</strong></div>}
           </section>

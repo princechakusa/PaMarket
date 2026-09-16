@@ -217,6 +217,11 @@ function parseDeepLinkString(raw?: string | null): ExpoRoute | null {
     // kind:id convention; the id itself is ignored.
     case "verify":
       return { pathname: "/verify" };
+    // Company/employer verification (required to post jobs) — a separate
+    // table (company_verifications) and screen from personal ID verification
+    // above; own profile, no id needed.
+    case "companyverify":
+      return { pathname: "/company-verify" };
     case "ownerorder":
       return { pathname: "/owner-order/[id]", params: { id } };
     case "shoporder":

@@ -72,13 +72,14 @@ export async function listUserVerificationDocuments(userId: string, accessToken:
 export async function getPendingVerificationsCount(): Promise<QueryResult<number>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
-  const [individual, business] = await Promise.all([
+  const [individual, business, company] = await Promise.all([
     client.from('verifications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     client.from('business_verifications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    client.from('company_verifications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
-  const failed = individual.error ?? business.error;
+  const failed = individual.error ?? business.error ?? company.error;
   if (failed) return { data: null, error: normalizeError(failed) };
-  return { data: (individual.count ?? 0) + (business.count ?? 0), error: null };
+  return { data: (individual.count ?? 0) + (business.count ?? 0) + (company.count ?? 0), error: null };
 }
 
 export async function listVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<VerificationRow>>> {
@@ -173,6 +174,50 @@ function businessDecisionCopy(status: string, note?: string): { title: string; b
   if (status === 'rejected') return { title: 'Business verification not approved', body: note ? `Your business verification was not approved: ${note}` : 'Your business verification was not approved. Please open the app to review and resubmit your documents.' };
   if (status === 'pending') return { title: 'Please resubmit your business documents', body: note ? `Your business verification needs another look: ${note} Please resubmit your documents in the app.` : 'Your business verification needs another look. Please resubmit your documents in the app.' };
   return null;
+}
+
+// Company/employer verification -- required before a user can post a job,
+// entirely separate from personal KYC and business document verification
+// above. No admin_note column exists on this table (schema has none), and
+// its primary key is user_id, not id -- one row per user.
+export type CompanyVerificationRow = {
+  user_id: string; company_name: string | null; status: string | null;
+  submitted_at: string | null; reviewed_at: string | null;
+  reg_cert_path: string | null; owner_id_path: string | null; tax_cert_path: string | null; premises_path: string | null;
+};
+
+export async function listCompanyVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<CompanyVerificationRow>>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  let query = client
+    .from('company_verifications')
+    .select('user_id, company_name, status, submitted_at, reviewed_at, reg_cert_path, owner_id_path, tax_cert_path, premises_path', { count: 'exact' })
+    .order('submitted_at', { ascending: false });
+  if (status) query = query.eq('status', status);
+  const from = Math.max(0, page - 1) * pageSize;
+  const { data, error, count } = await query.range(from, from + pageSize - 1);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
+}
+
+function companyDecisionCopy(status: string): { title: string; body: string } | null {
+  if (status === 'approved') return { title: 'You can now post jobs', body: 'Your company/employer verification has been approved. You can now post job listings.' };
+  if (status === 'rejected') return { title: 'Company verification not approved', body: 'Your company/employer verification was not approved. Please open the app to review and resubmit your documents.' };
+  if (status === 'pending') return { title: 'Please resubmit your company documents', body: 'Your company verification needs another look. Please resubmit your documents in the app.' };
+  return null;
+}
+
+export async function updateCompanyVerificationStatus(userId: string, status: string): Promise<QueryResult<{ userId: string; notified: boolean }>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.from('company_verifications').update({ status, reviewed_at: new Date().toISOString() }).eq('user_id', userId).select('user_id').maybeSingle();
+  if (error) return { data: null, error: normalizeError(error) };
+  if (!data) return { data: null, error: { code: 'forbidden', message: 'Not authorized to update this verification, or it no longer exists.', retryable: false } };
+  await client.from('profiles').update({ company_verified: status === 'approved' }).eq('id', userId);
+  const copy = companyDecisionCopy(status);
+  if (!copy) return { data: { userId, notified: false }, error: null };
+  const notifyResult = await notifyDecision(userId, { kind: 'companyverify' }, copy.title, copy.body);
+  return { data: { userId, notified: !notifyResult.error }, error: null };
 }
 
 export async function updateBusinessVerificationStatus(id: string, status: string, note?: string): Promise<QueryResult<{ id: string; notified: boolean }>> {

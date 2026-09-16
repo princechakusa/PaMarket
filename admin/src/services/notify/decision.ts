@@ -32,6 +32,7 @@ function unavailable<T>(): QueryResult<T> {
  * understand it -- see project_notification_deeplinks memory. */
 export type DecisionLink =
   | { kind: 'verify' }
+  | { kind: 'companyverify' }
   | { kind: 'businessverify'; businessId: string }
   | { kind: 'business'; businessId: string }
   | { kind: 'businessmanage'; businessId: string }
@@ -49,6 +50,7 @@ export type DecisionLink =
 function deepLinkString(link: DecisionLink): string | null {
   switch (link.kind) {
     case 'verify': return 'verify:me';
+    case 'companyverify': return 'companyverify:me';
     case 'businessverify': return `businessverify:${link.businessId}`;
     case 'business': return `business:${link.businessId}`;
     case 'businessmanage': return `businessmanage:${link.businessId}`;
