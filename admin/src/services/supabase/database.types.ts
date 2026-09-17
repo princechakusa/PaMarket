@@ -268,17 +268,20 @@ export type Database = {
         Row: {
           id: string; type: string | null; official_name: string | null; short_name: string | null;
           search_aliases: string[] | null; province_id: string | null; city_id: string | null; suburb: string | null;
-          logo_url: string | null; description: string | null; is_active: boolean | null; sort_order: number | null;
+          logo_url: string | null; cover_image: string | null; founded_year: number | null;
+          description: string | null; is_active: boolean | null; sort_order: number | null;
           created_by: string | null; created_at: string | null; updated_by: string | null; updated_at: string | null;
         };
         Insert: {
           id?: string; type: string; official_name: string; short_name?: string | null; search_aliases?: string[];
-          province_id: string; city_id: string; suburb?: string | null; logo_url?: string | null; description?: string | null;
+          province_id: string; city_id: string; suburb?: string | null; logo_url?: string | null;
+          cover_image?: string | null; founded_year?: number | null; description?: string | null;
           is_active?: boolean; sort_order?: number; created_by?: string | null;
         };
         Update: {
           type?: string; official_name?: string; short_name?: string | null; search_aliases?: string[];
-          province_id?: string; city_id?: string; suburb?: string | null; logo_url?: string | null; description?: string | null;
+          province_id?: string; city_id?: string; suburb?: string | null; logo_url?: string | null;
+          cover_image?: string | null; founded_year?: number | null; description?: string | null;
           is_active?: boolean; sort_order?: number; updated_by?: string | null; updated_at?: string | null;
         };
         Relationships: [];
