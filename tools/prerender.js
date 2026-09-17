@@ -353,7 +353,7 @@ function renderBusiness(b, chrome) {
   const url = PMSchema.businessUrl(b);
   const products = b._products || [];
   const reviews = b._reviews || [];
-  const verified = (b.verification_level || 0) > 0;
+  const verified = (b.verification_level || 0) >= 2;
   const loc = [b.suburb, b.city, b.province].filter(Boolean).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(', ') || 'Zimbabwe';
   const avg = avgRating(reviews);
   const year = b.created_at ? new Date(b.created_at).getFullYear() : '';

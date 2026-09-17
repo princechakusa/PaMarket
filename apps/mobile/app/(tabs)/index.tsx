@@ -46,7 +46,7 @@ import { useThemedStyles } from "../../lib/theme-provider";
 const LISTING_COLUMNS =
   "id,seller_id,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,business_id,created_at";
 const BUSINESS_COLUMNS =
-  "id,owner_user_id,name,logo,category,province,city,status,verification_level";
+  "id,owner_user_id,name,logo,photos,category,province,city,status,verification_level";
 
 const RAIL_CARD_WIDTH = 160;
 const RAIL_CARD_WIDTH_COMPACT = 122;
@@ -183,10 +183,14 @@ export default function HomeScreen() {
       .order("created_at", { ascending: false })
       .limit(60)
       .then((result) => result);
+    // Verified Shops is meant to surface actually-verified businesses, not
+    // just "recently active" ones — the checkmark used to be purely
+    // cosmetic per-card while every active business (any level) qualified.
     const businessesRequest = supabase
       .from("businesses")
       .select(BUSINESS_COLUMNS)
       .eq("status", "active")
+      .gte("verification_level", 2)
       .order("created_at", { ascending: false })
       .limit(20)
       .then((result) => result);

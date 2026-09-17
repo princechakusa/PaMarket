@@ -21,7 +21,7 @@ import { publicListingExpiryFilter } from "../../lib/listings";
 // shop card itself dropped location entirely (web shows "category · city,
 // province"; mobile only showed "category · N items").
 const BUSINESS_COLUMNS =
-  "id,owner_user_id,name,logo,category,province,city,suburb,status,verification_level";
+  "id,owner_user_id,name,logo,photos,category,province,city,suburb,status,verification_level";
 const PAGE_SIZE = 30;
 
 function SearchIcon() {
@@ -213,14 +213,15 @@ export default function ShopsDirectoryScreen() {
             const metaParts = [catLabel, loc].filter(Boolean);
             const verified = (item.verification_level ?? 0) >= 2;
             const products = productCounts[item.id] ?? 0;
+            const cardImage = item.logo || item.photos?.find(Boolean);
             return (
               <Pressable
                 style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
                 onPress={() => router.push({ pathname: "/business/[id]", params: { id: item.id } })}
               >
                 <View style={styles.logoWrap}>
-                  {item.logo ? (
-                    <Image source={{ uri: item.logo }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+                  {cardImage ? (
+                    <Image source={{ uri: cardImage }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
                   ) : (
                     <Text style={styles.logoInitial}>{businessInitials(item.name)}</Text>
                   )}

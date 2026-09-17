@@ -388,10 +388,11 @@ function prodCard(l){
 
 function bizCard(b){
   var loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
-  var logo = b.logo
-    ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+'" loading="lazy" decoding="async">'
+  var bizCardImg = b.logo || (Array.isArray(b.photos) && b.photos[0]);
+  var logo = bizCardImg
+    ? '<img src="'+esc(bizCardImg)+'" alt="'+esc(b.name)+'" loading="lazy" decoding="async">'
     : esc(initials(b.name));
-  var vf = b.verification_level > 0 ? '<span class="pm-biz-verified" title="Verified">✓</span>' : '';
+  var vf = b.verification_level >= 2 ? '<span class="pm-biz-verified" title="Verified">✓</span>' : '';
   return '<a class="pm-biz" href="business?id='+esc(b.id)+'">'+
     '<div class="pm-biz-logo">'+logo+'</div>'+
     '<div class="pm-biz-body">'+
@@ -441,7 +442,7 @@ function render(b, extras){
   var avg = reviews.length ? (reviews.reduce(function(a,r){return a+(Number(r.rating)||0);},0)/reviews.length) : 0;
   var year = b.created_at ? new Date(b.created_at).getFullYear() : '';
   var cats = (b.category || '').split('|').filter(Boolean);
-  var verified = b.verification_level > 0;
+  var verified = b.verification_level >= 2;
 
   // Shop photos (businesses.photos) is what the mobile Create Shop /
   // Manage Shop flow actually uploads — a real array the owner picks

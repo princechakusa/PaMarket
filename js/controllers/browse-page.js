@@ -45,7 +45,7 @@ function renderCategoryHero(){
   document.getElementById('catHeroChips').innerHTML=cfg.chips.map(chip=>'<a class="cat-hero-chip" href="'+chip[1]+'">'+chip[0]+'</a>').join('');
   const eyebrow=document.getElementById('catHeroEyebrow');
   eyebrow.textContent='';
-  const countPromise=key==='shops'?PM.fetchExactCount('businesses','status=eq.active&verification_level=gt.0'):PMListings.fetchListingCount(key==='all'?'':key);
+  const countPromise=key==='shops'?PM.fetchExactCount('businesses','status=eq.active&verification_level=gt.1'):PMListings.fetchListingCount(key==='all'?'':key);
   countPromise.then(count=>{
     eyebrow.textContent=Number(count).toLocaleString()+(key==='shops'?' verified storefront'+(count===1?'':'s'):' live listing'+(count===1?'':'s'));
   }).catch(()=>{eyebrow.textContent='';});
@@ -55,8 +55,9 @@ function bcard(biz,idx){
   const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
   const loc=[biz.city,biz.province].filter(Boolean).join(', ')||'Zimbabwe';
   const initials=(biz.name||'Shop').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  const img=biz.logo||biz.cover?`<img src="${biz.logo||biz.cover}" alt="${(biz.name||'').replace(/"/g,'&quot;')}" loading="lazy">`:`<span style="color:${tc};font-weight:800;font-size:18px">${initials}</span>`;
-  const verified=biz.verification_level>0?'<span class="shopcard-verified" title="Verified">✓</span>':'';
+  const cardImg=biz.logo||biz.cover||(Array.isArray(biz.photos)&&biz.photos[0]);
+  const img=cardImg?`<img src="${cardImg}" alt="${(biz.name||'').replace(/"/g,'&quot;')}" loading="lazy">`:`<span style="color:${tc};font-weight:800;font-size:18px">${initials}</span>`;
+  const verified=biz.verification_level>=2?'<span class="shopcard-verified" title="Verified">✓</span>':'';
   return`<a class="shopcard" href="business?id=${biz.id}">
     <div class="shopcard-logo" style="background:${bg}">${img}</div><div class="shopcard-body">
       <div class="shopcard-name">${biz.name||'Shop'}${verified}</div><div class="shopcard-loc">${PIN} ${loc}</div></div></a>`;

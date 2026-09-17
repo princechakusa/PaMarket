@@ -50,15 +50,21 @@ export function ShopsRail({
             .join(" / ");
           const niche = categoryNames || "Local Shop";
           const loc = [business.city, business.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+          const shopPhotos = (business.photos ?? []).filter((p): p is string => Boolean(p));
           const thumbs = products.filter((l) => l.photos?.[0]).slice(0, 2);
+          // Falls back to the shop's own photos (business.photos) when it has
+          // no products with thumbnails to show — mirrors the same
+          // business.photos fallback already used on the shop detail page
+          // and website business cards.
+          const thumbSources = thumbs.length ? thumbs.map((l) => l.photos![0]) : shopPhotos.slice(0, 2);
           const verified = (business.verification_level ?? 0) >= 2;
 
           return (
             <Pressable key={business.id} style={[styles.card, shadow.sm]} onPress={() => onPressShop(business)}>
               <View style={styles.topRow}>
                 <View style={styles.logoWrap}>
-                  {business.logo ? (
-                    <Image source={{ uri: business.logo }} style={styles.logo} cachePolicy="memory-disk" />
+                  {business.logo || shopPhotos[0] ? (
+                    <Image source={{ uri: business.logo || shopPhotos[0] }} style={styles.logo} cachePolicy="memory-disk" />
                   ) : (
                     <Text style={styles.logoInitial}>{businessInitials(business.name)}</Text>
                   )}
@@ -81,8 +87,8 @@ export function ShopsRail({
               <View style={styles.thumbRow}>
                 {[0, 1].map((i) => (
                   <View key={i} style={styles.thumb}>
-                    {thumbs[i] ? (
-                      <Image source={{ uri: thumbs[i].photos![0] }} style={styles.thumbImage} cachePolicy="memory-disk" />
+                    {thumbSources[i] ? (
+                      <Image source={{ uri: thumbSources[i] }} style={styles.thumbImage} cachePolicy="memory-disk" />
                     ) : null}
                   </View>
                 ))}
