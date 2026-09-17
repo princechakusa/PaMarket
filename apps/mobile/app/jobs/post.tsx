@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
+import { INSTITUTION_VISIBILITY_LABEL, type InstitutionVisibility } from "../../lib/institutions";
 import { useTaxonomy } from "../../lib/taxonomy";
 import {
   color,
@@ -162,7 +163,7 @@ export default function PostJobScreen() {
   // Part 8's UI (banner + visibility choice) is not implemented yet -- see
   // the render section below -- this is the data/validation layer only.
   const [institutionContext, setInstitutionContext] = useState<{ id: string; official_name: string } | null>(null);
-  const [institutionVisibility, setInstitutionVisibility] = useState<"public" | "institution_only">("public");
+  const [institutionVisibility, setInstitutionVisibility] = useState<InstitutionVisibility>("public");
 
   useEffect(() => {
     if (!params.institutionId) {
@@ -583,7 +584,7 @@ export default function PostJobScreen() {
                     </Svg>
                   ) : null}
                   <Text style={[styles.visibilityOptionText, institutionVisibility === "public" && styles.visibilityOptionTextActive]} numberOfLines={1}>
-                    PaMarket + Institution
+                    {INSTITUTION_VISIBILITY_LABEL.public}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -596,7 +597,7 @@ export default function PostJobScreen() {
                     </Svg>
                   ) : null}
                   <Text style={[styles.visibilityOptionText, institutionVisibility === "institution_only" && styles.visibilityOptionTextActive]} numberOfLines={1}>
-                    Institution only
+                    {INSTITUTION_VISIBILITY_LABEL.institution_only}
                   </Text>
                 </Pressable>
               </View>

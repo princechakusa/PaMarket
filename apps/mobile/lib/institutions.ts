@@ -30,3 +30,25 @@ export const INSTITUTION_TYPE_LABEL: Record<InstitutionType, string> = {
 export function institutionInitials(name: string): string {
   return (name || "I").trim().charAt(0).toUpperCase();
 }
+
+// "public"/"institution_only" is stored inside the existing listings.attributes
+// jsonb column (see INSTITUTION_VISIBILITY_ATTR_KEY below) -- the smallest
+// existing mechanism (already used for subcat/condition), never a new
+// column. Absent/undefined (a normal, non-institution listing) behaves
+// identically to "public": every existing query that doesn't know about
+// this key keeps working unchanged.
+export type InstitutionVisibility = "public" | "institution_only";
+
+// Single source of truth for the jsonb attribute key itself -- previously
+// hand-typed as the raw string "institution_visibility" in every screen
+// that reads or writes it (post.tsx, the Home/Search feed filters, the
+// Institutions directory feed filter, and the listing detail institution
+// card). A typo in any one of those call sites would silently break the
+// "Institution Only" privacy filter, so this key belongs in exactly one
+// place.
+export const INSTITUTION_VISIBILITY_ATTR_KEY = "institution_visibility";
+
+export const INSTITUTION_VISIBILITY_LABEL: Record<InstitutionVisibility, string> = {
+  public: "PaMarket + Institution",
+  institution_only: "Institution Only",
+};

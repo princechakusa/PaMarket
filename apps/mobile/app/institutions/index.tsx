@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path } from "react-native-svg";
@@ -8,8 +8,13 @@ import { useAuth } from "../../lib/auth";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useTaxonomy } from "../../lib/taxonomy";
-import { INSTITUTION_TYPE_LABEL, type Institution, type InstitutionType } from "../../lib/institutions";
-import { publicListingExpiryFilter, type Listing } from "../../lib/listings";
+import {
+  INSTITUTION_TYPE_LABEL,
+  INSTITUTION_VISIBILITY_ATTR_KEY,
+  type Institution,
+  type InstitutionType,
+} from "../../lib/institutions";
+import { publicListingExpiryFilter, type Listing, type SortMode } from "../../lib/listings";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
 import { ListingCard } from "../../components/ListingCard";
 import { EmptyState, ErrorState, GlassBackButton } from "../../components/ui";
@@ -31,6 +36,16 @@ const TYPE_META: Record<InstitutionType, { label: string; color: string; badgeBg
   high_school: { label: "High School", color: "#B8185B", badgeBg: "rgba(255,255,255,0.28)" },
   organization: { label: "Org", color: "#92400E", badgeBg: "rgba(255,255,255,0.28)" },
 };
+// Derived from the real InstitutionType source of truth (lib/institutions.ts)
+// rather than a second hand-typed literal tuple -- was previously written
+// out twice in this same file.
+const INSTITUTION_TYPES = Object.keys(INSTITUTION_TYPE_LABEL) as InstitutionType[];
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "newest", label: "Newest" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
+  { value: "views", label: "Trending" },
+];
 const LOCATION_ACTIVE = "#2563EB";
 const CTA_BG = "#1E293B";
 const SAFETY_TIPS = [
@@ -64,6 +79,14 @@ function PinIcon({ color: c, size = 12 }: { color: string; size?: number }) {
   );
 }
 
+function ChevronDownIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={color.text} strokeWidth={2.2}>
+      <Path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export default function InstitutionsDirectoryScreen() {
   const router = useRouter();
   const { session } = useAuth();
@@ -89,7 +112,8 @@ export default function InstitutionsDirectoryScreen() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const pageRef = useRef(0);
   const [tipIndex, setTipIndex] = useState(0);
-  const [sort, setSort] = useState<"newest" | "price_asc">("newest");
+  const [sort, setSort] = useState<SortMode>("newest");
+  const [sortOpen, setSortOpen] = useState(false);
 
   useEffect(() => {
     if (!locationFilter && provinces.length) setLocationFilter(provinces[0]);
@@ -109,7 +133,7 @@ export default function InstitutionsDirectoryScreen() {
   // small head:true count queries; the institutions table is tens of rows,
   // not a scale that justifies a dedicated aggregate RPC.
   useEffect(() => {
-    (["university", "high_school", "organization"] as const).forEach((t) => {
+    INSTITUTION_TYPES.forEach((t) => {
       supabase.from("institutions").select("*", { count: "exact", head: true }).eq("is_active", true).eq("type", t)
         .then(({ count }) => setTypeCounts((prev) => ({ ...prev, [t]: count ?? 0 })));
     });
@@ -141,7 +165,9 @@ export default function InstitutionsDirectoryScreen() {
       // picks feed, same exclusion as Home/Search -- explicit is-null/neq OR,
       // not a bare not-equal, so an ordinary listing with no
       // institution_visibility key at all isn't silently dropped.
-      q = q.or("attributes->>institution_visibility.is.null,attributes->>institution_visibility.neq.institution_only");
+      q = q.or(
+        `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
+      );
       // General discovery feed, not one institution's page -- that's what
       // /institutions/[id] is for (full info, "Post here", the fixed
       // category filters). Scoped to whichever institutions currently match
@@ -149,7 +175,11 @@ export default function InstitutionsDirectoryScreen() {
       // filter, without duplicating the detail screen's job.
       if (institutionIds.length > 0) q = q.in("institution_id", institutionIds);
       else q = q.not("institution_id", "is", null);
-      return q.order(sort === "newest" ? "created_at" : "price", { ascending: sort !== "newest" }).range(from, to);
+      if (sort === "price_asc") q = q.order("price", { ascending: true });
+      else if (sort === "price_desc") q = q.order("price", { ascending: false });
+      else if (sort === "views") q = q.order("views", { ascending: false });
+      else q = q.order("created_at", { ascending: false });
+      return q.range(from, to);
     },
     [institutionIds, sort]
   );
@@ -204,15 +234,27 @@ export default function InstitutionsDirectoryScreen() {
     });
   }
 
-  const typeOptions = useMemo(() => (["university", "high_school", "organization"] as const), []);
+  const typeOptions = INSTITUTION_TYPES;
 
   return (
     <View style={styles.container}>
       {Platform.OS !== "ios" ? (
         <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="dark" flat />
+          <GlassBackButton onPress={() => router.back()} flat />
         </View>
       ) : null}
+
+      {/* Rendered outside the FlatList (not inside ListHeaderComponent) so it
+          stays fixed at the top instead of scrolling away with the rest of
+          the header content (type/location filter pills, institution list,
+          Campus Picks) -- the simplest, lowest-risk way to make just this
+          block "sticky" without touching the FlatList's own virtualization
+          or introducing stickyHeaderIndices against a header built from
+          several nested horizontal FlatLists. */}
+      <View style={styles.titleBlock}>
+        <Text style={styles.h1}>Institutions</Text>
+        <Text style={styles.subtitle}>Find your campus or organization.</Text>
+      </View>
 
       <FlatList
         data={listings}
@@ -238,11 +280,6 @@ export default function InstitutionsDirectoryScreen() {
         ListFooterComponent={isLoadingMore ? <View style={styles.footer}><ActivityIndicator color={LOCATION_ACTIVE} /></View> : null}
         ListHeaderComponent={
           <>
-            <View style={styles.titleBlock}>
-              <Text style={styles.h1}>Institutions</Text>
-              <Text style={styles.subtitle}>Find your campus or organization.</Text>
-            </View>
-
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -357,8 +394,11 @@ export default function InstitutionsDirectoryScreen() {
                   <Text style={styles.picksCountText}>{listings.length} items</Text>
                 </View>
               </View>
-              <Pressable style={styles.sortPill} onPress={() => setSort((s) => (s === "newest" ? "price_asc" : "newest"))}>
-                <Text style={styles.sortPillText}>Sort: {sort === "newest" ? "Newest" : "Price"}</Text>
+              <Pressable style={styles.sortPill} onPress={() => setSortOpen(true)}>
+                <Text style={styles.sortPillText}>
+                  Sort: {SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Newest"}
+                </Text>
+                <ChevronDownIcon />
               </Pressable>
             </View>
 
@@ -367,6 +407,32 @@ export default function InstitutionsDirectoryScreen() {
           </>
         }
       />
+
+      <Modal visible={sortOpen} transparent animationType="fade" onRequestClose={() => setSortOpen(false)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setSortOpen(false)}>
+          <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Sort Campus Picks by</Text>
+            {SORT_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.value}
+                style={styles.sortRow}
+                onPress={() => {
+                  setSort(opt.value);
+                  setSortOpen(false);
+                }}
+              >
+                <Text style={[styles.sortRowText, opt.value === sort && styles.sortRowTextActive]}>{opt.label}</Text>
+                {opt.value === sort ? (
+                  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={LOCATION_ACTIVE} strokeWidth={2.5}>
+                    <Path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
+                ) : null}
+              </Pressable>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -376,7 +442,7 @@ function buildStyles(color: ColorPalette) {
     container: { flex: 1, backgroundColor: color.bg },
     backRow: { paddingHorizontal: space.lg, paddingBottom: space.xs },
     scrollContent: { paddingHorizontal: space.lg, paddingBottom: space.huge },
-    titleBlock: { paddingTop: space.sm, marginBottom: space.md },
+    titleBlock: { paddingTop: space.sm, paddingHorizontal: space.lg, marginBottom: space.md },
     h1: { ...font.h1, color: color.text },
     subtitle: { ...font.body, color: color.textMuted, fontWeight: "600", marginTop: 2 },
     pillRow: { gap: space.sm, paddingBottom: space.sm },
@@ -422,7 +488,15 @@ function buildStyles(color: ColorPalette) {
     picksTitle: { ...font.h3, color: color.text, flexShrink: 1 },
     picksCountPill: { backgroundColor: "rgba(37,99,235,0.1)", borderWidth: 1, borderColor: "rgba(37,99,235,0.25)", borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3 },
     picksCountText: { fontSize: 10.5, fontWeight: "800", color: LOCATION_ACTIVE },
-    sortPill: { flexDirection: "row", alignItems: "center", backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 7 },
+    sortPill: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 7 },
+
+    sheetBackdrop: { flex: 1, backgroundColor: color.overlay, justifyContent: "flex-end" },
+    sheet: { backgroundColor: color.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.lg, paddingTop: space.md },
+    sheetHandle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, marginBottom: space.md },
+    sheetTitle: { ...font.h3, color: color.text, marginBottom: space.sm },
+    sortRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: color.divider },
+    sortRowText: { ...font.body, color: color.text },
+    sortRowTextActive: { color: LOCATION_ACTIVE, fontWeight: "700" },
     sortPillText: { ...font.caption, fontWeight: "700", color: color.text },
     gridRow: { gap: space.md },
     footer: { paddingVertical: space.lg, alignItems: "center" },

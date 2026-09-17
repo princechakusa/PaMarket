@@ -39,6 +39,14 @@ import {
   isPersonalConversationFor,
   type ConversationRow,
 } from "../../lib/messages";
+import {
+  INSTITUTION_TYPE_LABEL,
+  INSTITUTION_VISIBILITY_ATTR_KEY,
+  INSTITUTION_VISIBILITY_LABEL,
+  institutionInitials,
+  type Institution,
+} from "../../lib/institutions";
+import { LocationMap } from "../../components/listing/LocationMap";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { notifyListingViewed } from "../../lib/store-review";
@@ -76,7 +84,7 @@ import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes,is_orderable";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,latitude,longitude,photos,status,boost,featured_until,expires_at,views,business_id,institution_id,created_at,updated_at,attributes,is_orderable";
 
 const CONDITION_LABELS: Record<string, string> = {
   new: "New",
@@ -301,6 +309,7 @@ export default function ListingDetailScreen() {
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const [orderableShop, setOrderableShop] = useState<{ id: string; name: string } | null>(null);
+  const [institution, setInstitution] = useState<Pick<Institution, "id" | "type" | "official_name" | "short_name" | "logo_url"> | null>(null);
   const {
     prices: boostPrices,
     availableProductIds: availableBoostIds,
@@ -402,6 +411,18 @@ export default function ListingDetailScreen() {
       }
     } else {
       setOrderableShop(null);
+    }
+
+    if (found.institution_id) {
+      const { data: instData } = await supabase
+        .from("institutions")
+        .select("id,type,official_name,short_name,logo_url")
+        .eq("id", found.institution_id)
+        .eq("is_active", true)
+        .maybeSingle();
+      setInstitution((instData as typeof institution) ?? null);
+    } else {
+      setInstitution(null);
     }
 
     supabase.rpc("increment_listing_view", { listing_id: found.id }).then(
@@ -951,6 +972,47 @@ export default function ListingDetailScreen() {
             </View>
           </View>
 
+          {/* Institution context -- only shown when this listing is tagged
+              to an institution hub (Institution Post Setup screen). Real
+              fields only: category (already fetched) + the actual
+              public/institution-only visibility choice made at post time. */}
+          {institution ? (
+            <Pressable
+              style={styles.section}
+              onPress={() => router.push({ pathname: "/institutions/[id]", params: { id: institution.id } })}
+            >
+              <View style={[styles.institutionCard, shadow.sm]}>
+                <View style={styles.institutionTopRow}>
+                  <View style={styles.institutionAvatar}>
+                    {institution.logo_url ? (
+                      <Image source={{ uri: institution.logo_url }} style={styles.institutionAvatarImage} contentFit="cover" cachePolicy="memory-disk" />
+                    ) : (
+                      <Text style={styles.institutionAvatarInitial}>{institutionInitials(institution.official_name)}</Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.institutionName} numberOfLines={1}>{institution.official_name}</Text>
+                    <Text style={styles.institutionMeta}>{INSTITUTION_TYPE_LABEL[institution.type]} Hub</Text>
+                  </View>
+                </View>
+                <View style={styles.institutionStatsRow}>
+                  <View style={styles.institutionStat}>
+                    <Text style={styles.institutionStatLabel}>Category</Text>
+                    <Text style={styles.institutionStatValue} numberOfLines={1}>{categoryName}</Text>
+                  </View>
+                  <View style={styles.institutionStat}>
+                    <Text style={styles.institutionStatLabel}>Visibility</Text>
+                    <Text style={styles.institutionStatValue} numberOfLines={1}>
+                      {INSTITUTION_VISIBILITY_LABEL[
+                        listing.attributes?.[INSTITUTION_VISIBILITY_ATTR_KEY] === "institution_only" ? "institution_only" : "public"
+                      ]}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Pressable>
+          ) : null}
+
           {/* Description */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
@@ -1012,6 +1074,30 @@ export default function ListingDetailScreen() {
                   ))}
                 </View>
               ) : null}
+            </View>
+          ) : null}
+
+          {/* Approximate location -- only when the seller actually captured
+              GPS coordinates at post time (optional, most listings don't
+              have this). Real, interactive OpenStreetMap tiles via WebView,
+              same deterministic jitter + 400m radius circle convention the
+              website's own listing page (detail.html) already uses, so a
+              given listing looks the same on both platforms. */}
+          {listing.latitude != null && listing.longitude != null ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Approximate Location</Text>
+              <LocationMap
+                latitude={listing.latitude}
+                longitude={listing.longitude}
+                listingId={listing.id}
+                locationLabel={[listing.suburb, listing.city].filter(Boolean).join(", ") || listing.province || null}
+              />
+              <View style={styles.locationTip}>
+                <Text style={styles.locationTipText}>
+                  This is an approximate area, not the seller's exact address. Agree on an exact handover spot with
+                  the seller in chat, and meet in a safe, public place.
+                </Text>
+              </View>
             </View>
           ) : null}
 
@@ -1609,6 +1695,35 @@ function buildStyles(color: ColorPalette) {
       color: color.goldDark,
       fontWeight: "800",
     },
+
+    institutionCard: {
+      backgroundColor: color.brandTint,
+      borderRadius: radius.lg,
+      padding: space.md,
+      gap: space.sm,
+    },
+    institutionTopRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+    institutionAvatar: {
+      width: 40, height: 40, borderRadius: radius.pill, backgroundColor: color.brand,
+      alignItems: "center", justifyContent: "center", overflow: "hidden",
+    },
+    institutionAvatarImage: { width: "100%", height: "100%" },
+    institutionAvatarInitial: { ...font.title, color: color.textOnBrand },
+    institutionName: { ...font.bodyStrong, color: color.text },
+    institutionMeta: { ...font.caption, color: color.textMuted, marginTop: 1 },
+    institutionStatsRow: { flexDirection: "row", gap: space.sm },
+    institutionStat: {
+      flex: 1, backgroundColor: color.surface, borderRadius: radius.md,
+      paddingHorizontal: space.sm, paddingVertical: space.xs,
+    },
+    institutionStatLabel: { ...font.micro, color: color.textMuted },
+    institutionStatValue: { ...font.caption, color: color.text, fontWeight: "700", marginTop: 1 },
+
+    locationTip: {
+      flexDirection: "row", backgroundColor: color.surfaceAlt, borderRadius: radius.md,
+      padding: space.sm, marginTop: space.sm,
+    },
+    locationTipText: { ...font.caption, color: color.textMuted, flex: 1, lineHeight: 16 },
 
     safetyTip: {
       backgroundColor: color.goldTint,

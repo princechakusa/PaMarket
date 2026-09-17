@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
-import Svg, { Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
+import { INSTITUTION_VISIBILITY_ATTR_KEY } from "../../lib/institutions";
 import {
   filterListings,
   isFeatured,
@@ -33,7 +33,6 @@ import { CategoryRail } from "../../components/home/CategoryRail";
 import { AdCarousel } from "../../components/home/AdCarousel";
 import { ListingCard } from "../../components/ListingCard";
 import {
-  Button,
   EmptyState,
   ErrorState,
   ListingCardSkeleton,
@@ -178,7 +177,9 @@ export default function HomeScreen() {
       // NULL in SQL and would silently drop every normal listing from
       // Home. Same defensive is-null-or-not-equal shape search.tsx already
       // uses for nullable currency values.
-      .or("attributes->>institution_visibility.is.null,attributes->>institution_visibility.neq.institution_only")
+      .or(
+        `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
+      )
       .order("created_at", { ascending: false })
       .limit(60)
       .then((result) => result);
@@ -227,27 +228,51 @@ export default function HomeScreen() {
     if (session?.user) {
       fetchSavedListingIds(session.user.id).then(setSavedIds);
     }
-  }, [session]);
+    // Deliberately keyed on the user id, not the session object itself.
+    // Supabase's AppState listener (lib/supabase.ts) calls
+    // startAutoRefresh() every time the app becomes active, which can
+    // silently rotate the access token and hand lib/auth.tsx a brand-new
+    // Session object for the *same* signed-in user. That new object
+    // reference was previously enough to change this callback's identity
+    // and re-trigger the mount effect below, which unconditionally set
+    // isLoading back to true — the entire Home feed replaced itself with
+    // HomeSkeleton on every single app resume, which is the flicker this
+    // was fixed for. userId only changes on a real sign-in/sign-out/
+    // account switch, which is the only time Home should reset to a loading
+    // state. Same fix shape already proven in app/(tabs)/profile.tsx
+    // (loadedUserIdRef) and app/(tabs)/messages.tsx (summariesRef.current.length
+    // check) — this mirrors those, it doesn't invent a new pattern.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   useEffect(() => {
-    setIsLoading(true);
     let cancelled = false;
-    // Hydrate from the last successful load immediately — if the network
-    // call below fails (no connection), this is what stays on screen
-    // instead of an empty/error state. Overwritten the moment fresh data
-    // arrives, so it's never shown alongside outdated data unknowingly.
-    loadCache<HomeCache>(HOME_CACHE_KEY).then((cached) => {
-      if (cancelled || !cached) return;
-      setListings((current) => (current.length ? current : cached.listings));
-      setBusinesses((current) => (current.length ? current : cached.businesses));
-      setAds((current) => (current.length ? current : cached.ads));
-      setShowingCached(true);
-      setIsLoading(false);
-    });
+    // Only show the full skeleton on a genuine first load (no data on
+    // screen yet). If Home already has listings/businesses rendered --
+    // e.g. this effect re-running because the signed-in user actually
+    // changed while some stale content briefly remains -- keep that
+    // content visible and let it update in place once the fresh data
+    // arrives, instead of flashing back to an empty loading state.
+    if (listings.length === 0 && businesses.length === 0) {
+      setIsLoading(true);
+      // Hydrate from the last successful load immediately — if the network
+      // call below fails (no connection), this is what stays on screen
+      // instead of an empty/error state. Overwritten the moment fresh data
+      // arrives, so it's never shown alongside outdated data unknowingly.
+      loadCache<HomeCache>(HOME_CACHE_KEY).then((cached) => {
+        if (cancelled || !cached) return;
+        setListings((current) => (current.length ? current : cached.listings));
+        setBusinesses((current) => (current.length ? current : cached.businesses));
+        setAds((current) => (current.length ? current : cached.ads));
+        setShowingCached(true);
+        setIsLoading(false);
+      });
+    }
     loadData().finally(() => setIsLoading(false));
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadData]);
 
   // The notification/message badge counts were only ever fetched once on
@@ -282,6 +307,35 @@ export default function HomeScreen() {
       if (debounceTimer) clearTimeout(debounceTimer);
       unsubscribe();
     };
+  }, [loadData]);
+
+  // Quiet catch-up refresh on app resume. The realtime subscription above
+  // only covers changes that happen while this screen is actually mounted
+  // and connected -- Realtime's socket is suspended while the app is
+  // backgrounded, and Supabase doesn't replay missed events on reconnect,
+  // so anything posted while the app was in the background would otherwise
+  // sit stale until something else happens to trigger a reload. This is a
+  // second AppState listener (alongside the existing ones in lib/supabase.ts
+  // for the auth token timer and app/_layout.tsx for push-notification
+  // re-registration) because it serves a different, screen-local purpose --
+  // not a duplicate of either. Deliberately calls loadData() directly
+  // instead of onRefresh()/setIsRefreshing(true): no spinner, no skeleton,
+  // existing listings/businesses/ads stay on screen and are simply replaced
+  // in place once the fresh data arrives (loadData() already only ever
+  // calls the plain setListings/setBusinesses/setAds setters, never
+  // setIsLoading(true)). A 30s cooldown keeps rapid background/foreground
+  // toggling (e.g. swiping through the app switcher) from firing repeated
+  // network requests.
+  useEffect(() => {
+    let lastRefresh = Date.now();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      const now = Date.now();
+      if (now - lastRefresh < 30_000) return;
+      lastRefresh = now;
+      loadData();
+    });
+    return () => subscription.remove();
   }, [loadData]);
 
   async function onRefresh() {
@@ -492,21 +546,6 @@ export default function HomeScreen() {
               compact
             />
 
-            <View style={styles.ctaWrap}>
-              <Button
-                label="Post a Free Ad"
-                variant="gold"
-                size="lg"
-                onPress={() => router.push("/(tabs)/post")}
-                icon={
-                  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2.5}>
-                    <Line x1={12} y1={5} x2={12} y2={19} />
-                    <Line x1={5} y1={12} x2={19} y2={12} />
-                  </Svg>
-                }
-              />
-            </View>
-
             {categorySections.map((section) => (
               <CategoryRail
                 key={section.id}
@@ -543,10 +582,6 @@ function buildStyles(color: ColorPalette) {
     rail: {
       paddingHorizontal: space.lg,
       gap: space.md,
-    },
-    ctaWrap: {
-      paddingHorizontal: space.lg,
-      marginBottom: space.xl,
     },
     offlineBanner: {
       marginHorizontal: space.lg,

@@ -23,24 +23,24 @@ import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { friendlyError } from "../../lib/safety";
 import { notifyPositiveAction } from "../../lib/store-review";
 import { useTaxonomy } from "../../lib/taxonomy";
-import { roundApproxCoord } from "../../lib/useCurrentLocation";
+import { reverseGeocode, roundApproxCoord } from "../../lib/useCurrentLocation";
 import { formatPrice } from "../../lib/listings";
+import {
+  INSTITUTION_VISIBILITY_ATTR_KEY,
+  INSTITUTION_VISIBILITY_LABEL,
+  type InstitutionVisibility,
+} from "../../lib/institutions";
 import { CONDITION_OPTIONS, categoryHasCondition, type ListingCondition } from "../../lib/listing-form";
 import { CategoryPicker } from "../../components/post/CategoryPicker";
 import { AttrFields, type AttrValues } from "../../components/post/AttrFields";
 import { PhotoGrid } from "../../components/post/PhotoGrid";
+import { MapLocationPicker } from "../../components/post/MapLocationPicker";
+import { LocationMap } from "../../components/listing/LocationMap";
 import { Button, Card, Chip, GlassBackButton, ProvinceCityFields, UseCurrentLocationButton } from "../../components/ui";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
-// Institutions Phase 4. "public"/"institution_only" is stored inside the
-// existing attributes jsonb column -- the smallest existing mechanism
-// (already used for subcat/condition) -- rather than a new listings
-// column. Absent/undefined (a normal, non-institution listing) behaves
-// identically to "public": every existing query that doesn't know about
-// this key keeps working unchanged.
-type InstitutionVisibility = "public" | "institution_only";
 type InstitutionContext = { id: string; official_name: string };
 
 const TITLE_PLACEHOLDERS: Record<string, string> = {
@@ -100,7 +100,18 @@ export default function PostScreen() {
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
-  const params = useLocalSearchParams<{ businessId?: string; institutionId?: string }>();
+  const params = useLocalSearchParams<{
+    businessId?: string;
+    institutionId?: string;
+    // Institution Post Setup screen (app/institutions/post-setup.tsx)
+    // forwards its already-made category + visibility choices here so this
+    // step 1 doesn't re-prompt for either. Absent for every other entry
+    // point (normal posting, or the older bare institutionId deep link),
+    // which keeps behaving exactly as before.
+    category?: string;
+    institutionVisibility?: string;
+  }>();
+  const preselectedFromSetup = !!params.category;
   const [state, setState] = useState<PostState>(INITIAL_STATE);
   const [institutionContext, setInstitutionContext] = useState<InstitutionContext | null>(null);
   // headerLeft stays custom (not the OS default) — this "back" button steps
@@ -131,6 +142,7 @@ export default function PostScreen() {
   // a non-blocking reminder, and is refreshed whenever the persistent Post
   // tab regains focus so an Edit Profile save appears without an app restart.
   const [hasPhone, setHasPhone] = useState<boolean | null>(null);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   // Stage 5: bundled CATEGORIES/PROVINCES/CITIES_BY_PROVINCE shown
   // immediately, silently upgraded in the background — never blocks
   // posting. The already-selected category/province/city (if any, e.g.
@@ -169,6 +181,24 @@ export default function PostScreen() {
       cancelled = true;
     };
   }, [params.institutionId]);
+
+  // Institution Post Setup's category + visibility choices, applied
+  // reactively (not via a useState initializer) -- this tab screen stays
+  // mounted across navigations (see the reset comment in handleSubmit
+  // below), so a useState initializer only ever ran once per app session
+  // and silently kept stale/default values on every subsequent visit from
+  // Post Setup. This mirrors the institutionId effect above: it re-runs
+  // every time the incoming route params actually change, so it applies
+  // correctly whether this is the Post tab's first mount this session or
+  // its hundredth.
+  useEffect(() => {
+    if (!params.category) return;
+    setState((s) => ({
+      ...s,
+      category: params.category as string,
+      institutionVisibility: params.institutionVisibility === "institution_only" ? "institution_only" : "public",
+    }));
+  }, [params.category, params.institutionVisibility]);
 
   useFocusEffect(
     useCallback(() => {
@@ -358,7 +388,7 @@ export default function PostScreen() {
       // non-institution post changes.
       const attributes = {
         ...(state.condition ? { ...state.attrs, condition: state.condition } : state.attrs),
-        ...(institutionContext ? { institution_visibility: state.institutionVisibility } : {}),
+        ...(institutionContext ? { [INSTITUTION_VISIBILITY_ATTR_KEY]: state.institutionVisibility } : {}),
       };
 
       const { error: insertError } = await supabase.from("listings").insert({
@@ -396,7 +426,18 @@ export default function PostScreen() {
       // when you navigate away via the bottom tabs, so a stale filled-in
       // form would otherwise greet you next time you open Post).
       setState(INITIAL_STATE);
+      // Return to whichever context this post actually came from, matching
+      // the existing businessId precedent below -- a business post already
+      // returns to that business's own management screen, not Home. An
+      // institution post follows the same rule: back to the institution's
+      // detail page (app/institutions/[id].tsx), which works identically for
+      // both University and High School since it's the one shared screen for
+      // both types and institutionContext.id is already independently
+      // re-verified (never the raw, untrusted route param). Anything else
+      // (a normal, non-institution, non-business post) keeps the original
+      // Home behavior unchanged.
       if (params.businessId) router.replace({ pathname: "/business-listings/[id]", params: { id: params.businessId } });
+      else if (institutionContext) router.replace({ pathname: "/institutions/[id]", params: { id: institutionContext.id } });
       else router.replace("/(tabs)");
       // isSubmitting is reset AFTER the navigation transition finishes
       // (InteractionManager), not in this same tick — a state update
@@ -464,27 +505,37 @@ export default function PostScreen() {
         <Card style={styles.institutionBanner}>
           <Text style={styles.institutionBannerLabel}>Posting to</Text>
           <Text style={styles.institutionBannerName}>{institutionContext.official_name}</Text>
-          <Text style={[styles.fieldLabel, { marginTop: space.sm }]}>Choose visibility</Text>
-          <View style={styles.currencyToggle}>
-            {(
-              [
-                { value: "public" as const, label: "PaMarket + Institution" },
-                { value: "institution_only" as const, label: "Institution only" },
-              ]
-            ).map((opt) => (
-              <Pressable
-                key={opt.value}
-                style={[styles.visibilityOption, state.institutionVisibility === opt.value && styles.currencyOptionActive]}
-                onPress={() => update({ institutionVisibility: opt.value })}
-              >
-                <Text
-                  style={[styles.currencyOptionText, state.institutionVisibility === opt.value && styles.currencyOptionTextActive]}
-                >
-                  {opt.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          {preselectedFromSetup ? (
+            // Institution Post Setup already asked for visibility -- show
+            // the chosen value read-only instead of a second picker.
+            <Text style={[styles.fieldLabel, { marginTop: space.sm }]}>
+              {INSTITUTION_VISIBILITY_LABEL[state.institutionVisibility]}
+            </Text>
+          ) : (
+            <>
+              <Text style={[styles.fieldLabel, { marginTop: space.sm }]}>Choose visibility</Text>
+              <View style={styles.currencyToggle}>
+                {(
+                  [
+                    { value: "public" as const, label: INSTITUTION_VISIBILITY_LABEL.public },
+                    { value: "institution_only" as const, label: INSTITUTION_VISIBILITY_LABEL.institution_only },
+                  ]
+                ).map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    style={[styles.visibilityOption, state.institutionVisibility === opt.value && styles.currencyOptionActive]}
+                    onPress={() => update({ institutionVisibility: opt.value })}
+                  >
+                    <Text
+                      style={[styles.currencyOptionText, state.institutionVisibility === opt.value && styles.currencyOptionTextActive]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          )}
         </Card>
       ) : null}
 
@@ -574,6 +625,32 @@ export default function PostScreen() {
 
         {state.step === 2 ? (
           <Card style={styles.card}>
+            {institutionContext ? (
+              <View style={styles.postingContextCard}>
+                <View style={styles.postingContextTopRow}>
+                  <Text style={styles.postingContextEyebrow}>Posting Context</Text>
+                  <View style={styles.campusPill}>
+                    <Text style={styles.campusPillText}>Campus Listing</Text>
+                  </View>
+                </View>
+                <Text style={styles.postingContextName} numberOfLines={1}>
+                  {institutionContext.official_name}
+                </Text>
+                <Text style={styles.postingContextMeta}>{categoryName} Category</Text>
+                <View style={styles.postingContextBanner}>
+                  <Text style={styles.postingContextBannerTitle}>
+                    {INSTITUTION_VISIBILITY_LABEL[state.institutionVisibility]}
+                    {state.institutionVisibility === "public" ? " Active" : ""}
+                  </Text>
+                  <Text style={styles.postingContextBannerBody}>
+                    {state.institutionVisibility === "institution_only"
+                      ? `Only visible inside the ${institutionContext.official_name} hub.`
+                      : `Visible simultaneously across the national marketplace and the ${institutionContext.official_name} campus feed.`}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             <Text style={styles.fieldLabel}>Price</Text>
             <View style={styles.priceRow}>
               <TextInput
@@ -618,7 +695,9 @@ export default function PostScreen() {
               placeholderTextColor={color.textMuted}
             />
 
-            <View style={{ marginTop: space.md }}>
+            <Text style={[styles.fieldLabel, { marginTop: space.lg }]}>Choose your location</Text>
+            <Text style={styles.locationHelp}>Specify where you can safely hand over the item</Text>
+            <View style={{ marginTop: space.sm }}>
               <UseCurrentLocationButton
                 provinces={provinces}
                 citiesByProvince={citiesByProvince}
@@ -635,7 +714,44 @@ export default function PostScreen() {
                   })
                 }
               />
+              <Pressable style={styles.dropPinButton} onPress={() => setMapPickerOpen(true)}>
+                <Text style={styles.dropPinButtonText}>
+                  {state.latitude != null ? "Change pin on map" : "Drop a pin on map"}
+                </Text>
+              </Pressable>
             </View>
+
+            {state.latitude != null && state.longitude != null ? (
+              <View style={{ marginTop: space.md, gap: space.xs }}>
+                <LocationMap
+                  latitude={state.latitude}
+                  longitude={state.longitude}
+                  listingId="draft"
+                  locationLabel={[state.suburb, state.city].filter(Boolean).join(", ") || state.province || null}
+                />
+                <Text style={styles.locationTip}>
+                  This approximate area is what buyers see for your privacy. Agree on an exact handover spot in chat.
+                </Text>
+              </View>
+            ) : null}
+
+            <MapLocationPicker
+              visible={mapPickerOpen}
+              initialLatitude={state.latitude}
+              initialLongitude={state.longitude}
+              onCancel={() => setMapPickerOpen(false)}
+              onConfirm={async (lat, lng) => {
+                setMapPickerOpen(false);
+                const geo = await reverseGeocode(lat, lng, provinces, citiesByProvince);
+                update({
+                  latitude: roundApproxCoord(lat),
+                  longitude: roundApproxCoord(lng),
+                  province: geo.province ?? state.province,
+                  city: geo.city ?? state.city,
+                  suburb: geo.suburb ?? state.suburb,
+                });
+              }}
+            />
           </Card>
         ) : null}
 
@@ -799,6 +915,28 @@ function buildStyles(color: ColorPalette) {
   institutionBanner: { marginHorizontal: space.lg, marginBottom: space.sm, padding: space.lg },
   institutionBannerLabel: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
   institutionBannerName: { ...font.title, color: color.text, marginTop: 2 },
+
+  postingContextCard: {
+    backgroundColor: color.brandTint, borderRadius: radius.lg, padding: space.md, marginBottom: space.lg, gap: space.xs,
+  },
+  postingContextTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  postingContextEyebrow: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
+  campusPill: { backgroundColor: color.surface, borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 2 },
+  campusPillText: { ...font.micro, color: color.brand },
+  postingContextName: { ...font.title, color: color.text },
+  postingContextMeta: { ...font.sub, color: color.textMuted },
+  postingContextBanner: { backgroundColor: color.surface, borderRadius: radius.md, padding: space.sm, marginTop: space.xs },
+  postingContextBannerTitle: { ...font.caption, color: color.brand, fontWeight: "800" },
+  postingContextBannerBody: { ...font.caption, color: color.textMuted, marginTop: 2 },
+
+  locationHelp: { ...font.sub, color: color.textMuted, marginTop: -space.xs, marginBottom: space.sm },
+  dropPinButton: {
+    marginTop: space.sm, height: 46, borderRadius: radius.md, borderWidth: 1.5, borderColor: color.borderStrong,
+    alignItems: "center", justifyContent: "center", backgroundColor: color.surface,
+  },
+  dropPinButtonText: { ...font.bodyStrong, color: color.brand },
+  locationTip: { ...font.caption, color: color.textMuted },
+
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   tipBox: { backgroundColor: color.goldTint, borderRadius: radius.md, padding: space.lg, marginTop: space.lg },
   phoneReminder: { backgroundColor: color.brandTint, borderRadius: radius.md, padding: space.md, marginTop: space.lg },

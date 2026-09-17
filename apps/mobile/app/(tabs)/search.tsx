@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path } from "react-native-svg";
 import { Image } from "expo-image";
 import { supabase } from "../../lib/supabase";
+import { INSTITUTION_VISIBILITY_ATTR_KEY } from "../../lib/institutions";
 import { useAuth } from "../../lib/auth";
 import {
   applyBrowseFilters,
@@ -157,7 +158,9 @@ export default function SearchScreen() {
       // Institutions Phase 4: same exclusion as Home's feed query -- see
       // that file's comment for why this must be an explicit is.null/neq
       // OR, not a bare not-equal.
-      .or("attributes->>institution_visibility.is.null,attributes->>institution_visibility.neq.institution_only")
+      .or(
+        `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
+      )
       .neq("category", "jobs");
 
     if (filters.categories.length === 1) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -40,6 +40,11 @@ export default function InstitutionDetailScreen() {
   const [institution, setInstitution] = useState<InstitutionRow | null>(null);
   const [isLoadingInstitution, setIsLoadingInstitution] = useState(true);
   const [institutionError, setInstitutionError] = useState(false);
+  // Real count (not a fabricated stat) -- same {count:"exact", head:true}
+  // pattern already used by app/institutions/index.tsx's per-type counts.
+  // Always "all" categories regardless of the active filter chip, so the
+  // header stat doesn't visually flicker as the user switches filters.
+  const [activeCount, setActiveCount] = useState<number | null>(null);
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
@@ -72,6 +77,19 @@ export default function InstitutionDetailScreen() {
   }, [id]);
 
   useEffect(() => { void loadInstitution(); }, [loadInstitution]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    supabase
+      .rpc("get_institution_listings", { p_institution_id: id, p_limit: 1, p_offset: 0 }, { count: "exact", head: true })
+      .then(({ count }) => {
+        if (!cancelled) setActiveCount(count ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const buildListingsQuery = useCallback(
     (from: number, to: number) => {
@@ -137,7 +155,7 @@ export default function InstitutionDetailScreen() {
   if (isLoadingInstitution) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} tone="light" flat /></View> : null}
+        {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
         <View style={styles.centered}><ActivityIndicator color={color.brand} /></View>
       </View>
     );
@@ -150,7 +168,7 @@ export default function InstitutionDetailScreen() {
   if (institutionError || !institution) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} tone="light" flat /></View> : null}
+        {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
         <View style={styles.centered}>
           {institutionError ? <ErrorState onRetry={() => void loadInstitution()} /> : <Text style={styles.notFoundTitle}>Institution not found</Text>}
         </View>
@@ -168,30 +186,39 @@ export default function InstitutionDetailScreen() {
         contentContainerStyle={[styles.listContent, { paddingBottom: 58 + insets.bottom + space.xxl }]}
         ListHeaderComponent={
           <>
-            {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} tone="light" flat /></View> : null}
+            {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
 
             <View style={styles.header}>
-              <View style={styles.logoWrap}>
-                {institution.logo_url ? (
-                  <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
-                ) : (
-                  <Text style={styles.logoInitial}>{institutionInitials(institution.official_name)}</Text>
-                )}
+              <View style={styles.headerTopRow}>
+                <View style={styles.logoWrap}>
+                  {institution.logo_url ? (
+                    <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+                  ) : (
+                    <Text style={styles.logoInitial}>{institutionInitials(institution.official_name)}</Text>
+                  )}
+                </View>
+                <Pressable
+                  style={styles.postHereButton}
+                  onPress={() => router.push({ pathname: "/institutions/post-setup", params: { institutionId: institution.id } })}
+                >
+                  <Text style={styles.postHereButtonText}>Post for {institution.short_name || institution.official_name}</Text>
+                </Pressable>
               </View>
+
               <Text style={styles.name}>{institution.official_name}</Text>
-              {institution.short_name ? <Text style={styles.shortName}>{institution.short_name}</Text> : null}
-              <Text style={styles.type}>{INSTITUTION_TYPE_LABEL[institution.type]}</Text>
-              {meta ? <Text style={styles.location}>{[institution.suburb, meta].filter(Boolean).join(", ")}</Text> : null}
+              <Text style={styles.type}>
+                {INSTITUTION_TYPE_LABEL[institution.type]}
+                {meta || institution.suburb ? ` • ${[institution.suburb, meta].filter(Boolean).join(", ")}` : ""}
+              </Text>
               {institution.description ? <Text style={styles.description}>{institution.description}</Text> : null}
 
-              <View style={styles.postHereWrap}>
-                <Text
-                  style={styles.postHereButton}
-                  onPress={() => router.push({ pathname: "/(tabs)/post", params: { institutionId: institution.id } })}
-                >
-                  Post here
-                </Text>
-              </View>
+              {activeCount !== null ? (
+                <View style={styles.statChip}>
+                  <Text style={styles.statChipText}>
+                    {activeCount} active listing{activeCount === 1 ? "" : "s"}
+                  </Text>
+                </View>
+              ) : null}
             </View>
 
             <FlatList
@@ -232,23 +259,27 @@ function buildStyles(color: ColorPalette) {
     centered: { flex: 1, alignItems: "center", justifyContent: "center" },
     backRow: { paddingHorizontal: space.lg, paddingBottom: space.sm },
     notFoundTitle: { ...font.title, color: color.text },
-    header: { alignItems: "center", paddingHorizontal: space.xl, paddingBottom: space.lg },
+    header: { paddingHorizontal: space.xl, paddingTop: space.md, paddingBottom: space.lg },
+    headerTopRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: space.sm },
     logoWrap: {
-      width: 84, height: 84, borderRadius: radius.pill, backgroundColor: color.brandTint,
-      alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: space.md,
+      width: 68, height: 68, borderRadius: radius.lg, backgroundColor: color.brand,
+      alignItems: "center", justifyContent: "center", overflow: "hidden",
     },
     logo: { width: "100%", height: "100%" },
-    logoInitial: { ...font.h2, color: color.brand },
-    name: { ...font.h3, color: color.text, textAlign: "center" },
-    shortName: { ...font.body, color: color.textMuted, fontWeight: "600", marginTop: 2 },
-    type: { ...font.caption, color: color.brand, fontWeight: "700", marginTop: space.xs, textTransform: "uppercase" },
-    location: { ...font.caption, color: color.textMuted, marginTop: space.xs },
-    description: { ...font.body, color: color.text, textAlign: "center", marginTop: space.md },
-    postHereWrap: { marginTop: space.lg },
+    logoInitial: { ...font.h2, color: color.textOnBrand },
     postHereButton: {
-      ...font.body, fontWeight: "700", color: color.textOnBrand, backgroundColor: color.brand,
-      paddingHorizontal: space.xl, paddingVertical: space.sm, borderRadius: radius.pill, overflow: "hidden",
+      backgroundColor: color.gold, paddingHorizontal: space.lg, paddingVertical: space.sm,
+      borderRadius: radius.pill, maxWidth: "62%",
     },
+    postHereButtonText: { ...font.caption, fontWeight: "800", color: color.textOnBrand },
+    name: { ...font.h3, color: color.text, marginTop: space.md },
+    type: { ...font.caption, color: color.brand, fontWeight: "700", marginTop: space.xs, textTransform: "uppercase" },
+    description: { ...font.body, color: color.text, marginTop: space.md },
+    statChip: {
+      alignSelf: "flex-start", backgroundColor: color.surfaceAlt, borderWidth: 1, borderColor: color.border,
+      borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs, marginTop: space.md,
+    },
+    statChipText: { ...font.caption, color: color.text },
     filterContent: { paddingHorizontal: space.lg, gap: space.sm, paddingBottom: space.md },
     gridRow: { paddingHorizontal: space.lg, gap: space.md },
     listContent: { paddingBottom: space.huge },
