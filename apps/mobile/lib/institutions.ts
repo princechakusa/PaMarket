@@ -16,6 +16,10 @@ export type Institution = {
   city_id: string;
   suburb?: string | null;
   logo_url?: string | null;
+  // Full-width hero banner on the detail screen, distinct from logo_url
+  // (the small circular badge) -- mirrors businesses.cover/.logo exactly.
+  cover_image?: string | null;
+  founded_year?: number | null;
   description?: string | null;
   is_active: boolean;
   sort_order?: number | null;

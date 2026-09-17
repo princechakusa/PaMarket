@@ -67,7 +67,7 @@ export default function InstitutionDetailScreen() {
     // this clause, so someone who knows the UUID directly cannot see it.
     const { data, error } = await supabase
       .from("institutions")
-      .select("id,type,official_name,short_name,search_aliases,province_id,city_id,suburb,logo_url,description,is_active,sort_order,provinces(name),cities(name)")
+      .select("id,type,official_name,short_name,search_aliases,province_id,city_id,suburb,logo_url,cover_image,founded_year,description,is_active,sort_order,provinces(name),cities(name)")
       .eq("id", id)
       .eq("is_active", true)
       .maybeSingle();
@@ -188,21 +188,34 @@ export default function InstitutionDetailScreen() {
           <>
             {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
 
-            <View style={styles.header}>
-              <View style={styles.headerTopRow}>
-                <View style={styles.logoWrap}>
-                  {institution.logo_url ? (
-                    <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
-                  ) : (
-                    <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
-                  )}
+            <View style={styles.cover}>
+              {institution.cover_image ? (
+                <Image source={{ uri: institution.cover_image }} style={styles.coverImage} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+              ) : null}
+              {activeCount !== null && activeCount > 0 ? (
+                <View style={styles.liveHubPill}>
+                  <View style={styles.liveHubDot} />
+                  <Text style={styles.liveHubPillText}>Live Hub</Text>
                 </View>
-                <Pressable
-                  style={styles.postHereButton}
-                  onPress={() => router.push({ pathname: "/institutions/post-setup", params: { institutionId: institution.id } })}
-                >
-                  <Text style={styles.postHereButtonText}>Post for {institution.short_name || institution.official_name}</Text>
-                </Pressable>
+              ) : null}
+              <Pressable
+                style={styles.postHereButton}
+                onPress={() => router.push({ pathname: "/institutions/post-setup", params: { institutionId: institution.id } })}
+              >
+                <Text style={styles.postHereButtonText}>Post for {institution.short_name || institution.official_name}</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.header}>
+              <View style={styles.logoWrap}>
+                {institution.logo_url ? (
+                  <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+                ) : (
+                  <>
+                    <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
+                    {institution.founded_year ? <Text style={styles.logoYear}>{institution.founded_year}</Text> : null}
+                  </>
+                )}
               </View>
 
               <View style={styles.nameRow}>
@@ -262,15 +275,27 @@ function buildStyles(color: ColorPalette) {
     centered: { flex: 1, alignItems: "center", justifyContent: "center" },
     backRow: { paddingHorizontal: space.lg, paddingBottom: space.sm },
     notFoundTitle: { ...font.title, color: color.text },
-    header: { paddingHorizontal: space.xl, paddingTop: space.md, paddingBottom: space.lg },
-    headerTopRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: space.sm },
+    cover: { height: 230, backgroundColor: color.brand },
+    coverImage: { width: "100%", height: "100%" },
+    liveHubPill: {
+      position: "absolute", top: space.md, right: space.md,
+      flexDirection: "row", alignItems: "center", gap: 6,
+      backgroundColor: "rgba(255,255,255,0.92)", borderRadius: radius.pill,
+      paddingHorizontal: space.sm, paddingVertical: 6,
+    },
+    liveHubDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#22C55E" },
+    liveHubPillText: { fontSize: 11, fontWeight: "800", color: "#16211D" },
+    header: { paddingHorizontal: space.xl, paddingTop: 0, paddingBottom: space.lg },
     logoWrap: {
-      width: 68, height: 68, borderRadius: radius.lg, backgroundColor: color.brand,
+      width: 68, height: 68, borderRadius: 34, backgroundColor: color.brand,
       alignItems: "center", justifyContent: "center", overflow: "hidden",
+      marginTop: -34, borderWidth: 3, borderColor: color.surface,
     },
     logo: { width: "100%", height: "100%" },
     logoInitial: { ...font.h2, color: color.textOnBrand },
+    logoYear: { fontSize: 10, fontWeight: "700", color: color.textOnBrand, opacity: 0.85, marginTop: 1 },
     postHereButton: {
+      position: "absolute", bottom: space.md, right: space.md,
       backgroundColor: color.gold, paddingHorizontal: space.lg, paddingVertical: space.sm,
       borderRadius: radius.pill, maxWidth: "62%",
     },

@@ -24,7 +24,8 @@ export type InstitutionType = 'university' | 'high_school' | 'organization';
 export type InstitutionRow = {
   id: string; type: string | null; official_name: string | null; short_name: string | null;
   search_aliases: string[] | null; province_id: string | null; city_id: string | null; suburb: string | null;
-  logo_url: string | null; description: string | null; is_active: boolean | null; sort_order: number | null;
+  logo_url: string | null; cover_image: string | null; founded_year: number | null;
+  description: string | null; is_active: boolean | null; sort_order: number | null;
 };
 
 export type ProvinceRow = { id: string; code: string | null; name: string | null };
@@ -53,7 +54,7 @@ export async function listInstitutions(filters: InstitutionFilters, page: number
   if (!client) return unavailable();
   let query = client
     .from('institutions')
-    .select('id, type, official_name, short_name, search_aliases, province_id, city_id, suburb, logo_url, description, is_active, sort_order', { count: 'exact' })
+    .select('id, type, official_name, short_name, search_aliases, province_id, city_id, suburb, logo_url, cover_image, founded_year, description, is_active, sort_order', { count: 'exact' })
     .order('sort_order', { ascending: true });
   if (filters.search) query = query.ilike('official_name', `%${filters.search.trim()}%`);
   if (filters.type) query = query.eq('type', filters.type);
@@ -76,7 +77,8 @@ export async function getInstitutionListingCount(institutionId: string): Promise
 
 export type InstitutionInput = {
   type: InstitutionType; official_name: string; short_name?: string | null; search_aliases?: string[];
-  province_id: string; city_id: string; suburb?: string | null; logo_url?: string | null; description?: string | null;
+  province_id: string; city_id: string; suburb?: string | null; logo_url?: string | null;
+  cover_image?: string | null; founded_year?: number | null; description?: string | null;
   is_active?: boolean; sort_order?: number;
 };
 

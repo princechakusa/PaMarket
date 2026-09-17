@@ -17,7 +17,8 @@ const TYPES: { value: InstitutionType; label: string }[] = [
 
 const emptyForm: InstitutionInput = {
   type: 'university', official_name: '', short_name: '', search_aliases: [],
-  province_id: '', city_id: '', suburb: '', logo_url: '', description: '', is_active: true, sort_order: 0,
+  province_id: '', city_id: '', suburb: '', logo_url: '', cover_image: '', founded_year: null,
+  description: '', is_active: true, sort_order: 0,
 };
 
 function duplicateFriendlyMessage(message: string): string {
@@ -55,6 +56,7 @@ export function InstitutionsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const selected = rows.find((r) => r.id === selectedId) ?? null;
@@ -104,7 +106,8 @@ export function InstitutionsPage() {
     setForm({
       type: (row.type as InstitutionType) ?? 'university', official_name: row.official_name ?? '', short_name: row.short_name ?? '',
       search_aliases: row.search_aliases ?? [], province_id: row.province_id ?? '', city_id: row.city_id ?? '',
-      suburb: row.suburb ?? '', logo_url: row.logo_url ?? '', description: row.description ?? '',
+      suburb: row.suburb ?? '', logo_url: row.logo_url ?? '', cover_image: row.cover_image ?? '',
+      founded_year: row.founded_year ?? null, description: row.description ?? '',
       is_active: row.is_active ?? true, sort_order: row.sort_order ?? 0,
     });
     setAliasesText((row.search_aliases ?? []).join(', '));
@@ -147,22 +150,24 @@ export function InstitutionsPage() {
     void load();
   }
 
-  async function onLogoSelected(file: File) {
+  async function onImageSelected(file: File, target: 'logo_url' | 'cover_image') {
     if (!auth.accessToken) return;
-    setLogoUploading(true); setMessage(null);
+    const label = target === 'logo_url' ? 'Logo' : 'Cover photo';
+    const setUploading = target === 'logo_url' ? setLogoUploading : setCoverUploading;
+    setUploading(true); setMessage(null);
     const result = await invokeAdminFunction<{ signedUrl?: string; publicUrl?: string; error?: string }>('get-r2-upload-url', auth.accessToken, {
-      body: { key: 'institutions/logo', contentType: file.type, verb: 'PUT' },
+      body: { key: target === 'logo_url' ? 'institutions/logo' : 'institutions/cover', contentType: file.type, verb: 'PUT' },
     });
-    if (result.error || !result.data.signedUrl) { setLogoUploading(false); setMessage(`Logo upload failed: ${result.error?.message ?? result.data?.error ?? 'unknown error'}`); return; }
+    if (result.error || !result.data.signedUrl) { setUploading(false); setMessage(`${label} upload failed: ${result.error?.message ?? result.data?.error ?? 'unknown error'}`); return; }
     try {
       const put = await fetch(result.data.signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
       if (!put.ok) throw new Error(`Upload failed (${put.status})`);
-      setForm((f) => ({ ...f, logo_url: result.data.publicUrl ?? f.logo_url }));
-      setMessage('Logo uploaded.');
+      setForm((f) => ({ ...f, [target]: result.data.publicUrl ?? f[target] }));
+      setMessage(`${label} uploaded.`);
     } catch (err) {
-      setMessage(`Logo upload failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+      setMessage(`${label} upload failed: ${err instanceof Error ? err.message : 'unknown error'}`);
     } finally {
-      setLogoUploading(false);
+      setUploading(false);
     }
   }
 
@@ -229,7 +234,9 @@ export function InstitutionsPage() {
             <label className="policy-field">Province<select value={form.province_id} onChange={(e) => setForm({ ...form, province_id: e.target.value, city_id: '' })}><option value="">Select province…</option>{provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
             <label className="policy-field">City<select value={form.city_id} onChange={(e) => setForm({ ...form, city_id: e.target.value })} disabled={!form.province_id}><option value="">Select city…</option>{formCities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
             <label className="policy-field">Suburb (optional)<input value={form.suburb ?? ''} onChange={(e) => setForm({ ...form, suburb: e.target.value })} /></label>
-            <label className="policy-field">Logo<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onLogoSelected(f); }} disabled={logoUploading} />{logoUploading && <small>Uploading…</small>}{form.logo_url && <div style={{ marginTop: 6 }}><img src={form.logo_url} alt="Institution logo" style={{ maxWidth: 96, maxHeight: 96 }} /></div>}</label>
+            <label className="policy-field">Logo (small badge)<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onImageSelected(f, 'logo_url'); }} disabled={logoUploading} />{logoUploading && <small>Uploading…</small>}{form.logo_url && <div style={{ marginTop: 6 }}><img src={form.logo_url} alt="Institution logo" style={{ maxWidth: 96, maxHeight: 96 }} /></div>}</label>
+            <label className="policy-field">Cover Photo (full-width banner)<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onImageSelected(f, 'cover_image'); }} disabled={coverUploading} />{coverUploading && <small>Uploading…</small>}{form.cover_image && <div style={{ marginTop: 6 }}><img src={form.cover_image} alt="Institution cover" style={{ maxWidth: 240, maxHeight: 120 }} /></div>}</label>
+            <label className="policy-field">Founded Year (optional)<input type="number" step={1} value={form.founded_year ?? ''} onChange={(e) => setForm({ ...form, founded_year: e.target.value ? Number.parseInt(e.target.value, 10) : null })} /></label>
             <label className="policy-field">Description<textarea value={form.description ?? ''} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ minHeight: 60 }} /></label>
             <label className="policy-field">Search Aliases (comma-separated)<input value={aliasesText} onChange={(e) => setAliasesText(e.target.value)} placeholder="e.g. UZ, Uni of Zim" /></label>
             <label className="policy-field">Sort Order<input type="number" step={1} value={form.sort_order ?? 0} onChange={(e) => setForm({ ...form, sort_order: Number.parseInt(e.target.value, 10) || 0 })} /></label>
