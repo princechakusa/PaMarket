@@ -17,7 +17,7 @@ import {
 import { publicListingExpiryFilter, type Listing, type SortMode } from "../../lib/listings";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
 import { ListingCard } from "../../components/ListingCard";
-import { EmptyState, ErrorState, GlassBackButton } from "../../components/ui";
+import { EmptyState, ErrorState } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 // Redesigned per the approved Stitch mock (bright, student-facing palette,
@@ -94,7 +94,7 @@ export default function InstitutionsDirectoryScreen() {
   const styles = useThemedStyles(buildStyles);
   const { provinces, citiesByProvince } = useTaxonomy();
 
-  useIOSNativeHeader({ backgroundColor: color.bg, tintColor: color.text, title: "" });
+  useIOSNativeHeader({ backgroundColor: color.bg, tintColor: color.text, title: "", androidNative: true });
 
   const [typeCounts, setTypeCounts] = useState<Record<InstitutionType, number>>({ university: 0, high_school: 0, organization: 0 });
   const [typeFilter, setTypeFilter] = useState<InstitutionType | "all">("all");
@@ -238,12 +238,6 @@ export default function InstitutionsDirectoryScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} flat />
-        </View>
-      ) : null}
-
       {/* Rendered outside the FlatList (not inside ListHeaderComponent) so it
           stays fixed at the top instead of scrolling away with the rest of
           the header content (type/location filter pills, institution list,

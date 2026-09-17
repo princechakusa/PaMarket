@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { Badge, GlassBackButton } from "../../components/ui";
+import { Badge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 function ChevronIcon() {
@@ -78,7 +78,7 @@ export default function JobsHubScreen() {
   const styles = useThemedStyles(buildStyles);
   const [applicationsCount, setApplicationsCount] = useState(0);
 
-  useIOSNativeHeader({ backgroundColor: color.gold, tintColor: color.text, title: "Jobs" });
+  useIOSNativeHeader({ backgroundColor: color.gold, tintColor: color.text, title: "Jobs", androidNative: true });
 
   useEffect(() => {
     if (!session?.user) return;
@@ -92,13 +92,6 @@ export default function JobsHubScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: space.huge }}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-          <GlassBackButton onPress={() => router.back()} tone="dark" flat />
-          <Text style={styles.headerTitle}>Jobs</Text>
-        </View>
-      ) : null}
-
       <View style={styles.intro}>
         <Text style={styles.introTitle}>What brings you here?</Text>
         <Text style={styles.introSub}>Choose how you want to use PaMarket Jobs.</Text>

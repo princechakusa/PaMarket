@@ -8,7 +8,6 @@ import type { ContactRequest } from "../../lib/jobs";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 function buildStatusMeta(color: ColorPalette): Record<string, { color: string; bg: string; label: string }> {
@@ -40,7 +39,7 @@ export default function MyContactRequestsScreen() {
   const [requests, setRequests] = useState<ContactRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My Requests" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My Requests", androidNative: true });
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -58,14 +57,6 @@ export default function MyContactRequestsScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>My Requests</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />

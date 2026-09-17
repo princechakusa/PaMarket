@@ -22,7 +22,6 @@ import {
   Chip,
   EmptyState,
   ErrorState,
-  GlassBackButton,
   Skeleton,
   VerifiedBadge,
 } from "../../components/ui";
@@ -87,6 +86,7 @@ export default function HireTalentScreen() {
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
+    androidNative: true,
     title: "Find candidates",
     headerRight: () => (
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
@@ -198,20 +198,6 @@ export default function HireTalentScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? space.md : insets.top + 10 }]}>
-        {Platform.OS !== "ios" ? (
-          <View style={styles.headerRow}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Find candidates</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-              <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
-                <Text style={styles.headerLink}>Messages</Text>
-              </Pressable>
-              <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
-                <Text style={styles.headerLink}>Requests</Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
         <View style={styles.searchBar}>
           <SearchIcon />
           <TextInput

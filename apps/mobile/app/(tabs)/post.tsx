@@ -195,6 +195,14 @@ export default function PostScreen() {
     if (!params.category) return;
     setState((s) => ({
       ...s,
+      // Always land on step 1 -- this tab stays mounted across navigations,
+      // so if the user had previously gotten to step 2/3/4 on an earlier,
+      // unfinished post (institution or not) and then came back in through
+      // Institution Post Setup, state.category/institutionVisibility would
+      // update correctly but the screen would silently stay on whatever
+      // step it was already sitting on -- looking exactly like "Continue
+      // did nothing", when the state was actually applied correctly.
+      step: 1,
       category: params.category as string,
       institutionVisibility: params.institutionVisibility === "institution_only" ? "institution_only" : "public",
     }));

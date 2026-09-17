@@ -15,7 +15,7 @@ import {
   type ContactRequest,
 } from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
-import { Avatar, Badge, Button, Card, EmptyState, GlassBackButton, VerifiedBadge } from "../../../components/ui";
+import { Avatar, Badge, Button, Card, EmptyState, VerifiedBadge } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 
 function LockIcon() {
@@ -45,7 +45,7 @@ export default function CandidateCvScreen() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [isMessaging, setIsMessaging] = useState(false);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Candidate profile" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Candidate profile", androidNative: true });
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -122,11 +122,6 @@ export default function CandidateCvScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -137,11 +132,6 @@ export default function CandidateCvScreen() {
   if (!candidate) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <EmptyState
             title="Profile unavailable"
@@ -173,14 +163,6 @@ export default function CandidateCvScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Candidate profile</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}>
         {/* ── Hero ────────────────────────────────────────── */}
         <View style={styles.hero}>

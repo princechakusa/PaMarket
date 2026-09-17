@@ -21,26 +21,42 @@ export type InstitutionCategoryTile = {
   // Approved short, campus-facing label shown on the tile (distinct from
   // the underlying category's generic marketplace name).
   label: string;
+  // Approved one-line description shown under the label, matching the
+  // Stitch mock's copy -- plain static UI text, not derived from any data
+  // source.
+  description: string;
   // Reuses the app's existing bundled category art (assets/cats/*.webp,
   // the same images already used by components/post/CategoryPicker.tsx)
   // rather than introducing new photographic assets.
   icon: ReturnType<typeof require>;
 };
 
-const catOther = require("../assets/cats/cat_other.webp");
-const catElectronics = require("../assets/cats/cat_electronics.webp");
-const catRooms = require("../assets/cats/cat_rooms.webp");
-const catFurniture = require("../assets/cats/cat_furniture.webp");
-const catServices = require("../assets/cats/cat_services.webp");
-const catFashion = require("../assets/cats/cat_fashion.webp");
+// Dedicated, real photographic-style art for each institution category tile
+// (assets/institution-cats/*.webp, resized to 400x400 and re-encoded to
+// WebP from the original 1024x1024 source PNGs -- ~1.5MB each raw down to
+// ~15-30KB each, so bundling all 10 costs the app well under 250KB total).
+// Distinct from assets/cats/*.webp (the normal marketplace CategoryPicker's
+// icon set) -- these were commissioned specifically for the Institutions
+// Post Setup screen, so every tile now gets its own real image instead of
+// sharing the generic marketplace icon.
+const imgTextbooks = require("../assets/institution-cats/textbooks.webp");
+const imgElectronics = require("../assets/institution-cats/electronics.webp");
+const imgAccommodation = require("../assets/institution-cats/accommodation.webp");
+const imgRoomFurniture = require("../assets/institution-cats/room-furniture.webp");
+const imgStationeryLab = require("../assets/institution-cats/stationery-lab.webp");
+const imgStudentServices = require("../assets/institution-cats/student-services.webp");
+const imgUniforms = require("../assets/institution-cats/uniforms.webp");
+const imgSports = require("../assets/institution-cats/sports.webp");
+const imgEquipment = require("../assets/institution-cats/equipment.webp");
+const imgBoarding = require("../assets/institution-cats/boarding.webp");
 
 const UNIVERSITY_CATEGORIES: InstitutionCategoryTile[] = [
-  { categoryId: "other", label: "Textbooks", icon: catOther },
-  { categoryId: "electronics", label: "Electronics", icon: catElectronics },
-  { categoryId: "rooms", label: "Accommodation", icon: catRooms },
-  { categoryId: "furniture", label: "Room & Furniture", icon: catFurniture },
-  { categoryId: "other", label: "Stationery & Lab", icon: catOther },
-  { categoryId: "services", label: "Student Services", icon: catServices },
+  { categoryId: "other", label: "Textbooks", icon: imgTextbooks, description: "Course packs, study guides, academic and faculty books" },
+  { categoryId: "electronics", label: "Electronics", icon: imgElectronics, description: "Laptops, phones, tablets, chargers and student gadgets" },
+  { categoryId: "rooms", label: "Accommodation", icon: imgAccommodation, description: "Student rooms, room shares, cottages and boarding vacancies" },
+  { categoryId: "furniture", label: "Room & Furniture", icon: imgRoomFurniture, description: "Desks, chairs, lamps, mattresses and mini fridges" },
+  { categoryId: "other", label: "Stationery & Lab", icon: imgStationeryLab, description: "Lab coats, notebooks, practical apparatus and supplies" },
+  { categoryId: "services", label: "Student Services", icon: imgStudentServices, description: "Tutoring, thesis binding, printing, design and repairs" },
 ];
 
 // Matches the approved High School Institution Post Setup design exactly:
@@ -50,12 +66,14 @@ const UNIVERSITY_CATEGORIES: InstitutionCategoryTile[] = [
 // existing taxonomy) -- same "distinct tiles, shared underlying category"
 // pattern already used by the University set's Textbooks/Stationery & Lab
 // pair, refined later via the existing subcategory picker where available.
+// Each tile still gets its own distinct real image now, even where the
+// underlying categoryId is shared.
 const HIGH_SCHOOL_CATEGORIES: InstitutionCategoryTile[] = [
-  { categoryId: "fashion", label: "Uniforms", icon: catFashion },
-  { categoryId: "other", label: "Sports", icon: catOther },
-  { categoryId: "other", label: "Textbooks", icon: catOther },
-  { categoryId: "other", label: "Calculators & Equipment", icon: catOther },
-  { categoryId: "other", label: "Boarding", icon: catOther },
+  { categoryId: "fashion", label: "Uniforms", icon: imgUniforms, description: "School uniforms, blazers, ties and formal school clothing" },
+  { categoryId: "other", label: "Sports", icon: imgSports, description: "Sports clothing, athletic tracksuits, boots and equipment" },
+  { categoryId: "other", label: "Textbooks", icon: imgTextbooks, description: "O-Level, A-Level, ZIMSEC & Cambridge textbooks & setbooks" },
+  { categoryId: "other", label: "Calculators & Equipment", icon: imgEquipment, description: "Calculators, geometry sets, drawing & practical equipment" },
+  { categoryId: "other", label: "Boarding", icon: imgBoarding, description: "Trunks, tuckboxes, padlocks, laundry bags and hostel supplies" },
 ];
 
 // "organization" institutions fall back to the university set (the closer

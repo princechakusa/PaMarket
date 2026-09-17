@@ -9,7 +9,7 @@ import { color, font, radius, shadow, space, type ColorPalette } from "../../lib
 import { useThemedStyles } from "../../lib/theme-provider";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { useTaxonomy } from "../../lib/taxonomy";
-import { Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton, VerifiedBadge } from "../../components/ui";
+import { Chip, EmptyState, ErrorState, ListingRowSkeleton, VerifiedBadge } from "../../components/ui";
 import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { publicListingExpiryFilter } from "../../lib/listings";
@@ -58,6 +58,7 @@ export default function ShopsDirectoryScreen() {
     tintColor: color.textOnBrand,
     title: "Shops",
     headerRight: () => <CartBadgeButton tone="light" />,
+    androidNative: true,
   });
 
   const buildQuery = useCallback(
@@ -142,13 +143,6 @@ export default function ShopsDirectoryScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? space.md : insets.top + 10 }]}>
-        {Platform.OS !== "ios" ? (
-          <View style={styles.headerRow}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Shops</Text>
-            <CartBadgeButton tone="light" />
-          </View>
-        ) : null}
         <View style={styles.searchBar}>
           <SearchIcon />
           <TextInput

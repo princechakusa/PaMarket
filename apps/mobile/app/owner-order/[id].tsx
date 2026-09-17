@@ -28,7 +28,7 @@ import {
 import { contactCustomerByPhone, contactCustomerByWhatsApp, normalizedPhoneDigits } from "../../lib/order-whatsapp";
 import { logClientError } from "../../lib/error-log";
 import { StatusChangeModal } from "../../components/orders/StatusChangeModal";
-import { Button, Card, EmptyState, ErrorState, GlassBackButton, toast } from "../../components/ui";
+import { Button, Card, EmptyState, ErrorState, toast } from "../../components/ui";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -57,7 +57,7 @@ export default function OwnerOrderDetailScreen() {
   const [pendingAction, setPendingAction] = useState<{ to: OrderStatus; label: string; danger?: boolean } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order" });
+  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order", androidNative: true });
 
   const load = useCallback(async () => {
     const userId = session?.user?.id;
@@ -122,18 +122,9 @@ export default function OwnerOrderDetailScreen() {
     load();
   }
 
-  const header = Platform.OS !== "ios" ? (
-    <View style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
-      <GlassBackButton onPress={() => router.back()} tone="light" flat />
-      <Text style={styles.headerTitle}>Order</Text>
-      <View style={{ width: 40 }} />
-    </View>
-  ) : null;
-
   if (state === "loading") {
     return (
       <View style={styles.container}>
-        {header}
         <View style={styles.centered}>
           <ActivityIndicator color={styles.headerBg.color} />
         </View>
@@ -144,7 +135,6 @@ export default function OwnerOrderDetailScreen() {
   if (state === "not-owner") {
     return (
       <View style={styles.container}>
-        {header}
         <EmptyState title="Owner only" subtitle="Only this shop's owner can manage this order." />
       </View>
     );
@@ -153,7 +143,6 @@ export default function OwnerOrderDetailScreen() {
   if (state === "error" || !order) {
     return (
       <View style={styles.container}>
-        {header}
         <ErrorState subtitle={errorMessage ?? "This order couldn't be found."} onRetry={load} />
       </View>
     );
@@ -164,7 +153,6 @@ export default function OwnerOrderDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {header}
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card style={styles.card}>
           <View style={styles.statusRow}>

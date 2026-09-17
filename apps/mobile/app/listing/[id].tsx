@@ -43,7 +43,7 @@ import {
   INSTITUTION_TYPE_LABEL,
   INSTITUTION_VISIBILITY_ATTR_KEY,
   INSTITUTION_VISIBILITY_LABEL,
-  institutionInitials,
+  institutionAbbreviation,
   type Institution,
 } from "../../lib/institutions";
 import { LocationMap } from "../../components/listing/LocationMap";
@@ -987,11 +987,14 @@ export default function ListingDetailScreen() {
                     {institution.logo_url ? (
                       <Image source={{ uri: institution.logo_url }} style={styles.institutionAvatarImage} contentFit="cover" cachePolicy="memory-disk" />
                     ) : (
-                      <Text style={styles.institutionAvatarInitial}>{institutionInitials(institution.official_name)}</Text>
+                      <Text style={styles.institutionAvatarInitial}>{institutionAbbreviation(institution)}</Text>
                     )}
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.institutionName} numberOfLines={1}>{institution.official_name}</Text>
+                    <View style={styles.institutionNameRow}>
+                      <Text style={styles.institutionName} numberOfLines={1}>{institution.official_name}</Text>
+                      <VerifiedBadge compact />
+                    </View>
                     <Text style={styles.institutionMeta}>{INSTITUTION_TYPE_LABEL[institution.type]} Hub</Text>
                   </View>
                 </View>
@@ -1709,7 +1712,8 @@ function buildStyles(color: ColorPalette) {
     },
     institutionAvatarImage: { width: "100%", height: "100%" },
     institutionAvatarInitial: { ...font.title, color: color.textOnBrand },
-    institutionName: { ...font.bodyStrong, color: color.text },
+    institutionNameRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+    institutionName: { ...font.bodyStrong, color: color.text, flexShrink: 1 },
     institutionMeta: { ...font.caption, color: color.textMuted, marginTop: 1 },
     institutionStatsRow: { flexDirection: "row", gap: space.sm },
     institutionStat: {

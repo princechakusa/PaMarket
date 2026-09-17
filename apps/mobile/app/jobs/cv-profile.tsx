@@ -44,7 +44,7 @@ import {
   openCvUrl,
   randomCvFileName,
 } from "../../lib/cv";
-import { Avatar, Button, Card, Chip, GlassBackButton, ProvinceCityFields, SectionHeader } from "../../components/ui";
+import { Avatar, Button, Card, Chip, ProvinceCityFields, SectionHeader } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
 // Mirrors www/js/jobs.js CandidateProfile ("Get Hired" CV builder). The flat
@@ -107,7 +107,7 @@ export default function CvProfileScreen() {
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My CV / Job Profile" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "My CV / Job Profile", androidNative: true });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -419,14 +419,6 @@ export default function CvProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>My CV / Job Profile</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />

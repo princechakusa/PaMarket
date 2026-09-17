@@ -31,6 +31,15 @@ type NativeHeaderOptions = {
   // its own (`headerTransparent`), matching what these screens looked like
   // before (a floating glass button over a full-bleed photo).
   transparent?: boolean;
+  // Plain list/form screens (no hero photo underneath) also get the real
+  // native header + back button on Android, not just iOS -- matches
+  // Settings' own native Android back arrow, which the user explicitly
+  // asked to be the standard everywhere it's safe to do (i.e. not on
+  // photo/hero screens, which keep their existing floating glass button by
+  // not passing this flag). Each call site's own route entry in
+  // app/_layout.tsx must also set `headerShown: true` (not the
+  // `Platform.OS === "ios"` conditional) for this to actually render.
+  androidNative?: boolean;
 };
 
 // iOS gets the app's real native Stack header — the actual system back
@@ -66,7 +75,7 @@ export function useIOSNativeHeader(options: NativeHeaderOptions) {
   optionsRef.current = options;
 
   useLayoutEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS !== "ios" && !optionsRef.current.androidNative) return;
     navigation.setOptions({
       headerTransparent: !!optionsRef.current.transparent,
       ...(optionsRef.current.transparent
@@ -101,5 +110,6 @@ export function useIOSNativeHeader(options: NativeHeaderOptions) {
     !!options.headerRight,
     !!options.headerLeft,
     options.headerLeftKey,
+    options.androidNative,
   ]);
 }

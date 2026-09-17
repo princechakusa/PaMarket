@@ -576,6 +576,12 @@ export default function AccountScreen() {
           <MenuRow label="My Profile" onPress={() => router.push(`/profile/${session.user.id}`)}  color={color} styles={styles} />
           <MenuRow label="Edit Profile" onPress={() => router.push("/edit-profile")}  color={color} styles={styles} />
           <MenuRow label="Verify Identity" onPress={() => router.push("/verify")}  color={color} styles={styles} />
+          {/* Also lives under Buying > Jobs (mode === "buying"), but that
+              tab defaults away from view every time this screen mounts
+              (mode starts as "selling" -- see useState above), so most
+              users never saw a path to their own candidate profile at all.
+              Always visible here regardless of the Selling/Buying toggle. */}
+          <MenuRow label="My Job Profile / CV" onPress={() => router.push("/jobs/cv-profile")} color={color} styles={styles} />
           <MenuRow label="My Activity" last onPress={() => router.push("/my-activity")}  color={color} styles={styles} />
         </Card>
       </View>

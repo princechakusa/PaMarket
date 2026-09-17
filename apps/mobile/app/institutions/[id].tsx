@@ -6,11 +6,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { institutionInitials, INSTITUTION_TYPE_LABEL, type Institution } from "../../lib/institutions";
+import { institutionAbbreviation, INSTITUTION_TYPE_LABEL, type Institution } from "../../lib/institutions";
 import { INSTITUTION_LISTING_FILTERS, applyInstitutionListingFilter, type InstitutionListingFilter } from "../../lib/institution-listing-filters";
 import { type Listing } from "../../lib/listings";
 import { ListingCard } from "../../components/ListingCard";
-import { Chip, EmptyState, ErrorState, GlassBackButton, ListingGridSkeleton } from "../../components/ui";
+import { Chip, EmptyState, ErrorState, GlassBackButton, ListingGridSkeleton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 // Detail screen -- mirrors app/business/[id].tsx's overall shape (header +
@@ -194,7 +194,7 @@ export default function InstitutionDetailScreen() {
                   {institution.logo_url ? (
                     <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
                   ) : (
-                    <Text style={styles.logoInitial}>{institutionInitials(institution.official_name)}</Text>
+                    <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
                   )}
                 </View>
                 <Pressable
@@ -205,7 +205,10 @@ export default function InstitutionDetailScreen() {
                 </Pressable>
               </View>
 
-              <Text style={styles.name}>{institution.official_name}</Text>
+              <View style={styles.nameRow}>
+                <Text style={styles.name}>{institution.official_name}</Text>
+                <VerifiedBadge />
+              </View>
               <Text style={styles.type}>
                 {INSTITUTION_TYPE_LABEL[institution.type]}
                 {meta || institution.suburb ? ` • ${[institution.suburb, meta].filter(Boolean).join(", ")}` : ""}
@@ -272,7 +275,8 @@ function buildStyles(color: ColorPalette) {
       borderRadius: radius.pill, maxWidth: "62%",
     },
     postHereButtonText: { ...font.caption, fontWeight: "800", color: color.textOnBrand },
-    name: { ...font.h3, color: color.text, marginTop: space.md },
+    nameRow: { flexDirection: "row", alignItems: "center", gap: space.xs, marginTop: space.md },
+    name: { ...font.h3, color: color.text, flexShrink: 1 },
     type: { ...font.caption, color: color.brand, fontWeight: "700", marginTop: space.xs, textTransform: "uppercase" },
     description: { ...font.body, color: color.text, marginTop: space.md },
     statChip: {

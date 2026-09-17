@@ -9,7 +9,7 @@ import { color, font, radius, shadow, space, type ColorPalette } from "../../lib
 import { useThemedStyles } from "../../lib/theme-provider";
 import { jobCompany, jobSalary, jobType, JOB_TYPES } from "../../lib/jobs";
 import { businessInitials } from "../../lib/businesses";
-import { Badge, Chip, EmptyState, ErrorState, GlassBackButton, ListingRowSkeleton } from "../../components/ui";
+import { Badge, Chip, EmptyState, ErrorState, ListingRowSkeleton } from "../../components/ui";
 import { loadCache, saveCache } from "../../lib/offlineCache";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
@@ -62,7 +62,7 @@ export default function JobsListScreen() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const pageRef = useRef(0);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Jobs" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Jobs", androidNative: true });
 
   // Debounced so search runs server-side (title + description) instead of
   // firing a request per keystroke or, worse, only ever filtering whatever
@@ -145,13 +145,6 @@ export default function JobsListScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? space.md : insets.top + 10 }]}>
-        {Platform.OS !== "ios" ? (
-          <View style={styles.headerRow}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Jobs</Text>
-            <View style={{ width: 20 }} />
-          </View>
-        ) : null}
         <View style={styles.searchBar}>
           <SearchIcon />
           <TextInput

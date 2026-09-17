@@ -971,6 +971,7 @@ export default function ChatScreen() {
   useIOSNativeHeader({
     backgroundColor: themeColor.surface,
     tintColor: themeColor.text,
+    androidNative: true,
     headerTitle: () => (
       <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
         <Avatar uri={displayAvatar} name={displayName} size={32} online={!conversationBusiness && otherOnline} />
@@ -1017,40 +1018,6 @@ export default function ChatScreen() {
       style={[styles.container, Platform.OS === "ios" ? { paddingBottom: keyboardHeight } : null]}
       behavior={Platform.OS === "ios" ? undefined : "height"}
     >
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
-          <GlassBackButton onPress={() => router.back()} flat />
-          <Pressable style={styles.headerIdentity} onPress={openProfile} disabled={!otherId && !conversationBusiness}>
-            <Avatar uri={displayAvatar} name={displayName} size={38} online={!conversationBusiness && otherOnline} />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.headerName} numberOfLines={1}>
-                {displayName}
-              </Text>
-              <Text
-                style={[
-                  styles.headerSubtitle,
-                  recruitmentSubtitle
-                    ? styles.subtitleOffline
-                    : otherTyping
-                      ? styles.subtitleTyping
-                      : otherOnline
-                        ? styles.subtitleOnline
-                        : styles.subtitleOffline,
-                ]}
-                numberOfLines={1}
-              >
-                {subtitle}
-              </Text>
-            </View>
-          </Pressable>
-          {otherId && !conversationBusiness ? (
-            <Pressable onPress={openChatMenu} hitSlop={10}>
-              <MoreIcon color={themeColor.text} />
-            </Pressable>
-          ) : null}
-        </View>
-      ) : null}
-
       {listing ? (
         <Pressable
           style={styles.listingStrip}

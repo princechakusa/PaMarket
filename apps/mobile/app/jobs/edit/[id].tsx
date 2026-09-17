@@ -14,7 +14,7 @@ import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { color, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
-import { GlassBackButton, ProvinceCityFields } from "../../../components/ui";
+import { ProvinceCityFields } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 import { useTaxonomy } from "../../../lib/taxonomy";
 
@@ -84,7 +84,7 @@ export default function EditJobScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Edit Job" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Edit Job", androidNative: true });
 
   const [company, setCompany] = useState("");
   const [title, setTitle] = useState("");
@@ -201,11 +201,6 @@ export default function EditJobScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -216,11 +211,6 @@ export default function EditJobScreen() {
   if (notFound) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <EmptyState title="Job not found" subtitle="This posting may have been removed." />
         </View>
@@ -230,14 +220,6 @@ export default function EditJobScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Edit Job</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
         <Field label="Company Name *" value={company} onChangeText={setCompany} placeholder="Your company or organisation name" styles={styles} />
         <Field label="Job Title *" value={title} onChangeText={setTitle} placeholder="e.g. Accountant, Driver, Sales Representative" styles={styles} />

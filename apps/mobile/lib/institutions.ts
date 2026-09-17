@@ -31,6 +31,18 @@ export function institutionInitials(name: string): string {
   return (name || "I").trim().charAt(0).toUpperCase();
 }
 
+// The real abbreviation (e.g. "UZ" for University of Zimbabwe, "PE" for
+// Prince Edward School) already exists as short_name on every seeded
+// institution -- institutionInitials() alone only ever produced a single
+// generic letter ("U", "P"), discarding that real, more identifying value.
+// Falls back to the single-letter form only for the (currently
+// nonexistent, but not schema-guaranteed) case of an institution added via
+// the Admin page without a short_name.
+export function institutionAbbreviation(institution: { official_name: string; short_name?: string | null }): string {
+  const short = institution.short_name?.trim();
+  return short || institutionInitials(institution.official_name);
+}
+
 // "public"/"institution_only" is stored inside the existing listings.attributes
 // jsonb column (see INSTITUTION_VISIBILITY_ATTR_KEY below) -- the smallest
 // existing mechanism (already used for subcat/condition), never a new

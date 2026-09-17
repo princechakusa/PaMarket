@@ -6,14 +6,14 @@ import { supabase } from "../../lib/supabase";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import {
-  institutionInitials,
+  institutionAbbreviation,
   INSTITUTION_TYPE_LABEL,
   INSTITUTION_VISIBILITY_LABEL,
   type Institution,
   type InstitutionVisibility,
 } from "../../lib/institutions";
 import { INSTITUTION_CATEGORIES, type InstitutionCategoryTile } from "../../lib/institution-categories";
-import { Button, ErrorState, GlassBackButton } from "../../components/ui";
+import { Button, ErrorState, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 // Institution Post Setup -- step 1 of posting into an institution hub.
@@ -57,7 +57,7 @@ export default function InstitutionPostSetupScreen() {
   // can't tell which tile is selected.
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Create Institution Post" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Create Institution Post", androidNative: true });
 
   const loadInstitution = useCallback(async () => {
     if (!institutionId) return;
@@ -100,11 +100,6 @@ export default function InstitutionPostSetupScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -115,11 +110,6 @@ export default function InstitutionPostSetupScreen() {
   if (loadError || !institution) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           {loadError ? (
             <ErrorState onRetry={() => void loadInstitution()} />
@@ -134,25 +124,22 @@ export default function InstitutionPostSetupScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + space.xxl }]}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} flat />
-          </View>
-        ) : null}
-
         <View style={styles.institutionCard}>
           <View style={styles.logoWrap}>
             {institution.logo_url ? (
               <Image source={{ uri: institution.logo_url }} style={styles.logo} />
             ) : (
-              <Text style={styles.logoInitial}>{institutionInitials(institution.official_name)}</Text>
+              <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
             )}
           </View>
           <View style={styles.institutionText}>
             <Text style={styles.postingToLabel}>Posting to</Text>
-            <Text style={styles.institutionName} numberOfLines={1}>
-              {institution.official_name}
-            </Text>
+            <View style={styles.institutionNameRow}>
+              <Text style={styles.institutionName} numberOfLines={1}>
+                {institution.official_name}
+              </Text>
+              <VerifiedBadge compact />
+            </View>
             <Text style={styles.institutionType}>{INSTITUTION_TYPE_LABEL[institution.type]}</Text>
           </View>
         </View>
@@ -209,6 +196,9 @@ export default function InstitutionPostSetupScreen() {
                   <Text style={styles.categoryLabel} numberOfLines={2}>
                     {c.label}
                   </Text>
+                  <Text style={styles.categoryDescription} numberOfLines={2}>
+                    {c.description}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -254,7 +244,8 @@ function buildStyles(color: ColorPalette) {
     logoInitial: { ...font.title, color: color.textOnBrand },
     institutionText: { flex: 1, minWidth: 0 },
     postingToLabel: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
-    institutionName: { ...font.title, color: color.text, marginTop: 1 },
+    institutionNameRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 1 },
+    institutionName: { ...font.title, color: color.text, flexShrink: 1 },
     institutionType: { ...font.caption, color: color.textMuted, marginTop: 1 },
 
     section: { gap: space.sm },
@@ -319,12 +310,11 @@ function buildStyles(color: ColorPalette) {
       aspectRatio: 4 / 3,
       borderRadius: radius.md,
       overflow: "hidden",
-      backgroundColor: "#FFFFFF",
-      alignItems: "center",
-      justifyContent: "center",
+      backgroundColor: color.surfaceAlt,
     },
-    categoryImage: { width: "70%", height: "70%", resizeMode: "contain" },
-    categoryLabel: { ...font.caption, color: color.text, marginTop: space.xs, textAlign: "left" },
+    categoryImage: { width: "100%", height: "100%", resizeMode: "cover" },
+    categoryLabel: { ...font.caption, color: color.text, marginTop: space.xs, textAlign: "left", fontWeight: "700" },
+    categoryDescription: { ...font.micro, color: color.textMuted, marginTop: 2, textAlign: "left", fontWeight: "500", lineHeight: 14 },
 
     footer: {
       paddingHorizontal: space.lg,

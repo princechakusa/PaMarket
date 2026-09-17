@@ -17,7 +17,6 @@ import { toast } from "../components/ui/Toast";
 import { bestMatch, CHIP_MAP, INIT_CHIPS } from "../lib/support-bot-kb";
 import { color, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
-import { GlassBackButton } from "../components/ui";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
 import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 
@@ -86,6 +85,7 @@ export default function ReportProblemScreen() {
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
+    androidNative: true,
     headerTitle: () => (
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <View style={styles.avatar}>
@@ -287,25 +287,6 @@ export default function ReportProblemScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>P</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>PaMarket Support</Text>
-            <View style={styles.onlineRow}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>Online · Usually replies instantly</Text>
-            </View>
-          </View>
-          <Pressable style={styles.clearButton} onPress={handleClearChat}>
-            <Text style={styles.clearButtonText}>Clear</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
       <FlatList
         ref={listRef}
         style={styles.chat}

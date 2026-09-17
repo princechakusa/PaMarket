@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
-import { institutionInitials, INSTITUTION_TYPE_LABEL, type Institution } from "../../lib/institutions";
+import { institutionAbbreviation, INSTITUTION_TYPE_LABEL, type Institution } from "../../lib/institutions";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
+import { VerifiedBadge } from "../ui";
 
 // A dedicated card, not a repurposed ListingCard -- an institution is a
 // place/entity, not a listing, and has a different data shape entirely
@@ -18,11 +19,14 @@ export function InstitutionCard({ institution, cityName, onPress }: { institutio
         {institution.logo_url ? (
           <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
         ) : (
-          <Text style={styles.logoInitial}>{institutionInitials(institution.official_name)}</Text>
+          <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
         )}
       </View>
       <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={1}>{institution.official_name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>{institution.official_name}</Text>
+          <VerifiedBadge compact />
+        </View>
         {institution.short_name ? <Text style={styles.shortName} numberOfLines={1}>{institution.short_name}</Text> : null}
         {meta ? <Text style={styles.meta} numberOfLines={1}>{meta}</Text> : null}
       </View>
@@ -57,7 +61,8 @@ function buildStyles(color: ColorPalette) {
     logo: { width: "100%", height: "100%" },
     logoInitial: { ...font.h3, color: color.brand },
     body: { flex: 1, gap: 3, minWidth: 0 },
-    name: { ...font.title, color: color.text },
+    nameRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+    name: { ...font.title, color: color.text, flexShrink: 1 },
     shortName: { ...font.caption, color: color.textMuted, fontWeight: "600" },
     meta: { ...font.caption, color: color.textMuted },
   });

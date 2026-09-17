@@ -10,7 +10,6 @@ import { businessInitials } from "../../lib/businesses";
 import type { RentalAccess, RentalCompanyRecord, RentalFleetVehicle, RentalLead } from "../../lib/rentals";
 import { fleetVehicleLabel } from "../../lib/rentals";
 import { EmptyState } from "../../components/ui/EmptyState";
-import { GlassBackButton } from "../../components/ui";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -112,6 +111,7 @@ export default function RentalFleetDashboard() {
   useIOSNativeHeader({
     backgroundColor: tones.brand,
     tintColor: tones.textOnBrand,
+    androidNative: true,
     title: company ? undefined : "Rental Dashboard",
     headerTitle: company
       ? () => {
@@ -290,13 +290,6 @@ export default function RentalFleetDashboard() {
   if (!session?.user) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Rental Dashboard</Text>
-            <View style={{ width: 36 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <EmptyState title="Sign in required" subtitle="Sign in to manage your rental fleet." buttonLabel="Sign In" onPressButton={() => router.push("/(auth)/sign-in")} />
         </View>
@@ -307,13 +300,6 @@ export default function RentalFleetDashboard() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Rental Dashboard</Text>
-            <View style={{ width: 36 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -324,13 +310,6 @@ export default function RentalFleetDashboard() {
   if (!businesses.length) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Rental Dashboard</Text>
-            <View style={{ width: 36 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <EmptyState
             title="Business account required"
@@ -350,13 +329,6 @@ export default function RentalFleetDashboard() {
     // renders the loading placeholder while that redirect is in flight.
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Rental Dashboard</Text>
-            <View style={{ width: 36 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -367,13 +339,6 @@ export default function RentalFleetDashboard() {
   if (access.company_status === "rejected") {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Rental Dashboard</Text>
-            <View style={{ width: 36 }} />
-          </View>
-        ) : null}
         <View style={styles.rejectedBox}>
           <Text style={styles.rejectedTitle}>Application Not Approved</Text>
           <Text style={styles.rejectedBody}>
@@ -391,13 +356,6 @@ export default function RentalFleetDashboard() {
   if (!company) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Rental Dashboard</Text>
-            <View style={{ width: 36 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />
         </View>
@@ -418,28 +376,6 @@ export default function RentalFleetDashboard() {
       contentContainerStyle={{ paddingBottom: 32 }}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.headerBar, { paddingTop: insets.top + 12 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <View style={styles.headerLogo}>
-            <Text style={styles.headerLogoText}>{initial}</Text>
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.headerTitle} numberOfLines={1}>
-              {bizName}
-            </Text>
-            <Text style={styles.headerSub}>Rentals Dashboard</Text>
-          </View>
-          <Pressable
-            onPress={() => router.push("/rental-fleet/profile")}
-            hitSlop={8}
-            style={styles.headerIconBtn}
-          >
-            <ProfileIcon stroke={tones.textOnBrand} />
-          </Pressable>
-        </View>
-      ) : null}
-
       <View style={styles.statsRow}>
         <StatCard num={fleet.length} label="Total Vehicles" styles={styles} />
         <StatCard num={activeCount} label="Active Listings" styles={styles} />

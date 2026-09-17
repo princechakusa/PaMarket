@@ -15,7 +15,7 @@ import {
   categoryLabel,
   type RentalListingSummary,
 } from "../../lib/rentals";
-import { Chip, GlassBackButton } from "../../components/ui";
+import { Chip } from "../../components/ui";
 import { loadCache, saveCache } from "../../lib/offlineCache";
 
 const RENTALS_CACHE_KEY = "rentals-browse";
@@ -67,6 +67,7 @@ export default function RentalsListScreen() {
   useIOSNativeHeader({
     backgroundColor: tones.brand,
     tintColor: tones.textOnBrand,
+    androidNative: true,
     title: "Rentals",
     headerRight: () => (
       <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
@@ -126,21 +127,6 @@ export default function RentalsListScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Rentals</Text>
-          <Pressable onPress={() => setFilterVisible(true)} hitSlop={10} style={styles.filterBtn}>
-            <FilterIcon stroke={tones.textOnBrand} />
-            {activeCount ? (
-              <View style={styles.filterCountDot}>
-                <Text style={styles.filterCountDotText}>{activeCount}</Text>
-              </View>
-            ) : null}
-          </Pressable>
-        </View>
-      ) : null}
-
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={tones.brand} />

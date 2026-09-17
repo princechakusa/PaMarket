@@ -14,7 +14,7 @@ import { useCart } from "../lib/cart-context";
 import { useResolvedCart } from "../lib/use-resolved-cart";
 import { MAX_ITEMS_PER_ORDER, cartUnitCount } from "../lib/cart";
 import { CartLineItem } from "../components/cart/CartLineItem";
-import { Button, ConfirmModal, EmptyState, ErrorState, GlassBackButton } from "../components/ui";
+import { Button, ConfirmModal, EmptyState, ErrorState } from "../components/ui";
 import { font, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
@@ -29,7 +29,7 @@ export default function ShopCartScreen() {
 
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
-  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Your Cart" });
+  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Your Cart", androidNative: true });
 
   function handleClear() {
     clear();
@@ -43,13 +43,6 @@ export default function ShopCartScreen() {
 
   const header = (
     <View style={styles.header}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Your Cart</Text>
-          <View style={{ width: 40 }} />
-        </View>
-      ) : null}
       {cart.businessName ? (
         <View style={styles.shopRow}>
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={styles.shopIcon.color} strokeWidth={2}>

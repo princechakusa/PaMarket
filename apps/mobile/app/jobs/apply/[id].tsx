@@ -8,7 +8,6 @@ import { jobCompany } from "../../../lib/jobs";
 import { toast } from "../../../components/ui/Toast";
 import { color, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
-import { GlassBackButton } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 
 type Styles = ReturnType<typeof buildStyles>;
@@ -51,7 +50,7 @@ export default function ApplyJobScreen() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Apply for this Job" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Apply for this Job", androidNative: true });
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
@@ -181,11 +180,6 @@ export default function ApplyJobScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -196,11 +190,6 @@ export default function ApplyJobScreen() {
   if (!job) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <Text style={styles.notFoundText}>Job not found</Text>
         </View>
@@ -214,15 +203,6 @@ export default function ApplyJobScreen() {
   if (hasCandidateProfile === false && !alreadyApplied) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle} numberOfLines={1}>
-              Apply for this Job
-            </Text>
-            <View style={{ width: 20 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <Text style={styles.blockedTitle}>Complete your Candidate Profile</Text>
           <Text style={styles.blockedBody}>
@@ -245,16 +225,6 @@ export default function ApplyJobScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            Apply for this Job
-          </Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
         <View style={styles.jobCard}>
           <Text style={styles.jobTitle} numberOfLines={1}>

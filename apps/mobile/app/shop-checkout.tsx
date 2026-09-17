@@ -14,7 +14,7 @@ import { useResolvedCart } from "../lib/use-resolved-cart";
 import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 import { isValidPhone } from "../lib/validation";
 import { createShopOrder, generateIdempotencyKey, type FulfillmentMethod } from "../lib/shop-orders";
-import { Button, CountedTextArea, ErrorState, FieldLabel, GlassBackButton, toast } from "../components/ui";
+import { Button, CountedTextArea, ErrorState, FieldLabel, toast } from "../components/ui";
 import { font, radius, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
@@ -43,7 +43,7 @@ export default function ShopCheckoutScreen() {
   // keeps the same key so retrying it can never create a second order.
   const idempotencyKeyRef = useRef(generateIdempotencyKey());
 
-  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order Request" });
+  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order Request", androidNative: true });
 
   useEffect(() => {
     const userId = session?.user?.id;
@@ -123,14 +123,6 @@ export default function ShopCheckoutScreen() {
 
   return (
     <KeyboardAvoidingView key={keyboardAvoidingKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Order Request</Text>
-          <View style={{ width: 40 }} />
-        </View>
-      ) : null}
-
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.field}>
           <FieldLabel text="Your name" required />

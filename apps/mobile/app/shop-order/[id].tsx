@@ -83,6 +83,7 @@ export default function ShopOrderDetailScreen() {
     tintColor: "#FFFFFF",
     title: "Order",
     headerLeft: cameFromCheckout ? () => <GlassBackButton onPress={goBackSafely} tone="light" flat /> : undefined,
+    androidNative: true,
   });
 
   const load = useCallback(async () => {
@@ -189,14 +190,6 @@ export default function ShopOrderDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={cameFromCheckout ? goBackSafely : () => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Order</Text>
-          <View style={{ width: 40 }} />
-        </View>
-      ) : null}
-
       <ScrollView contentContainerStyle={styles.scroll}>
         {showBanner ? (
           <Card style={styles.banner} elevated={false}>

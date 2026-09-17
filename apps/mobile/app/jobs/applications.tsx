@@ -7,7 +7,6 @@ import { useAuth } from "../../lib/auth";
 import type { JobApplication } from "../../lib/jobs";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 function buildStatusTones(color: ColorPalette): Record<string, string> {
@@ -45,6 +44,7 @@ export default function MyApplicationsScreen() {
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
+    androidNative: true,
     title: "My Applications",
     headerRight: () => (
       <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
@@ -70,16 +70,6 @@ export default function MyApplicationsScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>My Applications</Text>
-          <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
-            <Text style={styles.headerLink}>Messages</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />

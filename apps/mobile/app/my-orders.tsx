@@ -14,7 +14,7 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { fetchMyShopOrders, orderStatusMeta, FULFILLMENT_LABELS, type MyOrderListRow } from "../lib/shop-orders";
 import { logClientError } from "../lib/error-log";
-import { EmptyState, ErrorState, GlassBackButton } from "../components/ui";
+import { EmptyState, ErrorState } from "../components/ui";
 import { font, radius, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
@@ -30,7 +30,7 @@ export default function MyOrdersScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order Requests" });
+  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: "Order Requests", androidNative: true });
 
   const load = useCallback(async () => {
     const userId = session?.user?.id;
@@ -57,18 +57,9 @@ export default function MyOrdersScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
-  const header = Platform.OS !== "ios" ? (
-    <View style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
-      <GlassBackButton onPress={() => router.back()} tone="light" flat />
-      <Text style={styles.headerTitle}>Order Requests</Text>
-      <View style={{ width: 40 }} />
-    </View>
-  ) : null;
-
   if (isLoading) {
     return (
       <View style={styles.container}>
-        {header}
         <View style={styles.centered}>
           <ActivityIndicator color={styles.headerBg.color} />
         </View>
@@ -79,7 +70,6 @@ export default function MyOrdersScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        {header}
         <ErrorState subtitle={error} onRetry={load} />
       </View>
     );
@@ -88,7 +78,6 @@ export default function MyOrdersScreen() {
   if (!orders.length) {
     return (
       <View style={styles.container}>
-        {header}
         <EmptyState
           icon={
             <Svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={styles.emptyIcon.color} strokeWidth={2}>
@@ -108,7 +97,6 @@ export default function MyOrdersScreen() {
 
   return (
     <View style={styles.container}>
-      {header}
       <FlatList
         data={orders}
         keyExtractor={(o) => o.id}

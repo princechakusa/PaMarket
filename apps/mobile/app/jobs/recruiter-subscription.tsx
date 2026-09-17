@@ -22,7 +22,6 @@ import {
 import { toast } from "../../components/ui/Toast";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { GlassBackButton } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { purchaseProduct, restoreAllPurchases } from "../../lib/iap";
 import { RECRUITER_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
@@ -86,6 +85,7 @@ export default function RecruiterSubscriptionScreen() {
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
     title: "Recruiter Plan",
+    androidNative: true,
   });
 
   // Guideline 3.1.2(c): the price must be visible on the paywall itself
@@ -168,11 +168,6 @@ export default function RecruiterSubscriptionScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -184,14 +179,6 @@ export default function RecruiterSubscriptionScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Recruiter Plan</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>CURRENT PLAN</Text>

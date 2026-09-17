@@ -9,7 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
-import { Avatar, Badge, Button, Card, EmptyState, GlassBackButton, toast, VerifiedBadge } from "../../../components/ui";
+import { Avatar, Badge, Button, Card, EmptyState, toast, VerifiedBadge } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 
 type ApplicationStatus = "pending" | "shortlisted" | "declined";
@@ -107,7 +107,7 @@ export default function JobApplicantsScreen() {
   const [cvOpeningId, setCvOpeningId] = useState<string | null>(null);
   const [messagingId, setMessagingId] = useState<string | null>(null);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants", androidNative: true });
 
   const load = useCallback(async () => {
     if (!jobId || !session?.user) return;
@@ -248,11 +248,6 @@ export default function JobApplicantsScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -263,13 +258,6 @@ export default function JobApplicantsScreen() {
   if (notAllowed) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-            <Text style={styles.headerTitle}>Applicants</Text>
-            <View style={{ width: 20 }} />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <EmptyState title="Applicants unavailable" subtitle="Only the employer who posted this job can review applications." />
         </View>
@@ -279,14 +267,6 @@ export default function JobApplicantsScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Applicants</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       <FlatList
         data={apps}
         keyExtractor={(item) => item.id}

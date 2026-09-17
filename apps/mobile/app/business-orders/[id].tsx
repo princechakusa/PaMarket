@@ -15,7 +15,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { fetchShopOrdersForBusiness, type OwnerOrderListRow } from "../../lib/shop-orders";
 import { OwnerOrderRow } from "../../components/orders/OwnerOrderRow";
-import { EmptyState, ErrorState, GlassBackButton } from "../../components/ui";
+import { EmptyState, ErrorState } from "../../components/ui";
 import { space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -42,7 +42,7 @@ export default function BusinessOrdersScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigatingRef = useRef(false);
 
-  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: businessName });
+  useIOSNativeHeader({ backgroundColor: styles.headerBg.color, tintColor: "#FFFFFF", title: businessName, androidNative: true });
 
   const load = useCallback(async () => {
     const userId = session?.user?.id;
@@ -104,20 +104,9 @@ export default function BusinessOrdersScreen() {
     }, 800);
   }
 
-  const header = Platform.OS !== "ios" ? (
-    <View style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
-      <GlassBackButton onPress={() => router.back()} tone="light" flat />
-      <Text style={styles.headerTitle} numberOfLines={1}>
-        {businessName}
-      </Text>
-      <View style={{ width: 40 }} />
-    </View>
-  ) : null;
-
   if (state === "loading") {
     return (
       <View style={styles.container}>
-        {header}
         <View style={styles.centered}>
           <ActivityIndicator color={styles.headerBg.color} />
         </View>
@@ -128,7 +117,6 @@ export default function BusinessOrdersScreen() {
   if (state === "not-owner") {
     return (
       <View style={styles.container}>
-        {header}
         <EmptyState title="Owner only" subtitle="Only this shop's owner can view its orders." />
       </View>
     );
@@ -137,7 +125,6 @@ export default function BusinessOrdersScreen() {
   if (state === "error") {
     return (
       <View style={styles.container}>
-        {header}
         <ErrorState subtitle={errorMessage ?? undefined} onRetry={load} />
       </View>
     );
@@ -145,7 +132,6 @@ export default function BusinessOrdersScreen() {
 
   return (
     <View style={styles.container}>
-      {header}
       <FlatList
         data={orders}
         keyExtractor={(o) => o.id}

@@ -147,6 +147,7 @@ export default function PostJobScreen() {
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
     title: "Post a Job",
+    androidNative: true,
   });
 
   const [isLoading, setIsLoading] = useState(true);

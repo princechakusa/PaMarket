@@ -53,7 +53,6 @@ import {
   ClockIcon,
   DollarIcon,
   EmptyState,
-  GlassBackButton,
   PinIcon,
   UsersIcon,
 } from "../../components/ui";
@@ -223,6 +222,7 @@ export default function JobDetailScreen() {
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
+    androidNative: true,
     title: job ? jobCompany(job.description, job.seller_name) : "Job",
     headerRight:
       job && session?.user?.id !== job.seller_id
@@ -277,11 +277,6 @@ export default function JobDetailScreen() {
   if (isLoading) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -292,11 +287,6 @@ export default function JobDetailScreen() {
   if (!job) {
     return (
       <View style={{ flex: 1 }}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          </View>
-        ) : null}
         <View style={styles.centered}>
           <EmptyState
             title="Job not found"
@@ -406,22 +396,6 @@ export default function JobDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {company}
-          </Text>
-          {isOwner ? (
-            <View style={{ width: 20 }} />
-          ) : (
-            <Pressable onPress={handleToggleSave} hitSlop={10}>
-              <HeartIcon filled={isSaved} />
-            </Pressable>
-          )}
-        </View>
-      ) : null}
-
       <ScrollView
         contentContainerStyle={{ padding: space.lg, paddingBottom: 110 }}
       >
