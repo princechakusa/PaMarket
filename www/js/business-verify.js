@@ -137,8 +137,26 @@
       } catch (e) {}
       const level = pend.reg ? 3 : 2;
       const sb = window.supabase;
-      if (sb) {
-        try { await sb.from('business_verifications').insert({ business_id: id, level_requested: level, id_doc_path: idPath, reg_doc_path: regPath, status: 'pending' }); } catch (e) {}
+      const resetBtn = () => { const btn2 = document.getElementById('bvSubmit'); if (btn2) { btn2.disabled = false; btn2.textContent = 'Submit for Review'; } };
+      if (!sb) { resetBtn(); toast("Couldn't submit — please try again", 4000, true); return; }
+      // These used to go unchecked (bare catch(e){}), so a failed INSERT
+      // still showed "Submitted for review" with nothing actually recorded
+      // for admin — see apps/mobile/app/business-verify/[id].tsx's submit(),
+      // which already checks both errors explicitly; mirrored here.
+      const { error: insertError } = await sb.from('business_verifications')
+        .insert({ business_id: id, level_requested: level, id_doc_path: idPath, reg_doc_path: regPath, status: 'pending' });
+      if (insertError) {
+        console.error('business_verifications insert failed', insertError.message || insertError);
+        resetBtn();
+        toast("Couldn't submit — please try again", 4000, true);
+        return;
+      }
+      const { error: updateError } = await sb.from('businesses').update({ verification_pending: true }).eq('id', id);
+      if (updateError) {
+        console.error('businesses.verification_pending update failed', updateError.message || updateError);
+        resetBtn();
+        toast("Your documents were submitted, but we couldn't update your status — please refresh in a moment", 6000, true);
+        return;
       }
       b.verificationPending = true; b.updatedAt = Date.now(); saveState();
       if (typeof H.saveBusinessToCloud === 'function') H.saveBusinessToCloud(b);
