@@ -507,7 +507,8 @@ function buildStyles(color: ColorPalette) {
   dropdownRow: { flexDirection: "row", gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.md },
   dropdownButton: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: color.surfaceAlt, borderRadius: radius.md, paddingHorizontal: space.sm, paddingVertical: space.sm,
+    backgroundColor: color.surface, borderWidth: 1, borderColor: color.border,
+    borderRadius: radius.md, paddingHorizontal: space.sm, paddingVertical: space.sm,
   },
   dropdownButtonText: { ...font.caption, fontWeight: "700", color: color.text, flexShrink: 1 },
   dropdownButtonChevron: { ...font.caption, color: color.textMuted },

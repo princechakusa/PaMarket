@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -268,23 +268,20 @@ export default function InstitutionDetailScreen() {
               </View>
             </View>
 
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={INSTITUTION_LISTING_FILTERS}
-              keyExtractor={(item) => item.key}
-              contentContainerStyle={styles.filterContent}
-              renderItem={({ item }) => (
-                <Chip label={`${item.emoji} ${item.label}`} active={filter === item.key} onPress={() => setFilter(item.key)} />
-              )}
-            />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
+              {INSTITUTION_LISTING_FILTERS.map((item) => (
+                <Chip key={item.key} label={`${item.emoji} ${item.label}`} active={filter === item.key} onPress={() => setFilter(item.key)} />
+              ))}
+            </ScrollView>
 
             <View style={styles.sortPriceRow}>
               <Pressable style={styles.sortPriceButton} onPress={() => setSortMenuOpen(true)}>
-                <Text style={styles.sortPriceButtonText}>Sort: {sortOption.label}</Text>
+                <Text style={styles.sortPriceButtonText} numberOfLines={1}>Sort: {sortOption.label}</Text>
+                <Text style={styles.sortPriceButtonChevron}>▾</Text>
               </Pressable>
               <Pressable style={styles.sortPriceButton} onPress={() => setPriceMenuOpen(true)}>
-                <Text style={styles.sortPriceButtonText}>{priceOption.label}</Text>
+                <Text style={styles.sortPriceButtonText} numberOfLines={1}>{priceOption.label}</Text>
+                <Text style={styles.sortPriceButtonChevron}>▾</Text>
               </Pressable>
               <View style={{ flex: 1 }} />
               {!isLoadingListings ? <Text style={styles.showingCountText}>Showing {listings.length}</Text> : null}
@@ -413,10 +410,12 @@ function buildStyles(color: ColorPalette) {
     filterContent: { paddingHorizontal: space.lg, gap: space.sm, paddingBottom: space.md },
     sortPriceRow: { flexDirection: "row", gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.md },
     sortPriceButton: {
-      flexDirection: "row", alignItems: "center", backgroundColor: color.surfaceAlt,
+      flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: color.surface,
+      borderWidth: 1, borderColor: color.border,
       borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs,
     },
     sortPriceButtonText: { ...font.caption, color: color.text, fontWeight: "700" },
+    sortPriceButtonChevron: { ...font.caption, color: color.textMuted },
     showingCountText: { ...font.caption, color: color.textMuted, alignSelf: "center" },
     dropdownOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
     dropdownSheet: {
