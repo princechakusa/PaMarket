@@ -15,6 +15,7 @@ import {
   type InstitutionType,
 } from "../../lib/institutions";
 import { publicListingExpiryFilter, type Listing, type SortMode } from "../../lib/listings";
+import { padGridFiller } from "../../lib/listing-grid";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
 import { ListingCard } from "../../components/ListingCard";
 import { EmptyState, ErrorState } from "../../components/ui";
@@ -251,19 +252,23 @@ export default function InstitutionsDirectoryScreen() {
       </View>
 
       <FlatList
-        data={listings}
-        keyExtractor={(item) => item.id}
+        data={padGridFiller(listings, 2)}
+        keyExtractor={(item, index) => item?.id ?? `filler-${index}`}
         numColumns={2}
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 58 + insets.bottom + space.xxl }]}
-        renderItem={({ item }) => (
-          <ListingCard
-            listing={item}
-            saved={savedIds.has(item.id)}
-            onToggleSave={() => void onToggleSaveListing(item)}
-            onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
-          />
-        )}
+        renderItem={({ item }) =>
+          item ? (
+            <ListingCard
+              listing={item}
+              saved={savedIds.has(item.id)}
+              onToggleSave={() => void onToggleSaveListing(item)}
+              onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
+            />
+          ) : (
+            <View style={{ flex: 1 }} />
+          )
+        }
         ListEmptyComponent={
           !isLoadingListings && !listingsError ? (
             <EmptyState title="No listings yet" subtitle="Institution-tagged listings will appear here." />

@@ -102,14 +102,17 @@ function buildStyles(color: ColorPalette) {
       borderRadius: radius.lg,
       overflow: "hidden",
     },
-    // Was flex:1 -- correct for a full row of 2, but an incomplete last row
-    // (an odd number of listings) has only one flex item in it, and flex:1
-    // stretches that lone item to fill the entire row's width instead of
-    // keeping it at its normal half-width card size. A fixed percentage
-    // basis keeps every card the same size regardless of how many share its
-    // row -- 48%+48% plus the row's own gap comfortably fits without
-    // overflow on any real phone width.
-    fluid: { flexBasis: "48%", flexGrow: 0, flexShrink: 0 },
+    // flex:1 correctly splits a full row of 2, but an incomplete last row
+    // (an odd listing count) has only one flex item in it, which then
+    // stretches to fill the entire row instead of staying at half-width.
+    // The fix lives at the call site (an invisible filler item padding out
+    // the last row to a full 2, see FLUID_GRID_FILLER in lib/listing-grid),
+    // not here -- a fixed percentage basis was tried and reverted: it
+    // depends on the caller's own padding/gap values, which vary per
+    // screen, so a width that fits on one screen can silently overflow by
+    // a couple pixels on another (or a narrower phone), pushing the second
+    // card into its own row instead of sitting beside the first.
+    fluid: { flex: 1 },
     // compact mirrors the approved home-rail mockup: 1.4 photo ratio (was
     // 1.18), smaller ribbon/save button, tighter body padding, smaller
     // price/title, no location line at all.

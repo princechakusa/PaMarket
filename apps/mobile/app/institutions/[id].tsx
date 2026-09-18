@@ -9,6 +9,7 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { institutionAbbreviation, INSTITUTION_TYPE_LABEL, type Institution } from "../../lib/institutions";
 import { INSTITUTION_LISTING_FILTERS, applyInstitutionListingFilter, type InstitutionListingFilter } from "../../lib/institution-listing-filters";
 import { type Listing } from "../../lib/listings";
+import { padGridFiller } from "../../lib/listing-grid";
 import { ListingCard } from "../../components/ListingCard";
 import { Chip, EmptyState, ErrorState, GlassBackButton, ListingGridSkeleton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
@@ -208,8 +209,8 @@ export default function InstitutionDetailScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={listings}
-        keyExtractor={(item) => item.id}
+        data={padGridFiller(listings, 2)}
+        keyExtractor={(item, index) => item?.id ?? `filler-${index}`}
         numColumns={2}
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={[styles.listContent, { paddingBottom: 58 + insets.bottom + space.xxl }]}
@@ -351,9 +352,13 @@ export default function InstitutionDetailScreen() {
             />
           ) : null
         }
-        renderItem={({ item }) => (
-          <ListingCard listing={item} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} />
-        )}
+        renderItem={({ item }) =>
+          item ? (
+            <ListingCard listing={item} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} />
+          ) : (
+            <View style={{ flex: 1 }} />
+          )
+        }
         onEndReached={loadMoreListings}
         onEndReachedThreshold={0.5}
         ListFooterComponent={isLoadingMore ? <View style={styles.footer}><ActivityIndicator color={color.brand} /></View> : null}
