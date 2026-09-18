@@ -1,0 +1,11 @@
+-- The Sort/Price migration (20260918055548_institution_listings_sort_and_price_filter.sql)
+-- used "create or replace function" with a different parameter list, which
+-- in Postgres creates a NEW overload rather than replacing the old one --
+-- it left both the original 3-param and new 6-param versions of
+-- get_institution_listings live at once. Any caller using only the
+-- original 3 params (like the institution detail screen's own
+-- active-listing-count call: p_institution_id/p_limit/p_offset only) is
+-- now ambiguous between the two overloads, and PostgREST fails with
+-- "Could not choose the best candidate function" -- surfacing in the app
+-- as a generic "Something went wrong" error on that screen.
+drop function if exists public.get_institution_listings(uuid, integer, integer);
