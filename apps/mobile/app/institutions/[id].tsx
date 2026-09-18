@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,6 +21,22 @@ import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 // status/expiry filtering server-side, so no client-side column list or
 // expiry clause is needed here anymore.
 const LISTINGS_PAGE_SIZE = 20;
+
+type SortKey = "newest" | "price_asc" | "price_desc";
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "newest", label: "Newest" },
+  { key: "price_asc", label: "Price: Low to High" },
+  { key: "price_desc", label: "Price: High to Low" },
+];
+
+type PriceKey = "any" | "under50" | "50to200" | "200to500" | "500plus";
+const PRICE_OPTIONS: { key: PriceKey; label: string; min: number | null; max: number | null }[] = [
+  { key: "any", label: "Any Price", min: null, max: null },
+  { key: "under50", label: "Under $50", min: 0, max: 50 },
+  { key: "50to200", label: "$50 - $200", min: 50, max: 200 },
+  { key: "200to500", label: "$200 - $500", min: 200, max: 500 },
+  { key: "500plus", label: "$500+", min: 500, max: null },
+];
 
 type InstitutionRow = Institution & {
   provinces: { name: string } | { name: string }[];
@@ -52,6 +68,12 @@ export default function InstitutionDetailScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [listingsError, setListingsError] = useState(false);
   const [filter, setFilter] = useState<InstitutionListingFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("newest");
+  const [priceKey, setPriceKey] = useState<PriceKey>("any");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [priceMenuOpen, setPriceMenuOpen] = useState(false);
+  const priceOption = PRICE_OPTIONS.find((p) => p.key === priceKey) ?? PRICE_OPTIONS[0];
+  const sortOption = SORT_OPTIONS.find((s) => s.key === sortKey) ?? SORT_OPTIONS[0];
   const pageRef = useRef(0);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: institution?.official_name || "Institution" });
@@ -105,11 +127,18 @@ export default function InstitutionDetailScreen() {
       // category-filter chips still chain onto the result exactly as
       // before, since PostgREST filters a `returns setof listings`
       // function's output the same way it filters a table.
-      let q = supabase.rpc("get_institution_listings", { p_institution_id: id, p_limit: to - from + 1, p_offset: from });
+      let q = supabase.rpc("get_institution_listings", {
+        p_institution_id: id,
+        p_limit: to - from + 1,
+        p_offset: from,
+        p_sort: sortKey,
+        p_min_price: priceOption.min,
+        p_max_price: priceOption.max,
+      });
       q = applyInstitutionListingFilter(q as any, filter) as typeof q;
       return q;
     },
-    [id, filter]
+    [id, filter, sortKey, priceOption.min, priceOption.max]
   );
 
   const loadListings = useCallback(async () => {
@@ -192,12 +221,10 @@ export default function InstitutionDetailScreen() {
               {institution.cover_image ? (
                 <Image source={{ uri: institution.cover_image }} style={styles.coverImage} contentFit="cover" transition={150} cachePolicy="memory-disk" />
               ) : null}
-              {activeCount !== null && activeCount > 0 ? (
-                <View style={styles.liveHubPill}>
-                  <View style={styles.liveHubDot} />
-                  <Text style={styles.liveHubPillText}>LIVE HUB</Text>
-                </View>
-              ) : null}
+              <View style={styles.liveHubPill}>
+                <VerifiedBadge compact />
+                <Text style={styles.liveHubPillText}>Verified Community</Text>
+              </View>
             </View>
 
             <View style={styles.header}>
@@ -250,8 +277,67 @@ export default function InstitutionDetailScreen() {
               data={INSTITUTION_LISTING_FILTERS}
               keyExtractor={(item) => item.key}
               contentContainerStyle={styles.filterContent}
-              renderItem={({ item }) => <Chip label={item.label} active={filter === item.key} onPress={() => setFilter(item.key)} />}
+              renderItem={({ item }) => (
+                <Chip label={`${item.emoji} ${item.label}`} active={filter === item.key} onPress={() => setFilter(item.key)} />
+              )}
             />
+
+            <View style={styles.sortPriceRow}>
+              <Pressable style={styles.sortPriceButton} onPress={() => setSortMenuOpen(true)}>
+                <Text style={styles.sortPriceButtonText}>Sort: {sortOption.label}</Text>
+              </Pressable>
+              <Pressable style={styles.sortPriceButton} onPress={() => setPriceMenuOpen(true)}>
+                <Text style={styles.sortPriceButtonText}>{priceOption.label}</Text>
+              </Pressable>
+              <View style={{ flex: 1 }} />
+              {!isLoadingListings ? <Text style={styles.showingCountText}>Showing {listings.length}</Text> : null}
+            </View>
+
+            <Modal visible={sortMenuOpen} transparent animationType="fade" onRequestClose={() => setSortMenuOpen(false)}>
+              <Pressable style={styles.dropdownOverlay} onPress={() => setSortMenuOpen(false)}>
+                <View style={styles.dropdownSheet}>
+                  <Text style={styles.dropdownTitle}>Sort by</Text>
+                  {SORT_OPTIONS.map((opt) => (
+                    <Pressable
+                      key={opt.key}
+                      style={styles.dropdownOption}
+                      onPress={() => {
+                        setSortKey(opt.key);
+                        setSortMenuOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.dropdownOptionText, opt.key === sortKey && styles.dropdownOptionTextActive]}>
+                        {opt.label}
+                      </Text>
+                      {opt.key === sortKey ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                    </Pressable>
+                  ))}
+                </View>
+              </Pressable>
+            </Modal>
+
+            <Modal visible={priceMenuOpen} transparent animationType="fade" onRequestClose={() => setPriceMenuOpen(false)}>
+              <Pressable style={styles.dropdownOverlay} onPress={() => setPriceMenuOpen(false)}>
+                <View style={styles.dropdownSheet}>
+                  <Text style={styles.dropdownTitle}>Price range</Text>
+                  {PRICE_OPTIONS.map((opt) => (
+                    <Pressable
+                      key={opt.key}
+                      style={styles.dropdownOption}
+                      onPress={() => {
+                        setPriceKey(opt.key);
+                        setPriceMenuOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.dropdownOptionText, opt.key === priceKey && styles.dropdownOptionTextActive]}>
+                        {opt.label}
+                      </Text>
+                      {opt.key === priceKey ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                    </Pressable>
+                  ))}
+                </View>
+              </Pressable>
+            </Modal>
 
             {isLoadingListings ? <ListingGridSkeleton count={4} /> : null}
             {!isLoadingListings && listingsError ? <ErrorState onRetry={() => void loadListings()} /> : null}
@@ -290,7 +376,6 @@ function buildStyles(color: ColorPalette) {
       backgroundColor: "rgba(255,255,255,0.92)", borderRadius: radius.pill,
       paddingHorizontal: space.sm, paddingVertical: 6,
     },
-    liveHubDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#22C55E" },
     liveHubPillText: { fontSize: 11, fontWeight: "800", color: "#16211D" },
     header: { paddingHorizontal: space.xl, paddingTop: 0, paddingBottom: space.lg },
     identityRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: space.sm, marginTop: -32 },
@@ -326,6 +411,26 @@ function buildStyles(color: ColorPalette) {
     },
     verifiedChipText: { ...font.caption, color: color.brand, fontWeight: "700" },
     filterContent: { paddingHorizontal: space.lg, gap: space.sm, paddingBottom: space.md },
+    sortPriceRow: { flexDirection: "row", gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.md },
+    sortPriceButton: {
+      flexDirection: "row", alignItems: "center", backgroundColor: color.surfaceAlt,
+      borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs,
+    },
+    sortPriceButtonText: { ...font.caption, color: color.text, fontWeight: "700" },
+    showingCountText: { ...font.caption, color: color.textMuted, alignSelf: "center" },
+    dropdownOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+    dropdownSheet: {
+      backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg,
+      paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.xxl,
+    },
+    dropdownTitle: { ...font.title, color: color.text, marginBottom: space.sm },
+    dropdownOption: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: color.border,
+    },
+    dropdownOptionText: { ...font.body, color: color.text },
+    dropdownOptionTextActive: { color: color.brand, fontWeight: "700" },
+    dropdownCheck: { color: color.brand, fontWeight: "800" },
     gridRow: { paddingHorizontal: space.lg, gap: space.md },
     listContent: { paddingBottom: space.huge },
     footer: { paddingVertical: space.lg, alignItems: "center" },

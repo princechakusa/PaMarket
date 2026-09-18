@@ -8,17 +8,17 @@ export type InstitutionListingFilter =
   | "all" | "accommodation" | "study-materials" | "electronics" | "furniture"
   | "fashion" | "services" | "jobs" | "vehicles" | "free";
 
-export const INSTITUTION_LISTING_FILTERS: { key: InstitutionListingFilter; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "accommodation", label: "Accommodation" },
-  { key: "study-materials", label: "Study Materials" },
-  { key: "electronics", label: "Electronics" },
-  { key: "furniture", label: "Furniture" },
-  { key: "fashion", label: "Fashion" },
-  { key: "services", label: "Services" },
-  { key: "jobs", label: "Jobs" },
-  { key: "vehicles", label: "Vehicles" },
-  { key: "free", label: "Free" },
+export const INSTITUTION_LISTING_FILTERS: { key: InstitutionListingFilter; label: string; emoji: string }[] = [
+  { key: "all", label: "All", emoji: "🏫" },
+  { key: "accommodation", label: "Accommodation", emoji: "🏠" },
+  { key: "study-materials", label: "Study Materials", emoji: "📚" },
+  { key: "electronics", label: "Electronics", emoji: "💻" },
+  { key: "furniture", label: "Furniture", emoji: "🪑" },
+  { key: "fashion", label: "Fashion", emoji: "👕" },
+  { key: "services", label: "Services", emoji: "🛠️" },
+  { key: "jobs", label: "Jobs", emoji: "💼" },
+  { key: "vehicles", label: "Vehicles", emoji: "🚗" },
+  { key: "free", label: "Free", emoji: "🆓" },
 ];
 
 /** Applies one fixed filter's clause to an in-flight Supabase query builder
