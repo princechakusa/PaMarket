@@ -145,7 +145,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 137,
+    versionCode: 138,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
