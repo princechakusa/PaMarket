@@ -105,7 +105,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // applications, the dedicated Jobs > Recruitment Messages inbox, the
     // rental gallery full-screen pagination indicator, and the reviews /
     // delete-account keyboard fixes.
-    buildNumber: "26",
+    // 27 is the final production TestFlight/App Store candidate carrying
+    // everything shipped since 26: institution hero redesign (cover photo,
+    // logo badge, Live Hub -> Verified Community, real Sort/Price
+    // dropdowns, category emojis), the listing-grid card-stretch fix, the
+    // Home screen Campus Hub reorder/redesign, the corrected Privacy
+    // Policy location/Nominatim/Sentry disclosures, native Android back
+    // headers on the last two hero screens (institutions/[id], listing/
+    // [id]), the Rentals/Hire Talent dropdown filter redesign, and the
+    // app-wide removal of haptic (vibration) feedback. Confirmed via
+    // `eas build:list` that 26 was already built on 2026-08-21 -- 27 is
+    // the next unused number.
+    buildNumber: "27",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
