@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, Text } from "react-native";
-import * as Haptics from "expo-haptics";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -43,14 +42,9 @@ export function Chip({ label, active, onPress, tone = "brand" }: ChipProps) {
   const activeBgByTone = useThemedStyles(buildActiveBg);
   const activeBg = activeBgByTone[tone];
 
-  function handlePress() {
-    Haptics.selectionAsync().catch(() => {});
-    onPress?.();
-  }
-
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.chip,
         active ? { backgroundColor: activeBg, borderColor: activeBg } : styles.inactive,

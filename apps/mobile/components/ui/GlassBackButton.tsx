@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { Animated, Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import Svg, { Polyline } from "react-native-svg";
 import { glass, hitSlop as defaultHitSlop } from "../../lib/theme";
@@ -89,7 +88,6 @@ export function GlassBackButton({ onPress, tone = "auto", size = 52, label = "Ba
   const { resolvedScheme } = useThemePreference();
 
   function handlePress() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     if (onPress) onPress();
     else if (router.canGoBack()) router.back();
     // No history to pop — most often a screen a notification opened

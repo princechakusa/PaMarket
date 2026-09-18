@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
@@ -19,7 +19,6 @@ import {
   Avatar,
   Badge,
   Card,
-  Chip,
   EmptyState,
   ErrorState,
   Skeleton,
@@ -43,8 +42,6 @@ const EXP_FILTERS: Array<[string, string]> = [
   ["senior", "5-10 yrs"],
   ["expert", "10+ yrs"],
 ];
-
-type FilterTab = "sector" | "experience" | "location";
 
 // Mirrors www/js/jobs.js H.pages.HireTalent — employer-side candidate
 // browse/search. profiles columns confirmed against supabase/schema/profiles.sql
@@ -71,7 +68,9 @@ export default function HireTalentScreen() {
   const [sectorFilter, setSectorFilter] = useState<string>("all");
   const [expFilter, setExpFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
-  const [tab, setTab] = useState<FilterTab>("sector");
+  const [sectorMenuOpen, setSectorMenuOpen] = useState(false);
+  const [expMenuOpen, setExpMenuOpen] = useState(false);
+  const [cityMenuOpen, setCityMenuOpen] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const pageRef = useRef(0);
 
@@ -212,49 +211,26 @@ export default function HireTalentScreen() {
       </View>
 
       <View style={styles.filterPanel}>
-        <View style={styles.tabRow}>
-          <TabButton label="Industry" active={tab === "sector"} onPress={() => setTab("sector")} styles={styles} />
-          <TabButton label="Experience" active={tab === "experience"} onPress={() => setTab("experience")} styles={styles} />
-          <TabButton label="Location" active={tab === "location"} onPress={() => setTab("location")} styles={styles} />
+        <View style={styles.dropdownRow}>
+          <Pressable style={styles.dropdownButton} onPress={() => setSectorMenuOpen(true)}>
+            <Text style={styles.dropdownButtonText} numberOfLines={1}>
+              {sectorFilter === "all" ? "All industries" : sectorFilter}
+            </Text>
+            <Text style={styles.dropdownButtonChevron}>▾</Text>
+          </Pressable>
+          <Pressable style={styles.dropdownButton} onPress={() => setExpMenuOpen(true)}>
+            <Text style={styles.dropdownButtonText} numberOfLines={1}>
+              {expFilter === "all" ? "Any experience" : EXP_FILTERS.find(([key]) => key === expFilter)?.[1] ?? "Any experience"}
+            </Text>
+            <Text style={styles.dropdownButtonChevron}>▾</Text>
+          </Pressable>
+          <Pressable style={styles.dropdownButton} onPress={() => setCityMenuOpen(true)}>
+            <Text style={styles.dropdownButtonText} numberOfLines={1}>
+              {cityFilter === "all" ? "Anywhere" : cityFilter}
+            </Text>
+            <Text style={styles.dropdownButtonChevron}>▾</Text>
+          </Pressable>
         </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {tab === "sector"
-            ? ["all", ...JOB_CATEGORIES].map((c) => (
-                <Chip
-                  key={c}
-                  label={c === "all" ? "All industries" : c}
-                  active={sectorFilter === c}
-                  onPress={() => setSectorFilter(c)}
-                />
-              ))
-            : null}
-          {tab === "experience" ? (
-            <>
-              <Chip label="Any experience" active={expFilter === "all"} onPress={() => setExpFilter("all")} />
-              {EXP_FILTERS.map(([key, label]) => (
-                <Chip key={key} label={label} active={expFilter === key} onPress={() => setExpFilter(key)} />
-              ))}
-            </>
-          ) : null}
-          {tab === "location" ? (
-            <>
-              <Chip label="Anywhere" active={cityFilter === "all"} onPress={() => setCityFilter("all")} />
-              {cityOptions.length ? (
-                cityOptions.map((c) => (
-                  <Chip key={c} label={c} active={cityFilter === c} onPress={() => setCityFilter(c)} />
-                ))
-              ) : (
-                <Text style={styles.noCities}>No locations on the current candidates</Text>
-              )}
-            </>
-          ) : null}
-        </ScrollView>
 
         <View style={styles.summaryRow}>
           <Text style={styles.openOnlyLabel}>Open to Work candidates only</Text>
@@ -332,6 +308,99 @@ export default function HireTalentScreen() {
           }
         />
       )}
+
+      <Modal visible={sectorMenuOpen} transparent animationType="fade" onRequestClose={() => setSectorMenuOpen(false)}>
+        <Pressable style={styles.dropdownOverlay} onPress={() => setSectorMenuOpen(false)}>
+          <View style={styles.dropdownSheet}>
+            <ScrollView style={{ maxHeight: 420 }}>
+              <Text style={styles.dropdownTitle}>Industry</Text>
+              {["all", ...JOB_CATEGORIES].map((c) => (
+                <Pressable
+                  key={c}
+                  style={styles.dropdownOption}
+                  onPress={() => {
+                    setSectorFilter(c);
+                    setSectorMenuOpen(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownOptionText, sectorFilter === c && styles.dropdownOptionTextActive]}>
+                    {c === "all" ? "All industries" : c}
+                  </Text>
+                  {sectorFilter === c ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={expMenuOpen} transparent animationType="fade" onRequestClose={() => setExpMenuOpen(false)}>
+        <Pressable style={styles.dropdownOverlay} onPress={() => setExpMenuOpen(false)}>
+          <View style={styles.dropdownSheet}>
+            <Text style={styles.dropdownTitle}>Experience</Text>
+            <Pressable
+              style={styles.dropdownOption}
+              onPress={() => {
+                setExpFilter("all");
+                setExpMenuOpen(false);
+              }}
+            >
+              <Text style={[styles.dropdownOptionText, expFilter === "all" && styles.dropdownOptionTextActive]}>Any experience</Text>
+              {expFilter === "all" ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+            </Pressable>
+            {EXP_FILTERS.map(([key, label]) => (
+              <Pressable
+                key={key}
+                style={styles.dropdownOption}
+                onPress={() => {
+                  setExpFilter(key);
+                  setExpMenuOpen(false);
+                }}
+              >
+                <Text style={[styles.dropdownOptionText, expFilter === key && styles.dropdownOptionTextActive]}>{label}</Text>
+                {expFilter === key ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={cityMenuOpen} transparent animationType="fade" onRequestClose={() => setCityMenuOpen(false)}>
+        <Pressable style={styles.dropdownOverlay} onPress={() => setCityMenuOpen(false)}>
+          <View style={styles.dropdownSheet}>
+            <ScrollView style={{ maxHeight: 420 }}>
+              <Text style={styles.dropdownTitle}>Location</Text>
+              <Pressable
+                style={styles.dropdownOption}
+                onPress={() => {
+                  setCityFilter("all");
+                  setCityMenuOpen(false);
+                }}
+              >
+                <Text style={[styles.dropdownOptionText, cityFilter === "all" && styles.dropdownOptionTextActive]}>Anywhere</Text>
+                {cityFilter === "all" ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+              </Pressable>
+              {cityOptions.length ? (
+                cityOptions.map((c) => (
+                  <Pressable
+                    key={c}
+                    style={styles.dropdownOption}
+                    onPress={() => {
+                      setCityFilter(c);
+                      setCityMenuOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.dropdownOptionText, cityFilter === c && styles.dropdownOptionTextActive]}>{c}</Text>
+                    {cityFilter === c ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                  </Pressable>
+                ))
+              ) : (
+                <Text style={styles.noCities}>No locations on the current candidates</Text>
+              )}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -406,24 +475,6 @@ function CandidateCard({
   );
 }
 
-function TabButton({
-  label,
-  active,
-  onPress,
-  styles,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  styles: Styles;
-}) {
-  return (
-    <Pressable onPress={onPress} style={[styles.tab, active && styles.tabActive]} hitSlop={6}>
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg },
@@ -453,13 +504,27 @@ function buildStyles(color: ColorPalette) {
     borderBottomColor: color.border,
     paddingTop: space.md,
   },
-  tabRow: { flexDirection: "row", gap: space.xl, paddingHorizontal: space.lg },
-  tab: { paddingBottom: space.sm, borderBottomWidth: 2, borderBottomColor: "transparent" },
-  tabActive: { borderBottomColor: color.brand },
-  tabText: { ...font.caption, color: color.textMuted },
-  tabTextActive: { color: color.brand },
-  filterContent: { paddingHorizontal: space.lg, paddingVertical: space.md, gap: space.sm, alignItems: "center" },
-  noCities: { ...font.sub, color: color.textMuted },
+  dropdownRow: { flexDirection: "row", gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.md },
+  dropdownButton: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: color.surfaceAlt, borderRadius: radius.md, paddingHorizontal: space.sm, paddingVertical: space.sm,
+  },
+  dropdownButtonText: { ...font.caption, fontWeight: "700", color: color.text, flexShrink: 1 },
+  dropdownButtonChevron: { ...font.caption, color: color.textMuted },
+  dropdownOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+  dropdownSheet: {
+    backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg,
+    paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.xxl,
+  },
+  dropdownTitle: { ...font.title, color: color.text, marginBottom: space.sm },
+  dropdownOption: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: color.border,
+  },
+  dropdownOptionText: { ...font.body, color: color.text },
+  dropdownOptionTextActive: { color: color.brand, fontWeight: "700" },
+  dropdownCheck: { color: color.brand, fontWeight: "800" },
+  noCities: { ...font.sub, color: color.textMuted, paddingVertical: space.md },
   summaryRow: {
     flexDirection: "row",
     alignItems: "center",

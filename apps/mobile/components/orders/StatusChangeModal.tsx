@@ -8,7 +8,6 @@
 import { useEffect, useState } from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
 import { font, glass, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -31,20 +30,13 @@ export function StatusChangeModal({ visible, actionLabel, fromStatus, toStatusLa
     if (visible) setNote("");
   }, [visible]);
 
-  useEffect(() => {
-    if (!visible) return;
-    (danger ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)).catch(() => {});
-  }, [visible, danger]);
-
   function handleCancel() {
     if (busy) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onCancel();
   }
 
   function handleConfirm() {
     if (busy) return;
-    Haptics.impactAsync(danger ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onConfirm(note.trim());
   }
 

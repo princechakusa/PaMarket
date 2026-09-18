@@ -1,6 +1,5 @@
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs/types";
 import Svg, { Circle, Line, Path, Polyline } from "react-native-svg";
@@ -98,7 +97,6 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
         key={route.key}
         style={styles.tabButton}
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
           const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
           if (!isFocused && !event.defaultPrevented) goToTab(route.name);
         }}
@@ -128,7 +126,6 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
         <Pressable
           style={styles.fab}
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
             if (postRoute) goToTab(postRoute.name);
           }}
         >

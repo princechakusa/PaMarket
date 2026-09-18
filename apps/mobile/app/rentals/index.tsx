@@ -61,6 +61,8 @@ export default function RentalsListScreen() {
   const [showingCached, setShowingCached] = useState(false);
   const [filters, setFilters] = useState<RentalFilters>(DEFAULT_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [brandMenuOpen, setBrandMenuOpen] = useState(false);
   const activeCount = useMemo(() => countActive(filters), [filters]);
   const isDefaultFilters = activeCount === 0;
 
@@ -209,28 +211,20 @@ export default function RentalsListScreen() {
             </View>
             <ScrollView contentContainerStyle={styles.filterBody}>
               <Text style={styles.filterSectionTitle}>Vehicle Type</Text>
-              <View style={styles.filterChipWrap}>
-                {Object.entries(CATEGORY_LABELS).map(([slug, label]) => (
-                  <Chip
-                    key={slug}
-                    label={label}
-                    active={filters.category === slug}
-                    onPress={() => setFilters((f) => ({ ...f, category: f.category === slug ? null : slug }))}
-                  />
-                ))}
-              </View>
+              <Pressable style={styles.dropdownButton} onPress={() => setCategoryMenuOpen(true)}>
+                <Text style={styles.dropdownButtonText}>
+                  {filters.category ? CATEGORY_LABELS[filters.category] : "Any vehicle type"}
+                </Text>
+                <Text style={styles.dropdownButtonChevron}>▾</Text>
+              </Pressable>
 
               <Text style={styles.filterSectionTitle}>Brand</Text>
-              <View style={styles.filterChipWrap}>
-                {Object.entries(BRAND_LABELS).map(([slug, label]) => (
-                  <Chip
-                    key={slug}
-                    label={label}
-                    active={filters.brand === slug}
-                    onPress={() => setFilters((f) => ({ ...f, brand: f.brand === slug ? null : slug }))}
-                  />
-                ))}
-              </View>
+              <Pressable style={styles.dropdownButton} onPress={() => setBrandMenuOpen(true)}>
+                <Text style={styles.dropdownButtonText}>
+                  {filters.brand ? BRAND_LABELS[filters.brand] : "Any brand"}
+                </Text>
+                <Text style={styles.dropdownButtonChevron}>▾</Text>
+              </Pressable>
 
               <Text style={styles.filterSectionTitle}>Transmission</Text>
               <View style={styles.filterChipWrap}>
@@ -275,6 +269,70 @@ export default function RentalsListScreen() {
             </View>
           </View>
         </View>
+      </Modal>
+
+      <Modal visible={categoryMenuOpen} transparent animationType="fade" onRequestClose={() => setCategoryMenuOpen(false)}>
+        <Pressable style={styles.dropdownOverlay} onPress={() => setCategoryMenuOpen(false)}>
+          <View style={styles.dropdownSheet}>
+            <Text style={styles.dropdownTitle}>Vehicle Type</Text>
+            <Pressable
+              style={styles.dropdownOption}
+              onPress={() => {
+                setFilters((f) => ({ ...f, category: null }));
+                setCategoryMenuOpen(false);
+              }}
+            >
+              <Text style={[styles.dropdownOptionText, !filters.category && styles.dropdownOptionTextActive]}>Any vehicle type</Text>
+              {!filters.category ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+            </Pressable>
+            {Object.entries(CATEGORY_LABELS).map(([slug, label]) => (
+              <Pressable
+                key={slug}
+                style={styles.dropdownOption}
+                onPress={() => {
+                  setFilters((f) => ({ ...f, category: slug }));
+                  setCategoryMenuOpen(false);
+                }}
+              >
+                <Text style={[styles.dropdownOptionText, filters.category === slug && styles.dropdownOptionTextActive]}>{label}</Text>
+                {filters.category === slug ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={brandMenuOpen} transparent animationType="fade" onRequestClose={() => setBrandMenuOpen(false)}>
+        <Pressable style={styles.dropdownOverlay} onPress={() => setBrandMenuOpen(false)}>
+          <View style={styles.dropdownSheet}>
+            <ScrollView style={{ maxHeight: 420 }}>
+              <Text style={styles.dropdownTitle}>Brand</Text>
+              <Pressable
+                style={styles.dropdownOption}
+                onPress={() => {
+                  setFilters((f) => ({ ...f, brand: null }));
+                  setBrandMenuOpen(false);
+                }}
+              >
+                <Text style={[styles.dropdownOptionText, !filters.brand && styles.dropdownOptionTextActive]}>Any brand</Text>
+                {!filters.brand ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+              </Pressable>
+              {Object.entries(BRAND_LABELS).map(([slug, label]) => (
+                <Pressable
+                  key={slug}
+                  style={styles.dropdownOption}
+                  onPress={() => {
+                    setFilters((f) => ({ ...f, brand: slug }));
+                    setBrandMenuOpen(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownOptionText, filters.brand === slug && styles.dropdownOptionTextActive]}>{label}</Text>
+                  {filters.brand === slug ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -397,6 +455,30 @@ function buildStyles(color: ColorPalette) {
       flexWrap: "wrap",
       gap: 8,
     },
+    dropdownButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: color.surfaceAlt,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    dropdownButtonText: { fontSize: 14, fontWeight: "600", color: color.text },
+    dropdownButtonChevron: { fontSize: 14, color: color.textMuted },
+    dropdownOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+    dropdownSheet: {
+      backgroundColor: color.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+      paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32,
+    },
+    dropdownTitle: { fontSize: 17, fontWeight: "800", color: color.text, marginBottom: 8 },
+    dropdownOption: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: color.divider,
+    },
+    dropdownOptionText: { fontSize: 15, color: color.text },
+    dropdownOptionTextActive: { color: color.brand, fontWeight: "700" },
+    dropdownCheck: { color: color.brand, fontWeight: "800" },
     filterFooter: {
       flexDirection: "row",
       gap: 12,

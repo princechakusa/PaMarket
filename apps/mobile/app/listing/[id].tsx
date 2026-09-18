@@ -63,7 +63,6 @@ import {
   Card,
   ErrorState,
   FeatureIcon,
-  GlassBackButton,
   ListSkeleton,
   SectionHeader,
   Skeleton,
@@ -333,13 +332,14 @@ export default function ListingDetailScreen() {
     transparent: false,
     backgroundColor: color.brand,
     tintColor: "#FFFFFF",
+    androidNative: true,
   });
 
-  // Local coordinate within the hero. On iOS the native header has already
-  // positioned the entire hero below the safe/header area. Android keeps its
-  // existing full-bleed hero, so its status-bar inset is part of the hero's
-  // local top clearance. This value never follows the viewport or scroll.
-  const heroActionTop = Platform.OS === "ios" ? space.md : insets.top + space.md;
+  // Local coordinate within the hero. Now that Android also uses the real
+  // native header (androidNative above), both platforms position the hero
+  // below the safe/header area identically -- no extra status-bar inset
+  // needed here anymore. This value never follows the viewport or scroll.
+  const heroActionTop = space.md;
 
   const load = useCallback(async () => {
     setError(null);
@@ -772,11 +772,6 @@ export default function ListingDetailScreen() {
       <View style={styles.container}>
         <View style={styles.heroContainer}>
           <Skeleton width={width} height={330} radius={0} />
-          {Platform.OS !== "ios" ? (
-            <View style={[styles.heroActions, { top: heroActionTop }]}>
-              <GlassBackButton onPress={() => router.back()} tone="light" />
-            </View>
-          ) : null}
         </View>
         <View style={styles.content}>
           <Skeleton width={140} height={30} style={{ marginTop: space.md }} />
@@ -798,11 +793,6 @@ export default function ListingDetailScreen() {
   if (error === "not-found" || !listing) {
     return (
       <View style={[styles.container, styles.centered]}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.screenBack, { top: insets.top + space.md }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" />
-          </View>
-        ) : null}
         <ErrorState
           title="Listing not found"
           subtitle="This listing may have been removed or is no longer available."
@@ -814,11 +804,6 @@ export default function ListingDetailScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
-        {Platform.OS !== "ios" ? (
-          <View style={[styles.screenBack, { top: insets.top + space.md }]}>
-            <GlassBackButton onPress={() => router.back()} tone="light" />
-          </View>
-        ) : null}
         <ErrorState
           onRetry={() => {
             setIsLoading(true);
@@ -879,9 +864,6 @@ export default function ListingDetailScreen() {
           )}
 
           <View style={[styles.heroActions, { top: heroActionTop }]}>
-            {Platform.OS !== "ios" ? (
-              <GlassBackButton onPress={() => router.back()} tone="light" />
-            ) : null}
             <View style={{ flex: 1 }} />
             {!isOwner ? <CartBadgeButton tone="light" /> : null}
             <Pressable
@@ -1472,12 +1454,6 @@ function buildStyles(color: ColorPalette) {
       // Without these the group renders behind later siblings (the photo
       // counter, the gallery pager) and taps land on whatever is drawn on
       // top. elevation is the Android equivalent of zIndex for touch order.
-      zIndex: 20,
-      elevation: 20,
-    },
-    screenBack: {
-      position: "absolute",
-      left: space.md,
       zIndex: 20,
       elevation: 20,
     },

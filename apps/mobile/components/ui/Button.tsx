@@ -1,5 +1,4 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
-import * as Haptics from "expo-haptics";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -64,14 +63,9 @@ export function Button({
   const variants = useThemedStyles(buildVariants);
   const palette = variants[variant];
 
-  function handlePress() {
-    Haptics.impactAsync(variant === "danger" ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    onPress?.();
-  }
-
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={onPress}
       disabled={isDisabled}
       hitSlop={8}
       style={({ pressed }) => [

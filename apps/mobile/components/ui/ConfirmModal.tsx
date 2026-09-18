@@ -1,7 +1,5 @@
-import { useEffect } from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
-import * as Haptics from "expo-haptics";
 import { glass, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -31,19 +29,10 @@ export function ConfirmModal({
 }) {
   const styles = useThemedStyles(buildStyles);
 
-  useEffect(() => {
-    if (!visible) return;
-    (danger ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)).catch(
-      () => {}
-    );
-  }, [visible, danger]);
-
   function handleCancel() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onCancel();
   }
   function handleConfirm() {
-    Haptics.impactAsync(danger ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onConfirm();
   }
 

@@ -11,7 +11,7 @@ import { INSTITUTION_LISTING_FILTERS, applyInstitutionListingFilter, type Instit
 import { type Listing } from "../../lib/listings";
 import { padGridFiller } from "../../lib/listing-grid";
 import { ListingCard } from "../../components/ListingCard";
-import { Chip, EmptyState, ErrorState, GlassBackButton, ListingGridSkeleton, VerifiedBadge } from "../../components/ui";
+import { Chip, EmptyState, ErrorState, ListingGridSkeleton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 // Detail screen -- mirrors app/business/[id].tsx's overall shape (header +
@@ -77,7 +77,7 @@ export default function InstitutionDetailScreen() {
   const sortOption = SORT_OPTIONS.find((s) => s.key === sortKey) ?? SORT_OPTIONS[0];
   const pageRef = useRef(0);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: institution?.official_name || "Institution" });
+  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: institution?.official_name || "Institution", androidNative: true });
 
   const loadInstitution = useCallback(async () => {
     if (!id) return;
@@ -185,7 +185,6 @@ export default function InstitutionDetailScreen() {
   if (isLoadingInstitution) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
         <View style={styles.centered}><ActivityIndicator color={color.brand} /></View>
       </View>
     );
@@ -198,7 +197,6 @@ export default function InstitutionDetailScreen() {
   if (institutionError || !institution) {
     return (
       <View style={styles.container}>
-        {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
         <View style={styles.centered}>
           {institutionError ? <ErrorState onRetry={() => void loadInstitution()} /> : <Text style={styles.notFoundTitle}>Institution not found</Text>}
         </View>
@@ -216,8 +214,6 @@ export default function InstitutionDetailScreen() {
         contentContainerStyle={[styles.listContent, { paddingBottom: 58 + insets.bottom + space.xxl }]}
         ListHeaderComponent={
           <>
-            {Platform.OS !== "ios" ? <View style={[styles.backRow, { paddingTop: insets.top + 10 }]}><GlassBackButton onPress={() => router.back()} flat /></View> : null}
-
             <View style={styles.cover}>
               {institution.cover_image ? (
                 <Image source={{ uri: institution.cover_image }} style={styles.coverImage} contentFit="cover" transition={150} cachePolicy="memory-disk" />
@@ -371,7 +367,6 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: color.bg },
     centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-    backRow: { paddingHorizontal: space.lg, paddingBottom: space.sm },
     notFoundTitle: { ...font.title, color: color.text },
     cover: { height: 230, backgroundColor: color.brand },
     coverImage: { width: "100%", height: "100%" },
