@@ -195,27 +195,29 @@ export default function InstitutionDetailScreen() {
               {activeCount !== null && activeCount > 0 ? (
                 <View style={styles.liveHubPill}>
                   <View style={styles.liveHubDot} />
-                  <Text style={styles.liveHubPillText}>Live Hub</Text>
+                  <Text style={styles.liveHubPillText}>LIVE HUB</Text>
                 </View>
               ) : null}
-              <Pressable
-                style={styles.postHereButton}
-                onPress={() => router.push({ pathname: "/institutions/post-setup", params: { institutionId: institution.id } })}
-              >
-                <Text style={styles.postHereButtonText}>Post for {institution.short_name || institution.official_name}</Text>
-              </Pressable>
             </View>
 
             <View style={styles.header}>
-              <View style={styles.logoWrap}>
-                {institution.logo_url ? (
-                  <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
-                ) : (
-                  <>
-                    <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
-                    {institution.founded_year ? <Text style={styles.logoYear}>{institution.founded_year}</Text> : null}
-                  </>
-                )}
+              <View style={styles.identityRow}>
+                <View style={styles.logoOuter}>
+                  {institution.logo_url ? (
+                    <Image source={{ uri: institution.logo_url }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+                  ) : (
+                    <View style={styles.logoInner}>
+                      <Text style={styles.logoInitial}>{institutionAbbreviation(institution)}</Text>
+                      {institution.founded_year ? <Text style={styles.logoYear}>{institution.founded_year}</Text> : null}
+                    </View>
+                  )}
+                </View>
+                <Pressable
+                  style={styles.postHereButton}
+                  onPress={() => router.push({ pathname: "/institutions/post-setup", params: { institutionId: institution.id } })}
+                >
+                  <Text style={styles.postHereButtonText}>+ Post for {institution.short_name || institution.official_name}</Text>
+                </Pressable>
               </View>
 
               <View style={styles.nameRow}>
@@ -228,13 +230,18 @@ export default function InstitutionDetailScreen() {
               </Text>
               {institution.description ? <Text style={styles.description}>{institution.description}</Text> : null}
 
-              {activeCount !== null ? (
-                <View style={styles.statChip}>
-                  <Text style={styles.statChipText}>
-                    {activeCount} active listing{activeCount === 1 ? "" : "s"}
-                  </Text>
+              <View style={styles.statChipRow}>
+                {activeCount !== null ? (
+                  <View style={styles.statChip}>
+                    <Text style={styles.statChipText}>
+                      {activeCount} active listing{activeCount === 1 ? "" : "s"}
+                    </Text>
+                  </View>
+                ) : null}
+                <View style={styles.verifiedChip}>
+                  <Text style={styles.verifiedChipText}>Verified Campus</Text>
                 </View>
-              ) : null}
+              </View>
             </View>
 
             <FlatList
@@ -286,16 +293,19 @@ function buildStyles(color: ColorPalette) {
     liveHubDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#22C55E" },
     liveHubPillText: { fontSize: 11, fontWeight: "800", color: "#16211D" },
     header: { paddingHorizontal: space.xl, paddingTop: 0, paddingBottom: space.lg },
-    logoWrap: {
-      width: 68, height: 68, borderRadius: 34, backgroundColor: color.brand,
-      alignItems: "center", justifyContent: "center", overflow: "hidden",
-      marginTop: -34, borderWidth: 3, borderColor: color.surface,
+    identityRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: space.sm, marginTop: -32 },
+    logoOuter: {
+      width: 64, height: 64, borderRadius: radius.lg, backgroundColor: color.surface,
+      alignItems: "center", justifyContent: "center", overflow: "hidden", padding: 5,
     },
-    logo: { width: "100%", height: "100%" },
-    logoInitial: { ...font.h2, color: color.textOnBrand },
-    logoYear: { fontSize: 10, fontWeight: "700", color: color.textOnBrand, opacity: 0.85, marginTop: 1 },
+    logoInner: {
+      width: "100%", height: "100%", borderRadius: radius.md, backgroundColor: color.brand,
+      alignItems: "center", justifyContent: "center",
+    },
+    logo: { width: "100%", height: "100%", borderRadius: radius.md },
+    logoInitial: { ...font.h3, color: color.textOnBrand, fontWeight: "800" },
+    logoYear: { fontSize: 9, fontWeight: "700", color: color.textOnBrand, opacity: 0.85, marginTop: 1, letterSpacing: 0.5 },
     postHereButton: {
-      position: "absolute", bottom: space.md, right: space.md,
       backgroundColor: color.gold, paddingHorizontal: space.lg, paddingVertical: space.sm,
       borderRadius: radius.pill, maxWidth: "62%",
     },
@@ -304,11 +314,17 @@ function buildStyles(color: ColorPalette) {
     name: { ...font.h3, color: color.text, flexShrink: 1 },
     type: { ...font.caption, color: color.brand, fontWeight: "700", marginTop: space.xs, textTransform: "uppercase" },
     description: { ...font.body, color: color.text, marginTop: space.md },
+    statChipRow: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.md },
     statChip: {
       alignSelf: "flex-start", backgroundColor: color.surfaceAlt, borderWidth: 1, borderColor: color.border,
-      borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs, marginTop: space.md,
+      borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs,
     },
     statChipText: { ...font.caption, color: color.text },
+    verifiedChip: {
+      alignSelf: "flex-start", backgroundColor: color.brandTint,
+      borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs,
+    },
+    verifiedChipText: { ...font.caption, color: color.brand, fontWeight: "700" },
     filterContent: { paddingHorizontal: space.lg, gap: space.sm, paddingBottom: space.md },
     gridRow: { paddingHorizontal: space.lg, gap: space.md },
     listContent: { paddingBottom: space.huge },
