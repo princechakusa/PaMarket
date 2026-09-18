@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { useCurrentLocation, type ResolvedLocation } from "../../lib/useCurrentLocation";
 import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -20,7 +20,7 @@ export function UseCurrentLocationButton({
   onResolved: (location: ResolvedLocation) => void;
 }) {
   const styles = useThemedStyles(buildStyles);
-  const { loading, error, resolve } = useCurrentLocation(provinces, citiesByProvince);
+  const { loading, error, canAskAgain, resolve } = useCurrentLocation(provinces, citiesByProvince);
 
   async function handlePress() {
     const location = await resolve();
@@ -39,6 +39,11 @@ export function UseCurrentLocationButton({
         icon={<PinIcon c={styles.iconColor.color} size={15} />}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error && !canAskAgain ? (
+        <Text style={styles.settingsLink} onPress={() => Linking.openSettings()}>
+          Open Settings
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -48,5 +53,6 @@ function buildStyles(color: ColorPalette) {
     wrap: { gap: space.xs, alignItems: "flex-start" },
     iconColor: { color: color.text },
     error: { ...font.caption, color: color.danger, marginTop: 2 },
+    settingsLink: { ...font.caption, color: color.brand, fontWeight: "800", textDecorationLine: "underline" },
   });
 }

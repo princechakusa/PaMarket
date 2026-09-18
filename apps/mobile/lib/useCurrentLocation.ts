@@ -9,7 +9,7 @@ export type ResolvedLocation = {
   suburb?: string;
 };
 
-type State = { loading: boolean; error: string | null };
+type State = { loading: boolean; error: string | null; canAskAgain: boolean };
 
 // Rounds to ~100m precision. Personal listings should only ever persist an
 // approximate point — the public listing API selects the raw row, so an
@@ -74,16 +74,28 @@ export function useCurrentLocation(
   provinces: readonly string[],
   citiesByProvince: Record<string, readonly string[]>,
 ) {
-  const [state, setState] = useState<State>({ loading: false, error: null });
+  const [state, setState] = useState<State>({ loading: false, error: null, canAskAgain: true });
 
   const resolve = useCallback(async (): Promise<ResolvedLocation | null> => {
-    setState({ loading: true, error: null });
+    setState({ loading: true, error: null, canAskAgain: true });
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
+        // Once Android has been denied location access before (including a
+        // previous test build), it stops showing the system permission
+        // popup at all on later requests -- this call just silently
+        // resolves to "denied" with no dialog. That's exactly the "no
+        // popup, then nothing" symptom: the generic message below was easy
+        // to miss as a small caption, with no way to actually fix it short
+        // of finding Settings on your own. canAskAgain === false is how we
+        // know we're in that state, so tell the user precisely why nothing
+        // happened and give them the one working way out.
         setState({
           loading: false,
-          error: "Location permission wasn't granted — you can still set your area manually below.",
+          canAskAgain,
+          error: canAskAgain
+            ? "Location permission wasn't granted — you can still set your area manually below."
+            : "Location access is turned off for PaMarket. Open Settings to turn it on, or set your area manually below.",
         });
         return null;
       }
@@ -95,16 +107,17 @@ export function useCurrentLocation(
       // polled or repeated.
       const { province, city, suburb } = await reverseGeocode(latitude, longitude, provinces, citiesByProvince);
 
-      setState({ loading: false, error: null });
+      setState({ loading: false, error: null, canAskAgain: true });
       return { latitude, longitude, province, city, suburb };
     } catch {
       setState({
         loading: false,
+        canAskAgain: true,
         error: "Couldn't get your location. Check that location services are enabled, or set your area manually.",
       });
       return null;
     }
   }, [provinces, citiesByProvince]);
 
-  return { loading: state.loading, error: state.error, resolve };
+  return { loading: state.loading, error: state.error, canAskAgain: state.canAskAgain, resolve };
 }
