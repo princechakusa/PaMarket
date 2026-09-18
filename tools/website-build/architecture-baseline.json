@@ -21,9 +21,9 @@
       "inlineCss": 4013
     },
     "business.html": {
-      "bytes": 42144,
-      "lines": 644,
-      "inlineJs": 18948,
+      "bytes": 42226,
+      "lines": 645,
+      "inlineJs": 19030,
       "inlineCss": 4819
     },
     "chats.html": {
@@ -45,9 +45,9 @@
       "inlineCss": 7103
     },
     "delete-account.html": {
-      "bytes": 29800,
-      "lines": 585,
-      "inlineJs": 8868,
+      "bytes": 30397,
+      "lines": 595,
+      "inlineJs": 9465,
       "inlineCss": 2332
     },
     "detail.html": {
