@@ -73,6 +73,7 @@ export function Button({
     <Pressable
       onPress={handlePress}
       disabled={isDisabled}
+      hitSlop={8}
       style={({ pressed }) => [
         styles.base,
         { height: HEIGHTS[size], backgroundColor: palette.bg, borderColor: palette.border },

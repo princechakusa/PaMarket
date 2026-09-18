@@ -36,12 +36,13 @@ import { AttrFields, type AttrValues } from "../../components/post/AttrFields";
 import { PhotoGrid } from "../../components/post/PhotoGrid";
 import { MapLocationPicker } from "../../components/post/MapLocationPicker";
 import { LocationMap } from "../../components/listing/LocationMap";
-import { Button, Card, Chip, GlassBackButton, ProvinceCityFields, UseCurrentLocationButton } from "../../components/ui";
+import { Button, Card, Chip, GlassBackButton, ProvinceCityFields, UseCurrentLocationButton, VerifiedBadge } from "../../components/ui";
+import { institutionAbbreviation } from "../../lib/institutions";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
-type InstitutionContext = { id: string; official_name: string };
+type InstitutionContext = { id: string; official_name: string; short_name: string | null };
 
 const TITLE_PLACEHOLDERS: Record<string, string> = {
   property: "e.g. 3 Bedroom House in Borrowdale",
@@ -124,10 +125,11 @@ export default function PostScreen() {
   // yet), this is a tab root with nothing to go "back" to, so router.back()
   // there was a silent no-op; showing no button here matches how every
   // other tab root already behaves.
+  const headerTitleText = institutionContext && state.step === 2 ? "Set Price & Location" : "Post a Free Ad";
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
-    title: "Post a Free Ad",
+    title: headerTitleText,
     headerLeft:
       state.step > 1 || state.category ? () => <GlassBackButton onPress={handleHeaderBack} tone="light" flat /> : undefined,
     headerLeftKey: state.step,
@@ -170,7 +172,7 @@ export default function PostScreen() {
     let cancelled = false;
     supabase
       .from("institutions")
-      .select("id, official_name")
+      .select("id, official_name, short_name")
       .eq("id", params.institutionId)
       .eq("is_active", true)
       .maybeSingle()
@@ -264,14 +266,22 @@ export default function PostScreen() {
           return true;
         }
         if (state.category) {
-          setState((s) => ({ ...s, category: null }));
-          setError(null);
+          // Mirrors handleHeaderBack's fix -- the Android hardware/gesture
+          // back path hit the exact same "dumps you into the generic
+          // category grid" bug for a category preselected by Institution
+          // Post Setup.
+          if (preselectedFromSetup && params.institutionId) {
+            router.replace({ pathname: "/institutions/post-setup", params: { institutionId: params.institutionId } });
+          } else {
+            setState((s) => ({ ...s, category: null }));
+            setError(null);
+          }
           return true;
         }
         return false;
       });
       return () => subscription.remove();
-    }, [state.step, state.category])
+    }, [state.step, state.category, preselectedFromSetup, params.institutionId])
   );
 
   if (!session?.user) {
@@ -471,7 +481,20 @@ export default function PostScreen() {
     if (state.step > 1) {
       goBack();
     } else if (state.category) {
-      update({ category: null });
+      // A category preselected by Institution Post Setup didn't come from
+      // this screen's own category picker -- clearing it back to null just
+      // stranded the user on the generic PaMarket category grid instead of
+      // returning to the institution-specific picker they actually came
+      // from. Go back to that exact screen instead. (tabs)/post lives
+      // inside the Tabs navigator, not the Stack post-setup.tsx is part of,
+      // so router.back()'s ambient stack semantics can't be trusted here --
+      // this always lands in the right place regardless of how the tab was
+      // reached.
+      if (preselectedFromSetup && params.institutionId) {
+        router.replace({ pathname: "/institutions/post-setup", params: { institutionId: params.institutionId } });
+      } else {
+        update({ category: null });
+      }
     } else if (router.canGoBack()) {
       // Post is a tab root, not a pushed screen — when it was reached by
       // tapping the tab bar (the common case) there's nothing on the stack
@@ -494,9 +517,15 @@ export default function PostScreen() {
         <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>
           <GlassBackButton onPress={handleHeaderBack} tone="light" flat />
           <Text style={styles.topbarTitle} numberOfLines={1}>
-            Post a Free Ad
+            {headerTitleText}
           </Text>
-          <View style={styles.topbarSpacer} />
+          {institutionContext && state.step === 2 ? (
+            <View style={styles.stepChip}>
+              <Text style={styles.stepChipText}>Step {state.step} of 4</Text>
+            </View>
+          ) : (
+            <View style={styles.topbarSpacer} />
+          )}
         </View>
       ) : null}
 
@@ -509,7 +538,14 @@ export default function PostScreen() {
         ))}
       </View>
 
-      {institutionContext ? (
+      {institutionContext && !(state.step === 2 && preselectedFromSetup) ? (
+        // Step 2's own Posting Context card (below) already shows this same
+        // name + read-only visibility exactly when preselectedFromSetup is
+        // true (Institution Post Setup already asked for visibility) --
+        // showing both stacked on top of each other duplicated the same
+        // "posting to X" info twice on one screen. Keeps rendering here
+        // unchanged for every other step, and for the non-preselected case
+        // where this card is the only place the visibility picker lives.
         <Card style={styles.institutionBanner}>
           <Text style={styles.institutionBannerLabel}>Posting to</Text>
           <Text style={styles.institutionBannerName}>{institutionContext.official_name}</Text>
@@ -641,50 +677,73 @@ export default function PostScreen() {
                     <Text style={styles.campusPillText}>Campus Listing</Text>
                   </View>
                 </View>
-                <Text style={styles.postingContextName} numberOfLines={1}>
-                  {institutionContext.official_name}
-                </Text>
-                <Text style={styles.postingContextMeta}>{categoryName} Category</Text>
+                <View style={styles.postingContextIdentityRow}>
+                  <View style={styles.postingContextAvatar}>
+                    <Text style={styles.postingContextAvatarText}>{institutionAbbreviation(institutionContext)}</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={styles.postingContextNameRow}>
+                      <Text style={styles.postingContextName} numberOfLines={1}>
+                        {institutionContext.official_name}
+                      </Text>
+                      <VerifiedBadge compact />
+                    </View>
+                    <Text style={styles.postingContextMeta}>{categoryName} Category</Text>
+                  </View>
+                </View>
                 <View style={styles.postingContextBanner}>
-                  <Text style={styles.postingContextBannerTitle}>
-                    {INSTITUTION_VISIBILITY_LABEL[state.institutionVisibility]}
-                    {state.institutionVisibility === "public" ? " Active" : ""}
-                  </Text>
-                  <Text style={styles.postingContextBannerBody}>
-                    {state.institutionVisibility === "institution_only"
-                      ? `Only visible inside the ${institutionContext.official_name} hub.`
-                      : `Visible simultaneously across the national marketplace and the ${institutionContext.official_name} campus feed.`}
-                  </Text>
+                  <View style={styles.postingContextBannerIcon}>
+                    <Text style={styles.postingContextBannerIconText}>✓</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.postingContextBannerTitle}>
+                      {INSTITUTION_VISIBILITY_LABEL[state.institutionVisibility]}
+                      {state.institutionVisibility === "public" ? " Active" : ""}
+                    </Text>
+                    <Text style={styles.postingContextBannerBody}>
+                      {state.institutionVisibility === "institution_only"
+                        ? `Only visible inside the ${institutionContext.official_name} hub.`
+                        : `Visible simultaneously across the national marketplace and the ${institutionContext.official_name} campus feed.`}
+                    </Text>
+                  </View>
                 </View>
               </View>
             ) : null}
 
-            <Text style={styles.fieldLabel}>Price</Text>
-            <View style={styles.priceRow}>
+            <View style={styles.priceHeaderRow}>
+              <Text style={[styles.fieldLabel, { marginTop: 0, marginBottom: 0 }]}>Price</Text>
+              {institutionContext ? <Text style={styles.priceHint}>Campus-Friendly</Text> : null}
+            </View>
+            <View style={[styles.currencyToggle, { marginTop: space.sm, alignSelf: "stretch" }]}>
+              {(["USD", "ZiG"] as const).map((cur) => (
+                <Pressable
+                  key={cur}
+                  style={[styles.currencyOption, { flex: 1 }, state.currency === cur && styles.currencyOptionActive]}
+                  onPress={() => update({ currency: cur })}
+                >
+                  <Text style={[styles.currencyOptionText, state.currency === cur && styles.currencyOptionTextActive]}>
+                    {cur === "USD" ? "USD ($)" : "ZiG (ZWG)"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={styles.priceInputRow}>
+              <Text style={styles.priceInputPrefix}>{state.currency === "USD" ? "$" : "ZiG"}</Text>
               <TextInput
-                style={[styles.input, { flex: 1 }]}
+                style={styles.priceInput}
                 value={state.price}
                 onChangeText={(text) => update({ price: text })}
-                placeholder="0"
+                placeholder="0.00"
                 placeholderTextColor={color.textMuted}
                 keyboardType="numeric"
               />
-              <View style={styles.currencyToggle}>
-                {(["USD", "ZiG"] as const).map((cur) => (
-                  <Pressable
-                    key={cur}
-                    style={[styles.currencyOption, state.currency === cur && styles.currencyOptionActive]}
-                    onPress={() => update({ currency: cur })}
-                  >
-                    <Text
-                      style={[styles.currencyOptionText, state.currency === cur && styles.currencyOptionTextActive]}
-                    >
-                      {cur}
-                    </Text>
-                  </Pressable>
-                ))}
+              <View style={styles.priceFixedTag}>
+                <Text style={styles.priceFixedTagText}>Fixed</Text>
               </View>
             </View>
+            {institutionContext ? (
+              <Text style={styles.priceFootnote}>Cash, Innbucks or EcoCash accepted on handover.</Text>
+            ) : null}
 
             <ProvinceCityFields
               provinces={provinces}
@@ -722,15 +781,36 @@ export default function PostScreen() {
                   })
                 }
               />
-              <Pressable style={styles.dropPinButton} onPress={() => setMapPickerOpen(true)}>
-                <Text style={styles.dropPinButtonText}>
-                  {state.latitude != null ? "Change pin on map" : "Drop a pin on map"}
-                </Text>
-              </Pressable>
+              <View style={styles.locationButtonGrid}>
+                <Pressable style={[styles.dropPinButton, { flex: 1, marginTop: 0 }]} onPress={() => setMapPickerOpen(true)}>
+                  <Text style={styles.dropPinButtonText}>Choose on map</Text>
+                </Pressable>
+                <Pressable style={[styles.dropPinButton, styles.dropPinButtonPrimary, { flex: 1, marginTop: 0 }]} onPress={() => setMapPickerOpen(true)}>
+                  <Text style={styles.dropPinButtonPrimaryText}>
+                    {state.latitude != null ? "Change pin" : "Drop a pin"}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
             {state.latitude != null && state.longitude != null ? (
-              <View style={{ marginTop: space.md, gap: space.xs }}>
+              <View style={{ marginTop: space.md, gap: space.sm }}>
+                <View style={styles.selectedLocationBanner}>
+                  <View style={styles.selectedLocationIcon}>
+                    <Text style={styles.selectedLocationIconText}>◎</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.selectedLocationTitle} numberOfLines={1}>
+                      {[state.suburb, state.city].filter(Boolean).join(", ") || state.province}
+                    </Text>
+                    <Text style={styles.selectedLocationSubtitle} numberOfLines={1}>
+                      {state.province}
+                    </Text>
+                  </View>
+                  <Pressable onPress={() => setMapPickerOpen(true)}>
+                    <Text style={styles.selectedLocationChange}>Change</Text>
+                  </Pressable>
+                </View>
                 <LocationMap
                   latitude={state.latitude}
                   longitude={state.longitude}
@@ -867,6 +947,11 @@ function buildStyles(color: ColorPalette) {
   },
   topbarTitle: { flex: 1, ...font.title, color: color.textOnBrand, textAlign: "center" },
   topbarSpacer: { width: 52 },
+  stepChip: {
+    backgroundColor: "rgba(255,255,255,0.2)", borderRadius: radius.pill,
+    paddingHorizontal: space.sm, paddingVertical: 4,
+  },
+  stepChipText: { ...font.micro, color: color.textOnBrand, fontWeight: "800" },
   stepsBar: {
     flexDirection: "row",
     gap: space.xs,
@@ -908,6 +993,18 @@ function buildStyles(color: ColorPalette) {
   },
   textArea: { minHeight: 100, textAlignVertical: "top" },
   priceRow: { flexDirection: "row", gap: space.md },
+  priceHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: space.lg },
+  priceHint: { ...font.micro, color: color.textMuted },
+  priceInputRow: {
+    flexDirection: "row", alignItems: "center", gap: space.sm,
+    backgroundColor: color.surfaceAlt, borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: space.sm,
+    marginTop: space.sm,
+  },
+  priceInputPrefix: { ...font.h2, color: color.brand },
+  priceInput: { flex: 1, ...font.h2, color: color.text, padding: 0 },
+  priceFixedTag: { backgroundColor: color.surface, borderRadius: radius.sm, paddingHorizontal: space.sm, paddingVertical: 4 },
+  priceFixedTagText: { ...font.caption, color: color.textMuted },
+  priceFootnote: { ...font.caption, color: color.textMuted, marginTop: space.sm },
   currencyToggle: {
     flexDirection: "row",
     borderRadius: radius.md,
@@ -931,9 +1028,24 @@ function buildStyles(color: ColorPalette) {
   postingContextEyebrow: { ...font.micro, color: color.textMuted, textTransform: "uppercase" },
   campusPill: { backgroundColor: color.surface, borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 2 },
   campusPillText: { ...font.micro, color: color.brand },
-  postingContextName: { ...font.title, color: color.text },
+  postingContextIdentityRow: { flexDirection: "row", alignItems: "flex-start", gap: space.sm, marginTop: space.sm },
+  postingContextAvatar: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: color.brand,
+    alignItems: "center", justifyContent: "center",
+  },
+  postingContextAvatarText: { ...font.bodyStrong, color: color.textOnBrand },
+  postingContextNameRow: { flexDirection: "row", alignItems: "center", gap: space.xs },
+  postingContextName: { ...font.title, color: color.text, flexShrink: 1 },
   postingContextMeta: { ...font.sub, color: color.textMuted },
-  postingContextBanner: { backgroundColor: color.surface, borderRadius: radius.md, padding: space.sm, marginTop: space.xs },
+  postingContextBanner: {
+    flexDirection: "row", alignItems: "flex-start", gap: space.sm,
+    backgroundColor: color.surface, borderRadius: radius.md, padding: space.sm, marginTop: space.xs,
+  },
+  postingContextBannerIcon: {
+    width: 20, height: 20, borderRadius: 10, backgroundColor: color.brand,
+    alignItems: "center", justifyContent: "center", marginTop: 1,
+  },
+  postingContextBannerIconText: { color: color.textOnBrand, fontSize: 12, fontWeight: "800" },
   postingContextBannerTitle: { ...font.caption, color: color.brand, fontWeight: "800" },
   postingContextBannerBody: { ...font.caption, color: color.textMuted, marginTop: 2 },
 
@@ -943,7 +1055,22 @@ function buildStyles(color: ColorPalette) {
     alignItems: "center", justifyContent: "center", backgroundColor: color.surface,
   },
   dropPinButtonText: { ...font.bodyStrong, color: color.brand },
+  dropPinButtonPrimary: { backgroundColor: color.brand, borderColor: color.brand },
+  dropPinButtonPrimaryText: { ...font.bodyStrong, color: color.textOnBrand },
+  locationButtonGrid: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
   locationTip: { ...font.caption, color: color.textMuted },
+  selectedLocationBanner: {
+    flexDirection: "row", alignItems: "center", gap: space.sm,
+    backgroundColor: color.surfaceAlt, borderRadius: radius.md, padding: space.sm,
+  },
+  selectedLocationIcon: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: color.brand,
+    alignItems: "center", justifyContent: "center",
+  },
+  selectedLocationIconText: { color: color.textOnBrand, fontSize: 16 },
+  selectedLocationTitle: { ...font.bodyStrong, color: color.text },
+  selectedLocationSubtitle: { ...font.caption, color: color.textMuted, marginTop: 1 },
+  selectedLocationChange: { ...font.caption, color: color.brand, fontWeight: "800" },
 
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   tipBox: { backgroundColor: color.goldTint, borderRadius: radius.md, padding: space.lg, marginTop: space.lg },

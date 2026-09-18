@@ -50,7 +50,6 @@ import {
   FieldCol,
   FieldLabel,
   FieldRow,
-  GlassBackButton,
   MoneyIcon,
   ProvinceCityFields,
   SendIcon,
@@ -467,12 +466,6 @@ export default function PostJobScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Header
-          title="Post a Job"
-          onBack={() => router.back()}
-          insetTop={insets.top}
-          styles={styles}
-        />
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
         </View>
@@ -483,12 +476,6 @@ export default function PostJobScreen() {
   if (!verified) {
     return (
       <View style={styles.container}>
-        <Header
-          title="Post a Job"
-          onBack={() => router.back()}
-          insetTop={insets.top}
-          styles={styles}
-        />
         <ScrollView contentContainerStyle={styles.gateContent}>
           <Card style={styles.gateCard}>
             <View style={styles.gateIcon}>
@@ -539,13 +526,6 @@ export default function PostJobScreen() {
 
   return (
     <View style={styles.container}>
-      <Header
-        title="Post a Job"
-        onBack={() => router.back()}
-        insetTop={insets.top}
-        styles={styles}
-      />
-
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
         keyboardShouldPersistTaps="handled"
@@ -933,27 +913,6 @@ export default function PostJobScreen() {
 
 // ── Building blocks ────────────────────────────────────────────────────────
 type Styles = ReturnType<typeof buildStyles>;
-
-function Header({
-  title,
-  onBack,
-  insetTop,
-  styles,
-}: {
-  title: string;
-  onBack: () => void;
-  insetTop: number;
-  styles: Styles;
-}) {
-  if (Platform.OS === "ios") return null;
-  return (
-    <View style={[styles.header, { paddingTop: insetTop + 10 }]}>
-      <GlassBackButton onPress={onBack} tone="light" flat />
-      <Text style={styles.headerTitle}>{title}</Text>
-      <View style={{ width: 20 }} />
-    </View>
-  );
-}
 
 function Padded({
   children,
