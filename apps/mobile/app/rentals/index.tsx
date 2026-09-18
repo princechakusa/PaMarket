@@ -203,6 +203,65 @@ export default function RentalsListScreen() {
         <View style={styles.filterBackdrop}>
           <Pressable style={styles.filterBackdropTouch} onPress={() => setFilterVisible(false)} />
           <View style={styles.filterSheet}>
+            {categoryMenuOpen || brandMenuOpen ? (
+              // Rendered inline inside this same Modal instead of stacking a
+              // second <Modal> on top -- Android's native Modal is known to
+              // break touch handling when one RN Modal opens while another
+              // is already visible (the exact "nothing responds to taps"
+              // bug reported here).
+              <View style={styles.filterSheet}>
+                <View style={styles.filterHeader}>
+                  <Text style={styles.filterTitle}>{categoryMenuOpen ? "Vehicle Type" : "Brand"}</Text>
+                  <Pressable onPress={() => { setCategoryMenuOpen(false); setBrandMenuOpen(false); }} hitSlop={12}>
+                    <Text style={styles.filterClose}>Done</Text>
+                  </Pressable>
+                </View>
+                <ScrollView contentContainerStyle={styles.filterBody}>
+                  {categoryMenuOpen ? (
+                    <>
+                      <Pressable
+                        style={styles.dropdownOption}
+                        onPress={() => { setFilters((f) => ({ ...f, category: null })); setCategoryMenuOpen(false); }}
+                      >
+                        <Text style={[styles.dropdownOptionText, !filters.category && styles.dropdownOptionTextActive]}>Any vehicle type</Text>
+                        {!filters.category ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                      </Pressable>
+                      {Object.entries(CATEGORY_LABELS).map(([slug, label]) => (
+                        <Pressable
+                          key={slug}
+                          style={styles.dropdownOption}
+                          onPress={() => { setFilters((f) => ({ ...f, category: slug })); setCategoryMenuOpen(false); }}
+                        >
+                          <Text style={[styles.dropdownOptionText, filters.category === slug && styles.dropdownOptionTextActive]}>{label}</Text>
+                          {filters.category === slug ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                        </Pressable>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      <Pressable
+                        style={styles.dropdownOption}
+                        onPress={() => { setFilters((f) => ({ ...f, brand: null })); setBrandMenuOpen(false); }}
+                      >
+                        <Text style={[styles.dropdownOptionText, !filters.brand && styles.dropdownOptionTextActive]}>Any brand</Text>
+                        {!filters.brand ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                      </Pressable>
+                      {Object.entries(BRAND_LABELS).map(([slug, label]) => (
+                        <Pressable
+                          key={slug}
+                          style={styles.dropdownOption}
+                          onPress={() => { setFilters((f) => ({ ...f, brand: slug })); setBrandMenuOpen(false); }}
+                        >
+                          <Text style={[styles.dropdownOptionText, filters.brand === slug && styles.dropdownOptionTextActive]}>{label}</Text>
+                          {filters.brand === slug ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                        </Pressable>
+                      ))}
+                    </>
+                  )}
+                </ScrollView>
+              </View>
+            ) : (
+              <>
             <View style={styles.filterHeader}>
               <Text style={styles.filterTitle}>Filter Rentals</Text>
               <Pressable onPress={() => setFilterVisible(false)} hitSlop={12}>
@@ -267,72 +326,10 @@ export default function RentalsListScreen() {
                 <Text style={styles.filterApplyText}>Show results</Text>
               </Pressable>
             </View>
+              </>
+            )}
           </View>
         </View>
-      </Modal>
-
-      <Modal visible={categoryMenuOpen} transparent animationType="fade" onRequestClose={() => setCategoryMenuOpen(false)}>
-        <Pressable style={styles.dropdownOverlay} onPress={() => setCategoryMenuOpen(false)}>
-          <View style={styles.dropdownSheet}>
-            <Text style={styles.dropdownTitle}>Vehicle Type</Text>
-            <Pressable
-              style={styles.dropdownOption}
-              onPress={() => {
-                setFilters((f) => ({ ...f, category: null }));
-                setCategoryMenuOpen(false);
-              }}
-            >
-              <Text style={[styles.dropdownOptionText, !filters.category && styles.dropdownOptionTextActive]}>Any vehicle type</Text>
-              {!filters.category ? <Text style={styles.dropdownCheck}>✓</Text> : null}
-            </Pressable>
-            {Object.entries(CATEGORY_LABELS).map(([slug, label]) => (
-              <Pressable
-                key={slug}
-                style={styles.dropdownOption}
-                onPress={() => {
-                  setFilters((f) => ({ ...f, category: slug }));
-                  setCategoryMenuOpen(false);
-                }}
-              >
-                <Text style={[styles.dropdownOptionText, filters.category === slug && styles.dropdownOptionTextActive]}>{label}</Text>
-                {filters.category === slug ? <Text style={styles.dropdownCheck}>✓</Text> : null}
-              </Pressable>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
-
-      <Modal visible={brandMenuOpen} transparent animationType="fade" onRequestClose={() => setBrandMenuOpen(false)}>
-        <Pressable style={styles.dropdownOverlay} onPress={() => setBrandMenuOpen(false)}>
-          <View style={styles.dropdownSheet}>
-            <ScrollView style={{ maxHeight: 420 }}>
-              <Text style={styles.dropdownTitle}>Brand</Text>
-              <Pressable
-                style={styles.dropdownOption}
-                onPress={() => {
-                  setFilters((f) => ({ ...f, brand: null }));
-                  setBrandMenuOpen(false);
-                }}
-              >
-                <Text style={[styles.dropdownOptionText, !filters.brand && styles.dropdownOptionTextActive]}>Any brand</Text>
-                {!filters.brand ? <Text style={styles.dropdownCheck}>✓</Text> : null}
-              </Pressable>
-              {Object.entries(BRAND_LABELS).map(([slug, label]) => (
-                <Pressable
-                  key={slug}
-                  style={styles.dropdownOption}
-                  onPress={() => {
-                    setFilters((f) => ({ ...f, brand: slug }));
-                    setBrandMenuOpen(false);
-                  }}
-                >
-                  <Text style={[styles.dropdownOptionText, filters.brand === slug && styles.dropdownOptionTextActive]}>{label}</Text>
-                  {filters.brand === slug ? <Text style={styles.dropdownCheck}>✓</Text> : null}
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        </Pressable>
       </Modal>
     </View>
   );
