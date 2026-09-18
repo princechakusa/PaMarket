@@ -81,13 +81,9 @@ export function InstitutionsEntry({ onPress }: { onPress: () => void }) {
 
   return (
     <View style={styles.card}>
-      <View style={styles.topRow}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>CAMPUS HUB</Text>
-        </View>
-        <View style={styles.statusWrap}>
-          <Text style={styles.statusText}>Students &amp; Staff</Text>
-        </View>
+      <View style={styles.badge}>
+        <Text style={styles.badgeEmoji}>🎓</Text>
+        <Text style={styles.badgeText}>CAMPUS HUB</Text>
       </View>
 
       <Animated.View style={{ opacity, transform: [{ translateY }] }}>
@@ -95,6 +91,9 @@ export function InstitutionsEntry({ onPress }: { onPress: () => void }) {
           {ROTATING_MESSAGES[index]}
         </Text>
       </Animated.View>
+      <Text style={styles.subtitle} numberOfLines={1}>
+        📖 Textbooks &amp; student study essentials
+      </Text>
 
       <View style={styles.actionsRow}>
         <Pressable style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]} onPress={onPress}>
@@ -102,7 +101,7 @@ export function InstitutionsEntry({ onPress }: { onPress: () => void }) {
           <Text style={styles.primaryButtonText}>Post for Your Campus</Text>
         </Pressable>
         <Pressable style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]} onPress={onPress}>
-          <Text style={styles.secondaryButtonText}>Explore</Text>
+          <Text style={styles.secondaryButtonText}>Explore Hub</Text>
           <ArrowIcon />
         </Pressable>
       </View>
@@ -120,38 +119,34 @@ function buildStyles(color: ColorPalette) {
       padding: space.lg,
       gap: space.md,
     },
-    topRow: {
+    badge: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-    },
-    badge: {
+      gap: 6,
+      alignSelf: "flex-start",
       backgroundColor: color.gold,
       borderRadius: radius.pill,
       paddingHorizontal: space.md,
       paddingVertical: 4,
     },
+    badgeEmoji: { fontSize: 12 },
     badgeText: {
       ...font.caption,
       fontWeight: "800",
       letterSpacing: 0.4,
       color: DARK_COLORS.text,
     },
-    statusWrap: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    statusText: {
-      ...font.caption,
-      fontWeight: "600",
-      color: "rgba(255,255,255,0.85)",
-    },
     headline: {
       ...font.h3,
       fontWeight: "800",
       color: "#FFFFFF",
       lineHeight: 24,
+    },
+    subtitle: {
+      ...font.caption,
+      fontWeight: "600",
+      color: "rgba(255,255,255,0.85)",
+      marginTop: -space.xs,
     },
     actionsRow: {
       flexDirection: "row",
