@@ -165,7 +165,7 @@ export const PRIVACY: LegalDoc = {
     },
     {
       heading: "5. Sharing and Service Providers",
-      body: "We do not sell, rent, or trade your personal information. We share data only with trusted sub-processors: Supabase Inc. (database, auth, storage, realtime — hosted on AWS eu-west-1/Ireland); Google LLC/Firebase (Android push notifications via FCM); Apple Inc. (iOS push via APNS); Google LLC Sign in with Google (name/email shared if you choose Google login); Sign in with Apple (name/email shared if you choose Apple login on iOS); Google LLC Google Play Billing (purchase token, product ID, subscription status for paid features on Android); Apple Inc. App Store billing (the same purchase data for paid features on iOS). All sub-processors are bound by data processing agreements. We may disclose data if required by a court order, warrant, or lawful request from a competent Zimbabwean authority.",
+      body: "We do not sell, rent, or trade your personal information. We share data only with trusted sub-processors: Supabase Inc. (database, auth, storage, realtime — hosted on AWS eu-west-1/Ireland); Google LLC/Firebase (Android push notifications via FCM); Apple Inc. (iOS push via APNS); Google LLC Sign in with Google (name/email shared if you choose Google login); Sign in with Apple (name/email shared if you choose Apple login on iOS); Google LLC Google Play Billing (purchase token, product ID, subscription status for paid features on Android); Apple Inc. App Store billing (the same purchase data for paid features on iOS); Nominatim/OpenStreetMap Foundation (your coordinates are sent for reverse geocoding into Province/City/Suburb when you use current location or drop a pin); Sentry (crash and error diagnostics only). All sub-processors are bound by data processing agreements. We may disclose data if required by a court order, warrant, or lawful request from a competent Zimbabwean authority.",
     },
     {
       heading: "6. Push Notifications",
@@ -177,7 +177,7 @@ export const PRIVACY: LegalDoc = {
     },
     {
       heading: "8. Location Data",
-      body: "PaMarket does not request or collect your precise GPS location automatically. Province and suburb information is entered manually. You may optionally share a location pin within in-app messaging, shared only with the specific recipient.",
+      body: "Province and suburb information can be entered manually, or you can tap Use my current location when posting a listing or business, which requests your device's location permission and uses your GPS coordinates to help fill in your area. This only happens when you choose it. PaMarket never requests your location automatically or in the background. Personal listing coordinates are rounded to approximately 100 metres before storage and shown only as an approximate area on the map. Business Shop coordinates are exact, since a business is meant to be found by customers. Coordinates are reverse geocoded into Province/City/Suburb by Nominatim/OpenStreetMap Foundation (see Section 5). You may also optionally share a location pin within in-app messaging, shared only with the specific recipient.",
     },
     {
       heading: "9. Cookies and Analytics",
