@@ -268,7 +268,7 @@ export default function InstitutionDetailScreen() {
               </View>
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
+            <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
               {INSTITUTION_LISTING_FILTERS.map((item) => (
                 <Chip key={item.key} label={`${item.emoji} ${item.label}`} active={filter === item.key} onPress={() => setFilter(item.key)} />
               ))}

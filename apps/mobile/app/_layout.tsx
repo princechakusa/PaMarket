@@ -292,11 +292,11 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" options={{ title: "" }} />
       <Stack.Screen name="(auth)" options={{ title: "Sign In" }} />
       <Stack.Screen name="login-callback" options={{ title: "Sign In" }} />
-      <Stack.Screen name="listing/[id]" options={{ headerShown: Platform.OS === "ios", title: "Listing" }} />
+      <Stack.Screen name="listing/[id]" options={{ headerShown: true, title: "Listing" }} />
       <Stack.Screen name="listing/edit/[id]" options={{ headerShown: true, title: "Edit Listing" }} />
       <Stack.Screen name="business/[id]" options={{ headerShown: Platform.OS === "ios", title: "Shop" }} />
       <Stack.Screen name="institutions/index" options={{ headerShown: true, title: "Institutions" }} />
-      <Stack.Screen name="institutions/[id]" options={{ headerShown: Platform.OS === "ios", title: "Institution" }} />
+      <Stack.Screen name="institutions/[id]" options={{ headerShown: true, title: "Institution" }} />
       <Stack.Screen name="institutions/post-setup" options={{ headerShown: true, title: "Create Institution Post" }} />
       <Stack.Screen name="business-onboarding" options={{ headerShown: true, title: "Create Business" }} />
       <Stack.Screen name="business-manage/[id]" options={{ headerShown: true, title: "Seller Center" }} />
