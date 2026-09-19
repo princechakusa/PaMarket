@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -153,10 +153,16 @@ export default function InstitutionDetailScreen() {
     setHasMore(page.length === LISTINGS_PAGE_SIZE);
   }, [id, buildListingsQuery]);
 
-  useEffect(() => {
-    setIsLoadingListings(true);
-    loadListings().finally(() => setIsLoadingListings(false));
-  }, [loadListings]);
+  // Refetch every time this screen gains focus, not just once on mount --
+  // otherwise deleting/editing a listing elsewhere and coming back here
+  // left this grid showing a stale copy that 404'd when tapped (the
+  // listing genuinely no longer existed; this screen just never knew).
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoadingListings(true);
+      loadListings().finally(() => setIsLoadingListings(false));
+    }, [loadListings])
+  );
 
   const loadMoreListings = useCallback(async () => {
     if (isLoadingMore || isLoadingListings || !hasMore || listingsError) return;
