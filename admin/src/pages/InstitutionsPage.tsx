@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
-  listInstitutions, listProvinces, listCitiesForProvince, getInstitutionListingCount,
+  listInstitutions, listProvinces, listCitiesForProvince, getInstitutionListingCount, listOrganizationsForInstitution,
   createInstitution, updateInstitution, setInstitutionActive, INSTITUTIONS_PAGE_SIZE,
-  type InstitutionRow, type ProvinceRow, type CityRow, type InstitutionType, type InstitutionInput,
+  type InstitutionRow, type ProvinceRow, type CityRow, type InstitutionType, type InstitutionInput, type InstitutionOrganizationRow,
 } from '../services/institutions/query';
 import { invokeAdminFunction } from '../services/edge/invoke';
 
@@ -53,6 +53,7 @@ export function InstitutionsPage() {
   const [aliasesText, setAliasesText] = useState('');
   const [formCities, setFormCities] = useState<CityRow[]>([]);
   const [listingCount, setListingCount] = useState<number | null>(null);
+  const [organizations, setOrganizations] = useState<InstitutionOrganizationRow[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -97,7 +98,7 @@ export function InstitutionsPage() {
 
   function startCreate() {
     setIsCreating(true); setSelectedId(null);
-    setForm(emptyForm); setAliasesText(''); setListingCount(null);
+    setForm(emptyForm); setAliasesText(''); setListingCount(null); setOrganizations(null);
     setMessage(null); setValidationError(null);
   }
 
@@ -111,9 +112,13 @@ export function InstitutionsPage() {
       is_active: row.is_active ?? true, sort_order: row.sort_order ?? 0,
     });
     setAliasesText((row.search_aliases ?? []).join(', '));
-    setMessage(null); setValidationError(null); setListingCount(null);
-    const result = await getInstitutionListingCount(row.id);
-    setListingCount(result.data ?? 0);
+    setMessage(null); setValidationError(null); setListingCount(null); setOrganizations(null);
+    const [listingResult, orgsResult] = await Promise.all([
+      getInstitutionListingCount(row.id),
+      listOrganizationsForInstitution(row.id),
+    ]);
+    setListingCount(listingResult.data ?? 0);
+    setOrganizations(orgsResult.data ?? []);
   }
 
   function validate(): string | null {
@@ -245,6 +250,17 @@ export function InstitutionsPage() {
 
           {validationError && <p role="alert">{validationError}</p>}
           {!isCreating && <p><small>{listingCount === null ? 'Checking listing usage…' : `${listingCount} listing(s) currently reference this institution.`}</small></p>}
+          {!isCreating && (
+            <section>
+              <h3>Organizations</h3>
+              {organizations === null && <p><small>Checking organizations…</small></p>}
+              {organizations !== null && organizations.length === 0 && <p><small>No businesses are tagged to this institution yet.</small></p>}
+              {organizations !== null && organizations.length > 0 && <ul>
+                {organizations.map((org) => <li key={org.id}>{org.name ?? 'Unnamed'} <span className={`status-pill ${org.status === 'active' ? 'approved' : 'pending'}`}>{org.status ?? '—'}</span></li>)}
+              </ul>}
+              <p style={{ fontSize: 12 }}>Set via businesses.institution_id (business owners pick this on their own profile edit screen). Only active organizations appear on this institution's public hub page.</p>
+            </section>
+          )}
 
           {canManage && <div className="jobs-actions">
             <button disabled={saving} onClick={() => void save()}>{saving ? 'Saving…' : isCreating ? 'Create' : 'Save'}</button>

@@ -75,6 +75,24 @@ export async function getInstitutionListingCount(institutionId: string): Promise
   return { data: count ?? 0, error: null };
 }
 
+/** businesses.institution_id (2026-09-19): lets a business tag itself to an
+ * institution independent of listings -- surfaced here too so admins can
+ * see (not just the mobile app's own institution hub) which organizations
+ * are attached to a given institution. Uses "businesses: admin all"
+ * (is_admin()), same as services/businesses/query.ts. */
+export type InstitutionOrganizationRow = { id: string; name: string | null; status: string | null };
+export async function listOrganizationsForInstitution(institutionId: string): Promise<QueryResult<InstitutionOrganizationRow[]>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client
+    .from('businesses')
+    .select('id, name, status')
+    .eq('institution_id', institutionId)
+    .order('name', { ascending: true });
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data ?? [], error: null };
+}
+
 export type InstitutionInput = {
   type: InstitutionType; official_name: string; short_name?: string | null; search_aliases?: string[];
   province_id: string; city_id: string; suburb?: string | null; logo_url?: string | null;

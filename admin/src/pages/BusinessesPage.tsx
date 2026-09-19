@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
   listBusinesses, getBusiness, getBusinessListingsCount, getBusinessStaff, getBusinessPaymentsTotal, getBusinessLeads,
-  approveBusinessActivation, rejectBusinessActivation,
+  approveBusinessActivation, rejectBusinessActivation, setBusinessInstitution,
   BUSINESSES_PAGE_SIZE, type BusinessRow, type BusinessDetail, type BusinessStaffRow, type BusinessLeadRow,
 } from '../services/businesses/query';
+import { listInstitutions, type InstitutionRow } from '../services/institutions/query';
 
 function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat('en-ZW', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Africa/Harare' }).format(new Date(value)) : '—'; }
 
@@ -28,6 +29,22 @@ export function BusinessesPage() {
   const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState('');
   const [showRejectInput, setShowRejectInput] = useState(false);
+  const [institutions, setInstitutions] = useState<InstitutionRow[]>([]);
+  const [institutionSaving, setInstitutionSaving] = useState(false);
+
+  useEffect(() => {
+    if (auth.mode !== 'live') return;
+    void listInstitutions({ active: true }, 1, 200).then((r) => { if (!r.error) setInstitutions(r.data.rows); });
+  }, [auth.mode]);
+
+  async function changeInstitution(institutionId: string) {
+    if (!detail) return;
+    setInstitutionSaving(true);
+    const result = await setBusinessInstitution(detail.id, institutionId || null);
+    setInstitutionSaving(false);
+    setDecisionMessage(result.error ? `Failed: ${result.error.message}` : 'Institution tag updated.');
+    if (!result.error) void loadDetail(detail.id);
+  }
 
   const load = useCallback(async () => {
     if (auth.mode !== 'live') { setPhase('ready'); return; }
@@ -139,6 +156,14 @@ export function BusinessesPage() {
             {detail.latitude != null && detail.longitude != null && (
               <div><dt>Map</dt><dd><a href={`https://www.openstreetmap.org/?mlat=${detail.latitude}&mlon=${detail.longitude}#map=16/${detail.latitude}/${detail.longitude}`} target="_blank" rel="noreferrer noopener">View on OpenStreetMap ↗</a></dd></div>
             )}
+            <div><dt>Institution / Campus</dt><dd>
+              {canManage ? (
+                <select value={detail.institution_id ?? ''} disabled={institutionSaving} onChange={(e) => void changeInstitution(e.target.value)}>
+                  <option value="">None</option>
+                  {institutions.map((i) => <option key={i.id} value={i.id}>{i.official_name}</option>)}
+                </select>
+              ) : (institutions.find((i) => i.id === detail.institution_id)?.official_name ?? '—')}
+            </dd></div>
             <div><dt>Plan</dt><dd>{detail.plan_id ?? 'free'}</dd></div>
             <div><dt>Verification level</dt><dd>{detail.verification_level ?? 0}{detail.verification_pending ? ' (pending review)' : ''}</dd></div>
             <div><dt>Created</dt><dd>{fmtDate(detail.created_at)}</dd></div>

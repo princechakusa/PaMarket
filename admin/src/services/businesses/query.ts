@@ -35,17 +35,29 @@ export async function listBusinesses(filters: { status?: string; search?: string
   return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
-export type BusinessDetail = BusinessRow & { owner_user_id: string | null; biz_type: string | null; phone: string | null; email: string | null; verification_level: number | null; verification_pending: boolean | null; suburb: string | null; latitude: number | null; longitude: number | null };
+export type BusinessDetail = BusinessRow & { owner_user_id: string | null; biz_type: string | null; phone: string | null; email: string | null; verification_level: number | null; verification_pending: boolean | null; suburb: string | null; latitude: number | null; longitude: number | null; institution_id: string | null };
 export async function getBusiness(id: string): Promise<QueryResult<BusinessDetail | null>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const { data, error } = await client
     .from('businesses')
-    .select('id, name, status, category, city, province, suburb, plan_id, created_at, owner_user_id, biz_type, phone, email, verification_level, verification_pending, latitude, longitude')
+    .select('id, name, status, category, city, province, suburb, plan_id, created_at, owner_user_id, biz_type, phone, email, verification_level, verification_pending, latitude, longitude, institution_id')
     .eq('id', id)
     .maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
   return { data: data ?? null, error: null };
+}
+
+/** businesses.institution_id (2026-09-19): lets admins view/correct which
+ * institution an organization is tagged to, mirroring the picker the owner
+ * already has on their own business-edit screen in the mobile app. Uses
+ * "businesses: admin all" (is_admin()), same as every other write here. */
+export async function setBusinessInstitution(id: string, institutionId: string | null): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { error } = await client.from('businesses').update({ institution_id: institutionId }).eq('id', id);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
 }
 
 export async function getBusinessListingsCount(businessId: string): Promise<QueryResult<number>> {
