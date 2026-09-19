@@ -124,7 +124,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // positioning. Also carries the Rentals nested-Modal touch-bug fix and
     // the dropdown chevron/border styling pass. 27 was already submitted
     // to App Store Connect, so it's burned -- 28 is the next number.
-    buildNumber: "28",
+    buildNumber: "29",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -153,7 +153,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 138,
+    versionCode: 139,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
