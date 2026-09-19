@@ -78,6 +78,32 @@ export async function getBusinessPaymentsTotal(businessId: string): Promise<Quer
   return { data: { count: rows.length, totalPaid: rows.filter((r) => r.status === 'paid').reduce((sum, r) => sum + (r.amount ?? 0), 0) }, error: null };
 }
 
+/** Admin activation decision for a pending_activation business -- the
+ * "Approve a pending_activation business" capability referenced in
+ * supabase/migrations/20260909143012_business_activation_decline_cancel.sql
+ * ("Today's admin panel can only Approve...") never actually existed in
+ * this React admin (Batch 3 shipped this page read-only), leaving every
+ * new business/shop/campus-org submission stuck in pending_activation
+ * forever with no way for anyone to move it forward -- discovered
+ * 2026-09-19 when a real submission had nowhere to be approved. Reuses
+ * "businesses: admin all" (is_admin()) directly, same as every other
+ * write in this file's sibling pages. */
+export async function approveBusinessActivation(id: string): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { error } = await client.from('businesses').update({ status: 'active', rejection_note: null }).eq('id', id);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}
+
+export async function rejectBusinessActivation(id: string, note: string): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { error } = await client.from('businesses').update({ status: 'rejected', rejection_note: note }).eq('id', id);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}
+
 /** business_leads: customer inquiries (call/whatsapp/chat clicks) against a
  * business. Already has an admin-read RLS policy ("biz_leads: admin read",
  * is_admin()) but no admin page ever selected from it -- these inquiries

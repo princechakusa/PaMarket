@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../security/auth-context';
 import {
   listBusinesses, getBusiness, getBusinessListingsCount, getBusinessStaff, getBusinessPaymentsTotal, getBusinessLeads,
+  approveBusinessActivation, rejectBusinessActivation,
   BUSINESSES_PAGE_SIZE, type BusinessRow, type BusinessDetail, type BusinessStaffRow, type BusinessLeadRow,
 } from '../services/businesses/query';
 
@@ -9,6 +10,7 @@ function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat(
 
 export function BusinessesPage() {
   const auth = useAuth();
+  const canManage = auth.identity?.permissions.includes('businesses.manage') ?? false;
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -23,6 +25,9 @@ export function BusinessesPage() {
   const [payments, setPayments] = useState<{ count: number; totalPaid: number } | null>(null);
   const [leads, setLeads] = useState<BusinessLeadRow[]>([]);
   const [detailPhase, setDetailPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
+  const [showRejectInput, setShowRejectInput] = useState(false);
 
   const load = useCallback(async () => {
     if (auth.mode !== 'live') { setPhase('ready'); return; }
@@ -40,6 +45,9 @@ export function BusinessesPage() {
   const loadDetail = useCallback(async (id: string) => {
     setSelectedId(id);
     setDetailPhase('loading');
+    setDecisionMessage(null);
+    setShowRejectInput(false);
+    setRejectNote('');
     const businessResult = await getBusiness(id);
     if (businessResult.error) { setDetailPhase('error'); return; }
     const [listingsResult, staffResult, paymentsResult, leadsResult] = await Promise.all([
@@ -52,6 +60,20 @@ export function BusinessesPage() {
     setLeads(leadsResult.data ?? []);
     setDetailPhase('ready');
   }, []);
+
+  async function approve() {
+    if (!detail) return;
+    const result = await approveBusinessActivation(detail.id);
+    setDecisionMessage(result.error ? `Failed: ${result.error.message}` : 'Business approved and is now live.');
+    if (!result.error) { void loadDetail(detail.id); void load(); }
+  }
+
+  async function reject() {
+    if (!detail || !rejectNote.trim()) return;
+    const result = await rejectBusinessActivation(detail.id, rejectNote.trim());
+    setDecisionMessage(result.error ? `Failed: ${result.error.message}` : 'Business declined; the owner can see your note and resubmit.');
+    if (!result.error) { setShowRejectInput(false); setRejectNote(''); void loadDetail(detail.id); void load(); }
+  }
 
   const pageCount = Math.max(1, Math.ceil(total / BUSINESSES_PAGE_SIZE));
 
@@ -87,6 +109,27 @@ export function BusinessesPage() {
         {selectedId && detailPhase === 'error' && <p role="alert">Could not load business detail.</p>}
         {selectedId && detailPhase === 'ready' && detail && <>
           <header><span className="material-symbols-outlined">storefront</span><div><small>BUSINESS</small><strong>{detail.name ?? 'Unnamed'}</strong></div><b>{detail.status?.toUpperCase() ?? '—'}</b></header>
+          {detail.status === 'pending_activation' && canManage && (
+            <section>
+              <h3>Activation Decision</h3>
+              <p style={{ fontSize: 12 }}>This business is waiting to go live. Approving publishes it immediately; declining sends the owner your note and they can edit and resubmit.</p>
+              {decisionMessage && <p role="status">{decisionMessage}</p>}
+              {!showRejectInput && <div className="jobs-actions">
+                <button onClick={() => void approve()}>Approve &amp; Publish</button>
+                <button onClick={() => setShowRejectInput(true)}>Decline</button>
+              </div>}
+              {showRejectInput && <>
+                <label className="policy-field">Reason for decline (shown to the owner)<textarea value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} style={{ minHeight: 60 }} /></label>
+                <div className="jobs-actions">
+                  <button onClick={() => void reject()} disabled={!rejectNote.trim()}>Confirm Decline</button>
+                  <button onClick={() => { setShowRejectInput(false); setRejectNote(''); }}>Cancel</button>
+                </div>
+              </>}
+            </section>
+          )}
+          {detail.status === 'pending_activation' && !canManage && (
+            <section><p role="status">This business is waiting for activation review. Your admin role does not have permission to approve or decline it.</p></section>
+          )}
           <section><h3>Details</h3><dl>
             <div><dt>Category</dt><dd>{detail.category ?? '—'}</dd></div>
             <div><dt>Type</dt><dd>{detail.biz_type ?? '—'}</dd></div>

@@ -4,7 +4,7 @@ export const permissions = [
   'listings.view', 'listings.moderate',
   'verifications.manage', 'reports.view', 'reports.manage',
   'moderation.manage', 'reviews.moderate', 'chats.view', 'support.manage',
-  'businesses.view',
+  'businesses.view', 'businesses.manage',
   'orders.view', 'orders.manage',
   'content.view', 'content.edit', 'content.publish',
   'legal.view', 'legal.edit', 'legal.publish',
@@ -26,7 +26,7 @@ export type AdminRole = typeof adminRoles[number];
 const operationalAdmin: Permission[] = [
   'dashboard.view', 'users.view', 'users.assist', 'listings.view', 'listings.moderate',
   'verifications.manage', 'reports.view', 'reports.manage', 'moderation.manage',
-  'reviews.moderate', 'chats.view', 'support.manage', 'businesses.view',
+  'reviews.moderate', 'chats.view', 'support.manage', 'businesses.view', 'businesses.manage',
   'orders.view', 'orders.manage', 'content.view', 'content.edit', 'content.publish',
   'legal.view', 'legal.edit', 'legal.publish', 'taxonomy.view', 'taxonomy.manage',
   'taxonomy.publish', 'institutions.view', 'institutions.manage',
