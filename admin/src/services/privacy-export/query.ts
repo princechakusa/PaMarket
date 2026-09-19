@@ -1,17 +1,9 @@
 // DPO / Privacy Data Export -- platform-wide compliance snapshot (2026-09-19).
 //
-// This is a READ-ONLY aggregation over tables that already exist and are
-// already admin-readable via existing RLS (is_admin() / is_admin_team() /
-// is_super_admin() policies, or the existing list_security_events RPC for
-// the one table with no direct grant at all). Nothing here adds a new
-// policy, grant, or bypass -- every query below runs exactly as any other
-// admin query in this app does, under the signed-in admin's own session.
-// If a table's RLS does not let this admin see a row, the count reflects
-// that (and is labelled honestly, not silently substituted).
-//
-// Where no dedicated data-protection record exists for a checklist item
-// (e.g. no data-breach register, no per-user consent timestamp), the
-// section says so explicitly instead of inventing a number.
+// Platform aggregation uses existing admin-readable tables and their RLS.
+// The individual export uses privacy_export_subject, a fixed allowlist RPC
+// gated server-side by super_admin and AAL2. New register reads use their
+// own super_admin/AAL2 RLS policies. Query failures are shown explicitly.
 import { getSupabaseClient } from '../supabase/client';
 import { normalizeError, type NormalizedError } from '../errors/normalize-error';
 import { listSecurityEvents } from '../security-events/query';
@@ -30,11 +22,14 @@ export type Section = {
   metrics: Metric[];
   /** Explicit "no record exists" / RLS-limitation statements for this section. */
   caveats: string[];
+  records?: Record<string, unknown>[];
+  source?: string;
 };
 export type PrivacySnapshot = {
   generatedAt: string;
   generatedBy: { id: string; name: string; email: string; role: string };
   sections: Section[];
+  subjectId?: string;
 };
 
 type Client = ReturnType<typeof getSupabaseClient>;
@@ -83,10 +78,36 @@ function metric(label: string, n: { n: number | null; err?: string }, note?: str
 
 const asOf = () => new Date().toISOString();
 
-export async function generatePrivacySnapshot(generatedBy: { id: string; name: string; email: string; role: string }): Promise<QueryResult<PrivacySnapshot>> {
+async function registerSection(client: NonNullable<Client>, table: string, id: string, title: string, description: string): Promise<Section> {
+  const records: Record<string, unknown>[] = [];
+  for (let from = 0; ; from += 500) {
+    if (from >= 10000) return { id, title, description, source: `public.${table}`, metrics: [{ label: 'Records', value: 'Unavailable' }], caveats: ['Register exceeds the 10,000-row safe export limit. Use an audited paged database export; this report has not silently truncated the register.'] };
+    const { data, error } = await (client.from as any)(table).select('*').order('id', { ascending: true }).range(from, from + 499);
+    if (error) return { id, title, description, source: `public.${table}`, metrics: [{ label: 'Records', value: 'Unavailable' }], caveats: [`Query failed: ${error.message}`] };
+    records.push(...(data ?? []));
+    if (!data || data.length < 500) break;
+  }
+  return { id, title, description, source: `public.${table}`, metrics: [{ label: 'Records', value: String(records.length) }], records, caveats: records.length ? [] : ['No records currently exist in this register. Historical events have not been inferred or backfilled.'] };
+}
+
+export async function generatePrivacySnapshot(generatedBy: { id: string; name: string; email: string; role: string }, subjectId?: string): Promise<QueryResult<PrivacySnapshot>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const c = client;
+  if (generatedBy.role !== 'super_admin') return { data: null, error: { code: 'forbidden', message: 'Super Admin is required.', retryable: false } };
+
+  if (subjectId) {
+    const { data, error } = await (c.rpc as any)('privacy_export_subject', { p_user_id: subjectId });
+    if (error) return { data: null, error: normalizeError(error) };
+    const groups = data as Record<string, Record<string, unknown>[]>;
+    const sections: Section[] = Object.entries(groups).map(([table, records]) => ({
+      id: `subject-${table}`, title: `SAR: ${table}`, source: `public.${table}`,
+      description: `Records directly linked to subject ${subjectId}. Message records are authored messages only; records about other conversation participants are excluded.`,
+      metrics: [{ label: 'Records', value: String(records.length) }], records,
+      caveats: records.length ? [] : ['No matching records.'],
+    }));
+    return { data: { generatedAt: asOf(), generatedBy, subjectId, sections }, error: null };
+  }
 
   const sections: Section[] = [];
 
@@ -182,7 +203,7 @@ export async function generatePrivacySnapshot(generatedBy: { id: string; name: s
       metrics: [],
       caveats: [
         'No dedicated data protection record/aggregate exists in this system as of ' + asOf() + ' for platform-wide message volume: `messages`/`conversations` RLS only lets a user (or an admin who happens to be a conversation member) read their own conversations -- there is no admin-wide bypass policy on either table, so no admin role (including super_admin) can produce a true platform-wide message count or content export from this app today.',
-        'A specific data-subject-access or law-enforcement request for one user\'s message history is technically fulfillable (their user_id appears in conversations.members / messages.sender_id) but requires a direct, audited database query outside this admin UI, not a feature that exists here yet.',
+        'The individual SAR export below includes messages authored by the selected user through a Super Admin and MFA gated database function. It does not include other participants\' messages in the same conversation.',
       ],
     });
   }
@@ -225,7 +246,7 @@ export async function generatePrivacySnapshot(generatedBy: { id: string; name: s
         metric('Users opted out of marketing email', marketingOptOut),
       ],
       caveats: [
-        'There is no single "consent given at <timestamp> for <purpose> v<policy version>" ledger -- consent is inferred from account creation (acceptance of Terms/Privacy at signup) plus the current value of these preference columns, not an immutable per-event consent log.',
+        'The event register in Section 16 contains only consents recorded after its introduction. Earlier acceptance cannot be reconstructed from current preferences or account creation.',
       ],
     });
   }
@@ -290,11 +311,10 @@ export async function generatePrivacySnapshot(generatedBy: { id: string; name: s
     sections.push({
       id: 'breaches',
       title: '9. Data Breaches / Incidents & Related Actions',
-      description: 'No dedicated data-breach or incident-register table exists in this system as of ' + asOf() + ' for this data category.',
+      description: 'Operational security-event evidence and legal holds are listed above. Formal incident records, when entered, appear in Section 15.',
       metrics: [],
       caveats: [
-        'The closest existing mechanisms are `security_events` (see Section 8) and `security_event_legal_holds`, which lets an admin place an evidentiary hold on a specific security event or correlation_id while an incident is investigated. Neither is a breach register (with fields like affected-user count, notification date, regulator notified) -- they are per-event operational security tooling.',
-        'If a breach investigation is ever required, it would need to be assembled manually from Security Center event detail + this snapshot + relevant table records, then formally logged; there is currently no single place that produces a breach report end-to-end.',
+        'Incident investigation and notification details are recorded in privacy_incidents (Section 15); no historical incidents have been invented.',
       ],
     });
   }
@@ -335,14 +355,14 @@ export async function generatePrivacySnapshot(generatedBy: { id: string; name: s
     sections.push({
       id: 'third-parties',
       title: '11. Third-Party / Service Providers Receiving Data',
-      description: 'No formal third-party-processor register table exists. The following processors are inferred directly from the schema and known infrastructure (not from a compliance record): Supabase (database, auth, file storage), Cloudflare (Pages hosting, R2 object storage for uploaded photos/documents), Expo/EAS (mobile app build & push delivery), Paynow (payment processing -- `paynow_payments`), Google Play Billing (in-app purchases/subscriptions -- `play_purchases`, `play_subscriptions`, `play_recruiter_subscriptions`), Sentry (crash/error monitoring -- `app_error_events.sentry_event_id`), and device push-notification delivery (`push_tokens`).',
+      description: 'Engineering-derived provider signals: Supabase, Cloudflare, Expo/EAS, Paynow, Google Play Billing, Sentry and push delivery. The DPO-maintained formal processor register appears in Section 17.',
       metrics: [
         metric('Paynow payment records (name/phone/email may be attached)', paynow),
         metric('Google Play purchase/subscription records', playPurchases),
         metric('Registered push-notification device tokens', pushTokens),
       ],
       caveats: [
-        'This list should be treated as an engineering-derived starting point for the DPO\'s formal processor register, not a substitute for one -- it does not capture data-processing agreements, sub-processor chains, or data-residency terms, none of which are recorded in this database.',
+        'Provider agreements, sub-processors and data location are only known if entered in the formal register; do not infer compliance from usage counts.',
       ],
     });
   }
@@ -355,7 +375,7 @@ export async function generatePrivacySnapshot(generatedBy: { id: string; name: s
       description: 'The only table with an explicit, machine-enforced retention field is `security_events.retention_until` (a per-row timestamp). Verification documents (`verifications.id_doc_path`/`selfie_path`, `business_verifications.id_doc_path`/`reg_doc_path`, `company_verifications.*_path`) have no retention/expiry column at all -- they persist indefinitely unless manually deleted. Account erasure is tracked via `account_deletion_requests` + `deletion_logs` (see Section 7).',
       metrics: [],
       caveats: [
-        'No documented retention period (e.g. "delete ID documents N days after verification decision") is enforced anywhere in the schema today -- this is a genuine gap the DPO should set a policy for, not something this report can report a number on.',
+        'The DPO-maintained retention schedule is in Section 18. A recorded schedule does not itself enforce deletion; technical enforcement must be checked separately.',
       ],
     });
   }
@@ -377,11 +397,23 @@ export async function generatePrivacySnapshot(generatedBy: { id: string; name: s
         metric('Total content/user reports', reports),
       ],
       caveats: [
-        'support_tickets.category has never been set to a privacy/GDPR/data-request-specific value on this data -- a data subject request submitted via support today would be indistinguishable from a normal ticket unless staff manually flag it. There is no dedicated data-subject-request tracker.',
-        'Formal erasure requests specifically are tracked separately and accurately in account_deletion_requests (Section 7) -- currently zero.',
+        'Privacy-specific requests are tracked in Section 14. General support tickets are not automatically classified or migrated into that register.',
+        'Formal erasure requests are tracked separately in account_deletion_requests (Section 7); consult that section for the live count.',
       ],
     });
   }
+
+  // Dedicated registers complement the existing real-data snapshot. They are
+  // empty until a DPO records actual cases, agreements and schedules.
+  for (const [table, id, title, description] of [
+    ['privacy_requests', 'request-register', '14. Privacy / Data-Subject Request Register', 'Access, correction, deletion, portability and other requests; deadlines, verification, decision and evidence. Existing account_deletion_requests remain reported in Section 7.'],
+    ['privacy_incidents', 'incident-register', '15. Data Breach / Incident Register', 'Detection, affected data and users, investigation, containment, notifications and resolution. Security events remain reported in Section 8.'],
+    ['privacy_consents', 'consent-history', '16. Consent Event History', 'Recorded grants and withdrawals with purpose, policy version, timestamps and evidence. Current preference values remain in Section 6.'],
+    ['privacy_processors', 'processor-register', '17. Formal Processor Register', 'DPO-maintained provider, data categories, purpose, location, agreements, retention and compliance status. Engineering-derived provider signals remain in Section 11.'],
+    ['privacy_retention_schedule', 'retention-schedule', '18. Retention Schedule', 'DPO-maintained category, source tables, period, trigger, deletion method, exceptions and review status. Actual deletion records remain in Section 7.'],
+    ['privacy_register_audit', 'register-audit', '19. Privacy Register Change Evidence', 'Immutable insert/update evidence for the five DPO registers, including actor, timestamp and before/after state.'],
+    ['privacy_export_audit', 'export-audit', '20. Individual Export Access Evidence', 'Audit of subject IDs exported, actor IDs and timestamps. Each SAR function invocation records an entry.'],
+  ]) sections.push(await registerSection(c, table, id, title, description));
 
   return {
     data: { generatedAt: asOf(), generatedBy, sections },
