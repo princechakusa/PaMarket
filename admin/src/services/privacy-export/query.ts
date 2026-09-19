@@ -41,7 +41,10 @@ type Client = ReturnType<typeof getSupabaseClient>;
 
 async function countRows(client: NonNullable<Client>, table: string, apply?: (q: any) => any): Promise<{ n: number | null; err?: string }> {
   try {
-    let q = client.from(table).select('*', { count: 'exact', head: true });
+    // Generic helper spans ~30 tables across this file -- a typed union
+    // param would defeat the point of the helper, so we deliberately opt
+    // out of the typed client here (as any) rather than list every table.
+    let q = (client.from as any)(table).select('*', { count: 'exact', head: true });
     if (apply) q = apply(q);
     const { count, error } = await q;
     if (error) return { n: null, err: error.message };
@@ -54,8 +57,8 @@ async function countRows(client: NonNullable<Client>, table: string, apply?: (q:
 async function firstLastCreatedAt(client: NonNullable<Client>, table: string, column = 'created_at'): Promise<{ earliest: string | null; latest: string | null; err?: string }> {
   try {
     const [oldest, newest] = await Promise.all([
-      client.from(table).select(column).order(column, { ascending: true }).limit(1).maybeSingle(),
-      client.from(table).select(column).order(column, { ascending: false }).limit(1).maybeSingle(),
+      (client.from as any)(table).select(column).order(column, { ascending: true }).limit(1).maybeSingle(),
+      (client.from as any)(table).select(column).order(column, { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (oldest.error || newest.error) return { earliest: null, latest: null, err: (oldest.error ?? newest.error)?.message };
     return { earliest: (oldest.data as any)?.[column] ?? null, latest: (newest.data as any)?.[column] ?? null };
