@@ -15,6 +15,7 @@ export type Business = {
   suburb?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  institution_id?: string | null;
   status: string;
   plan_id?: string | null;
   verification_level?: number | null;

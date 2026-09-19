@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { institutionAbbreviation, INSTITUTION_TYPE_LABEL, type Institution } from "../../lib/institutions";
+import { businessInitials, type Business } from "../../lib/businesses";
 import { INSTITUTION_LISTING_FILTERS, applyInstitutionListingFilter, type InstitutionListingFilter } from "../../lib/institution-listing-filters";
 import { type Listing } from "../../lib/listings";
 import { padGridFiller } from "../../lib/listing-grid";
@@ -63,6 +64,11 @@ export default function InstitutionDetailScreen() {
   // header stat doesn't visually flicker as the user switches filters.
   const [activeCount, setActiveCount] = useState<number | null>(null);
 
+  // Organizations tagged to this institution via businesses.institution_id
+  // (separate from listings -- an approved org shows up here as soon as it's
+  // tagged, whether or not it has posted anything yet).
+  const [organizations, setOrganizations] = useState<Business[]>([]);
+
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -100,6 +106,17 @@ export default function InstitutionDetailScreen() {
   }, [id]);
 
   useEffect(() => { void loadInstitution(); }, [loadInstitution]);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("businesses")
+      .select("id,owner_user_id,name,logo,cover,description,biz_type,category,status,institution_id")
+      .eq("institution_id", id)
+      .eq("status", "active")
+      .order("name", { ascending: true })
+      .then(({ data }) => setOrganizations((data as Business[]) ?? []));
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -274,6 +291,26 @@ export default function InstitutionDetailScreen() {
               </View>
             </View>
 
+            {organizations.length > 0 ? (
+              <View style={styles.orgsSection}>
+                <Text style={styles.orgsSectionTitle}>Organizations</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.orgsRow}>
+                  {organizations.map((org) => (
+                    <Pressable key={org.id} style={styles.orgCard} onPress={() => router.push({ pathname: "/business/[id]", params: { id: org.id } })}>
+                      <View style={styles.orgLogoWrap}>
+                        {org.logo ? (
+                          <Image source={{ uri: org.logo }} style={styles.orgLogo} contentFit="cover" cachePolicy="memory-disk" />
+                        ) : (
+                          <Text style={styles.orgLogoInitial}>{businessInitials(org.name)}</Text>
+                        )}
+                      </View>
+                      <Text style={styles.orgName} numberOfLines={2}>{org.name}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
             <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
               {INSTITUTION_LISTING_FILTERS.map((item) => (
                 <Chip key={item.key} label={`${item.emoji} ${item.label}`} active={filter === item.key} onPress={() => setFilter(item.key)} />
@@ -413,6 +450,17 @@ function buildStyles(color: ColorPalette) {
       borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs,
     },
     verifiedChipText: { ...font.caption, color: color.brand, fontWeight: "700" },
+    orgsSection: { paddingTop: space.sm, paddingBottom: space.md },
+    orgsSectionTitle: { ...font.title, color: color.text, paddingHorizontal: space.lg, marginBottom: space.sm },
+    orgsRow: { paddingHorizontal: space.lg, gap: space.md },
+    orgCard: { width: 84, alignItems: "center", gap: space.xs },
+    orgLogoWrap: {
+      width: 64, height: 64, borderRadius: radius.lg, backgroundColor: color.brandTint,
+      alignItems: "center", justifyContent: "center", overflow: "hidden",
+    },
+    orgLogo: { width: "100%", height: "100%" },
+    orgLogoInitial: { ...font.title, color: color.brand, fontWeight: "800" },
+    orgName: { ...font.caption, color: color.text, textAlign: "center" },
     filterContent: { paddingHorizontal: space.lg, gap: space.sm, paddingBottom: space.md },
     sortPriceRow: { flexDirection: "row", gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.md },
     sortPriceButton: {

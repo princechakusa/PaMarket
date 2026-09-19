@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -21,6 +22,7 @@ import { ProvinceCityFields, UseCurrentLocationButton } from "../../components/u
 import { useTaxonomy, withSelectedValue } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
+import { institutionAbbreviation, type Institution } from "../../lib/institutions";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
@@ -51,6 +53,9 @@ export default function BusinessEditScreen() {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [logo, setLogo] = useState<string | null>(null);
   const [cover, setCover] = useState<string | null>(null);
+  const [institutionId, setInstitutionId] = useState<string | null>(null);
+  const [institutionOptions, setInstitutionOptions] = useState<Institution[]>([]);
+  const [institutionPickerOpen, setInstitutionPickerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   // Stage 5: keeps this business's existing category selections/province/
@@ -67,7 +72,7 @@ export default function BusinessEditScreen() {
     const { data } = await supabase
       .from("businesses")
       .select(
-        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,latitude,longitude,status"
+        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,latitude,longitude,institution_id,status"
       )
       .eq("id", id)
       .maybeSingle();
@@ -88,12 +93,27 @@ export default function BusinessEditScreen() {
     setLongitude(b.longitude ?? null);
     setLogo(b.logo ?? null);
     setCover(b.cover ?? null);
+    setInstitutionId(b.institution_id ?? null);
   }, [id]);
 
   useEffect(() => {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   }, [load]);
+
+  // Optional institution/campus tag -- lets an org appear on that
+  // institution's hub page (see institutions/[id].tsx's Organizations
+  // section) independent of whether it has posted any listings there.
+  useEffect(() => {
+    supabase
+      .from("institutions")
+      .select("id,type,official_name,short_name,province_id,city_id,is_active")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => setInstitutionOptions((data as Institution[]) ?? []));
+  }, []);
+
+  const selectedInstitution = institutionOptions.find((i) => i.id === institutionId) ?? null;
 
   const isOwner = session?.user?.id === business?.owner_user_id;
 
@@ -152,6 +172,7 @@ export default function BusinessEditScreen() {
         longitude,
         logo,
         cover,
+        institution_id: institutionId,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -268,6 +289,50 @@ export default function BusinessEditScreen() {
         <Field label="Suburb / Area" styles={styles}>
           <TextInput style={styles.input} value={suburb} onChangeText={setSuburb} />
         </Field>
+        <Field label="Institution / Campus (optional)" styles={styles}>
+          <Pressable style={styles.input} onPress={() => setInstitutionPickerOpen(true)}>
+            <Text style={{ color: selectedInstitution ? tones.text : tones.textMuted }}>
+              {selectedInstitution ? selectedInstitution.official_name : "None"}
+            </Text>
+          </Pressable>
+        </Field>
+
+        <Modal visible={institutionPickerOpen} transparent animationType="fade" onRequestClose={() => setInstitutionPickerOpen(false)}>
+          <Pressable style={styles.institutionOverlay} onPress={() => setInstitutionPickerOpen(false)}>
+            <View style={styles.institutionSheet}>
+              <Text style={styles.dropdownTitle}>Institution / Campus</Text>
+              <ScrollView style={{ maxHeight: 360 }}>
+                <Pressable
+                  style={styles.institutionOption}
+                  onPress={() => {
+                    setInstitutionId(null);
+                    setInstitutionPickerOpen(false);
+                  }}
+                >
+                  <Text style={styles.institutionOptionText}>None</Text>
+                  {institutionId === null ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                </Pressable>
+                {institutionOptions.map((inst) => (
+                  <Pressable
+                    key={inst.id}
+                    style={styles.institutionOption}
+                    onPress={() => {
+                      setInstitutionId(inst.id);
+                      setInstitutionPickerOpen(false);
+                    }}
+                  >
+                    <Text style={styles.institutionOptionText}>
+                      {inst.official_name}
+                      {inst.short_name ? ` (${institutionAbbreviation(inst)})` : ""}
+                    </Text>
+                    {institutionId === inst.id ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Modal>
+
         <UseCurrentLocationButton
           provinces={provinces}
           citiesByProvince={citiesByProvince}
@@ -303,7 +368,7 @@ function Field({ label, children, styles }: { label: string; children: React.Rea
 }
 
 function buildTones(color: ColorPalette) {
-  return { brand: color.brand, textOnBrand: color.textOnBrand };
+  return { brand: color.brand, textOnBrand: color.textOnBrand, text: color.text, textMuted: color.textMuted };
 }
 
 function buildStyles(color: ColorPalette) {
@@ -339,5 +404,17 @@ function buildStyles(color: ColorPalette) {
     primaryButtonText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
     secondaryButton: { borderRadius: 10, paddingVertical: 13, alignItems: "center", marginTop: 10, backgroundColor: color.surfaceAlt },
     secondaryButtonText: { fontSize: 14, fontWeight: "700", color: color.text },
+    institutionOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+    institutionSheet: {
+      backgroundColor: color.surface, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+      paddingHorizontal: 16, paddingTop: 14, paddingBottom: 32,
+    },
+    dropdownTitle: { fontSize: 16, fontWeight: "700", color: color.text, marginBottom: 8 },
+    institutionOption: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: color.border,
+    },
+    institutionOptionText: { fontSize: 14, color: color.text, flexShrink: 1 },
+    dropdownCheck: { color: color.brand, fontWeight: "800" },
   });
 }
