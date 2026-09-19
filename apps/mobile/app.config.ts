@@ -116,7 +116,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // app-wide removal of haptic (vibration) feedback. Confirmed via
     // `eas build:list` that 26 was already built on 2026-08-21 -- 27 is
     // the next unused number.
-    buildNumber: "27",
+    // 28 carries the real fix discovered after 27 was submitted: Android's
+    // headerShown flag for listing/[id] and institutions/[id] was still
+    // gated to iOS-only even after their custom back-button fallback was
+    // removed, so those two screens (shared by both platforms, same JS
+    // bundle) lost their header, back button, and correct content
+    // positioning. Also carries the Rentals nested-Modal touch-bug fix and
+    // the dropdown chevron/border styling pass. 27 was already submitted
+    // to App Store Connect, so it's burned -- 28 is the next number.
+    buildNumber: "28",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
