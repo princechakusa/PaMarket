@@ -17,6 +17,13 @@ export const permissions = [
   'security.view', 'security.manage', 'admins.manage', 'mfa_policy.manage',
   'settings.view', 'settings.manage',
   'legal_holds.manage',
+  // DPO/regulator-facing compliance snapshot (2026-09-19): reads across
+  // nearly every table holding personal data (profiles, verifications,
+  // deletion records, admin/security audit trails, ...). Deliberately left
+  // out of `operationalAdmin` -- super_admin is the only role that gets it,
+  // matching the most-restrictive-that-still-makes-sense precedent used
+  // elsewhere in this file (e.g. legal_holds.manage, admins.manage).
+  'privacy.export',
 ] as const;
 
 export type Permission = typeof permissions[number];

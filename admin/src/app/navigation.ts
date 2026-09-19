@@ -31,6 +31,7 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
   { label: 'Security & Platform', items: [
     { label: 'Security Center', path: '/security/center', permission: 'security.view', icon: 'security' },
     { label: 'Security & Honeypot', path: '/security/events', permission: 'audit.view', icon: 'shield_with_heart' },
+    { label: 'Privacy Data Export', path: '/security/privacy-export', permission: 'privacy.export', icon: 'fact_check' },
     { label: 'Roles & Permissions', path: '/security/permissions', permission: 'security.view', icon: 'admin_panel_settings' },
     { label: 'Errors & Health', path: '/observability/errors', permission: 'errors.view', icon: 'vital_signs' },
     { label: 'Security Settings', path: '/settings/security', permission: 'security.view', icon: 'passkey' },
@@ -116,6 +117,7 @@ export const navigationGroups: NavigationGroup[] = [
     { label: 'Security center', path: '/security/center', permission: 'security.view' },
     { label: 'Permission preview', path: '/security/permissions', permission: 'security.view' },
     { label: 'Security settings', path: '/settings/security', permission: 'security.view' },
+    { label: 'Privacy data export', path: '/security/privacy-export', permission: 'privacy.export' },
   ] },
   { label: 'Settings', items: [
     { label: 'Notifications', path: '/settings/notifications', permission: 'settings.view' },
@@ -128,4 +130,4 @@ export const navigationGroups: NavigationGroup[] = [
 
 export const mockRoutes = navigationGroups
   .flatMap((group) => group.items)
-  .filter((item) => item.path !== '/' && item.path !== '/settings/security' && item.path !== '/security/events');
+  .filter((item) => item.path !== '/' && item.path !== '/settings/security' && item.path !== '/security/events' && item.path !== '/security/privacy-export');

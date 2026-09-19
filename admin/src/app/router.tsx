@@ -10,6 +10,7 @@ import { MfaChallengePage } from '../pages/MfaChallengePage';
 import { SecuritySettingsPage } from '../pages/security/SecuritySettingsPage';
 import { MfaEnrollPage } from '../pages/security/MfaEnrollPage';
 import { SecurityEventsPage } from '../pages/security/SecurityEventsPage';
+import { PrivacyExportPage } from '../pages/PrivacyExportPage';
 import { ListingsModerationPage } from '../pages/ListingsModerationPage';
 import { BusinessVerificationsPage } from '../pages/BusinessVerificationsPage';
 import { ReportsDisputesPage } from '../pages/ReportsDisputesPage';
@@ -53,6 +54,7 @@ export function createAppRouter() { return createBrowserRouter([
       { path: 'settings/security', element: <RequirePermission permission="security.view"><SecuritySettingsPage /></RequirePermission> },
       { path: 'settings/security/mfa/enroll', element: <RequirePermission permission="security.view"><MfaEnrollPage /></RequirePermission> },
       { path: 'security/events', element: <RequirePermission permission="audit.view"><SecurityEventsPage /></RequirePermission> },
+      { path: 'security/privacy-export', element: <RequirePermission permission="privacy.export"><PrivacyExportPage /></RequirePermission> },
       { path: 'states/:state', element: <UnavailablePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
