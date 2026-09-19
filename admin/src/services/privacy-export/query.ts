@@ -44,7 +44,12 @@ async function countRows(client: NonNullable<Client>, table: string, apply?: (q:
     // Generic helper spans ~30 tables across this file -- a typed union
     // param would defeat the point of the helper, so we deliberately opt
     // out of the typed client here (as any) rather than list every table.
-    let q = (client.from as any)(table).select('*', { count: 'exact', head: true });
+    // select('id') not select('*') -- a head:true count still evaluates
+    // column-level grants for every selected column, and profiles has
+    // REVOKE'd column privileges on its auth-secret columns (mfa_secret,
+    // two_factor_secret); select('*') hit "permission denied for column"
+    // and silently produced a null count with no readable message.
+    let q = (client.from as any)(table).select('id', { count: 'exact', head: true });
     if (apply) q = apply(q);
     const { count, error } = await q;
     if (error) return { n: null, err: error.message };
@@ -68,7 +73,12 @@ async function firstLastCreatedAt(client: NonNullable<Client>, table: string, co
 }
 
 function metric(label: string, n: { n: number | null; err?: string }, note?: string): Metric {
-  return { label, value: n.err ? 'Unavailable' : String(n.n), note: n.err ? `Query error: ${n.err}` : note };
+  // n.n === null means the query failed (regardless of whether err carries
+  // a readable message) -- must never fall through to String(null),
+  // which is the exact bug that showed literal "null" text in a real
+  // compliance report instead of an honest failure state.
+  if (n.n === null) return { label, value: 'Unavailable', note: `Query error: ${n.err || 'unknown error (no message returned)'}` };
+  return { label, value: String(n.n), note };
 }
 
 const asOf = () => new Date().toISOString();
