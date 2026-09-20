@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../security/auth-context';
 import {
   listBusinesses, getBusiness, getBusinessListingsCount, getBusinessStaff, getBusinessPaymentsTotal, getBusinessLeads,
-  approveBusinessActivation, rejectBusinessActivation, setBusinessInstitution,
+  approveBusinessActivation, rejectBusinessActivation, setBusinessInstitution, suspendBusiness, restoreBusiness, archiveBusiness,
   BUSINESSES_PAGE_SIZE, type BusinessRow, type BusinessDetail, type BusinessStaffRow, type BusinessLeadRow,
 } from '../services/businesses/query';
 import { listInstitutions, type InstitutionRow } from '../services/institutions/query';
@@ -12,6 +13,7 @@ function fmtDate(value: string | null) { return value ? new Intl.DateTimeFormat(
 export function BusinessesPage() {
   const auth = useAuth();
   const canManage = auth.identity?.permissions.includes('businesses.manage') ?? false;
+  const canDelete = auth.identity?.permissions.includes('businesses.delete') ?? false;
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -31,6 +33,9 @@ export function BusinessesPage() {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [institutions, setInstitutions] = useState<InstitutionRow[]>([]);
   const [institutionSaving, setInstitutionSaving] = useState(false);
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const [archiveReason, setArchiveReason] = useState('');
+  const [showArchive, setShowArchive] = useState(false);
 
   useEffect(() => {
     if (auth.mode !== 'live') return;
@@ -65,6 +70,8 @@ export function BusinessesPage() {
     setDecisionMessage(null);
     setShowRejectInput(false);
     setRejectNote('');
+    setShowArchive(false);
+    setArchiveReason('');
     const businessResult = await getBusiness(id);
     if (businessResult.error) { setDetailPhase('error'); return; }
     const [listingsResult, staffResult, paymentsResult, leadsResult] = await Promise.all([
@@ -92,6 +99,21 @@ export function BusinessesPage() {
     if (!result.error) { setShowRejectInput(false); setRejectNote(''); void loadDetail(detail.id); void load(); }
   }
 
+  async function changeLifecycle(action: 'suspend' | 'restore' | 'archive') {
+    if (!detail || lifecycleBusy) return;
+    if (action === 'suspend' && !window.confirm(`Suspend ${detail.name ?? 'this business'}? Its storefront will no longer be public.`)) return;
+    if (action === 'archive' && (!archiveReason.trim() || !window.confirm(`Archive ${detail.name ?? 'this business'}? This cannot be undone in Admin.`))) return;
+    setLifecycleBusy(true);
+    const result = action === 'suspend' ? await suspendBusiness(detail.id)
+      : action === 'restore' ? await restoreBusiness(detail.id)
+      : await archiveBusiness(detail.id, archiveReason);
+    setLifecycleBusy(false);
+    if (result.error) { setDecisionMessage(`Failed: ${result.error.message}`); return; }
+    await loadDetail(detail.id);
+    setDecisionMessage(action === 'archive' ? 'Business archived; financial and audit records were retained.' : action === 'suspend' ? 'Business suspended.' : 'Business restored.');
+    void load();
+  }
+
   const pageCount = Math.max(1, Math.ceil(total / BUSINESSES_PAGE_SIZE));
 
   return <div className="directory-page">
@@ -101,7 +123,7 @@ export function BusinessesPage() {
 
     <section className="directory-filters" aria-label="Business filters"><div>
       <label className="directory-search"><span className="material-symbols-outlined">search</span><input aria-label="Search businesses" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search name or business ID" /></label>
-      <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option><option value="draft">DRAFT</option><option value="pending_activation">PENDING ACTIVATION</option><option value="active">ACTIVE</option><option value="suspended">SUSPENDED</option></select>
+      <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">STATUS: ALL</option><option value="draft">DRAFT</option><option value="pending_activation">PENDING ACTIVATION</option><option value="active">ACTIVE</option><option value="suspended">SUSPENDED / ARCHIVED</option></select>
       <button onClick={() => { setStatus(''); setSearch(''); setPage(1); void load(); }} aria-label="Reset filters"><span className="material-symbols-outlined">restart_alt</span></button>
     </div></section>
 
@@ -114,7 +136,7 @@ export function BusinessesPage() {
           {phase === 'error' && <div className="directory-empty" role="alert">Could not load businesses: {error}</div>}
           {phase !== 'error' && <table aria-label="Businesses"><thead><tr><th>Name</th><th>Category</th><th>Location</th><th>Plan</th><th>Status</th><th>Created</th></tr></thead>
             <tbody>{rows.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected' : ''} onClick={() => void loadDetail(row.id)} style={{ cursor: 'pointer' }}>
-              <td>{row.name ?? 'Unnamed'}</td><td>{row.category ?? '—'}</td><td>{row.city ?? '—'}{row.province ? `, ${row.province}` : ''}</td><td>{row.plan_id ?? 'free'}</td><td>{row.status ?? '—'}</td><td>{fmtDate(row.created_at)}</td>
+              <td>{row.name ?? 'Unnamed'}</td><td>{row.category ?? '—'}</td><td>{row.city ?? '—'}{row.province ? `, ${row.province}` : ''}</td><td>{row.plan_id ?? 'free'}</td><td>{row.deleted_at ? 'archived' : row.status ?? '—'}</td><td>{fmtDate(row.created_at)}</td>
             </tr>)}</tbody></table>}
           {phase === 'ready' && rows.length === 0 && <div className="directory-empty" role="status">No businesses match these filters.</div>}
         </div>
@@ -125,12 +147,27 @@ export function BusinessesPage() {
         {selectedId && detailPhase === 'loading' && <p>Loading…</p>}
         {selectedId && detailPhase === 'error' && <p role="alert">Could not load business detail.</p>}
         {selectedId && detailPhase === 'ready' && detail && <>
-          <header><span className="material-symbols-outlined">storefront</span><div><small>BUSINESS</small><strong>{detail.name ?? 'Unnamed'}</strong></div><b>{detail.status?.toUpperCase() ?? '—'}</b></header>
+          <header><span className="material-symbols-outlined">storefront</span><div><small>BUSINESS</small><strong>{detail.name ?? 'Unnamed'}</strong></div><b>{detail.deleted_at ? 'ARCHIVED' : detail.status?.toUpperCase() ?? '—'}</b></header>
+          {decisionMessage && <p role="status">{decisionMessage}</p>}
+          <section><h3>Business actions</h3>
+            {canManage && !detail.lifecycleAvailable && <p role="status">Suspend and archive controls will appear after the business lifecycle migration is applied.</p>}
+            <div className="jobs-actions">
+              <Link to={`/marketplace/verifications?businessId=${encodeURIComponent(detail.id)}`}>Review verification</Link>
+              {canManage && detail.lifecycleAvailable && !detail.deleted_at && detail.status === 'active' && <button disabled={lifecycleBusy} onClick={() => void changeLifecycle('suspend')}>Suspend business</button>}
+              {canManage && detail.lifecycleAvailable && !detail.deleted_at && detail.status === 'suspended' && <button disabled={lifecycleBusy} onClick={() => void changeLifecycle('restore')}>Restore business</button>}
+              {canDelete && detail.lifecycleAvailable && !detail.deleted_at && <button disabled={lifecycleBusy} onClick={() => setShowArchive(true)}>Delete business (archive)</button>}
+            </div>
+            {showArchive && canDelete && !detail.deleted_at && <div>
+              <p>Archiving hides the storefront, pauses active business listings, and preserves linked orders, payments and audit records. This action cannot be reversed in Admin.</p>
+              <label className="policy-field">Reason for deletion<textarea value={archiveReason} onChange={(e) => setArchiveReason(e.target.value)} /></label>
+              <div className="jobs-actions"><button disabled={lifecycleBusy || !archiveReason.trim()} onClick={() => void changeLifecycle('archive')}>Confirm archive</button><button disabled={lifecycleBusy} onClick={() => { setShowArchive(false); setArchiveReason(''); }}>Cancel</button></div>
+            </div>}
+            {detail.deleted_at && <p>Archived {fmtDate(detail.deleted_at)}. Reason: {detail.deletion_reason ?? 'Not recorded'}</p>}
+          </section>
           {detail.status === 'pending_activation' && canManage && (
             <section>
               <h3>Activation Decision</h3>
               <p style={{ fontSize: 12 }}>This business is waiting to go live. Approving publishes it immediately; declining sends the owner your note and they can edit and resubmit.</p>
-              {decisionMessage && <p role="status">{decisionMessage}</p>}
               {!showRejectInput && <div className="jobs-actions">
                 <button onClick={() => void approve()}>Approve &amp; Publish</button>
                 <button onClick={() => setShowRejectInput(true)}>Decline</button>

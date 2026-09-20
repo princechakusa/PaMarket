@@ -5,6 +5,7 @@ export const permissions = [
   'verifications.manage', 'reports.view', 'reports.manage',
   'moderation.manage', 'reviews.moderate', 'chats.view', 'support.manage',
   'businesses.view', 'businesses.manage',
+  'businesses.delete',
   'orders.view', 'orders.manage',
   'content.view', 'content.edit', 'content.publish',
   'legal.view', 'legal.edit', 'legal.publish',

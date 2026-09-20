@@ -136,7 +136,7 @@ export type BusinessVerificationRow = {
   businesses: { name: string | null; category: string | null; biz_type: string | null; status: string | null } | null;
 };
 
-export async function listBusinessVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE): Promise<QueryResult<Page<BusinessVerificationRow>>> {
+export async function listBusinessVerifications(status: string | undefined, page: number, pageSize = VERIFICATIONS_PAGE_SIZE, businessId?: string): Promise<QueryResult<Page<BusinessVerificationRow>>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   let query = client
@@ -144,6 +144,7 @@ export async function listBusinessVerifications(status: string | undefined, page
     .select('id, business_id, status, admin_note, submitted_at, reviewed_at, level_requested, id_doc_path, reg_doc_path', { count: 'exact' })
     .order('submitted_at', { ascending: false });
   if (status) query = query.eq('status', status);
+  if (businessId) query = query.eq('business_id', businessId);
   const from = Math.max(0, page - 1) * pageSize;
   const { data, error, count } = await query.range(from, from + pageSize - 1);
   if (error) return { data: null, error: normalizeError(error) };

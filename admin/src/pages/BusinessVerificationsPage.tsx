@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../security/auth-context';
 import {
   listVerifications, updateVerificationStatus, listBusinessVerifications, updateBusinessVerificationStatus,
@@ -69,7 +70,9 @@ function levelLabel(level: number | null): string { return level == null ? '—'
 
 export function BusinessVerificationsPage() {
   const auth = useAuth();
-  const [tab, setTab] = useState<'individual' | 'business' | 'company'>('individual');
+  const [searchParams] = useSearchParams();
+  const businessId = searchParams.get('businessId') ?? undefined;
+  const [tab, setTab] = useState<'individual' | 'business' | 'company'>(businessId ? 'business' : 'individual');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [individualRows, setIndividualRows] = useState<VerificationRow[]>([]);
@@ -93,9 +96,10 @@ export function BusinessVerificationsPage() {
       setIndividualRows(result.data.rows);
       setTotal(result.data.total);
     } else if (tab === 'business') {
-      const result = await listBusinessVerifications(status || undefined, page);
+      const result = await listBusinessVerifications(status || undefined, page, VERIFICATIONS_PAGE_SIZE, businessId);
       if (result.error) { setError(result.error.message); setPhase('error'); return; }
       setBusinessRows(result.data.rows);
+      if (businessId && result.data.rows.length) setSelectedId(result.data.rows[0].id);
       setTotal(result.data.total);
     } else {
       const result = await listCompanyVerifications(status || undefined, page);
@@ -104,7 +108,7 @@ export function BusinessVerificationsPage() {
       setTotal(result.data.total);
     }
     setPhase('ready');
-  }, [auth.mode, tab, status, page]);
+  }, [auth.mode, tab, status, page, businessId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -158,6 +162,7 @@ export function BusinessVerificationsPage() {
     {auth.mode === 'mock' && <div className="directory-reference" role="note"><span className="material-symbols-outlined">science</span><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment; Verifications cannot load real data here.</span></div>}
     <div className="directory-breadcrumb">PAMARKET OPS / TRUST & MODERATION / <b>VERIFICATIONS</b></div>
     <header className="directory-hero"><div><small>PRODUCTION VERIFICATION QUEUE</small><h1>Verifications</h1><p>Individual KYC, business, and job-posting eligibility review, in one workspace.</p></div></header>
+    {businessId && tab === 'business' && <p role="status">Showing verification submissions for business <code>{businessId}</code>. {phase === 'ready' && businessRows.length === 0 ? 'No submission exists yet; the owner must submit documents in the app.' : ''}</p>}
 
     <nav className="listing-tabs" aria-label="Verification type"><div>
       <button className={tab === 'individual' ? 'active' : ''} onClick={() => { setTab('individual'); setSelectedId(null); setPage(1); }}>Individual (KYC)</button>

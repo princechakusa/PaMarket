@@ -15,7 +15,7 @@ function unavailable<T>(): QueryResult<T> {
 
 export const BUSINESSES_PAGE_SIZE = 20;
 
-export type BusinessRow = { id: string; name: string | null; status: string | null; category: string | null; city: string | null; province: string | null; plan_id: string | null; created_at: string | null };
+export type BusinessRow = { id: string; name: string | null; status: string | null; deleted_at: string | null; category: string | null; city: string | null; province: string | null; plan_id: string | null; created_at: string | null };
 
 export async function listBusinesses(filters: { status?: string; search?: string }, page: number, pageSize = BUSINESSES_PAGE_SIZE): Promise<QueryResult<Page<BusinessRow>>> {
   const client = getSupabaseClient();
@@ -32,10 +32,15 @@ export async function listBusinesses(filters: { status?: string; search?: string
   const from = Math.max(0, page - 1) * pageSize;
   const { data, error, count } = await query.range(from, from + pageSize - 1);
   if (error) return { data: null, error: normalizeError(error) };
-  return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
+  const rows = data ?? [];
+  const { data: lifecycleRows } = rows.length
+    ? await client.from('businesses').select('id, deleted_at').in('id', rows.map((row) => row.id))
+    : { data: [] as { id: string; deleted_at: string | null }[] };
+  const deletedById = new Map((lifecycleRows ?? []).map((row) => [row.id, row.deleted_at]));
+  return { data: { rows: rows.map((row) => ({ ...row, deleted_at: deletedById.get(row.id) ?? null })), total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
-export type BusinessDetail = BusinessRow & { owner_user_id: string | null; biz_type: string | null; phone: string | null; email: string | null; verification_level: number | null; verification_pending: boolean | null; suburb: string | null; latitude: number | null; longitude: number | null; institution_id: string | null };
+export type BusinessDetail = BusinessRow & { owner_user_id: string | null; biz_type: string | null; phone: string | null; email: string | null; verification_level: number | null; verification_pending: boolean | null; deletion_reason: string | null; lifecycleAvailable: boolean; suburb: string | null; latitude: number | null; longitude: number | null; institution_id: string | null };
 export async function getBusiness(id: string): Promise<QueryResult<BusinessDetail | null>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
@@ -45,7 +50,9 @@ export async function getBusiness(id: string): Promise<QueryResult<BusinessDetai
     .eq('id', id)
     .maybeSingle();
   if (error) return { data: null, error: normalizeError(error) };
-  return { data: data ?? null, error: null };
+  if (!data) return { data: null, error: null };
+  const lifecycle = await client.from('businesses').select('deleted_at, deletion_reason').eq('id', id).maybeSingle();
+  return { data: { ...data, deleted_at: lifecycle.data?.deleted_at ?? null, deletion_reason: lifecycle.data?.deletion_reason ?? null, lifecycleAvailable: !lifecycle.error }, error: null };
 }
 
 /** businesses.institution_id (2026-09-19): lets admins view/correct which
@@ -113,6 +120,32 @@ export async function rejectBusinessActivation(id: string, note: string): Promis
   if (!client) return unavailable();
   const { error } = await client.from('businesses').update({ status: 'rejected', rejection_note: note }).eq('id', id);
   if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}
+
+async function changeBusinessStatus(id: string, from: string, to: string): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.from('businesses').update({ status: to }).eq('id', id).eq('status', from).is('deleted_at', null).select('id').maybeSingle();
+  if (error) return { data: null, error: normalizeError(error) };
+  if (!data) return { data: null, error: { code: 'not_found', message: 'Business changed or is no longer eligible for this action.', retryable: false } };
+  return { data: true, error: null };
+}
+
+export const suspendBusiness = (id: string) => changeBusinessStatus(id, 'active', 'suspended');
+export const restoreBusiness = (id: string) => changeBusinessStatus(id, 'suspended', 'active');
+
+/** Evidence-preserving deletion: the business is archived, not hard-deleted.
+ * The database trigger requires Super Admin + AAL2 and makes it immutable. */
+export async function archiveBusiness(id: string, reason: string): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  if (!reason.trim()) return { data: null, error: { code: 'reason_required', message: 'An archive reason is required.', retryable: false } };
+  const { data, error } = await client.from('businesses')
+    .update({ status: 'suspended', deleted_at: new Date().toISOString(), deletion_reason: reason.trim() })
+    .eq('id', id).is('deleted_at', null).select('id').maybeSingle();
+  if (error) return { data: null, error: normalizeError(error) };
+  if (!data) return { data: null, error: { code: 'not_found', message: 'Business changed or was already archived.', retryable: false } };
   return { data: true, error: null };
 }
 

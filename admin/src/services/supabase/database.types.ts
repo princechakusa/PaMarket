@@ -41,9 +41,10 @@ export type Database = {
           phone: string | null; email: string | null; plan_id: string | null; verification_level: number | null;
           verification_pending: boolean | null; created_at: string | null; latitude: number | null; longitude: number | null;
           rejection_note: string | null; institution_id: string | null;
+          deleted_at: string | null; deletion_reason: string | null;
         };
         Insert: { id?: string; status?: string | null };
-        Update: { status?: string | null; verification_level?: number | null; rejection_note?: string | null; institution_id?: string | null };
+        Update: { status?: string | null; verification_level?: number | null; rejection_note?: string | null; institution_id?: string | null; deleted_at?: string | null; deletion_reason?: string | null };
         Relationships: [];
       };
       // Batch 3: Platform + Operations tables. All already admin/support-
