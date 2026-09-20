@@ -75,9 +75,9 @@ export function LoginPage() {
     setError(null);
     const result = await auth.signInWithPassword(email.trim(), password);
     if (result.error) {
+      await reportLoginSecurityEvent('admin_login_failed', { reasonCode: reasonCodeFor(result.error) });
       setSubmitting(false);
       setError(GENERIC_LOGIN_FAILURE);
-      void reportLoginSecurityEvent('admin_login_failed', { reasonCode: reasonCodeFor(result.error) });
       return;
     }
 

@@ -196,6 +196,12 @@ Deno.serve(async (req) => {
       return json(cors, { error: 'authentication_required' }, 401)
     }
 
+    // A valid marketplace account is not an admin session. In particular,
+    // it must not be able to manufacture a successful admin login signal.
+    if (config.requiresAuth && !['admin', 'super_admin', 'moderator', 'support', 'finance'].includes(actorRole ?? '')) {
+      return json(cors, { error: 'authentication_required' }, 401)
+    }
+
     const { ip, source: ipSource } = verifiedIp(req)
     const userAgent = normalizedUserAgent(req)
     const url = new URL(req.url)

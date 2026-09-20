@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../security/auth-context';
 import {
-  getSecurityEvent, placeLegalHold, releaseLegalHold, ipDisplay,
+  getSecurityEvent, placeLegalHold, releaseLegalHold, recordSecurityEvidenceExport, ipDisplay,
   type SecurityEventRow, type SecurityEventDetail as SecurityEventDetailRow,
 } from '../../services/security-events/query';
+import { buildSecurityEvidenceHtml, deviceDescription, eventEvidenceStatus } from '../../services/security-events/evidence';
 
 function MetadataList({ metadata }: { metadata: unknown }) {
   if (!metadata || typeof metadata !== 'object') return <p>None recorded.</p>;
@@ -72,6 +73,20 @@ export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
     onHoldChanged();
   }
 
+  async function handleExport() {
+    if (!event || auth.identity?.role !== 'super_admin' || auth.assuranceLevel !== 'aal2' || event.ip_source === 'restricted') return;
+    setActionError(null);
+    const receipt = await recordSecurityEvidenceExport(event.id);
+    if (receipt.error) { setActionError(receipt.error.message); return; }
+    const html = await buildSecurityEvidenceHtml(event, receipt.data);
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pamarket-security-evidence-${event.id}.html`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
   if (!event) {
     return (
       <aside className="panel security-event-dossier" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
@@ -85,8 +100,11 @@ export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
     <aside className="panel security-event-dossier" role="dialog" aria-label="Security event detail" style={{ marginTop: 16 }}>
       <div className="panel-heading">
         <h2>{event.event_type}</h2>
+        {canManageHolds && <button type="button" onClick={() => void handleExport()}>Export evidence</button>}
         <button type="button" onClick={onClose}>Close</button>
       </div>
+
+      <p className="notice-card" style={{ padding: 10 }}>{eventEvidenceStatus(event.event_type)}</p>
 
       {event.event_type === 'admin_login_honeypot' && (
         <p className="notice-card" style={{ padding: 10 }}>
@@ -112,6 +130,8 @@ export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
         <div><dt>IP address</dt><dd>{ipDisplay(event.ip_address, event.ip_source)}</dd></div>
         <div><dt>User agent</dt><dd className="break-value">{event.user_agent ?? '—'}</dd></div>
         <div><dt>Retention until</dt><dd>{new Date(event.retention_until).toLocaleDateString()}</dd></div>
+        <div><dt>Device indication</dt><dd>{deviceDescription(event.user_agent)}</dd></div>
+        <div><dt>Network location</dt><dd>Not recorded. IP address alone does not establish the visitor's physical location.</dd></div>
       </dl>
 
       <h3>Metadata</h3>

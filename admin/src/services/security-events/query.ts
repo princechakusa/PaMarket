@@ -126,6 +126,14 @@ export async function getSecurityEvent(eventId: string): Promise<QueryResult<Sec
   return { data: data?.[0] ?? null, error: null };
 }
 
+export async function recordSecurityEvidenceExport(eventId: string): Promise<QueryResult<string>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.rpc('record_security_evidence_export', { p_event_id: eventId });
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: data as string, error: null };
+}
+
 export async function placeLegalHold(args: { eventId?: string; correlationId?: string; reason: string }): Promise<QueryResult<{ id: string }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();

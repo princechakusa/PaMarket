@@ -413,6 +413,7 @@ export type Database = {
           hold_id: string | null;
         }[];
       };
+      record_security_evidence_export: { Args: { p_event_id: string }; Returns: string };
       // C2E-9: the six existing C2E-5-gated analytics RPCs (already
       // has_admin_privilege('admin')-enforced server-side; unused by any
       // frontend before this stage). Reused as-is, not modified.
