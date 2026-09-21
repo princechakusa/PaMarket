@@ -59,6 +59,7 @@
           '<li><a class="hover:text-primary" href="safety.html">Scam Awareness &amp; Reporting Fraud</a></li>' +
           '<li><a class="hover:text-primary" href="terms.html">Terms of Service &amp; Compliance</a></li>' +
           '<li><a class="hover:text-primary" href="privacy.html">Privacy &amp; Data Protection Policy</a></li>' +
+          '<li><a class="hover:text-primary" href="cookie-policy.html">Cookie Policy</a></li>' +
           '<li><a class="hover:text-primary" href="community-guidelines.html">Prohibited Items &amp; Community Guidelines</a></li>' +
           '<li><a class="hover:text-primary" href="refund-policy.html">Refund &amp; Cancellation Policy</a></li>' +
         '</ul>' +
