@@ -26,6 +26,11 @@ export type ReportOptions = {
 };
 
 const REPORT_TIMEOUT_MS = 5_000;
+const SECURITY_PROXY = 'https://pamarket-admin-security-proxy.chakusaprince.workers.dev';
+const PROXIED_ORIGINS = new Set([
+  'https://pamarket-admin-react.pages.dev',
+  'https://main.pamarket-admin-react.pages.dev',
+]);
 
 export async function reportLoginSecurityEvent(eventType: LoginSecurityEventType, options: ReportOptions = {}): Promise<void> {
   if (adminEnvironment.mode !== 'live' || !adminEnvironment.supabaseUrl || !adminEnvironment.publishableKey) return;
@@ -34,7 +39,10 @@ export async function reportLoginSecurityEvent(eventType: LoginSecurityEventType
   const timeout = window.setTimeout(() => controller.abort(), options.timeoutMs ?? REPORT_TIMEOUT_MS);
 
   try {
-    await fetch(`${adminEnvironment.supabaseUrl}/functions/v1/record-security-event`, {
+    const endpoint = PROXIED_ORIGINS.has(window.location.origin)
+      ? SECURITY_PROXY
+      : `${adminEnvironment.supabaseUrl}/functions/v1/record-security-event`;
+    await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

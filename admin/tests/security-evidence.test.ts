@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildSecurityEvidenceHtml, deviceDescription, eventEvidenceStatus } from '../src/services/security-events/evidence';
+import { buildSecurityEvidenceHtml, deviceDescription, eventEvidenceStatus, networkLocationDescription } from '../src/services/security-events/evidence';
 import type { SecurityEventDetail } from '../src/services/security-events/query';
 
 describe('security evidence snapshot', () => {
   it('labels browser signals and avoids claiming an exact device or location', () => {
     expect(eventEvidenceStatus('admin_login_failed')).toContain('Browser-reported');
     expect(deviceDescription('Mozilla/5.0 (Windows NT 10.0) Chrome/130.0')).toContain('desktop or laptop');
+    expect(networkLocationDescription({ network_location: { city: 'Harare', country: 'ZW', latitude: -17.8, longitude: 31 } }, 'cloudflare_worker')).toContain('Cloudflare IP estimate');
+    expect(networkLocationDescription({ network_location: { city: 'Harare' } }, 'restricted')).toBe('Restricted for this role');
   });
 
   it('escapes event content and includes an integrity reference and export receipt', async () => {

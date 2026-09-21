@@ -74,6 +74,29 @@ const ALLOWED_METADATA_KEYS: Record<string, readonly string[]> = {
 
 const MAX_BODY_BYTES = 4 * 1024 // 4 KB — this endpoint only ever needs a few short fields
 const REQUEST_TIMEOUT_MS = 8_000
+const GEO_PUBLIC_KEY = { kty: 'EC', crv: 'P-256', x: 'rIVoreWtlSBH_KQznVdQvN_k1eMzB9wNLSneRVw-T50', y: 'zMCvgy69yT-1JxFhi5ds83lwENIqOp9CWTHIxU6IIRQ', ext: true, key_ops: ['verify'] }
+
+function fromBase64Url(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=')
+  return Uint8Array.from(atob(normalized), (character) => character.charCodeAt(0))
+}
+
+async function cloudflareGeo(req: Request): Promise<Record<string, unknown> | null> {
+  const payload = req.headers.get('x-pamarket-geo-payload')
+  const signature = req.headers.get('x-pamarket-geo-signature')
+  if (!payload && !signature) return null
+  if (!payload || !signature || payload.length > 1600 || signature.length > 200) throw new Error('invalid_geo_proof')
+  const key = await crypto.subtle.importKey('jwk', GEO_PUBLIC_KEY, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify'])
+  const bytes = fromBase64Url(payload)
+  const valid = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, fromBase64Url(signature), bytes)
+  if (!valid) throw new Error('invalid_geo_proof')
+  const geo = JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>
+  if (geo.source !== 'cloudflare_request_cf' || typeof geo.observed_at !== 'string' ||
+      !Number.isFinite(Date.parse(geo.observed_at)) ||
+      Math.abs(Date.now() - Date.parse(geo.observed_at)) > 120_000 ||
+      (geo.ip !== null && typeof geo.ip !== 'string')) throw new Error('invalid_geo_proof')
+  return geo
+}
 
 function json(cors: Record<string, string>, data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
@@ -146,6 +169,9 @@ Deno.serve(async (req) => {
     // The raw body is never logged, stored, or forwarded beyond the
     // narrow fields read below — this is the only place it is touched.
 
+    let geo: Record<string, unknown> | null
+    try { geo = await cloudflareGeo(req) } catch { return json(cors, { error: 'invalid_geo_proof' }, 401) }
+
     const eventType = typeof body['eventType'] === 'string' ? body['eventType'] : ''
     const config = EVENT_CONFIG[eventType]
     if (!config) return json(cors, { error: 'unsupported_event_type' }, 400)
@@ -202,7 +228,14 @@ Deno.serve(async (req) => {
       return json(cors, { error: 'authentication_required' }, 401)
     }
 
-    const { ip, source: ipSource } = verifiedIp(req)
+    const observedIp = verifiedIp(req)
+    const ip = geo?.ip ? String(geo.ip) : observedIp.ip
+    const ipSource = geo?.ip ? 'cloudflare_worker' : observedIp.source
+    if (geo) {
+      const location = { ...geo }
+      delete location.ip
+      metadata['network_location'] = location
+    }
     const userAgent = normalizedUserAgent(req)
     const url = new URL(req.url)
 

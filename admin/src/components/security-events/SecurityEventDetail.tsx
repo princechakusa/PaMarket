@@ -4,7 +4,7 @@ import {
   getSecurityEvent, placeLegalHold, releaseLegalHold, recordSecurityEvidenceExport, ipDisplay,
   type SecurityEventRow, type SecurityEventDetail as SecurityEventDetailRow,
 } from '../../services/security-events/query';
-import { buildSecurityEvidenceHtml, deviceDescription, eventEvidenceStatus } from '../../services/security-events/evidence';
+import { buildSecurityEvidenceHtml, deviceDescription, eventEvidenceStatus, networkLocationDescription } from '../../services/security-events/evidence';
 
 function MetadataList({ metadata }: { metadata: unknown }) {
   if (!metadata || typeof metadata !== 'object') return <p>None recorded.</p>;
@@ -131,7 +131,7 @@ export function SecurityEventDetail({ eventSummary, onClose, onHoldChanged }: {
         <div><dt>User agent</dt><dd className="break-value">{event.user_agent ?? '—'}</dd></div>
         <div><dt>Retention until</dt><dd>{new Date(event.retention_until).toLocaleDateString()}</dd></div>
         <div><dt>Device indication</dt><dd>{deviceDescription(event.user_agent)}</dd></div>
-        <div><dt>Network location</dt><dd>Not recorded. IP address alone does not establish the visitor's physical location.</dd></div>
+        <div><dt>Network location</dt><dd>{networkLocationDescription(event.metadata, event.ip_source)}</dd></div>
       </dl>
 
       <h3>Metadata</h3>
