@@ -1,449 +1,408 @@
-/* ============================================================
-   browse.html — real Supabase-driven category/listing browser.
-   Adapted from this site's existing filtering logic in
-   js/services/listings.js + js/taxonomy.js (the same helpers
-   index.html uses) into the new visual design. Every count and
-   card below is a real live query; there is no fabricated data.
+(function(root){
+'use strict';
+const document=root.document;
+const PIN='<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+const COLORS=['#EEF2FF','#FEF3C7','#DCFCE7','#FCE7F3','#E0F2FE','#FEF9C3','#F3E8FF','#FFEDD5'];
+const TCOLORS=['#1A3A8F','#B27D22','#1F7A4D','#9D174D','#0369A1','#92400E','#7B2D8B','#C2410C'];
+// Stage 4 fix: was missing 'other' (confirmed drift vs js/listing-schema.js's
+// CAT_LABELS, the canonical copy) — a listing in the 'other' category fell
+// back to its raw key instead of a real label anywhere this map was used.
+const CAT_LABELS={property:'Property',vehicles:'Vehicles',electronics:'Electronics',furniture:'Furniture',fashion:'Fashion',services:'Services',agriculture:'Agriculture',rooms:'Rooms to Rent',pets:'Pets',kids:'Baby & Kids',jobs:'Jobs',other:'Other'};
+const PAGE_SIZE=20;
+const SUPPORTED_SORTS=new Set(['created_at.desc','price.asc','price.desc']);
+let state={cat:'',q:'',prov:'',city:'',sort:'created_at.desc',offset:0,shops:false};
+const ZW_CITIES=['Harare','Bulawayo','Mutare','Gweru','Masvingo','Chinhoyi','Kadoma','Kwekwe','Victoria Falls'];
+function hero(title,sub,image,alt,chips){return{title,sub,image,alt,chips};}
+const CATEGORY_HEROES={
+  all:hero('All listings across Zimbabwe.','Explore property, vehicles, electronics, services and more from sellers nationwide.','img/category-heroes/hero-all-listings.jpg','Zimbabwe marketplace featuring property, vehicles, technology and local services',[['Property','browse?cat=property'],['Vehicles','browse?cat=vehicles'],['Electronics','browse?cat=electronics'],['Furniture','browse?cat=furniture']]),
+  property:hero('Find your next home in Zimbabwe.','Live listings from real sellers. Updated continuously.','img/category-heroes/hero-property.jpg','Large modern house with landscaped gardens',[['Houses','browse?cat=property&sub=houses'],['Flats & Apartments','browse?cat=property&sub=flats'],['Stands & Land','browse?cat=property&sub=stands'],['Commercial','browse?cat=property&sub=commercial']]),
+  vehicles:hero('Cars, bakkies and bikes, ready to drive.','Live listings from real sellers. Updated continuously.','img/category-heroes/hero-vehicles.jpg','Toyota pickup overlooking a mountain lake',[['Cars','browse?cat=vehicles&sub=cars'],['SUVs & 4x4','browse?cat=vehicles&sub=suvs'],['Bakkies & Trucks','browse?cat=vehicles&sub=bakkies'],['Spares & Parts','browse?cat=vehicles&sub=parts']]),
+  electronics:hero('Phones, laptops and gadgets you can trust.','Live listings from real sellers. Updated continuously.','img/category-heroes/hero-electronics.jpg','Laptops, phones, headphones and electronic accessories on display',[['Phones & Tablets','browse?cat=electronics&sub=phones'],['Laptops & Computers','browse?cat=electronics&sub=computers'],['TVs & Monitors','browse?cat=electronics&sub=tvs'],['Gaming','browse?cat=electronics&sub=gaming']]),
+  furniture:{
+    title:'Furnish your home for less.',
+    sub:'Live listings from real sellers. Updated continuously.',
+    image:'img/category-heroes/hero-furniture.jpg',alt:'Modern sofas, chairs and tables in a furniture showroom',
+    chips:[['Sofas & Lounge','browse?cat=furniture&sub=sofas'],['Beds & Bedroom','browse?cat=furniture&sub=beds'],['Dining & Kitchen','browse?cat=furniture&sub=dining'],['Home Décor','browse?cat=furniture&sub=decor']]
+  },
+  fashion:hero('Style for every occasion.','Discover clothing, shoes and accessories from sellers across Zimbabwe.','img/category-heroes/hero-fashion.jpg','Fashionable woman walking through a city square',[['Clothing','browse?cat=fashion&sub=clothing'],['Shoes','browse?cat=fashion&sub=shoes'],['Bags & Luggage','browse?cat=fashion&sub=bags'],['Jewellery','browse?cat=fashion&sub=jewellery']]),
+  services:hero('Find trusted help for every job.','Connect with local professionals offering practical services across Zimbabwe.','img/category-heroes/hero-services.jpg','Professional plumber repairing pipes beneath a kitchen sink',[['Home & Repairs','browse?cat=services&sub=home'],['Building & Construction','browse?cat=services&sub=building'],['Tutoring & Lessons','browse?cat=services&sub=tutoring'],['Transport & Moving','browse?cat=services&sub=transport']]),
+  agriculture:hero('Everything you need to keep Zimbabwe growing.','Browse farm equipment, livestock, produce and supplies from local sellers.','img/category-heroes/hero-agriculture.jpg','Agricultural mechanic repairing farm machinery',[['Livestock','browse?cat=agriculture&sub=livestock'],['Crops & Produce','browse?cat=agriculture&sub=produce'],['Farm Equipment','browse?cat=agriculture&sub=equipment'],['Irrigation','browse?cat=agriculture&sub=irrigation']]),
+  rooms:hero('Find a room that feels like home.','Browse rooms, cottages and shared homes available across Zimbabwe.','img/category-heroes/hero-rooms.jpg','Bright furnished bedroom available to rent',[['Single Rooms','browse?cat=rooms&sub=single'],['Shared Rooms','browse?cat=rooms&sub=shared'],['Self-Contained','browse?cat=rooms&sub=self-contained'],['Student Digs','browse?cat=rooms&sub=student']]),
+  pets:hero('Find everything your pets need.','Browse pets, supplies and accessories from sellers across Zimbabwe.','img/category-heroes/hero-pets.jpg','Comfortable pet room with cats, dogs, beds and pet supplies',[['Dogs','browse?cat=pets&sub=dogs'],['Cats','browse?cat=pets&sub=cats'],['Birds','browse?cat=pets&sub=birds'],['Pet Accessories','browse?cat=pets&sub=accessories']]),
+  shops:hero('Shop from trusted Zimbabwean businesses.','Browse verified businesses selling on PaMarket across Zimbabwe.','img/category-heroes/hero-shops.jpg','Customer speaking with a shop owner inside a local boutique',[['Electronics Shops','browse?shops=1&q=electronics'],['Fashion Shops','browse?shops=1&q=fashion'],['Hardware Shops','browse?shops=1&q=hardware'],['Open Your Shop','open-shop']])
+};
 
-   Extracted from browse.html into this external controller (rather
-   than a large inline <script>) to stay within this repo's
-   architecture size policy (tools/website-build/validate-architecture.js
-   flags any HTML page with more than 8192 bytes of inline JS as a
-   new violation) — this file replaces the previous browse-page.js
-   controller, which drove the pre-redesign browse.html.
+function renderCategoryHero(){
+  const key=state.shops?'shops':(state.cat||'all');
+  const cfg=CATEGORY_HEROES[key];
+  const hero=document.getElementById('catHero');
+  if(!cfg||state.business){hero.hidden=true;return;}
+  hero.hidden=false;
+  const image=document.getElementById('catHeroImg');
+  image.src=cfg.image;image.alt=cfg.alt;
+  document.getElementById('catHeroTitle').textContent=cfg.title;
+  document.getElementById('catHeroSub').textContent=cfg.sub;
+  document.getElementById('catHeroChips').innerHTML=cfg.chips.map(chip=>'<a class="cat-hero-chip" href="'+chip[1]+'">'+chip[0]+'</a>').join('');
+  const eyebrow=document.getElementById('catHeroEyebrow');
+  eyebrow.textContent='';
+  const countPromise=key==='shops'?PM.fetchExactCount('businesses','status=eq.active&verification_level=gt.1'):PMListings.fetchListingCount(key==='all'?'':key);
+  countPromise.then(count=>{
+    eyebrow.textContent=Number(count).toLocaleString()+(key==='shops'?' verified storefront'+(count===1?'':'s'):' live listing'+(count===1?'':'s'));
+  }).catch(()=>{eyebrow.textContent='';});
+}
 
-   Adaptations vs the mockup (documented, not fabricated):
-   - "Radius slider" dropped — no meaningful geo-radius search
-     exists in the schema for most listings (lat/lng mostly null).
-   - "Handover & Logistics" checkboxes dropped — no such field
-     exists on `listings`.
-   - "Seller Verification Status" narrowed to the two states the
-     schema actually supports: listings with a business_id
-     (posted by a verified business) vs individual seller listings.
-   - Category subcategory counts use the real `attributes->>subcat`
-     values already used by post-ad.html, not the mockup's invented
-     subcategory names/counts.
-   ============================================================ */
-(function () {
-  'use strict';
+function bcard(biz,idx){
+  const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
+  const loc=[biz.city,biz.province].filter(Boolean).join(', ')||'Zimbabwe';
+  const initials=(biz.name||'Shop').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const cardImg=biz.logo||biz.cover||(Array.isArray(biz.photos)&&biz.photos[0]);
+  const img=cardImg?`<img src="${cardImg}" alt="${(biz.name||'').replace(/"/g,'&quot;')}" loading="lazy">`:`<span style="color:${tc};font-weight:800;font-size:18px">${initials}</span>`;
+  const verified=biz.verification_level>=2?'<span class="shopcard-verified" title="Verified">✓</span>':'';
+  return`<a class="shopcard" href="business?id=${biz.id}">
+    <div class="shopcard-logo" style="background:${bg}">${img}</div><div class="shopcard-body">
+      <div class="shopcard-name">${biz.name||'Shop'}${verified}</div><div class="shopcard-loc">${PIN} ${loc}</div></div></a>`;
+}
 
-  window.PMBrowseNav = { toggleMobile: function (btn) {
-    var n = document.getElementById('hpMobNav');
-    if (!n) return;
-    var open = n.classList.toggle('hidden') === false;
-    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }};
+function gcard(listing,idx){
+  const bg=COLORS[idx%COLORS.length],tc=TCOLORS[idx%TCOLORS.length];
+  const photo=listing.photos&&listing.photos.length?listing.photos[0]:null;
+  const loc=[listing.suburb,listing.city].filter(Boolean).join(', ')||listing.province||'Zimbabwe';
+  const isNew=(Date.now()-new Date(listing.created_at).getTime())<86400000*3;
+  const isFeatured=listing.featured_until&&new Date(listing.featured_until)>new Date();
+  const badge=isFeatured?'<div class="gcard-badge badge-feat">FEATURED</div>':(isNew?'<div class="gcard-badge">NEW</div>':'');
+  const img=photo?`<img src="${photo}" alt="${listing.title.replace(/"/g,'&quot;')}" loading="lazy">`:`<div class="gcard-img-ph" style="color:${tc}">${listing.title.split(' ').slice(0,3).join('<br>')}</div>`;
+  return`<a class="gcard" href="${PMUrls.listingPath(listing)}">
+    <button type="button" class="gcard-save" data-save-listing="${listing.id}" aria-label="Save ${listing.title.replace(/"/g,'&quot;')}" onclick="event.preventDefault();event.stopPropagation();toggleFavourite(this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
+    <div class="gcard-img" style="background:${bg}">${badge}${img}</div><div class="gcard-body"><div class="gcard-price">${PM.money(listing.price,listing.currency)}</div><div class="gcard-title">${listing.title}</div><div class="gcard-loc">${PIN} ${loc}</div></div></a>`;
+}
 
-  var CAT_LABELS = { property: 'Property', vehicles: 'Vehicles', electronics: 'Electronics & Gadgets', furniture: 'Furniture', fashion: 'Fashion', services: 'Services', agriculture: 'Agriculture', rooms: 'Rooms to Rent', pets: 'Pets', kids: 'Baby & Kids', other: 'Other' };
-  var SUBCAT_LABELS = { phones: 'Smartphones & Tablets', computers: 'Laptops & Computers', gaming: 'Gaming & Consoles', cameras: 'Cameras & Audio', tvs: 'TVs & Monitors', accessories: 'Accessories' };
-  var CONDITION_LABELS = { 'new': 'Brand New', 'like-new': 'Like New / Refurbished', 'used': 'Pre-Owned / Used' };
-  var PAGE_SIZE = 9;
-  var ILLUSTRATIVE_ZIG_RATE = 27.42;
+function skeletons(n){
+  return Array.from({length:n}).map(()=>'<div class="gcard"><div class="gcard-img skeleton"></div><div class="gcard-body"><div class="skeleton" style="height:16px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:12px;width:90%;border-radius:4px"></div></div></div>').join('');
+}
 
-  var params = new URLSearchParams(location.search);
-  var state = {
-    cat: params.get('cat') || '',
-    subcat: params.get('sub') || '',
-    province: params.get('province') || '',
-    city: params.get('city') || '',
-    q: params.get('q') || '',
-    minPrice: params.get('min') || '',
-    maxPrice: params.get('max') || '',
-    condition: params.get('condition') || '',
-    sellerType: params.get('seller') || '',
-    sort: params.get('sort') || 'created_at.desc',
-    page: parseInt(params.get('page') || '1', 10) || 1,
-    viewMode: params.get('view') || 'grid'
-  };
-  var lastRows = [];
+function updateItemListSchema(rows){
+  const existing=document.getElementById('itemListSchema');
+  if(existing)existing.remove();
+  if(!rows.length)return;
+  const script=document.createElement('script');
+  script.type='application/ld+json';
+  script.id='itemListSchema';
+  script.textContent=JSON.stringify({
+    '@context':'https://schema.org',
+    '@type':'ItemList',
+    itemListElement:rows.slice(0,20).map((r,i)=>({
+      '@type':'ListItem',
+      position:i+1,
+      url:PMUrls.listingUrl(r),
+      name:r.title
+    }))
+  });
+  document.head.appendChild(script);
+}
 
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function money(n) { n = Number(n) || 0; return n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
-  function timeAgo(iso) {
-    var diff = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-    if (diff < 3600) return Math.max(1, Math.round(diff / 60)) + 'm ago';
-    if (diff < 86400) return Math.round(diff / 3600) + 'h ago';
-    return Math.round(diff / 86400) + 'd ago';
+function updateHero(){
+  const tag=document.getElementById('heroTag'),title=document.getElementById('heroTitle'),sub=document.getElementById('heroSub');
+  const place=state.city||state.prov||'';
+  const catLabel=CAT_LABELS[state.cat]||state.cat;
+  let pageTitle,pageDesc,crumbLabel,ogType='website',introText;
+
+  if(state.shops){
+    tag.textContent='Shops';
+    title.textContent='Verified Business Shops';
+    sub.textContent='Browse verified businesses selling on PaMarket across Zimbabwe.';
+    pageTitle='Verified Business Shops — PaMarket Zimbabwe';
+    pageDesc='Browse verified business shops selling on PaMarket across Zimbabwe.';
+    crumbLabel='Shops';
+    introText='PaMarket Shops are verified businesses selling directly through the platform — from electronics retailers to furniture stores to service providers. Every Shop is reviewed before verification, giving buyers extra confidence when shopping from a business rather than an individual seller. Browsing and contacting Shops is completely free, with no commission taken on any purchase.';
+  }else if(state.business){
+    tag.textContent='Shop';
+    title.textContent='Listings from this shop';
+    sub.textContent='All active listings from this verified business.';
+    pageTitle='Shop Listings — PaMarket Zimbabwe';
+    pageDesc='All active listings from this verified PaMarket business.';
+    crumbLabel='Shop';
+    introText='';
+  }else if(state.cat && place){
+    tag.textContent=catLabel;
+    title.textContent=catLabel+' in '+place+', Zimbabwe';
+    sub.textContent='Browse '+catLabel.toLowerCase()+' listings in '+place+'. Updated continuously, always free.';
+    pageTitle=catLabel+' for Sale in '+place+' | PaMarket Zimbabwe';
+    pageDesc='Find '+catLabel.toLowerCase()+' listings in '+place+', Zimbabwe on PaMarket. Live listings from real sellers, updated daily. No fees, no commissions.';
+    crumbLabel=catLabel+' in '+place;
+    ogType='product.group';
+    introText='PaMarket lists '+catLabel.toLowerCase()+' directly from sellers in '+place+', updated continuously throughout the day. Every listing includes real photos, an accurate price in USD, and the seller\'s general location within '+place+', so you know roughly where to expect to meet before you even make contact. Contact sellers directly through WhatsApp to ask questions or arrange a viewing — PaMarket never charges a fee to browse, contact a seller, or complete a sale in '+place+' or anywhere else in Zimbabwe. If you cannot find what you are looking for in '+place+' right now, try widening your search to the surrounding province, or check back soon as new listings are added throughout the day. Selling in '+place+' is just as free — post your own listing in under two minutes with no fees or commission at any point.';
+  }else if(state.cat){
+    tag.textContent=catLabel;
+    title.textContent=catLabel+' listings in Zimbabwe';
+    sub.textContent='Live listings from real sellers. Updated continuously.';
+    pageTitle=catLabel+' for Sale in Zimbabwe | PaMarket';
+    pageDesc='Browse '+catLabel.toLowerCase()+' listings across Zimbabwe on PaMarket — Harare, Bulawayo and all 10 provinces. Free to browse and post.';
+    crumbLabel=catLabel;
+    ogType='product.group';
+    introText='PaMarket lists '+catLabel.toLowerCase()+' from sellers across all ten provinces of Zimbabwe, including Harare, Bulawayo, Mutare, Gweru and Masvingo. Use the filters above to narrow results by province, city or keyword, or browse everything currently available. Every listing is posted directly by the seller with real photos and a price in USD — there are no listing fees or commission on any sale, and you contact sellers directly through WhatsApp to arrange a safe, in-person meeting. New listings go live throughout the day after a quick review, so checking back regularly is worthwhile if you have not found the right match yet. Selling is completely free too — post your own listing in under two minutes with no charge at any step.';
+  }else if(place){
+    tag.textContent=place;
+    title.textContent='Listings in '+place+', Zimbabwe';
+    sub.textContent='Browse everything for sale in '+place+' on PaMarket. Updated continuously.';
+    pageTitle='Classifieds in '+place+', Zimbabwe | PaMarket';
+    pageDesc='Browse property, vehicles, electronics, jobs and more for sale in '+place+', Zimbabwe on PaMarket.';
+    crumbLabel=place;
+    introText='PaMarket lists classifieds from sellers across '+place+', spanning property, vehicles, electronics, furniture, jobs and more. Filter by category above to narrow down to exactly what you are looking for in '+place+', or browse the full range of what is currently for sale. Every listing includes a real photo and an accurate price in USD, posted directly by the person selling it — there is no middleman involved. As with every listing on PaMarket, there are no fees to browse, post, or contact a seller directly, and you can reach out through WhatsApp as soon as you find something you like. If you are selling something yourself in '+place+', posting takes under two minutes and is completely free.';
+  }else if(state.q){
+    tag.textContent='Search';
+    title.textContent='Results for "'+state.q+'"';
+    sub.textContent='Live listings from real sellers. Updated continuously.';
+    pageTitle='Search: '+state.q+' | PaMarket Zimbabwe';
+    pageDesc='Search results for "'+state.q+'" on PaMarket, Zimbabwe\'s free marketplace.';
+    crumbLabel='Search';
+    introText='';
+  }else{
+    tag.textContent='Browse';
+    title.textContent='All listings across Zimbabwe';
+    sub.textContent='Live listings from real sellers. Updated continuously.';
+    pageTitle='Browse Listings — PaMarket Zimbabwe';
+    pageDesc='Thousands of live listings across Zimbabwe. Updated daily.';
+    crumbLabel='Browse';
+    introText='PaMarket lists thousands of live classifieds across all ten provinces of Zimbabwe, covering property, vehicles, electronics, furniture, jobs and more. Every listing is posted directly by real sellers — there are no listing fees or commission on any sale, and you contact sellers directly to arrange a safe, in-person transaction. Use the category and location filters above to narrow results by what you are looking for and where you are based, whether that is Harare, Bulawayo, Mutare, or any of the other cities and provinces PaMarket covers. New listings are added continuously throughout the day, so it is worth checking back regularly if you do not find what you need on your first visit. Selling is just as free as browsing — post your own listing in under two minutes with no charge to list, promote, or complete a sale.';
   }
 
-  function nowIso() { return encodeURIComponent(new Date().toISOString()); }
-  function baseQP() {
-    var qp = ['status=eq.active', 'expires_at=gt.' + nowIso()];
-    if (state.cat) qp.push('category=eq.' + encodeURIComponent(state.cat));
-    if (state.subcat) qp.push('attributes->>subcat=eq.' + encodeURIComponent(state.subcat));
-    if (state.province) qp.push('province=ilike.*' + encodeURIComponent(state.province) + '*');
-    if (state.city) qp.push('city=ilike.*' + encodeURIComponent(state.city) + '*');
-    if (state.q) qp.push('title=ilike.*' + encodeURIComponent(state.q) + '*');
-    if (state.minPrice) qp.push('price=gte.' + encodeURIComponent(state.minPrice));
-    if (state.maxPrice) qp.push('price=lte.' + encodeURIComponent(state.maxPrice));
-    if (state.condition) qp.push('condition=eq.' + encodeURIComponent(state.condition));
-    if (state.sellerType === 'business') qp.push('business_id=not.is.null');
-    if (state.sellerType === 'individual') qp.push('business_id=is.null');
-    return qp;
+  const introEl=document.getElementById('browseIntro');
+  const introSection=document.getElementById('browseIntroSection');
+  if(introEl&&introSection){
+    if(introText){introEl.textContent=introText;introSection.classList.remove('hidden');}
+    else{introSection.classList.add('hidden');}
   }
 
-  function pushUrl() {
-    var qs = new URLSearchParams();
-    if (params.get('shops')) qs.set('shops', '1');
-    if (state.cat) qs.set('cat', state.cat);
-    if (state.subcat) qs.set('sub', state.subcat);
-    if (state.province) qs.set('province', state.province);
-    if (state.city) qs.set('city', state.city);
-    if (state.q) qs.set('q', state.q);
-    if (state.minPrice) qs.set('min', state.minPrice);
-    if (state.maxPrice) qs.set('max', state.maxPrice);
-    if (state.condition) qs.set('condition', state.condition);
-    if (state.sellerType) qs.set('seller', state.sellerType);
-    if (state.sort !== 'created_at.desc') qs.set('sort', state.sort);
-    if (state.page > 1) qs.set('page', String(state.page));
-    if (state.viewMode && state.viewMode !== 'grid') qs.set('view', state.viewMode);
-    var s = qs.toString();
-    history.replaceState(null, '', location.pathname + (s ? '?' + s : ''));
-  }
-
-  // withId=true tags the card with a real listing id + coordinates so the
-  // Split Map & List view (js/controllers/browse-map.js) can highlight it
-  // from a pin click/hover without a second card template. Grid/List views
-  // don't pass this — no point paying for unused id/data attributes there.
-  function listingCard(l, withId) {
-    var img = (l.photos && l.photos[0]) || 'img/icon-512.png';
-    var loc = [l.city, l.province].filter(Boolean).join(', ');
-    var zig = money(Math.round((Number(l.price) || 0) * ILLUSTRATIVE_ZIG_RATE));
-    var condBadge = l.condition && CONDITION_LABELS[l.condition] ? '<span class="absolute top-2 left-2 rounded-full bg-primary text-on-primary text-[10px] font-bold px-2 py-1">' + esc(CONDITION_LABELS[l.condition]) + '</span>' : '';
-    var bizBadge = l.business_id ? '<span class="absolute top-2 ' + (condBadge ? 'left-2 mt-6' : 'left-2') + ' rounded-full bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold px-2 py-1 flex items-center gap-1"><span class="pm-material text-[11px]">verified</span>Verified Business</span>' : '';
-    var idAttrs = withId ? ' id="pm-map-card-' + esc(l.id) + '" data-listing-id="' + esc(l.id) + '"' + (l.latitude != null && l.longitude != null ? ' data-lat="' + esc(l.latitude) + '" data-lng="' + esc(l.longitude) + '"' : '') : '';
-    return '' +
-      '<a href="detail.html?id=' + encodeURIComponent(l.id) + '"' + idAttrs + ' class="group rounded-xl border border-outline-variant bg-surface-container-lowest overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">' +
-        '<div class="relative aspect-[4/3] bg-surface-container">' +
-          '<img src="' + img + '" alt="' + esc(l.title) + '" loading="lazy" class="w-full h-full object-cover">' +
-          condBadge + bizBadge +
-          '<button type="button" aria-label="Save to favourites" onclick="event.preventDefault()" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest/90 flex items-center justify-center text-on-surface-variant"><span class="pm-material text-[18px]">favorite_border</span></button>' +
-          (loc ? '<span class="absolute bottom-2 left-2 rounded-full bg-on-background/70 text-inverse-on-surface text-[10px] font-semibold px-2 py-1">' + esc(loc) + '</span>' : '') +
-        '</div>' +
-        '<div class="p-3 flex flex-col flex-1">' +
-          '<div class="flex items-center justify-between text-[11px] text-on-surface-variant mb-1"><span>' + esc(l.seller_name || 'PaMarket seller') + '</span><span>' + timeAgo(l.created_at) + '</span></div>' +
-          '<h3 class="text-body-md font-body-md font-semibold text-on-background line-clamp-2 min-h-[2.5em]">' + esc(l.title) + '</h3>' +
-          '<div class="mt-2 rounded-lg bg-surface-container px-3 py-2">' +
-            '<div class="text-price-primary font-price-primary text-on-background">' + esc(l.currency || 'USD') + ' ' + money(l.price) + '</div>' +
-            '<div class="text-price-secondary font-price-secondary text-on-surface-variant">≈ ZiG ' + zig + ' (illustrative)</div>' +
-          '</div>' +
-          '<div class="mt-2 grid grid-cols-2 gap-2">' +
-            '<a href="https://wa.me/?text=' + encodeURIComponent('Hi, I saw "' + l.title + '" on PaMarket: https://pamarketzw.com/detail.html?id=' + l.id) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rounded-lg bg-primary text-on-primary text-label-sm font-label-sm py-2 text-center">WhatsApp Seller</a>' +
-            '<a href="detail.html?id=' + encodeURIComponent(l.id) + '" onclick="event.stopPropagation()" class="rounded-lg border border-outline-variant text-label-sm font-label-sm py-2 text-center flex items-center justify-center"><span class="pm-material text-[16px]">call</span></a>' +
-          '</div>' +
-        '</div>' +
-      '</a>';
-  }
-
-  function renderChips() {
-    var chips = [];
-    if (state.province) chips.push(['Province: ' + state.province, function () { state.province = ''; refreshAll(); }]);
-    if (state.city) chips.push(['City: ' + state.city, function () { state.city = ''; refreshAll(); }]);
-    if (state.cat) chips.push([CAT_LABELS[state.cat] || state.cat, function () { state.cat = ''; state.subcat = ''; refreshAll(); }]);
-    if (state.subcat) chips.push([SUBCAT_LABELS[state.subcat] || state.subcat, function () { state.subcat = ''; refreshAll(); }]);
-    if (state.minPrice || state.maxPrice) chips.push(['USD ' + (state.minPrice || '0') + '–' + (state.maxPrice || '∞'), function () { state.minPrice = ''; state.maxPrice = ''; refreshAll(); }]);
-    if (state.condition) chips.push([CONDITION_LABELS[state.condition] || state.condition, function () { state.condition = ''; refreshAll(); }]);
-    if (state.sellerType) chips.push([state.sellerType === 'business' ? 'Verified Business Sellers' : 'Individual Sellers', function () { state.sellerType = ''; refreshAll(); }]);
-    if (state.q) chips.push(['"' + state.q + '"', function () { state.q = ''; refreshAll(); }]);
-
-    var row = document.getElementById('filterChipsRow');
-    if (!chips.length) { row.innerHTML = ''; return; }
-    window.__pmChipHandlers = chips.map(function (c) { return c[1]; });
-    row.innerHTML = chips.map(function (c, i) {
-      return '<button type="button" onclick="window.__pmChipHandlers[' + i + ']()" class="inline-flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1.5 text-label-sm font-label-sm text-on-surface-variant hover:bg-surface-container-high">' + esc(c[0]) + ' <span class="pm-material text-[14px]">close</span></button>';
-    }).join('') + '<button type="button" onclick="PMBrowse.resetFilters()" class="text-label-sm font-label-sm text-primary font-semibold ml-1">Reset All</button>';
-  }
-
-  function renderHeading(total) {
-    var h1 = document.getElementById('pageH1');
-    var crumbCat = document.getElementById('crumbCat');
-    var crumbLocWrap = document.getElementById('crumbLocWrap');
-    var crumbLoc = document.getElementById('crumbLoc');
-    var catLabel = CAT_LABELS[state.cat] || (state.cat ? state.cat : 'All Listings');
-    var locLabel = state.city || state.province || '';
-    var title = catLabel + (locLabel ? ' in ' + locLabel : ' in Zimbabwe');
-    h1.textContent = title;
-    crumbCat.textContent = catLabel;
-    if (locLabel) { crumbLocWrap.classList.remove('hidden'); crumbLocWrap.classList.add('flex'); crumbLoc.textContent = locLabel; }
-    else { crumbLocWrap.classList.add('hidden'); }
-
-    document.title = title + ' — PaMarket Zimbabwe';
-    document.getElementById('pageTitle').textContent = title + ' — PaMarket Zimbabwe';
-    var desc = 'Browse ' + total.toLocaleString() + ' real, live ' + catLabel.toLowerCase() + ' listings' + (locLabel ? ' in ' + locLabel : ' across Zimbabwe') + ' on PaMarket — no listing fees, no commission.';
-    document.getElementById('metaDesc').setAttribute('content', desc);
-    document.getElementById('ogTitle').setAttribute('content', title + ' — PaMarket Zimbabwe');
-    document.getElementById('ogDesc').setAttribute('content', desc);
-    document.getElementById('twTitle').setAttribute('content', title + ' — PaMarket Zimbabwe');
-    document.getElementById('twDesc').setAttribute('content', desc);
-
-    var start = total === 0 ? 0 : (state.page - 1) * PAGE_SIZE + 1;
-    var end = Math.min(total, state.page * PAGE_SIZE);
-    document.getElementById('resultsSummary').textContent = total === 0 ? 'No listings match these filters yet.' : ('Showing ' + start + '–' + end + ' of ' + total.toLocaleString() + ' verified listings');
-  }
-
-  function renderPagination(total) {
-    var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    var row = document.getElementById('paginationRow');
-    if (pages <= 1) { row.innerHTML = ''; return; }
-    var html = '';
-    html += '<button type="button" ' + (state.page <= 1 ? 'disabled' : '') + ' onclick="PMBrowse.goPage(' + (state.page - 1) + ')" class="rounded-full border border-outline-variant px-3 py-2 text-label-sm font-label-sm disabled:opacity-40">Previous</button>';
-    html += '<span class="text-body-sm font-body-sm text-on-surface-variant">Page ' + state.page + ' of ' + pages + ' (' + total.toLocaleString() + ' total)</span>';
-    html += '<button type="button" ' + (state.page >= pages ? 'disabled' : '') + ' onclick="PMBrowse.goPage(' + (state.page + 1) + ')" class="rounded-full border border-outline-variant px-3 py-2 text-label-sm font-label-sm disabled:opacity-40">Next</button>';
-    row.innerHTML = html;
-  }
-
-  function fetchTotal() {
-    return window.PMServiceTransport.exactCount('listings?' + baseQP().join('&'));
-  }
-
-  function fetchPage() {
-    var qp = baseQP().slice();
-    qp.push('select=id,title,price,currency,category,province,city,photos,created_at,condition,business_id,seller_name,latitude,longitude');
-    qp.push('order=' + state.sort);
-    qp.push('limit=' + PAGE_SIZE);
-    qp.push('offset=' + ((state.page - 1) * PAGE_SIZE));
-    return window.PMServiceTransport.fetchJson('listings?' + qp.join('&'));
-  }
-
-  // Businesses/"Shops" mode (browse.html?shops=1) — linked from index.html's
-  // nav ("Businesses") and footer ("Verified Business Storefronts"). The
-  // mockup screenshot for this page only covered the category/listing view,
-  // so this reuses the same real businesses query index.html already uses
-  // (js/services/businesses.js) rendered into the same grid area, with the
-  // location/category/price/condition filters hidden since they don't apply
-  // to businesses.
-  function businessCard(b) {
-    var loc = [b.city, b.province].filter(Boolean).join(', ');
-    var verified = Number(b.verification_level) >= 2;
-    return '' +
-      '<a href="business.html?id=' + encodeURIComponent(b.id) + '" class="rounded-xl border border-outline-variant bg-surface-container-lowest p-space-lg shadow-sm hover:shadow-md transition-shadow flex flex-col">' +
-        '<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant font-bold text-lg">' + esc((b.name || '?').trim().charAt(0).toUpperCase()) + '</div>' +
-        (verified ? '<span class="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold px-2 py-1"><span class="pm-material text-[12px]">verified</span>Verified Merchant</span>' : '') +
-        '<h3 class="mt-2 text-headline-sm font-headline-sm text-on-background">' + esc(b.name) + '</h3>' +
-        '<p class="text-body-sm font-body-sm text-on-surface-variant">' + esc(loc || 'Zimbabwe') + '</p>' +
-        '<p class="mt-1 text-body-sm font-body-sm text-on-surface-variant flex-1 line-clamp-2">' + esc(b.description || '') + '</p>' +
-        '<span class="mt-3 rounded-lg bg-on-background text-inverse-on-surface text-label-sm font-label-sm py-2 text-center">Visit Store</span>' +
-      '</a>';
-  }
-
-  function refreshShops() {
-    document.getElementById('filtersSidebar').classList.add('hidden');
-    document.getElementById('pageH1').textContent = 'Verified Business Storefronts in Zimbabwe';
-    document.getElementById('crumbCat').textContent = 'Verified Businesses';
-    document.title = 'Verified Business Storefronts — PaMarket Zimbabwe';
-    document.getElementById('pageTitle').textContent = 'Verified Business Storefronts — PaMarket Zimbabwe';
-    // Businesses have no lat/lng in this schema — the map view mode only
-    // applies to real listings, so hide it rather than show an empty map.
-    var vmg = document.getElementById('viewModeGroup');
-    if (vmg) vmg.classList.add('hidden');
-    var split = document.getElementById('mapSplitView');
-    if (split) split.classList.add('hidden');
-    var grid = document.getElementById('resultsGrid');
-    grid.classList.remove('hidden');
-    grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-base';
-    grid.innerHTML = '<div class="col-span-full text-center text-body-sm text-on-surface-variant py-space-lg">Loading businesses…</div>';
-    document.getElementById('paginationRow').innerHTML = '';
-    window.PMBusinesses.fetchBusinesses({ q: state.q, limit: 60 }).then(function (rows) {
-      rows = rows || [];
-      document.getElementById('resultsSummary').textContent = rows.length + ' verified business' + (rows.length === 1 ? '' : 'es') + ' on PaMarket';
-      grid.innerHTML = rows.length ? rows.map(businessCard).join('') :
-        '<div class="col-span-full text-center text-body-sm text-on-surface-variant py-space-lg">No verified storefronts yet. <a class="text-primary font-semibold" href="open-shop.html">Open a free shop →</a></div>';
-    }).catch(function () {
-      grid.innerHTML = '<div class="col-span-full text-center text-body-sm text-on-surface-variant py-space-lg">Could not load businesses right now.</div>';
-    });
-  }
-
-  function refreshResults() {
-    if (params.get('shops')) { refreshShops(); return; }
-    var grid = document.getElementById('resultsGrid');
-    grid.innerHTML = '<div class="col-span-full text-center text-body-sm text-on-surface-variant py-space-lg">Loading listings…</div>';
-    Promise.all([fetchTotal(), fetchPage()]).then(function (r) {
-      var total = r[0], rows = r[1] || [];
-      lastRows = rows;
-      renderHeading(total);
-      renderPagination(total);
-      grid.innerHTML = rows.length ? rows.map(function (l) { return listingCard(l, false); }).join('') :
-        '<div class="col-span-full text-center text-body-sm text-on-surface-variant py-space-lg">No listings match these filters yet. Try widening your search or <a class="text-primary font-semibold" href="post-ad.html">post the first one</a>.</div>';
-      if (state.viewMode === 'split' && window.PMBrowseMap) window.PMBrowseMap.render(rows, listingCard);
-    }).catch(function () {
-      grid.innerHTML = '<div class="col-span-full text-center text-body-sm text-on-surface-variant py-space-lg">Could not load listings right now. Please try again shortly.</div>';
-    });
-  }
-
-  function catCountQP(cat, subcat) {
-    var qp = ['status=eq.active', 'expires_at=gt.' + nowIso()];
-    if (cat) qp.push('category=eq.' + encodeURIComponent(cat));
-    if (subcat) qp.push('attributes->>subcat=eq.' + encodeURIComponent(subcat));
-    return qp.join('&');
-  }
-
-  function renderCategoryTree() {
-    var cats = Object.keys(CAT_LABELS);
-    Promise.all(cats.map(function (c) { return window.PMServiceTransport.exactCount('listings?' + catCountQP(c)); })).then(function (counts) {
-      var tree = document.getElementById('categoryTree');
-      tree.innerHTML = cats.map(function (c, i) {
-        var active = state.cat === c;
-        return '<button type="button" onclick="PMBrowse.setCategory(\'' + c + '\')" class="flex items-center justify-between rounded-lg px-2 py-1.5 text-left ' + (active ? 'bg-primary-fixed text-on-primary-fixed-variant font-semibold' : 'hover:bg-surface-container') + '"><span>' + esc(CAT_LABELS[c]) + '</span><span class="text-on-surface-variant">' + counts[i] + '</span></button>';
-      }).join('');
-      renderSubcatTree();
-    }).catch(function () {});
-  }
-
-  function renderSubcatTree() {
-    var wrap = document.getElementById('subcatTree');
-    if (state.cat !== 'electronics') { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
-    var subs = Object.keys(SUBCAT_LABELS);
-    Promise.all(subs.map(function (s) { return window.PMServiceTransport.exactCount('listings?' + catCountQP('electronics', s)); })).then(function (counts) {
-      wrap.classList.remove('hidden');
-      wrap.innerHTML = subs.map(function (s, i) {
-        if (!counts[i]) return '';
-        var active = state.subcat === s;
-        return '<button type="button" onclick="PMBrowse.setSubcat(\'' + s + '\')" class="flex items-center justify-between rounded-lg px-2 py-1 text-left ' + (active ? 'text-primary font-semibold' : 'text-on-surface-variant hover:text-on-background') + '"><span>' + esc(SUBCAT_LABELS[s]) + '</span><span>' + counts[i] + '</span></button>';
-      }).join('');
-    }).catch(function () {});
-  }
-
-  function renderConditionChecks() {
-    var conds = Object.keys(CONDITION_LABELS);
-    Promise.all(conds.map(function (c) {
-      var qp = ['status=eq.active', 'expires_at=gt.' + nowIso(), 'condition=eq.' + encodeURIComponent(c)];
-      if (state.cat) qp.push('category=eq.' + encodeURIComponent(state.cat));
-      return window.PMServiceTransport.exactCount('listings?' + qp.join('&'));
-    })).then(function (counts) {
-      var wrap = document.getElementById('conditionChecks');
-      wrap.innerHTML = conds.map(function (c, i) {
-        var checked = state.condition === c;
-        return '<label class="flex items-center gap-2"><input type="checkbox" class="pm-checkbox" ' + (checked ? 'checked' : '') + ' onchange="PMBrowse.setCondition(\'' + c + '\', this.checked)"><span>' + esc(CONDITION_LABELS[c]) + '</span><span class="ml-auto text-on-surface-variant text-body-sm">' + counts[i] + '</span></label>';
-      }).join('');
-    }).catch(function () {});
-  }
-
-  function renderSellerType() {
-    var qpBiz = ['status=eq.active', 'expires_at=gt.' + nowIso(), 'business_id=not.is.null'];
-    var qpInd = ['status=eq.active', 'expires_at=gt.' + nowIso(), 'business_id=is.null'];
-    if (state.cat) { qpBiz.push('category=eq.' + encodeURIComponent(state.cat)); qpInd.push('category=eq.' + encodeURIComponent(state.cat)); }
-    Promise.all([window.PMServiceTransport.exactCount('listings?' + qpBiz.join('&')), window.PMServiceTransport.exactCount('listings?' + qpInd.join('&'))]).then(function (r) {
-      var wrap = document.getElementById('sellerTypeRadios');
-      var opts = [['', 'All Sellers', r[0] + r[1]], ['business', 'Verified Business Sellers', r[0]], ['individual', 'Individual Sellers', r[1]]];
-      wrap.innerHTML = opts.map(function (o) {
-        var checked = state.sellerType === o[0];
-        return '<label class="flex items-center gap-2"><input type="radio" name="sellerType" class="pm-checkbox" ' + (checked ? 'checked' : '') + ' onchange="PMBrowse.setSellerType(\'' + o[0] + '\')"><span>' + esc(o[1]) + '</span><span class="ml-auto text-on-surface-variant text-body-sm">' + o[2] + '</span></label>';
-      }).join('');
-    }).catch(function () {});
-  }
-
-  function renderPriceQuickButtons() {
-    var opts = [[0, 50, '$0 – $50'], [50, 200, '$50 – $200'], [200, 1000, '$200 – $1,000'], [1000, '', '$1,000+']];
-    var wrap = document.getElementById('priceQuickButtons');
-    wrap.innerHTML = opts.map(function (o) {
-      var active = String(state.minPrice) === String(o[0]) && String(state.maxPrice) === String(o[1]);
-      return '<button type="button" onclick="PMBrowse.setPriceRange(' + o[0] + ',\'' + o[1] + '\')" class="rounded-full border px-2.5 py-1 text-[11px] font-semibold ' + (active ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant text-on-surface-variant hover:bg-surface-container') + '">' + o[2] + '</button>';
-    }).join('');
-  }
-
-  function syncFormFields() {
-    var fp = document.getElementById('fProvince'), fc = document.getElementById('fCity');
-    if (fp) fp.value = state.province;
-    if (fc) fc.value = state.city;
-    document.getElementById('fMinPrice').value = state.minPrice;
-    document.getElementById('fMaxPrice').value = state.maxPrice;
-    document.getElementById('sortSelect').value = state.sort;
-  }
-
-  function refreshAll() {
-    pushUrl();
-    if (params.get('shops')) { refreshResults(); return; }
-    syncFormFields();
-    renderChips();
-    renderCategoryTree();
-    renderConditionChecks();
-    renderSellerType();
-    renderPriceQuickButtons();
-    refreshResults();
-  }
-
-  // Toggles between the 3 view modes wired to the pill buttons in
-  // browse.html's control bar: 'split' (real map + condensed list, reusing
-  // the same card renderer via renderCard/PMBrowseMap), 'grid' (existing
-  // grid) and 'list' (existing single-column layout — no separate list-only
-  // template was worth building, this just reuses the grid's own 1-col
-  // class, same as the pre-existing viewListBtn behaviour did).
-  function applyViewMode() {
-    var grid = document.getElementById('resultsGrid');
-    var split = document.getElementById('mapSplitView');
-    if (!grid || !split) return;
-    var mode = state.viewMode || 'grid';
-    var btnIds = { split: 'viewSplitBtn', grid: 'viewGridBtn', list: 'viewListBtn' };
-    Object.keys(btnIds).forEach(function (m) {
-      var b = document.getElementById(btnIds[m]);
-      if (!b) return;
-      var active = m === mode;
-      b.className = 'flex items-center gap-1.5 px-3 h-9 ' + (active ? 'bg-primary text-on-primary' : 'text-on-surface-variant');
-      b.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-
-    if (mode === 'split') {
-      grid.classList.add('hidden');
-      split.classList.remove('hidden');
-      if (window.PMBrowseMap) {
-        window.PMBrowseMap.render(lastRows, listingCard);
-        window.PMBrowseMap.invalidateSize();
-      }
-    } else {
-      split.classList.add('hidden');
-      grid.classList.remove('hidden');
-      grid.className = 'grid gap-space-base ' + (mode === 'list' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3');
+  const popEl=document.getElementById('popularCities');
+  if(popEl){
+    let popLinks=[];
+    if(state.cat&&!place){
+      popLinks=ZW_CITIES.slice(0,4).map(c=>({label:catLabel+' in '+c,href:'browse?cat='+state.cat+'&city='+encodeURIComponent(c)}));
+    }else if(state.cat&&place){
+      popLinks=[{label:'All '+catLabel+' in Zimbabwe',href:'browse?cat='+state.cat}];
+    }
+    if(popLinks.length){
+      popEl.classList.remove('hidden');
+      popEl.innerHTML=popLinks.map(l=>'<a href="'+l.href+'" style="background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--sub)">'+l.label+'</a>').join('');
+    }else{
+      popEl.classList.add('hidden');
     }
   }
 
-  window.PMBrowse = {
-    renderCard: listingCard,
-    setViewMode: function (mode) {
-      state.viewMode = mode;
-      pushUrl();
-      applyViewMode();
-    },
-    applyFilters: function () {
-      state.province = document.getElementById('fProvince').value;
-      state.city = document.getElementById('fCity').value;
-      state.minPrice = document.getElementById('fMinPrice').value;
-      state.maxPrice = document.getElementById('fMaxPrice').value;
-      state.page = 1;
-      refreshAll();
-    },
-    resetFilters: function () {
-      state = { cat: '', subcat: '', province: '', city: '', q: '', minPrice: '', maxPrice: '', condition: '', sellerType: '', sort: 'created_at.desc', page: 1 };
-      refreshAll();
-    },
-    setCategory: function (c) { state.cat = state.cat === c ? '' : c; state.subcat = ''; state.page = 1; refreshAll(); },
-    setSubcat: function (s) { state.subcat = state.subcat === s ? '' : s; state.page = 1; refreshAll(); },
-    setCondition: function (c, checked) { state.condition = checked ? c : ''; state.page = 1; refreshAll(); },
-    setSellerType: function (t) { state.sellerType = t; state.page = 1; refreshAll(); },
-    setPriceRange: function (min, max) { state.minPrice = String(min); state.maxPrice = String(max); state.page = 1; refreshAll(); },
-    goPage: function (p) { state.page = Math.max(1, p); window.scrollTo({ top: 0, behavior: 'smooth' }); refreshAll(); }
-  };
+  document.title=pageTitle;
+  document.getElementById('pageTitle').textContent=pageTitle;
+  document.getElementById('metaDesc').setAttribute('content',pageDesc);
+  document.getElementById('ogTitle').setAttribute('content',pageTitle);
+  document.getElementById('ogDesc').setAttribute('content',pageDesc);
+  document.getElementById('twTitle').setAttribute('content',pageTitle);
+  document.getElementById('twDesc').setAttribute('content',pageDesc);
+  document.getElementById('crumbCur').textContent=crumbLabel;
+  const canonicalUrl='https://pamarketzw.com/browse'+(state.shops?'?shops=1':(state.cat?'?cat='+state.cat:''));
+  document.getElementById('canonicalLink').setAttribute('href',canonicalUrl);
+  document.getElementById('ogUrl').setAttribute('content',canonicalUrl);
 
-  window.PMHeaderSearch = function () {
-    var cat = document.getElementById('hpCat'), prov = document.getElementById('hpProvince'), q = document.getElementById('hpQ');
-    if (cat && cat.value === 'jobs') { window.location.href = 'jobs.html' + (q && q.value ? '?q=' + encodeURIComponent(q.value) : ''); return; }
-    state.cat = cat ? cat.value : state.cat;
-    state.province = prov ? prov.value : state.province;
-    state.q = q ? q.value : state.q;
-    state.page = 1;
-    refreshAll();
-  };
+  document.getElementById('rentalBanner').classList.toggle('hidden',state.cat!=='vehicles');
+  renderCategoryHero();
 
-  document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('sortSelect').addEventListener('change', function () { state.sort = this.value; state.page = 1; refreshAll(); });
-    applyViewMode();
-    document.getElementById('hpQ').value = state.q;
-    // Re-scope the city select to the chosen province once real provinces load.
-    document.getElementById('fProvince').addEventListener('change', function () {
-      var val = this.value;
-      window.PMTaxonomy && window.PMTaxonomy.fetchCities(val || null).then(function (opts) {
-        if (opts) window.PMTaxonomy.populateSelect(document.getElementById('fCity'), opts);
-      });
-    });
-    refreshAll();
+  // The shared header (stamped by tools/build-includes.js) may not carry
+  // these ids — never let a missing element kill init, which blocks
+  // runQuery() and leaves the whole browse page stuck on "Loading…".
+  const postAdHref='post-ad'+(state.cat==='vehicles'?'?type=vehicles':'');
+  const postAdBtn=document.getElementById('postAdBtn');
+  if(postAdBtn)postAdBtn.href=postAdHref;
+  const postAdBtnMob=document.getElementById('postAdBtnMob');
+  if(postAdBtnMob)postAdBtnMob.href=postAdHref;
+}
+
+function highlightCatNav(){
+  document.querySelectorAll('#catNav .cnav').forEach(a=>{
+    const dc=a.getAttribute('data-cat');
+    if(state.shops)a.classList.toggle('on',dc==='shops');
+    else a.classList.toggle('on',dc===state.cat && state.cat!=='');
   });
-})();
+}
+
+async function runQuery(append){
+  const grid=document.getElementById('resultsGrid');
+  const countEl=document.getElementById('resultsCount');
+  const loadBtn=document.getElementById('loadMoreBtn');
+  const noun=state.shops?'shop':'listing';
+  grid.classList.toggle('shops-grid',state.shops);
+  if(!append){grid.innerHTML=skeletons(8);countEl.textContent='Loading '+noun+'s…';loadBtn.classList.add('hidden')}
+  try{
+    let rows,cardFn;
+    if(state.shops){
+      rows=await PMBusinesses.fetchBusinesses({q:state.q||undefined,limit:PAGE_SIZE,offset:state.offset});
+      cardFn=bcard;
+    }else{
+      // Default "newest" sort gets paid boosts pinned first (featuredFirst);
+      // an explicit sort choice (price etc.) is respected untouched.
+      const defaultSort=state.sort==='created_at.desc';
+      rows=await PMListings.fetchListings({category:state.cat||undefined,subcat:state.sub||undefined,q:state.q||undefined,province:state.prov||undefined,city:state.city||undefined,businessId:state.business||undefined,order:defaultSort?undefined:state.sort,featuredFirst:defaultSort,limit:PAGE_SIZE,offset:state.offset});
+      cardFn=gcard;
+    }
+    if(!append)grid.innerHTML='';
+    if(!rows.length && !append){
+      grid.innerHTML=PMFeedback.empty('No '+noun+'s found'+(state.shops?' yet.':' for these filters.'),{style:'grid-column:1/-1',actionHref:'browse',actionLabel:'Clear filters and browse everything'});
+      countEl.textContent='0 '+noun+'s found';
+      return;
+    }
+    grid.insertAdjacentHTML('beforeend',rows.map((r,i)=>cardFn(r,state.offset+i)).join(''));
+    if(!state.shops)syncFavouriteButtons();
+    const shown=grid.querySelectorAll('.gcard, .shopcard').length;
+    countEl.innerHTML='<b>'+shown+'</b> '+noun+(shown===1?'':'s')+' shown';
+    loadBtn.classList.toggle('hidden',rows.length<PAGE_SIZE);
+    if(!state.shops && !append)updateItemListSchema(rows);
+  }catch(e){
+    if(!append)grid.innerHTML=PMFeedback.error('Couldn\'t load '+noun+'s right now. Please try again shortly.',{style:'grid-column:1/-1'});
+    countEl.textContent='';
+  }
+}
+
+let loadingMore=false;
+async function loadMore(){
+  if(loadingMore)return;
+  loadingMore=true;
+  state.offset+=PAGE_SIZE;
+  try{await runQuery(true);}finally{loadingMore=false;}
+}
+
+// Infinite scroll: auto-trigger Load More when the button nears the viewport.
+// The button stays as a visible manual fallback (and for browsers without
+// IntersectionObserver). runQuery hides it when a page comes back short.
+function setupInfiniteScroll(){
+if('IntersectionObserver' in window){
+  const btn=document.getElementById('loadMoreBtn');
+  if(btn)new IntersectionObserver((entries)=>{
+    if(entries.some(e=>e.isIntersecting)&&!btn.classList.contains('hidden'))loadMore();
+  },{rootMargin:'600px'}).observe(btn);
+}
+}
+
+function syncFromUrl(){
+  const p=new URLSearchParams(location.search);
+  state.cat=p.get('cat')||'';
+  state.q=p.get('q')||'';
+  state.prov=p.get('prov')||'';
+  state.city=p.get('city')||'';
+  state.shops=p.get('shops')==='1';
+  state.business=p.get('business')||'';
+  state.sub=p.get('sub')||'';
+  state.sort=SUPPORTED_SORTS.has(p.get('sort'))?p.get('sort'):'created_at.desc';
+  document.getElementById('fCat').value=state.cat;
+  document.getElementById('fQ').value=state.q;
+  document.getElementById('fProv').value=state.prov;
+  document.getElementById('fCity').value=state.city;
+  document.getElementById('sortSelect').value=state.sort;
+  if(state.shops){
+    document.getElementById('filtersPanel').classList.add('hidden');
+    document.getElementById('browseLayout').classList.add('no-filters');
+  }
+}
+
+function applyFilters(){
+  state.cat=document.getElementById('fCat').value;
+  state.q=document.getElementById('fQ').value.trim();
+  state.prov=document.getElementById('fProv').value;
+  state.city=document.getElementById('fCity').value;
+  const selectedSort=document.getElementById('sortSelect').value;
+  state.sort=SUPPORTED_SORTS.has(selectedSort)?selectedSort:'created_at.desc';
+  document.getElementById('sortSelect').value=state.sort;
+  state.offset=0;
+  const u=new URLSearchParams();
+  if(state.cat)u.set('cat',state.cat);
+  if(state.q)u.set('q',state.q);
+  if(state.prov)u.set('prov',state.prov);
+  if(state.city)u.set('city',state.city);
+  if(state.sort!=='created_at.desc')u.set('sort',state.sort);
+  history.replaceState(null,'','browse'+(u.toString()?'?'+u.toString():''));
+  updateHero();highlightCatNav();runQuery(false);
+}
+
+function applyFiltersMobile(){
+  document.getElementById('fCat').value=document.getElementById('fCatM').value;
+  document.getElementById('fQ').value=document.getElementById('fQM').value;
+  document.getElementById('fProv').value=document.getElementById('fProvM').value;
+  document.getElementById('fCity').value=document.getElementById('fCityM').value;
+  closeDrawer();
+  applyFilters();
+}
+
+async function saveCurrentSearch(){
+  const session=PM.getSession();
+  if(!(session&&session.user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
+  const filters={category:state.cat||'',q:state.q||'',province:state.prov||'',city:state.city||'',sort:state.sort||'created_at.desc'};
+  const suggestion=[state.q,state.city||state.prov,state.cat].filter(Boolean).join(' · ')||'All listings';
+  const name=prompt('Name this search',suggestion);
+  if(name===null)return;
+  const button=document.getElementById('saveSearchBtn');button.disabled=true;
+  try{await PMSavedContent.saveSearch(name||suggestion,filters);button.textContent='Search saved';button.classList.add('saved');}
+  catch(e){alert('Could not save this search. Please try again.');}
+  finally{button.disabled=false;}
+}
+
+async function toggleFavourite(button){
+  const session=PM.getSession();
+  if(!(session&&session.user)){location.href='auth?return='+encodeURIComponent(location.pathname+location.search);return;}
+  const id=button.getAttribute('data-save-listing');button.disabled=true;
+  try{if(button.classList.contains('saved')){await PMSavedContent.unsaveListing(id);button.classList.remove('saved');button.setAttribute('aria-label','Save listing');}else{await PMSavedContent.saveListing(id);button.classList.add('saved');button.setAttribute('aria-label','Remove from favourites');}}
+  catch(e){alert('Could not update favourites. Please try again.');}
+  finally{button.disabled=false;}
+}
+
+function syncFavouriteButtons(){
+  if(!(PM.getSession&&PM.getSession()))return;
+  PMSavedContent.listFavouriteIds().then(rows=>{const ids=new Set(rows.map(r=>String(r.listing_id)));document.querySelectorAll('[data-save-listing]').forEach(b=>b.classList.toggle('saved',ids.has(b.getAttribute('data-save-listing'))));}).catch(()=>{});
+}
+
+function openDrawer(){
+  document.getElementById('fCatM').value=state.cat;
+  document.getElementById('fProvM').value=state.prov;
+  document.getElementById('fCityM').value=state.city;
+  document.getElementById('fQM').value=state.q;
+  document.getElementById('drawerBg').classList.add('show');
+  document.getElementById('filterDrawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawerBg').classList.remove('show');
+  document.getElementById('filterDrawer').classList.remove('open');
+}
+
+// ── Header search ──
+function doSearch(){
+  const q=document.getElementById('hQ')?.value?.trim();
+  const cat=document.getElementById('hCat')?.value;
+  if(cat==='jobs'){window.location='jobs'+(q?'?q='+encodeURIComponent(q):'');return}
+  let u='browse?';
+  if(q)u+='q='+encodeURIComponent(q);
+  if(cat)u+=(q?'&':'')+'cat='+encodeURIComponent(cat);
+  window.location=u==='browse?'?'browse':u;
+}
+function toggleMob(){
+  document.getElementById('mobNav').classList.toggle('open');
+}
+function setupHeaderDismiss(){
+document.addEventListener('click',e=>{
+  const h=document.getElementById('hdr');
+  const n=document.getElementById('mobNav');
+  if(n && n.classList.contains('open') && h && !h.contains(e.target))n.classList.remove('open');
+});
+
+}
+
+let initialized=false;
+function init(){
+  if(initialized)return;
+  initialized=true;
+  setupInfiniteScroll();
+  setupHeaderDismiss();
+  syncFromUrl();
+  updateHero();
+  highlightCatNav();
+  runQuery(false);
+}
+function getState(){return Object.assign({},state);}
+const api=Object.freeze({init,getState,runQuery,loadMore,syncFromUrl,applyFilters,applyFiltersMobile,saveCurrentSearch,toggleFavourite,renderListingCard:gcard,renderBusinessCard:bcard,updateItemListSchema});
+root.PMBrowsePage=api;
+Object.assign(root,{loadMore,applyFilters,applyFiltersMobile,saveCurrentSearch,toggleFavourite,openDrawer,closeDrawer,doSearch,toggleMob});
+})(typeof self!=='undefined'?self:this);
