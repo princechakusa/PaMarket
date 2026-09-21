@@ -22,6 +22,7 @@ function loadSupabaseConfig() {
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
   { loc: '/browse', changefreq: 'daily', priority: '0.9' },
+  { loc: '/institutions', changefreq: 'daily', priority: '0.7' },
   { loc: '/download', changefreq: 'monthly', priority: '0.8' },
   // /browse?cat=X, ?shops=1 and ?city=X were previously listed here as
   // separate indexable URLs, but browse.html serves byte-identical initial
@@ -161,6 +162,10 @@ async function fetchActiveBusinessIds(cfg) {
   return fetchAllRows(cfg, 'businesses', 'id,name,updated_at', 'status=eq.active');
 }
 
+async function fetchActiveInstitutionIds(cfg) {
+  return fetchAllRows(cfg, 'institutions', 'id,updated_at', 'is_active=eq.true');
+}
+
 function xmlEscape(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -184,13 +189,19 @@ function profileUrlEntry(profile, today) {
   return urlEntry('/profile?id=' + profile.id, lastmod, 'monthly', '0.4');
 }
 
+function institutionUrlEntry(institution, today) {
+  const lastmod = institution.updated_at ? institution.updated_at.slice(0, 10) : today;
+  return urlEntry('/institution?id=' + institution.id, lastmod, 'weekly', '0.6');
+}
+
 async function main() {
   const cfg = loadSupabaseConfig();
-  const [listings, rentals, profiles, businesses] = await Promise.all([
+  const [listings, rentals, profiles, businesses, institutions] = await Promise.all([
     fetchActiveListingIds(cfg),
     fetchActiveRentalIds(cfg),
     fetchPublicProfileIds(cfg),
     fetchActiveBusinessIds(cfg),
+    fetchActiveInstitutionIds(cfg),
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -222,6 +233,10 @@ async function main() {
     xml += urlEntry('/' + PMSchema.businessPath(b), lastmod, 'weekly', '0.7');
   }
 
+  for (const i of institutions) {
+    xml += institutionUrlEntry(i, today);
+  }
+
   const blogPosts = loadBlogPosts();
   for (const post of blogPosts) {
     const lastmod = post.dateModified || post.datePublished || today;
@@ -236,6 +251,7 @@ async function main() {
     'sitemap.xml written with ' + STATIC_PAGES.length + ' static pages, ' +
     listings.length + ' listing pages, ' + rentals.length + ' rental pages, ' +
     profiles.length + ' profile pages, ' + businesses.length + ' business pages, ' +
+    institutions.length + ' institution pages, ' +
     blogPosts.length + ' blog posts.'
   );
 }
