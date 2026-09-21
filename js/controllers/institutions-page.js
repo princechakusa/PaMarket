@@ -119,5 +119,36 @@ document.getElementById('instProvince').addEventListener('change', function(){
   loadInstitutions();
 });
 
+// Hero "Find Campus" search box (mockup section 2) drives the SAME real
+// state.q / loadInstitutions() path as the #instSearch box below it -- no
+// separate/duplicate search logic, just a second real input bound to it.
+(function(){
+  var heroInput = document.getElementById('instHeroSearch');
+  var heroBtn = document.getElementById('instHeroSearchBtn');
+  if (!heroInput || !heroBtn) return;
+  function runHeroSearch(){
+    var v = heroInput.value.trim();
+    var mirror = document.getElementById('instSearch');
+    if (mirror) mirror.value = v;
+    state.q = v;
+    loadInstitutions();
+    document.getElementById('instListTitle').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  heroBtn.addEventListener('click', runHeroSearch);
+  heroInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') runHeroSearch(); });
+})();
+
+// Real "N Provinces • N Accredited Campuses" banner line (mockup section 2)
+// -- province count is the fixed real list of Zimbabwe's 10 provinces used
+// site-wide (see PROVINCES arrays elsewhere), campus count is the live
+// institutions total, never the mockup's invented "140+".
+(function(){
+  var el = document.getElementById('instBannerStats');
+  if (!el) return;
+  PMInstitutions.fetchInstitutions({ limit: 100 }).then(function(rows){
+    el.textContent = '10 Provinces • ' + (rows || []).length + ' Accredited Institutions';
+  }).catch(function(){ el.textContent = '10 Provinces • Accredited Institutions'; });
+})();
+
 PMInstitutions.fetchInstitutionTypeCounts().then(renderTypeRow).catch(function(){ renderTypeRow({}); });
 loadInstitutions();

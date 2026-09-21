@@ -108,6 +108,24 @@
     });
   }
 
+  // Real per-institution ACTIVE listing counts in one round trip -- used by
+  // the institution hub's "Active Peer Listings" stat and the High Schools
+  // Quick Switch chip row, neither of which can use the get_institution_listings
+  // RPC directly (that RPC is a single-institution setof-listings function,
+  // not an aggregate). The live listings table is small (order of hundreds
+  // of active rows total), so one select of institution_id is cheap and
+  // avoids firing one exactCount request per institution (40 rows today).
+  // Mirrors the RPC's own visibility rules (status=active only) so counts
+  // shown in the UI can never exceed what get_institution_listings would
+  // actually return for that institution.
+  function fetchInstitutionListingCounts(){
+    return transport.fetchJson('listings?institution_id=not.is.null&status=eq.active&select=institution_id&limit=1000').then(function(rows){
+      var out={};
+      (rows||[]).forEach(function(r){ if(r.institution_id) out[r.institution_id]=(out[r.institution_id]||0)+1; });
+      return out;
+    });
+  }
+
   return Object.freeze({
     TYPE_LABEL:TYPE_LABEL,
     TYPES:TYPES,
@@ -116,5 +134,6 @@
     fetchInstitutionTypeCounts:fetchInstitutionTypeCounts,
     fetchInstitutionOrganizations:fetchInstitutionOrganizations,
     fetchInstitutionListings:fetchInstitutionListings,
+    fetchInstitutionListingCounts:fetchInstitutionListingCounts,
   });
 });

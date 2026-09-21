@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet">
 <meta id="metaDesc" name="description" content="Browse listings and organizations from this institution on PaMarket — Zimbabwe's free marketplace.">
 <title id="pageTitle">Institution — PaMarket Zimbabwe</title>
 <link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/institution">
@@ -26,86 +27,51 @@
 <meta id="robotsMeta" name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary":"#ffffff","surface-container-lowest":"#ffffff","on-tertiary-container":"#adb4ce","primary":"#003820","tertiary-fixed":"#dae2fd","primary-fixed":"#b0f1c7","on-secondary-fixed":"#2f1500","surface-container-low":"#eff4ff","surface":"#f8f9ff","secondary":"#904d00","surface-container-highest":"#d3e4fe","error":"#ba1a1a","on-tertiary-fixed-variant":"#3f465c","secondary-fixed":"#ffdcc3","outline-variant":"#c0c9c0","on-background":"#0b1c30","inverse-surface":"#213145","surface-tint":"#2d6a48","on-secondary":"#ffffff","on-tertiary-fixed":"#131b2e","on-primary":"#ffffff","on-secondary-fixed-variant":"#6e3900","surface-container-high":"#dce9ff","on-primary-fixed-variant":"#0f5132","on-primary-container":"#84c39b","primary-fixed-dim":"#95d4ac","tertiary":"#283044","tertiary-fixed-dim":"#bec6e0","surface-bright":"#f8f9ff","surface-variant":"#d3e4fe","tertiary-container":"#3f465b","error-container":"#ffdad6","on-secondary-container":"#663500","on-primary-fixed":"#002111","on-surface-variant":"#404942","on-error-container":"#93000a","secondary-container":"#fe932c","secondary-fixed-dim":"#ffb77d","on-surface":"#0b1c30","primary-container":"#0f5132","inverse-primary":"#95d4ac","on-error":"#ffffff","inverse-on-surface":"#eaf1ff","outline":"#707971","surface-container":"#e5eeff","background":"#f8f9ff","surface-dim":"#cbdbf5"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{"space-md":"0.875rem","margin-tablet":"2rem","margin":"1rem","space-xs":"0.25rem","space-2xl":"3rem","gutter":"1rem","space-xl":"2rem","gutter-desktop":"1.5rem","margin-desktop":"3rem","space-lg":"1.5rem","space-base":"1rem","space-sm":"0.5rem","space-2xs":"0.125rem"},fontFamily:{"headline-lg":["Manrope"],"price-secondary":["Hanken Grotesk"],"headline-lg-mobile":["Manrope"],"body-sm":["Hanken Grotesk"],display:["Manrope"],"body-lg":["Hanken Grotesk"],"headline-sm":["Manrope"],"headline-md":["Manrope"],"label-sm":["Hanken Grotesk"],"body-md":["Hanken Grotesk"],"price-primary":["Manrope"],"label-md":["Hanken Grotesk"]},fontSize:{"headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.025em",fontWeight:"700"}],"price-secondary":["13px",{lineHeight:"18px",letterSpacing:"0.01em",fontWeight:"500"}],"headline-lg-mobile":["26px",{lineHeight:"32px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-sm":["12px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"400"}],display:["48px",{lineHeight:"56px",letterSpacing:"-0.03em",fontWeight:"800"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"0em",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.015em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.05em",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",letterSpacing:"0.005em",fontWeight:"400"}],"price-primary":["20px",{lineHeight:"24px",letterSpacing:"-0.02em",fontWeight:"800"}],"label-md":["13px",{lineHeight:"18px",letterSpacing:"0.02em",fontWeight:"600"}]}}}};</script>
 <link rel="stylesheet" href="css/site.css">
 <style>
-/* Institution-detail-specific layout only; cards, chips, badges, skeletons
-   and empty states come from css/site.css (shared components). Mirrors
-   business.html's .biz-* block structure -- same visual language for the
-   "hub page" pattern (cover + logo + stats + sections). */
-.crumb{max-width:1000px;margin:0 auto;padding:16px 24px 0;font-size:13px;color:var(--mute)}
-.crumb a{color:var(--sub);font-weight:500}
-.crumb a:hover{color:var(--navy)}
+/* Institution-detail-specific layout. Re-points the shared .biz-*/.pm-*/
+   .inst-* component tokens (defined in css/site.css) at the new brand
+   palette (primary green / secondary orange) introduced on index.html, so
+   this page's real data-driven cards/chips/skeletons read as one visual
+   system with the new Tailwind header/hero below -- without re-implementing
+   any of those components. */
+*{box-sizing:border-box}
+.pm-material{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr}
+:root{
+  --navy:#0f5132;--navy-deep:#003820;--navy-mid:#2d6a48;
+  --gold:#fe932c;--gold-dark:#904d00;
+  --ink:#0b1c30;--sub:#404942;--mute:#646A78;
+  --line:#c0c9c0;--paper:#f8f9ff;--white:#FFFFFF;
+  --green:#0f5132;--red:#DC2626;
+}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--paper)}
 .biz-cover{height:200px;background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));position:relative;overflow:hidden}
 .biz-cover img{width:100%;height:100%;object-fit:cover}
-.biz-head{max-width:1000px;margin:0 auto;padding:0 24px}
-.biz-id{display:flex;gap:20px;align-items:flex-end;margin-top:-46px;position:relative;z-index:1}
-.biz-logo{width:104px;height:104px;border-radius:20px;background:#fff;border:3px solid #fff;box-shadow:0 8px 26px rgba(15,36,96,.18);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:34px;font-weight:800;color:var(--navy)}
+.biz-logo{width:104px;height:104px;border-radius:20px;background:#fff;border:3px solid #fff;box-shadow:0 8px 26px rgba(0,56,32,.18);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:34px;font-weight:800;color:var(--navy)}
 .biz-logo img{width:100%;height:100%;object-fit:cover}
-.biz-id-name{flex:1;min-width:0;padding-bottom:10px}
-.biz-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.biz-name{font-size:26px;font-weight:900;letter-spacing:-.02em;color:var(--ink);line-height:1.15}
-.biz-verified{display:inline-flex;align-items:center;gap:5px;background:#E8F3EC;color:var(--green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
-.biz-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:13.5px;color:var(--sub)}
-.biz-meta span{display:inline-flex;align-items:center;gap:5px}
-.biz-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,auto));gap:14px 30px;margin-top:22px}
-.biz-stat .n{font-size:20px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
-.biz-stat .l{font-size:12px;color:var(--mute);margin-top:1px}
-.biz-body{max-width:1000px;margin:0 auto;padding:8px 24px 60px}
-.biz-section{margin-top:40px}
-.biz-section h2{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
-.biz-section .sub{font-size:13.5px;color:var(--sub);margin-bottom:18px}
-.biz-about p{font-size:15px;color:var(--sub);line-height:1.8;white-space:pre-line}
-.orgs-row{display:flex;gap:16px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
-.orgs-row::-webkit-scrollbar{display:none}
-.org-card{flex:0 0 auto;width:96px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
-.org-logo{width:64px;height:64px;border-radius:14px;background:var(--navy-tint);display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:800;color:var(--navy);font-size:20px}
+.org-logo{width:64px;height:64px;border-radius:14px;background:#e5eeff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:800;color:var(--navy);font-size:20px}
 .org-logo img{width:100%;height:100%;object-fit:cover}
-.org-name{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
 .filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;margin-bottom:14px}
 .filter-row::-webkit-scrollbar{display:none}
-.sort-price-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
 .sp-select{border:1.5px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);outline:none}
-.showing-count{font-size:12.5px;color:var(--mute);margin-left:auto}
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
-@media(max-width:560px){
-  .biz-id{flex-direction:column;align-items:flex-start;gap:12px;margin-top:-40px}
-  .biz-actions .btn{flex:1}
-  .biz-name{font-size:22px}
-  .showing-count{margin-left:0}
-}
+.qs-row{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.qs-row::-webkit-scrollbar{display:none}
+.qs-chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;width:76px;text-align:center}
+.qs-badge{width:56px;height:56px;border-radius:16px;background:#e5eeff;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy);font-size:16px}
+.qs-name{font-size:11px;font-weight:600;color:var(--ink);line-height:1.25}
+.qs-count{font-size:10px;color:var(--mute)}
+.inst-type-chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;transition:all .15s;flex:0 0 auto;white-space:nowrap}
+.inst-type-chip:hover{border-color:var(--navy)}
+.inst-type-chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.inst-type-count{background:rgba(0,0,0,.08);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:800}
+.inst-type-chip.on .inst-type-count{background:rgba(255,255,255,.25)}
 </style>
 </head>
-<body>
+<body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
 
-<!-- HEADER:START -->
-<!-- ============================================================
-     PaMarket shared header — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the HEADER:START/END markers.
-     Styling lives in css/site.css. Do not edit the copies that
-     appear inside individual page files.
-     ============================================================ -->
-<div class="top-bar">
-  <div class="top-bar-w">
-    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14" loading="eager" decoding="async">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
-    <nav class="top-bar-links" aria-label="Primary">
-      <a href="browse">Browse</a>
-      <a href="institutions">Institutions</a>
-      <a href="advertise">Advertise</a>
-      <a href="contact">Contact Us</a>
-      <a href="blog">Blog</a>
-      <a href="about">About Us</a>
-    </nav>
-  </div>
-</div>
-
-<div class="site-announcement" id="siteAnnouncementBanner" role="status" aria-live="polite" hidden>
-  <div class="site-announcement-w">
-    <span class="site-announcement-message" id="siteAnnouncementMessage"></span>
-    <a class="site-announcement-link" id="siteAnnouncementLink" hidden></a>
-    <button class="site-announcement-close" id="siteAnnouncementClose" type="button" aria-label="Dismiss announcement">&times;</button>
-  </div>
-</div>
 <script src="js/supabase-config.js"></script>
 <script src="js/core/supabase-client.js"></script>
 <script src="js/services/service-transport.js"></script>
@@ -114,78 +80,77 @@
 <script src="js/services/profiles.js"></script>
 <script src="js/services/businesses.js"></script>
 <script src="js/services/rentals.js"></script>
+<script src="js/services/institutions.js"></script>
 <script src="js/site-announcements.js" defer></script>
 <script src="js/taxonomy.js" defer></script>
 
-<header id="hdr">
-  <div class="hdr-w">
-    <a href="/" class="logo">Pa<em>Market</em></a>
-    <div class="search-bar">
-      <select class="search-cat" id="hCat" data-taxonomy="category" aria-label="Category">
-        <option value="">All Categories</option>
-        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
-        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
-        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
-        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option><option value="other">Other</option>
-      </select>
-      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="search-btn" onclick="doSearch()" aria-label="Search">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <span class="sbtn-lbl">Search</span>
-      </button>
-    </div>
-    <div class="hdr-util">
-      <a href="notifications" class="util-btn" title="Notifications" aria-label="Notifications">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-        <span class="util-lbl">Notifications</span>
-      </a>
-      <a href="saved-searches" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-        <span class="util-lbl">My Searches</span>
-      </a>
-      <a href="favourites" class="util-btn" title="Favourites" aria-label="Favourites">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span class="util-lbl">Favourites</span>
-      </a>
-      <a href="chats" class="util-btn" title="Chats" aria-label="Chats">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="util-lbl">Chats</span>
-      </a>
-      <a href="dashboard" class="util-btn" title="My Ads" aria-label="My Ads">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
-        <span class="util-lbl">My Ads</span>
-      </a>
-    </div>
-    <div class="hdr-right">
-      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
-      <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="PMHeader.toggleMobile(this)" aria-label="Menu" aria-expanded="false">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-      </button>
+<!-- ============================================================
+     Header matches the new site-wide Tailwind design (same markup as
+     index.html / institutions.html) with "Institutions" active.
+     ============================================================ -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+  <div class="bg-surface-container text-on-surface-variant text-label-sm font-label-sm py-1.5 px-margin md:px-margin-desktop">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+        <span class="pm-material text-primary text-[14px]">verified_user</span>
+        <span class="truncate"><strong class="text-on-surface font-semibold">Safe Trading in Zimbabwe:</strong> Always inspect goods in public spaces &amp; verify before payment. 24/7 WhatsApp Support active.</span>
+      </div>
+      <div class="hidden md:flex items-center gap-6 shrink-0">
+        <a class="hover:text-primary transition-colors" href="browse">Browse</a>
+        <a class="hover:text-primary transition-colors" href="advertise">Advertise</a>
+        <a class="hover:text-primary transition-colors" href="about">About Us</a>
+        <a class="hover:text-primary transition-colors" href="blog">Blog</a>
+        <a class="hover:text-primary transition-colors" href="contact">Contact Us</a>
+      </div>
     </div>
   </div>
-  <nav id="mobNav" class="mob-nav">
-    <a href="/">Home</a>
-    <a href="browse">Browse</a>
-    <a href="institutions">Institutions</a>
-    <a href="favourites">My Favourites</a>
-    <a href="saved-searches">Saved Searches</a>
-    <a href="notifications">Notifications</a>
-    <a href="dashboard">My Ads</a>
-    <a href="advertise">Advertise</a>
-    <a href="contact">Contact Us</a>
-    <a href="blog">Blog</a>
-    <a href="about">About Us</a>
-    <a href="post-ad">+ Post Free Ad</a>
+
+  <div class="h-20 max-w-7xl mx-auto px-margin md:px-margin-desktop flex items-center justify-between gap-space-md">
+    <div class="flex items-center gap-4 shrink-0">
+      <a class="flex items-center gap-2" href="/">
+        <img alt="PaMarket Zimbabwe Logo" class="h-8 w-auto object-contain" src="img/icon-192.png">
+        <span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket<span class="text-secondary">.zw</span></span>
+      </a>
+    </div>
+    <div class="hidden lg:flex items-center flex-1 max-w-xl mx-4 rounded-full border border-outline-variant bg-surface-container-low overflow-hidden">
+      <select class="bg-transparent text-body-sm font-body-sm px-4 py-2.5 border-r border-outline-variant outline-none max-w-[140px] truncate" data-taxonomy="category" id="hCat" aria-label="Category">
+        <option value="">All Categories</option>
+      </select>
+      <input class="flex-1 bg-transparent px-4 py-2.5 text-body-md font-body-md outline-none min-w-0" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="px-4 h-full bg-primary text-on-primary flex items-center justify-center" onclick="doSearch()" aria-label="Search"><span class="pm-material text-[18px]">search</span></button>
+    </div>
+    <div class="flex items-center gap-1 md:gap-3 shrink-0">
+      <a href="favourites" title="Favourites" aria-label="Favourites" class="hidden sm:flex w-9 h-9 rounded-full items-center justify-center hover:bg-surface-container-low text-on-surface-variant"><span class="pm-material text-[20px]">favorite</span></a>
+      <a href="chats" title="Chats" aria-label="Chats" class="hidden sm:flex w-9 h-9 rounded-full items-center justify-center hover:bg-surface-container-low text-on-surface-variant"><span class="pm-material text-[20px]">chat_bubble</span></a>
+      <a href="dashboard" class="hidden md:inline-flex items-center gap-1.5 rounded-full border border-outline-variant px-4 py-2 text-label-md font-label-md hover:bg-surface-container-low">My Ads</a>
+      <a href="post-ad" class="inline-flex items-center gap-1.5 rounded-full bg-secondary text-on-secondary px-4 py-2 text-label-md font-label-md hover:opacity-90">
+        <span class="pm-material text-[16px]">add_circle</span><span class="hidden sm:inline">Post Free Ad</span>
+      </a>
+      <a href="auth" id="signInBtn" class="hidden lg:inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-label-md font-label-md hover:bg-surface-container-low"><span class="pm-material text-[20px]">account_circle</span>Sign In</a>
+      <button class="lg:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-surface-container-low" aria-label="Menu" aria-expanded="false" onclick="PMInstNav.toggleMobile(this)"><span class="pm-material text-[22px]">menu</span></button>
+    </div>
+  </div>
+  <nav class="hidden lg:flex items-center gap-1 max-w-7xl mx-auto px-margin-desktop h-11 border-t border-outline-variant/60 text-label-md font-label-md text-on-surface-variant">
+    <a href="browse" class="px-3 py-2 rounded-lg hover:bg-surface-container-low hover:text-primary">Marketplace</a>
+    <a href="jobs" class="px-3 py-2 rounded-lg hover:bg-surface-container-low hover:text-primary flex items-center gap-1.5">Jobs</a>
+    <a href="browse?shops=1" class="px-3 py-2 rounded-lg hover:bg-surface-container-low hover:text-primary flex items-center gap-1.5">Businesses</a>
+    <a href="institutions" class="px-3 py-2 rounded-lg bg-surface-container-low text-primary font-bold flex items-center gap-1.5"><span class="pm-material text-[16px]">school</span> Institutions (High Schools &amp; Unis)</a>
+    <a href="browse" class="px-3 py-2 rounded-lg hover:bg-surface-container-low hover:text-primary ml-auto">All Listings</a>
+  </nav>
+  <nav id="instMobNav" class="hidden lg:hidden flex-col gap-1 px-margin py-3 border-t border-outline-variant bg-surface-container-lowest text-body-md font-body-md">
+    <a href="browse" class="py-2">Marketplace</a>
+    <a href="jobs" class="py-2">Jobs</a>
+    <a href="browse?shops=1" class="py-2">Businesses</a>
+    <a href="institutions" class="py-2 font-bold text-primary">Institutions</a>
+    <a href="post-ad" class="py-2">Post a Free Ad</a>
+    <a href="auth" class="py-2">Sign In</a>
   </nav>
 </header>
 <script>
-/* Self-contained header behaviour. The shell owns its mobile control;
-   page-specific search implementations remain compatible. */
-window.PMHeader = Object.freeze({toggleMobile:function(button){
-  var n = document.getElementById('mobNav');
+window.PMInstNav = Object.freeze({toggleMobile:function(button){
+  var n = document.getElementById('instMobNav');
   if (!n) return;
-  var open = n.classList.toggle('open');
+  var open = n.classList.toggle('hidden') === false;
   if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
 }});
 window.doSearch = window.doSearch || function(){
@@ -198,15 +163,37 @@ window.doSearch = window.doSearch || function(){
   window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
 };
 </script>
-<!-- HEADER:END -->
 
-<main id="instMain" aria-live="polite">
+<!-- ============================================================
+     Mini directory bar (mockup: type chips + search fixed at the top of
+     the continuous page). Real architecture keeps institution.html and
+     institutions.html as two pages (each institution needs its own
+     canonical URL / meta / JSON-LD for SEO -- collapsing that into one
+     client-swapped page would break it). This bar reuses the SAME real
+     PMInstitutions.fetchInstitutions()/fetchInstitutionTypeCounts() calls
+     institutions.html uses (no duplicate query logic) so a visitor can
+     search and switch institutions without a full trip back to the
+     directory page -- selecting a result navigates to this same template
+     with a new ?id=, which is what preserves per-institution SEO.
+     ============================================================ -->
+<div class="sticky top-[148px] lg:top-[124px] z-40 bg-surface-container-lowest border-b border-outline-variant">
+  <div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-sm flex flex-col md:flex-row gap-2 md:items-center">
+    <div class="qs-row flex gap-2 md:flex-1" id="miniTypeRow" role="tablist" aria-label="Institution type"></div>
+    <div class="relative w-full md:w-72 shrink-0">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="miniSearch" placeholder="Switch institution…" aria-label="Switch institution" class="w-full border border-outline-variant rounded-full pl-8 pr-3 py-2 text-body-sm font-body-sm outline-none">
+      <div id="miniResults" class="hidden absolute left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg max-h-72 overflow-y-auto z-50"></div>
+    </div>
+  </div>
+</div>
+
+<main id="instMain" aria-live="polite" class="pt-[64px] lg:pt-[40px] bg-background min-h-screen">
   <div id="instLoading">
     <div class="biz-cover skeleton" style="background:#EEF1F6"></div>
-    <div class="biz-head">
-      <div class="biz-id">
+    <div class="max-w-5xl mx-auto px-margin md:px-margin-desktop">
+      <div class="flex gap-5 items-end -mt-12 relative z-10">
         <div class="biz-logo skeleton" style="border:none"></div>
-        <div class="biz-id-name">
+        <div class="pb-2">
           <div class="skeleton" style="height:26px;width:220px;border-radius:6px;margin-bottom:10px"></div>
           <div class="skeleton" style="height:14px;width:300px;border-radius:6px"></div>
         </div>
@@ -216,105 +203,76 @@ window.doSearch = window.doSearch || function(){
   <div id="instContent" class="hidden"></div>
 </main>
 
-<!-- FOOTER:START -->
 <!-- ============================================================
-     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the FOOTER:START/END markers.
-     Styling lives in css/site.css.
+     Footer matches the new Tailwind footer design (same as institutions.html/index.html).
      ============================================================ -->
-<footer>
-  <div class="foot-main">
+<footer class="bg-surface-container-lowest border-t border-outline-variant mt-space-2xl">
+  <div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl grid grid-cols-1 lg:grid-cols-5 gap-space-2xl">
+    <div class="lg:col-span-1">
+      <div class="flex items-center gap-2">
+        <img alt="PaMarket Zimbabwe Logo" class="h-7 w-auto object-contain" src="img/icon-192.png">
+        <span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket</span>
+      </div>
+      <p class="mt-3 text-body-sm font-body-sm text-on-surface-variant">Zimbabwe's free digital marketplace — buy, sell, find jobs and grow a verified business across all ten provinces.</p>
+      <div class="mt-4 flex flex-col gap-2">
+        <a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-label-sm font-label-sm text-on-surface hover:text-primary"><span class="pm-material text-[16px]">shop</span>Get on Google Play Store</a>
+        <a href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-label-sm font-label-sm text-on-surface hover:text-primary"><span class="pm-material text-[16px]">apple</span>Download Apple App Store</a>
+      </div>
+    </div>
     <div>
-      <div class="foot-logo">Pa<em>Market</em></div>
-      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
-      <div class="foot-contact">
-        <a id="footWhatsapp" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
-        <a id="footEmail" href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
-      </div>
-      <nav class="foot-social" aria-label="PaMarket on social media" style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;align-items:center">
-        <a id="footFacebook" href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
-        <a id="footInstagram" href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
-        <a href="https://x.com/pamarketzw" target="_blank" rel="me noopener" aria-label="PaMarket on X (Twitter)" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg></a>
-        <a id="footTiktok" href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
-        <a href="https://www.linkedin.com/company/pamarket-zim/" target="_blank" rel="me noopener" aria-label="PaMarket on LinkedIn" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
-      </nav>
-      <div class="foot-store">
-        <a id="footPlayStore" href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
-          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm" loading="lazy" decoding="async">
-        </a>
-        <a id="footAppStore" href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" aria-label="Download PaMarket on the Apple App Store">
-          <img src="img/app-store-badge.svg" alt="Download on the App Store" class="appstore-badge-sm" width="120" height="40" loading="lazy" decoding="async">
-        </a>
-      </div>
+      <h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Marketplace Categories</h5>
+      <ul class="flex flex-col gap-2 text-body-sm font-body-sm">
+        <li><a class="hover:text-primary" href="browse?cat=vehicles">Vehicles &amp; Car Rental</a></li>
+        <li><a class="hover:text-primary" href="browse?cat=property">Residential &amp; Commercial Property</a></li>
+        <li><a class="hover:text-primary" href="browse?cat=electronics">Mobile Phones &amp; Tech Hardware</a></li>
+        <li><a class="hover:text-primary" href="browse?cat=furniture">Home Living &amp; Furniture</a></li>
+        <li><a class="hover:text-primary" href="browse?cat=fashion">Fashion Apparel &amp; Beauty</a></li>
+      </ul>
     </div>
-    <div class="foot-col">
-      <h5>Categories</h5>
-      <a href="browse?cat=property">Property</a>
-      <a href="browse?cat=vehicles">Vehicles</a>
-      <a href="browse?cat=electronics">Electronics</a>
-      <a href="browse?cat=furniture">Furniture</a>
-      <a href="browse?cat=fashion">Fashion</a>
-      <a href="browse?cat=agriculture">Agriculture</a>
-      <a href="jobs">Jobs</a>
-      <a href="services">Services</a>
-      <a href="browse?shops=1">Shops</a>
-      <a href="plans">Shop Plans</a>
-      <a href="institutions">Institutions</a>
+    <div>
+      <h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Dedicated Hubs</h5>
+      <ul class="flex flex-col gap-2 text-body-sm font-body-sm">
+        <li><a class="hover:text-primary" href="jobs">PaMarket Jobs (Seekers &amp; Employers)</a></li>
+        <li><a class="hover:text-primary" href="browse?shops=1">Verified Business Storefronts</a></li>
+        <li><a class="hover:text-primary" href="institutions">High Schools &amp; Universities Campus Hub</a></li>
+        <li><a class="hover:text-primary" href="advertise">Advertise With Us →</a></li>
+      </ul>
     </div>
-    <div class="foot-col">
-      <h5>Customer Service</h5>
-      <a href="blog">Blog</a>
-      <a href="help">Help &amp; FAQ</a>
-      <a href="contact">Contact Us</a>
-      <a href="advertise">Advertise</a>
-      <a href="community-guidelines">Community Guidelines</a>
-      <a href="safety">Safety &amp; Fraud Prevention</a>
-      <a href="about">About PaMarket</a>
+    <div>
+      <h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Trust, Safety &amp; Legal</h5>
+      <ul class="flex flex-col gap-2 text-body-sm font-body-sm">
+        <li><a class="hover:text-primary" href="safety">Safety Guidelines &amp; Fraud Prevention</a></li>
+        <li><a class="hover:text-primary" href="terms">Terms of Service</a></li>
+        <li><a class="hover:text-primary" href="privacy">Privacy Policy</a></li>
+        <li><a class="hover:text-primary" href="community-guidelines">Community Guidelines</a></li>
+      </ul>
     </div>
-    <div class="foot-col">
-      <h5>Legal</h5>
-      <a href="terms">Terms of Service</a>
-      <a href="privacy">Privacy Policy</a>
-      <a href="cookie-policy">Cookie Policy</a>
-      <a href="refund-policy">Refund &amp; Cancellation</a>
-      <a href="delete-account">Delete My Account</a>
-      <a href="#" data-cookie-settings>Cookie Settings</a>
-      <a href="post-ad">Post a Free Ad</a>
-      <a href="auth">Sign In</a>
-      <a href="auth?mode=signup">Create Account</a>
+    <div>
+      <h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Support</h5>
+      <ul class="flex flex-col gap-2 text-body-sm font-body-sm">
+        <li><a class="hover:text-primary" href="contact">24/7 Help Desk &amp; Inquiries</a></li>
+        <li><a class="hover:text-primary" id="footWhatsapp" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a></li>
+        <li><a class="hover:text-primary" id="footEmail" href="mailto:support@pamarketzw.com">support@pamarketzw.com</a></li>
+        <li><a class="hover:text-primary" href="help">Help &amp; FAQ</a></li>
+      </ul>
     </div>
   </div>
-  <div class="foot-bottom">
-    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
-    <div class="foot-bottom-links">
-      <a href="terms">Terms</a>
-      <a href="privacy">Privacy</a>
-      <a href="cookie-policy">Cookies</a>
-      <a href="#" data-cookie-settings>Cookie Settings</a>
-      <a href="community-guidelines">Guidelines</a>
-      <a href="contact">Contact</a>
+  <div class="border-t border-outline-variant">
+    <div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant">
+      <span>&copy; 2026 PaMarket Zimbabwe. Serving all 10 provinces across Zimbabwe. Made in Zimbabwe. All rights reserved.</span>
+      <span>Multi-Currency Support (USD / ZiG)</span>
     </div>
   </div>
 </footer>
 <script src="js/cookie-consent.js" defer></script>
 <script src="js/site-content.js" defer></script>
 <script defer>
-// Overlays admin-managed contact/social/store links onto the footer above.
-// Every element already has its current hardcoded value as href/text, so a
-// failed or slow request just leaves the page exactly as it renders today —
-// this only ever upgrades what's already correct and visible.
 (function () {
   function apply(content) {
     if (!content) return;
     var map = [
       ['footWhatsapp', content.whatsappNumber ? 'https://wa.me/' + String(content.whatsappNumber).replace(/[^0-9]/g, '') : null, content.whatsappNumber ? 'WhatsApp: ' + content.whatsappNumber : null],
       ['footEmail', content.supportEmail ? 'mailto:' + content.supportEmail : null, content.supportEmail],
-      ['footFacebook', content.socialLinks && content.socialLinks.facebook, null],
-      ['footInstagram', content.socialLinks && content.socialLinks.instagram, null],
-      ['footTiktok', content.socialLinks && content.socialLinks.tiktok, null],
-      ['footPlayStore', content.playStoreUrl, null],
-      ['footAppStore', content.appStoreUrl, null],
     ];
     map.forEach(function (row) {
       var id = row[0], href = row[1], text = row[2];
@@ -333,10 +291,9 @@ window.doSearch = window.doSearch || function(){
   else init();
 })();
 </script>
-<!-- FOOTER:END -->
 
 <div class="wa">
-  <a class="wa-btn" id="waFloat" href="https://wa.me/971589772645" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+  <a class="wa-btn" href="https://wa.me/971589772645" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3M12 21.5c-1.7 0-3.3-.4-4.7-1.3l-3.4.9.9-3.3c-1-1.5-1.5-3.2-1.5-5C3.8 7.6 7.5 3.9 12 3.9s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2m0-18C6.5 3.5 2 8 2 13.5c0 1.9.5 3.7 1.5 5.3L2 24l5.3-1.4c1.5.8 3.1 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 3.5 12 3.5"/></svg>
   </a>
 </div>
@@ -345,7 +302,6 @@ window.doSearch = window.doSearch || function(){
 <script src="js/session.js"></script>
 <script src="js/marketplace-data.js"></script>
 <script src="js/nav-dropdowns.js"></script>
-<script src="js/services/institutions.js"></script>
 <script src="js/controllers/institution-page.js"></script>
 </body>
 </html>
