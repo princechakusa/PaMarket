@@ -8,4 +8,8 @@ The Worker private signing key is a Cloudflare secret named `CF_GEO_SIGNING_KEY`
 
 Supabase Auth database audit logging was enabled in the live dashboard (`audit_log_disable_postgres=false`), so future supported Auth events can be retained in `auth.audit_log_entries`. A controlled failed sign-in with a random nonexistent address did **not** produce a database audit row. Do not describe that table as a complete failed-login ledger. The browser signal remains best-effort and source-labelled; provider Auth logs remain a separate investigation source. Existing absent history cannot be reconstructed.
 
+Supabase Auth's password-grant implementation writes its `login` audit entry only after it finds a user and validates the password, inside the successful token-issuance transaction (see `supabase/auth` `internal/api/token.go`). Failed credential attempts can appear in provider `auth_logs`, but `auth.audit_log_entries` is not a server-attested failed-login register. A complete server-side attempt register would require routing the Admin login itself through a trusted server, a separate authentication design change; do not infer that history from browser-reported events.
+
+The React Admin Direct Upload project `pamarket-admin-react` was deployed to production on 2026-09-21 from commit `2e1a746489e797a242af76ce24529cf373384c99` (Cloudflare deployment `a68bb583-2b8f-4cc0-87f7-ade3570af9f1`). The Pages URL is protected by Cloudflare Access, so an anonymous HTTP request returns its Access sign-in page.
+
 Camera access requires an explicit browser permission grant from the visitor. An administrator cannot remotely override a refusal; no covert camera capture is implemented.
