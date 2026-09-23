@@ -7,7 +7,6 @@ import { supabase } from "../../lib/supabase";
 import { INSTITUTION_VISIBILITY_ATTR_KEY } from "../../lib/institutions";
 import {
   filterListings,
-  isFeatured,
   isPublicListingEligible,
   publicListingExpiryFilter,
   type Listing,
@@ -19,7 +18,14 @@ import { fetchActiveAds, type PaidAd } from "../../lib/ads";
 import { subscribeToFeedChanges } from "../../lib/realtime-feed";
 import { loadCache, saveCache } from "../../lib/offlineCache";
 
-type HomeCache = { listings: Listing[]; businesses: Business[]; ads: PaidAd[] };
+type HomeCache = {
+  listings: Listing[];
+  businesses: Business[];
+  ads: PaidAd[];
+  shopListings: Listing[];
+  featuredListings: Listing[];
+  categoryListingsMap: Record<string, Listing[]>;
+};
 const HOME_CACHE_KEY = "home-feed";
 import { useAuth } from "../../lib/auth";
 import { fetchSavedListingIds, toggleSave } from "../../lib/saves";
@@ -122,6 +128,28 @@ export default function HomeScreen() {
   const { session } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  // Dedicated, business-scoped active listings for the Verified Shops rail --
+  // deliberately NOT derived from the global `listings` feed above, which is
+  // capped to the 60 most-recently-created listings site-wide. A shop whose
+  // real active items simply weren't among the newest 60 platform-wide would
+  // show "0 items" and no thumbnails on Home despite having real stock,
+  // because the rail's client-side business_id filter only ever saw that
+  // capped, recency-ordered slice. This query is scoped directly to the
+  // shops actually shown (their real business_id set), so it can never miss
+  // a shop's own listings the way the shared global feed could.
+  const [shopListings, setShopListings] = useState<Listing[]>([]);
+  // Featured, per-category and Near-<city> rails each get their own
+  // indexed, limited query instead of being client-side slices of the
+  // capped `listings` feed above. A slice of only the newest 60 listings
+  // site-wide starves every other rail once the marketplace has more than
+  // ~60 active listings total -- a featured or category item that's real
+  // and active but not among the single newest 60 platform-wide would
+  // simply never appear anywhere on Home. Each rail's own query stays
+  // cheap (small LIMIT, indexed WHERE) no matter how large the full
+  // active-listings table grows, so nothing is hidden and Home stays fast.
+  const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
+  const [categoryListingsMap, setCategoryListingsMap] = useState<Record<string, Listing[]>>({});
+  const [nearCityListings, setNearCityListings] = useState<Listing[]>([]);
   const [ads, setAds] = useState<PaidAd[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -162,6 +190,38 @@ export default function HomeScreen() {
     setCityFilter(city);
     SecureStore.setItemAsync(CITY_STORAGE_KEY, city).catch(() => {});
   }
+
+  // Near-<city> is its own indexed query (city + status), not a slice of
+  // the capped global feed -- a city's real active listings can easily sit
+  // outside the newest 60 platform-wide once the marketplace has grown.
+  // Refetches whenever the selected city changes; cleared for "All
+  // Zimbabwe" since that rail only ever renders when a specific city is
+  // picked.
+  useEffect(() => {
+    if (cityFilter === "All Zimbabwe") {
+      setNearCityListings([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("listings")
+      .select(LISTING_COLUMNS)
+      .eq("status", "active")
+      .eq("city", cityFilter)
+      .or(publicListingExpiryFilter())
+      .or(
+        `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
+      )
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then((result) => {
+        if (cancelled || result.error) return;
+        setNearCityListings((result.data as Listing[]) ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cityFilter]);
 
   const loadData = useCallback(async () => {
     setError(null);
@@ -216,13 +276,89 @@ export default function HomeScreen() {
       setBusinesses(freshBusinesses);
     }
 
+    // Business-scoped listings for the Verified Shops rail -- see the
+    // shopListings state comment for why this can't reuse the global,
+    // 60-row-capped `listings` feed above. Only fires once we actually know
+    // which businesses are being shown, and only queries those exact IDs.
+    let freshShopListings: Listing[] = [];
+    if (freshBusinesses && freshBusinesses.length) {
+      const shopListingsRes = await supabase
+        .from("listings")
+        .select(LISTING_COLUMNS)
+        .eq("status", "active")
+        .in(
+          "business_id",
+          freshBusinesses.map((b) => b.id)
+        )
+        .order("created_at", { ascending: false });
+      if (!shopListingsRes.error) {
+        freshShopListings = (shopListingsRes.data as Listing[]) ?? [];
+        setShopListings(freshShopListings);
+      }
+    } else {
+      setShopListings([]);
+    }
+
+    // Same public-visibility rule as the main feed query above, reused
+    // across the featured and per-category queries below so all three stay
+    // in sync if that rule ever changes.
+    const institutionVisibilityFilter = `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`;
+
+    const featuredRequest = supabase
+      .from("listings")
+      .select(LISTING_COLUMNS)
+      .eq("status", "active")
+      .or(publicListingExpiryFilter())
+      .or(institutionVisibilityFilter)
+      .gt("featured_until", new Date().toISOString())
+      .order("featured_until", { ascending: false })
+      .limit(20)
+      .then((result) => result);
+
+    // One small, indexed query per category instead of slicing the capped
+    // global feed -- run in parallel so the round trips don't stack up.
+    const nonJobCategories = CATEGORIES.filter((c) => c.id !== "jobs");
+    const categoryRequests = nonJobCategories.map((cat) =>
+      supabase
+        .from("listings")
+        .select(LISTING_COLUMNS)
+        .eq("status", "active")
+        .eq("category", cat.id)
+        .or(publicListingExpiryFilter())
+        .or(institutionVisibilityFilter)
+        .order("created_at", { ascending: false })
+        .limit(8)
+        .then((result) => ({ id: cat.id, result }))
+    );
+
+    const [featuredRes, categoryResList] = await Promise.all([featuredRequest, Promise.all(categoryRequests)]);
+
+    let freshFeatured: Listing[] = [];
+    if (!featuredRes.error) {
+      freshFeatured = (featuredRes.data as Listing[]) ?? [];
+      setFeaturedListings(freshFeatured);
+    }
+
+    const freshCategoryMap: Record<string, Listing[]> = {};
+    for (const { id, result } of categoryResList) {
+      if (!result.error) freshCategoryMap[id] = (result.data as Listing[]) ?? [];
+    }
+    setCategoryListingsMap(freshCategoryMap);
+
     const freshAds = await fetchActiveAds();
     setAds(freshAds);
 
     // Only overwrite the on-disk snapshot once every part of this load
     // succeeded — a partial/failed load must never stomp a good cache.
     if (freshListings && freshBusinesses) {
-      saveCache<HomeCache>(HOME_CACHE_KEY, { listings: freshListings, businesses: freshBusinesses, ads: freshAds });
+      saveCache<HomeCache>(HOME_CACHE_KEY, {
+        listings: freshListings,
+        businesses: freshBusinesses,
+        ads: freshAds,
+        shopListings: freshShopListings,
+        featuredListings: freshFeatured,
+        categoryListingsMap: freshCategoryMap,
+      });
     }
 
     // Unread notification/message counts are handled entirely by the
@@ -268,6 +404,11 @@ export default function HomeScreen() {
         setListings((current) => (current.length ? current : cached.listings));
         setBusinesses((current) => (current.length ? current : cached.businesses));
         setAds((current) => (current.length ? current : cached.ads));
+        setShopListings((current) => (current.length ? current : cached.shopListings ?? []));
+        setFeaturedListings((current) => (current.length ? current : cached.featuredListings ?? []));
+        setCategoryListingsMap((current) =>
+          Object.keys(current).length ? current : cached.categoryListingsMap ?? {}
+        );
         setShowingCached(true);
         setIsLoading(false);
       });
@@ -394,7 +535,11 @@ export default function HomeScreen() {
     [activeNonJobListings, cityFilter]
   );
 
-  const featured = useMemo(() => filtered.filter(isFeatured).slice(0, 12), [filtered]);
+  // Sourced from their own dedicated queries (see the featuredListings/
+  // categoryListingsMap/nearCityListings state above), not sliced from the
+  // capped `filtered`/`listings` feed -- so none of these rails go blind
+  // once the marketplace has more active listings than that cap.
+  const featured = useMemo(() => featuredListings.filter((l) => isPublicListingEligible(l)), [featuredListings]);
 
   const recent = useMemo(() => {
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -403,17 +548,17 @@ export default function HomeScreen() {
 
   const nearCity = useMemo(() => {
     if (cityFilter === "All Zimbabwe") return [];
-    return filtered.slice(0, 12);
-  }, [filtered, cityFilter]);
+    return nearCityListings.filter((l) => isPublicListingEligible(l));
+  }, [nearCityListings, cityFilter]);
 
   const categorySections = useMemo(() => {
     return categories.filter((c) => c.id !== "jobs")
       .map((cat) => ({
         ...cat,
-        items: filtered.filter((l) => l.category === cat.id).slice(0, 6),
+        items: (categoryListingsMap[cat.id] ?? []).filter((l) => isPublicListingEligible(l)),
       }))
       .filter((section) => section.items.length > 0);
-  }, [filtered, categories]);
+  }, [categoryListingsMap, categories]);
 
   const hasAnyContent = filtered.length > 0 || businesses.length > 0;
 
@@ -531,7 +676,7 @@ export default function HomeScreen() {
 
             <ShopsRail
               businesses={businesses}
-              listings={listings}
+              listings={shopListings}
               onPressShop={(b) => router.push({ pathname: "/business/[id]", params: { id: b.id } })}
               onSeeAll={() => router.push("/shops")}
             />
