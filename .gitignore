@@ -67,3 +67,7 @@ listings-import*.csv
 
 # Deterministic website deployment output
 dist-site/
+
+# Local dev/test scratch artifacts — never part of the deployed site
+.playwright-mcp/
+.wrangler/
