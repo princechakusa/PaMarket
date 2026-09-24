@@ -530,6 +530,8 @@
       views: 0,
       created_at: new Date().toISOString(),
     };
+    if (opts.condition) row.condition = opts.condition;
+    if (opts.institutionId) row.institution_id = opts.institutionId;
     if (opts.attributes && typeof opts.attributes === 'object') row.attributes = opts.attributes;
     // Screening questions for a job (LinkedIn-style), same jsonb shape the app
     // writes: [{ id, question, type:'text'|'yesno'|'select', options:[], required }].
@@ -822,6 +824,38 @@
     }).then(function (res) { return res.ok ? res.json() : []; }).then(function (rows) { return !!(rows && rows.length); }).catch(function () { return false; });
   }
 
+  // Job listings (category='jobs') can no longer be inserted directly into
+  // public.listings — a DB trigger rejects them with JOB_POST_REQUIRES_RPC
+  // unless the insert came from this RPC (see
+  // supabase/migrations/enforce_job_posting_entitlement.sql). The RPC checks
+  // entitlement, inserts the row, and spends a job credit if needed, all in
+  // one transaction, so a failed credit spend can never leave a job
+  // published-but-unpaid. Mirrors apps/mobile/app/jobs/post.tsx exactly.
+  // Resolves the RPC's { ok, listing_id?, used_credit?, unlimited?, msg? }.
+  function createJobListing(opts) {
+    var s = sharedSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    var body = {
+      p_title: opts.title,
+      p_description: opts.description,
+      p_price: opts.price || 0,
+      p_currency: opts.currency || 'USD',
+      p_city: opts.city || null,
+      p_province: opts.province || null,
+      p_seller_name: opts.sellerName || null,
+      p_seller_phone: opts.sellerPhone || null,
+    };
+    if (opts.institutionId) {
+      body.p_institution_id = opts.institutionId;
+      body.p_institution_visibility = opts.institutionVisibility || 'public';
+    }
+    return fetch(SB_URL + '/rest/v1/rpc/create_job_listing', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(function (res) { return res.json().catch(function () { return { ok: false }; }); });
+  }
+
   // Spend one job credit on a listing the caller owns (server-side RPC,
   // guarded by balance + a unique-per-listing constraint). Called right
   // after a job listing is created when the recruiter is over the free
@@ -924,6 +958,7 @@
   global.PM.checkBoostPayment = checkBoostPayment;
   global.PM.fetchJobCreditBalance = fetchJobCreditBalance;
   global.PM.fetchExtraSlotBalance = fetchExtraSlotBalance;
+  global.PM.createJobListing = createJobListing;
   global.PM.spendJobCredit = spendJobCredit;
   global.PM.applyToJob = applyToJob;
   global.PM.hasAppliedToJob = hasAppliedToJob;

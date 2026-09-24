@@ -105,6 +105,7 @@
     return '';
   }
   function notifTime(value) {
+    if (value === null || value === undefined || value === '') return '';
     var n = Number(value); var d = Number.isFinite(n) ? new Date(n) : new Date(value);
     return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
   }

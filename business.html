@@ -3,645 +3,363 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
-<meta id="metaDesc" name="description" content="View a verified business shop on PaMarket — Zimbabwe's free marketplace. Browse products, read reviews and contact the seller directly.">
-<title id="pageTitle">Business Shop — PaMarket Zimbabwe</title>
+<meta id="metaDesc" name="description" content="View a registered business storefront on PaMarket Zimbabwe. Real catalog, real contact details.">
+<title id="pageTitle">Business Storefront - PaMarket Zimbabwe</title>
 <link id="canonicalLink" rel="canonical" href="https://pamarketzw.com/business">
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
-<meta id="ogTitle" property="og:title" content="Business Shop — PaMarket Zimbabwe">
-<meta id="ogDesc" property="og:description" content="Browse products, read reviews and contact the seller directly on PaMarket.">
-<meta id="ogImage" property="og:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta id="ogUrl" property="og:url" content="https://pamarketzw.com/business">
-<meta property="og:type" content="website">
-<meta property="og:locale" content="en_ZW">
-<meta name="twitter:card" content="summary_large_image">
-<meta id="twTitle" name="twitter:title" content="Business Shop — PaMarket Zimbabwe">
-<meta id="twDesc" name="twitter:description" content="Browse products, read reviews and contact the seller directly on PaMarket.">
-<meta id="twImage" name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
-<meta id="robotsMeta" name="robots" content="index, follow">
+<meta name="robots" content="index, follow">
 <meta name="geo.region" content="ZW">
 <meta name="geo.placename" content="Zimbabwe">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
-<style>
-/* Business-profile-specific layout only; cards, buttons, badges, chips,
-   skeletons and empty states come from css/site.css (shared components).
-   This block is also baked into the pre-rendered /b/ pages by
-   tools/prerender.js, so the static shop pages match this page exactly. */
-.crumb{max-width:1000px;margin:0 auto;padding:16px 24px 0;font-size:13px;color:var(--mute)}
-.crumb a{color:var(--sub);font-weight:500}
-.crumb a:hover{color:var(--navy)}
-.owner-panel{background:linear-gradient(135deg,#EEF2FF,#F8FAFC);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
-.slot-buy{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.slot-opt{display:inline-flex;align-items:center;gap:9px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px 16px;cursor:pointer;font-family:inherit;transition:border-color .15s}
-.slot-opt:hover{border-color:var(--navy)}
-.slot-opt .so-label{font-size:14px;font-weight:800}
-.slot-opt .so-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:10px}
-.slot-opt .so-price{font-size:16px;font-weight:900;color:var(--navy)}
-.biz-cover{height:200px;background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));position:relative;overflow:hidden}
-.biz-cover img{width:100%;height:100%;object-fit:cover}
-.biz-head{max-width:1000px;margin:0 auto;padding:0 24px}
-.biz-id{display:flex;gap:20px;align-items:flex-end;margin-top:-46px;position:relative;z-index:1}
-.biz-logo{width:104px;height:104px;border-radius:20px;background:#fff;border:3px solid #fff;box-shadow:0 8px 26px rgba(15,36,96,.18);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:34px;font-weight:800;color:var(--navy)}
-.biz-logo img{width:100%;height:100%;object-fit:cover}
-.biz-id-name{flex:1;min-width:0;padding-bottom:10px}
-.biz-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.biz-name{font-size:26px;font-weight:900;letter-spacing:-.02em;color:var(--ink);line-height:1.15}
-.biz-verified{display:inline-flex;align-items:center;gap:5px;background:#E8F3EC;color:var(--green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
-.biz-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:13.5px;color:var(--sub)}
-.biz-meta span{display:inline-flex;align-items:center;gap:5px}
-.biz-stats{display:grid;grid-template-columns:repeat(4,auto);gap:14px 30px;margin-top:22px}
-.biz-stat .n{font-size:20px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
-.biz-stat .l{font-size:12px;color:var(--mute);margin-top:1px}
-.biz-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.biz-body{max-width:1000px;margin:0 auto;padding:8px 24px 60px}
-.biz-section{margin-top:40px}
-.biz-section h2{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
-.biz-section .sub{font-size:13.5px;color:var(--sub);margin-bottom:18px}
-.biz-about p{font-size:15px;color:var(--sub);line-height:1.8;white-space:pre-line}
-.cat-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
-.biz-photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.biz-photos-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
-.rev-list{display:flex;flex-direction:column;gap:12px}
-.rev{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
-.rev-top{display:flex;align-items:center;gap:10px}
-.rev-av{width:36px;height:36px;border-radius:50%;background:var(--navy-tint);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
-.rev-who{font-size:14px;font-weight:700;color:var(--ink)}
-.rev-date{font-size:12px;color:var(--mute)}
-.rev-stars{margin-left:auto;color:var(--gold);font-size:14px;letter-spacing:1px}
-.rev-body{font-size:14px;color:var(--sub);margin-top:9px;line-height:1.6}
-.rating-hero{display:flex;align-items:center;gap:16px;background:var(--gold-tint);border:1px solid var(--gold-soft,#F3C77E);border-radius:14px;padding:16px 20px;margin-bottom:18px}
-.rating-big{font-size:38px;font-weight:900;color:var(--gold-dark);line-height:1}
-.rating-stars{color:var(--gold);font-size:16px;letter-spacing:2px}
-.rating-count{font-size:13px;color:var(--sub);margin-top:2px}
-.rel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-@media(max-width:560px){
-  .biz-id{flex-direction:column;align-items:flex-start;gap:12px;margin-top:-40px}
-  .biz-stats{grid-template-columns:repeat(2,1fr);gap:14px}
-  .biz-actions .btn{flex:1}
-  .biz-name{font-size:22px}
-}
-</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet"/>
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style>
+<style id="pmAntiFlicker">body{opacity:0}</style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tailwind-config.js"></script>
 </head>
-<body>
-
-<!-- HEADER:START -->
-<!-- ============================================================
-     PaMarket shared header — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the HEADER:START/END markers.
-     Styling lives in css/site.css. Do not edit the copies that
-     appear inside individual page files.
-     ============================================================ -->
-<div class="top-bar">
-  <div class="top-bar-w">
-    <span class="zw-flag-row"><img class="zw-flag" src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" width="20" height="14" loading="eager" decoding="async">Zimbabwe's #1 Free Marketplace — No fees, no commissions</span>
-    <nav class="top-bar-links" aria-label="Primary">
-      <a href="browse">Browse</a>
-      <a href="institutions">Institutions</a>
-      <a href="advertise">Advertise</a>
-      <a href="contact">Contact Us</a>
-      <a href="blog">Blog</a>
-      <a href="about">About Us</a>
-    </nav>
-  </div>
-</div>
-
-<div class="site-announcement" id="siteAnnouncementBanner" role="status" aria-live="polite" hidden>
-  <div class="site-announcement-w">
-    <span class="site-announcement-message" id="siteAnnouncementMessage"></span>
-    <a class="site-announcement-link" id="siteAnnouncementLink" hidden></a>
-    <button class="site-announcement-close" id="siteAnnouncementClose" type="button" aria-label="Dismiss announcement">&times;</button>
-  </div>
-</div>
-<script src="js/supabase-config.js"></script>
-<script src="js/core/supabase-client.js"></script>
-<script src="js/services/service-transport.js"></script>
-<script src="js/services/saved-content.js"></script>
-<script src="js/services/listings.js"></script>
-<script src="js/services/profiles.js"></script>
-<script src="js/services/businesses.js"></script>
-<script src="js/services/rentals.js"></script>
-<script src="js/site-announcements.js" defer></script>
-<script src="js/taxonomy.js" defer></script>
-
-<header id="hdr">
-  <div class="hdr-w">
-    <a href="/" class="logo">Pa<em>Market</em></a>
-    <div class="search-bar">
-      <select class="search-cat" id="hCat" data-taxonomy="category" aria-label="Category">
-        <option value="">All Categories</option>
-        <option value="property">Property</option><option value="vehicles">Vehicles</option><option value="electronics">Electronics</option>
-        <option value="jobs">Jobs</option><option value="furniture">Furniture</option><option value="fashion">Fashion</option>
-        <option value="services">Services</option><option value="agriculture">Agriculture</option><option value="rooms">Rooms</option>
-        <option value="pets">Pets</option><option value="kids">Baby &amp; Kids</option><option value="other">Other</option>
-      </select>
-      <input class="search-inp" id="hQ" type="text" placeholder="Search listings, shops, jobs..." aria-label="Search" onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="search-btn" onclick="doSearch()" aria-label="Search">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <span class="sbtn-lbl">Search</span>
-      </button>
-    </div>
-    <div class="hdr-util">
-      <a href="notifications" class="util-btn" title="Notifications" aria-label="Notifications">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-        <span class="util-lbl">Notifications</span>
-      </a>
-      <a href="saved-searches" class="util-btn" title="Saved Searches" aria-label="Saved Searches">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-        <span class="util-lbl">My Searches</span>
-      </a>
-      <a href="favourites" class="util-btn" title="Favourites" aria-label="Favourites">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span class="util-lbl">Favourites</span>
-      </a>
-      <a href="chats" class="util-btn" title="Chats" aria-label="Chats">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="util-lbl">Chats</span>
-      </a>
-      <a href="dashboard" class="util-btn" title="My Ads" aria-label="My Ads">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
-        <span class="util-lbl">My Ads</span>
-      </a>
-    </div>
-    <div class="hdr-right">
-      <a href="auth" class="btn-sign" id="signInBtn">Sign In</a>
-      <a href="post-ad" class="btn-post">+ Post Free Ad</a>
-      <button class="ham" onclick="PMHeader.toggleMobile(this)" aria-label="Menu" aria-expanded="false">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-      </button>
-    </div>
-  </div>
-  <nav id="mobNav" class="mob-nav">
-    <a href="/">Home</a>
-    <a href="browse">Browse</a>
-    <a href="institutions">Institutions</a>
-    <a href="favourites">My Favourites</a>
-    <a href="saved-searches">Saved Searches</a>
-    <a href="notifications">Notifications</a>
-    <a href="dashboard">My Ads</a>
-    <a href="advertise">Advertise</a>
-    <a href="contact">Contact Us</a>
-    <a href="blog">Blog</a>
-    <a href="about">About Us</a>
-    <a href="post-ad">+ Post Free Ad</a>
-  </nav>
-</header>
-<script>
-/* Self-contained header behaviour. The shell owns its mobile control;
-   page-specific search implementations remain compatible. */
-window.PMHeader = Object.freeze({toggleMobile:function(button){
-  var n = document.getElementById('mobNav');
-  if (!n) return;
-  var open = n.classList.toggle('open');
-  if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
-}});
-window.doSearch = window.doSearch || function(){
-  var cat = document.getElementById('hCat');
-  var q = document.getElementById('hQ');
-  var p = new URLSearchParams();
-  if (cat && cat.value) p.set('cat', cat.value);
-  if (q && q.value.trim()) p.set('q', q.value.trim());
-  var qs = p.toString();
-  window.location.href = (cat && cat.value === 'jobs' ? 'jobs' : 'browse') + (qs ? '?' + qs : '');
-};
+<script id="pmAntiFlickerReveal">
+(function(){
+  var revealed = false;
+  function reveal(){
+    if (revealed) return;
+    revealed = true;
+    document.body.style.transition = 'opacity .15s ease';
+    document.body.style.opacity = '1';
+  }
+  // Two animation frames guarantee at least one full paint has happened
+  // with Tailwind's CDN-generated styles applied (it scans + injects
+  // reactively via MutationObserver as the DOM parses, so there's no
+  // single synchronous "ready" signal to wait on instead).
+  requestAnimationFrame(function(){ requestAnimationFrame(reveal); });
+  setTimeout(reveal, 500); // hard fallback so the page is never stuck invisible
+})();
 </script>
+<body class="bg-surface-container font-body-md text-on-surface antialiased min-h-screen"><!-- HEADER:START -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-surface-container text-on-surface-variant text-label-sm font-label-sm py-1.5 px-margin md:px-margin-desktop"><div class="max-w-7xl mx-auto flex items-center justify-between gap-4"><div class="flex items-center gap-2 overflow-hidden whitespace-nowrap"><span class="material-symbols-outlined text-primary text-[14px]">verified_user</span><span class="truncate"><strong class="text-on-surface font-semibold">Safe Trading in Zimbabwe:</strong> Always inspect goods in public spaces &amp; verify before payment. 24/7 WhatsApp Support active.</span></div><div class="hidden md:flex items-center gap-6 shrink-0"><a class="hover:text-primary transition-colors" href="browse.html">Browse</a><a class="hover:text-primary transition-colors" href="advertise.html">Advertise</a><a class="hover:text-primary transition-colors" href="about.html">About Us</a><a class="hover:text-primary transition-colors" href="blog.html">Blog</a><a class="hover:text-primary transition-colors" href="contact.html">Contact Us</a><a class="text-secondary font-bold hover:underline flex items-center gap-1" href="download.html">Download App</a></div></div></div><div class="h-20 max-w-7xl mx-auto px-margin md:px-margin-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-4 shrink-0"><a class="flex items-center gap-2" href="index.html"><img alt="PaMarket Zimbabwe Logo" class="h-8 w-auto object-contain" src="img/icon-192.png"/><span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket<span class="text-secondary">.zw</span></span></a></div><div class="flex-1 max-w-xl mx-2 hidden lg:block"><div class="flex items-center bg-surface-container-low rounded p-1 shadow-inner"><input id="headerSearchInput" class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none px-3" placeholder="Search cars, phones, services, jobs or campus items..." type="text" onkeydown="if(event.key==='Enter')doHeaderSearch()"/><button onclick="doHeaderSearch()" class="bg-secondary text-on-secondary px-4 py-2 rounded font-label-md text-label-md flex items-center justify-center hover:bg-on-secondary-container transition-colors shrink-0" type="button"><span class="material-symbols-outlined text-[18px]">search</span></button></div></div><div class="flex items-center gap-space-sm shrink-0"><div class="flex items-center bg-surface-container-low p-0.5 rounded text-label-sm font-label-sm"><button id="currencyUsdBtn" onclick="setCurrency('USD')" class="px-2 py-1 rounded bg-primary text-on-primary font-bold shadow-sm">USD ($)</button><button id="currencyZigBtn" onclick="setCurrency('ZiG')" class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors font-medium">ZiG</button></div><a class="relative p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-low" href="favourites.html"><span class="material-symbols-outlined text-[22px]">favorite</span></a><a class="hidden sm:flex items-center justify-center p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors" href="dashboard.html" title="My Ads"><span class="material-symbols-outlined text-[22px]">dashboard</span></a><a class="bg-secondary hover:bg-on-secondary-container text-on-secondary px-3 py-2 rounded text-label-md font-label-md flex items-center gap-1 font-bold shadow-sm transition-colors" href="post-ad.html"><span class="material-symbols-outlined text-[18px]">add_circle</span><span class="hidden sm:inline">Post Free Ad</span></a><a href="auth.html" id="signInBtn" class="flex items-center gap-1.5 text-label-sm font-label-sm text-on-surface hover:text-primary pl-2 border-l border-outline-variant/30"><span class="material-symbols-outlined text-[20px]">account_circle</span><span class="hidden md:inline">Sign In</span></a></div></div><div class="bg-surface-container-lowest px-margin md:px-margin-desktop py-1 border-t border-outline-variant/20"><div class="max-w-7xl mx-auto flex items-center justify-between"><nav class="flex items-center gap-6 overflow-x-auto text-body-md font-body-md py-1.5"><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 transition-all" href="index.html">Marketplace</a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 flex items-center gap-1.5 transition-all" href="jobs.html"><span>Jobs</span><span class="bg-primary-fixed text-on-primary-fixed text-[10px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Hiring</span></a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 flex items-center gap-1.5 transition-all" href="businesses.html"><span>Businesses</span><span class="bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Verified</span></a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 flex items-center gap-1.5 transition-all" href="institutions.html"><span class="material-symbols-outlined text-[16px] text-primary">school</span><span>Institutions (High Schools &amp; Unis)</span></a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 transition-all" href="browse.html">All Listings</a></nav><div class="hidden lg:flex items-center gap-3 text-label-sm font-label-sm text-on-surface-variant"><span class="flex items-center gap-1 text-primary font-semibold"><span class="material-symbols-outlined text-[15px]">lock</span>Escrow Protected</span><span>&bull;</span><span id="fxRateHeader">Official Rates Synced Daily</span></div></div></div></header>
 <!-- HEADER:END -->
+<main class="w-full pt-[148px] bg-surface-container min-h-screen">
 
-<main id="bizMain" aria-live="polite">
-  <!-- Loading skeleton -->
-  <div id="bizLoading">
-    <div class="biz-cover skeleton" style="background:#EEF1F6"></div>
-    <div class="biz-head">
-      <div class="biz-id">
-        <div class="biz-logo skeleton" style="border:none"></div>
-        <div class="biz-id-main">
-          <div class="skeleton" style="height:26px;width:220px;border-radius:6px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:14px;width:300px;border-radius:6px"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="bizContent" class="hidden"></div>
+<div id="loadingState" class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl text-center text-on-surface-variant">Loading business...</div>
+<div id="notFoundState" class="hidden max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl text-center">
+<h1 class="font-headline-lg text-headline-md text-on-surface font-bold">Business not found</h1>
+<a href="businesses.html" class="inline-block mt-4 bg-primary text-on-primary px-5 py-2.5 rounded text-label-md font-label-md font-bold">Browse businesses</a>
+</div>
+
+<div id="bizContent" class="hidden flex flex-col w-full">
+
+<section class="relative w-full overflow-hidden">
+<div id="coverBg" class="w-full h-56 md:h-72 bg-cover bg-center relative bg-primary">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-on-surface/30 to-transparent"></div>
+</div>
+<div class="max-w-7xl mx-auto px-margin md:px-margin-desktop -mt-20 md:-mt-24 relative z-10">
+<div class="bg-surface-container-lowest rounded-xl p-6 md:p-8 shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 min-w-0">
+<div id="logoBox" class="relative w-24 h-24 md:w-28 md:h-28 rounded-xl bg-surface-container-low flex items-center justify-center shadow-md shrink-0 overflow-hidden"></div>
+<div class="space-y-2 min-w-0">
+<div id="badgeRow" class="flex flex-wrap items-center gap-2"></div>
+<div class="flex items-center gap-3 flex-wrap"><h1 id="bizName" class="font-headline-lg text-headline-lg font-extrabold text-on-surface tracking-tight"></h1><span id="joinedBadge" class="font-body-sm text-body-sm text-on-surface-variant font-semibold bg-surface-container-low px-2 py-0.5 rounded"></span></div>
+<p id="bizLocation" class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1.5"></p>
+<div id="statsRow" class="flex flex-wrap items-center gap-4 pt-1 font-body-sm text-body-sm text-on-surface-variant"></div>
+</div>
+</div>
+<div class="flex flex-wrap sm:flex-nowrap lg:flex-col gap-2.5 w-full lg:w-auto shrink-0">
+<a id="waBtn" href="#" target="_blank" rel="noopener" class="w-full sm:w-auto bg-primary-container hover:bg-primary text-on-primary px-5 py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 shadow-sm transition-all duration-200"><span class="material-symbols-outlined text-[19px]">chat</span><span>WhatsApp This Business</span></a>
+<div class="flex items-center gap-2 w-full">
+<a id="callBtn" href="#" class="flex-1 bg-surface-container-low hover:bg-surface-container text-on-surface px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors"><span class="material-symbols-outlined text-[17px] text-primary">call</span><span>Call</span></a>
+<button onclick="document.getElementById('rfqCard').scrollIntoView({behavior:'smooth',block:'center'})" class="flex-1 bg-secondary text-on-secondary hover:bg-on-secondary-container px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors shadow-sm"><span class="material-symbols-outlined text-[17px]">request_quote</span><span>Send Enquiry</span></button>
+<a id="shareBtn" href="#" target="_blank" rel="noopener" class="p-2.5 bg-surface-container-low text-on-surface hover:text-primary rounded-lg transition-colors" title="Share Storefront"><span class="material-symbols-outlined text-[18px]">share</span></a>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="max-w-7xl mx-auto px-margin md:px-margin-desktop w-full mt-6">
+<div class="bg-surface-container-lowest rounded-xl p-1.5 shadow-sm overflow-x-auto flex items-center gap-1">
+<button onclick="document.getElementById('catalogSection').scrollIntoView({behavior:'smooth'})" class="px-4 py-2.5 rounded-lg font-label-md text-label-md bg-primary text-on-primary font-bold whitespace-nowrap transition-colors" id="catalogTabLabel">Catalog</button>
+<button onclick="document.getElementById('mapSection').scrollIntoView({behavior:'smooth'})" class="px-4 py-2.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-semibold whitespace-nowrap transition-colors">Location</button>
+<button onclick="document.getElementById('reviewsSection').scrollIntoView({behavior:'smooth'})" class="px-4 py-2.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low font-semibold whitespace-nowrap transition-colors" id="reviewsTabLabel">Reviews</button>
+</div>
+</section>
+
+<section class="max-w-7xl mx-auto px-margin md:px-margin-desktop w-full mt-8 mb-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-8 flex flex-col gap-10">
+
+<div id="catalogSection" class="flex flex-col gap-6">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary-container text-[20px]">inventory_2</span><h2 id="catalogHeading" class="font-headline-sm text-headline-sm font-bold text-on-surface">Catalog</h2></div>
+</div>
+<div id="catalogGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+<div id="catalogEmpty" class="hidden bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-xl p-space-2xl text-center">
+<span class="material-symbols-outlined text-[36px] text-primary">inventory_2</span>
+<h3 class="font-headline-sm text-body-lg font-bold text-on-surface mt-2">No listings from this business yet</h3>
+</div>
+</div>
+
+<div id="descriptionSection" class="bg-surface-container-lowest rounded-xl p-6 md:p-8 shadow-sm flex flex-col gap-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[22px] text-primary">description</span>About This Business</h3>
+<p id="bizDescription" class="font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-line"></p>
+</div>
+
+<div id="reviewsSection" class="bg-surface-container-lowest rounded-xl p-6 md:p-8 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div><h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Customer Feedback</h3><p class="font-body-sm text-body-sm text-on-surface-variant">Real reviews from real PaMarket buyers</p></div>
+<div id="ratingChip" class="hidden items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-lg"><span class="material-symbols-outlined text-secondary text-[18px]">star</span><span id="ratingChipText" class="font-headline-sm text-body-md font-bold text-on-surface"></span></div>
+</div>
+<div id="reviewsList" class="space-y-4"></div>
+<div id="reviewsEmpty" class="text-body-sm font-body-sm text-on-surface-variant">No reviews yet. Be the first to buy from this business and leave one.</div>
+</div>
+
+</div>
+
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div id="mapSection" class="bg-surface-container-lowest rounded-xl p-5 shadow-lg flex flex-col gap-4 lg:sticky lg:top-28">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[22px]">storefront</span><h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Location</h3></div>
+</div>
+<p id="mapLocationText" class="text-body-sm font-body-sm text-on-surface-variant"></p>
+<div id="mapContainer" class="hidden w-full h-56 rounded-xl overflow-hidden bg-surface-container"></div>
+<p id="mapCaption" class="text-label-sm font-label-sm text-on-surface-variant"></p>
+<div class="flex flex-col gap-2 pt-2">
+<a id="directionsBtn" href="#" target="_blank" rel="noopener" class="w-full bg-surface-container hover:bg-surface-container-high text-on-surface py-2.5 px-4 rounded-lg font-label-md text-label-md font-bold flex items-center justify-center gap-2 transition-colors"><span class="material-symbols-outlined text-[18px] text-primary">directions</span><span>Get Directions</span></a>
+</div>
+</div>
+
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-md flex flex-col gap-3" id="rfqCard">
+<div class="flex items-center justify-between"><h4 class="font-headline-sm text-headline-sm font-bold text-on-surface">Send an Enquiry</h4></div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sends straight to their real WhatsApp number.</p>
+<form id="rfqForm" class="flex flex-col gap-2.5 mt-1">
+<input id="rfqName" class="w-full px-3 py-2 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container" placeholder="Your Name" required type="text"/>
+<input id="rfqPhone" class="w-full px-3 py-2 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container" placeholder="Your Phone / WhatsApp" required type="text"/>
+<textarea id="rfqMessage" class="w-full px-3 py-2 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container" placeholder="What are you looking for?" rows="3" required></textarea>
+<button class="w-full bg-secondary hover:bg-on-secondary-container text-on-secondary py-2.5 rounded-lg font-label-md text-label-md font-bold shadow-sm transition-colors mt-1" type="submit">Send via WhatsApp</button>
+</form>
+</div>
+</div>
+
+</section>
+</div>
 </main>
 
 <!-- FOOTER:START -->
-<!-- ============================================================
-     PaMarket shared footer — SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the FOOTER:START/END markers.
-     Styling lives in css/site.css.
-     ============================================================ -->
-<footer>
-  <div class="foot-main">
-    <div>
-      <div class="foot-logo">Pa<em>Market</em></div>
-      <p class="foot-tagline">Zimbabwe's free marketplace. Buy, sell, find jobs and grow your business across all ten provinces. No fees, ever.</p>
-      <div class="foot-contact">
-        <a id="footWhatsapp" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp: +971 589 772 645</a>
-        <a id="footEmail" href="mailto:support@pamarketzw.com">support@pamarketzw.com</a>
-      </div>
-      <nav class="foot-social" aria-label="PaMarket on social media" style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;align-items:center">
-        <a id="footFacebook" href="https://www.facebook.com/share/1BYRHcg9C9/?mibextid=wwXIfr" target="_blank" rel="me noopener" aria-label="PaMarket on Facebook" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
-        <a id="footInstagram" href="https://www.instagram.com/pamarketzim" target="_blank" rel="me noopener" aria-label="PaMarket on Instagram" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.12 1.38C1.36 2.67.95 3.34.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.12.66.66 1.33 1.07 2.12 1.38.76.3 1.64.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.12-1.38.66-.66 1.07-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.12-.66-.66-1.33-1.07-2.12-1.38-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.41-10.4a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
-        <a href="https://x.com/pamarketzw" target="_blank" rel="me noopener" aria-label="PaMarket on X (Twitter)" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg></a>
-        <a id="footTiktok" href="https://www.tiktok.com/@pamarketzw?_r=1&amp;_t=ZS-97w0qE4b22v" target="_blank" rel="me noopener" aria-label="PaMarket on TikTok" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
-        <a href="https://www.linkedin.com/company/pamarket-zim/" target="_blank" rel="me noopener" aria-label="PaMarket on LinkedIn" style="color:inherit;opacity:.75"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
-      </nav>
-      <div class="foot-store">
-        <a id="footPlayStore" href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener">
-          <img src="img/google-play-badge.png" alt="Get it on Google Play" class="play-badge-sm" loading="lazy" decoding="async">
-        </a>
-        <a id="footAppStore" href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" aria-label="Download PaMarket on the Apple App Store">
-          <img src="img/app-store-badge.svg" alt="Download on the App Store" class="appstore-badge-sm" width="120" height="40" loading="lazy" decoding="async">
-        </a>
-      </div>
-    </div>
-    <div class="foot-col">
-      <h5>Categories</h5>
-      <a href="browse?cat=property">Property</a>
-      <a href="browse?cat=vehicles">Vehicles</a>
-      <a href="browse?cat=electronics">Electronics</a>
-      <a href="browse?cat=furniture">Furniture</a>
-      <a href="browse?cat=fashion">Fashion</a>
-      <a href="browse?cat=agriculture">Agriculture</a>
-      <a href="jobs">Jobs</a>
-      <a href="services">Services</a>
-      <a href="browse?shops=1">Shops</a>
-      <a href="plans">Shop Plans</a>
-      <a href="institutions">Institutions</a>
-    </div>
-    <div class="foot-col">
-      <h5>Customer Service</h5>
-      <a href="blog">Blog</a>
-      <a href="help">Help &amp; FAQ</a>
-      <a href="contact">Contact Us</a>
-      <a href="advertise">Advertise</a>
-      <a href="community-guidelines">Community Guidelines</a>
-      <a href="safety">Safety &amp; Fraud Prevention</a>
-      <a href="about">About PaMarket</a>
-    </div>
-    <div class="foot-col">
-      <h5>Legal</h5>
-      <a href="terms">Terms of Service</a>
-      <a href="privacy">Privacy Policy</a>
-      <a href="cookie-policy">Cookie Policy</a>
-      <a href="refund-policy">Refund &amp; Cancellation</a>
-      <a href="delete-account">Delete My Account</a>
-      <a href="#" data-cookie-settings>Cookie Settings</a>
-      <a href="post-ad">Post a Free Ad</a>
-      <a href="auth">Sign In</a>
-      <a href="auth?mode=signup">Create Account</a>
-    </div>
-  </div>
-  <div class="foot-bottom">
-    <span>&copy; 2026 PaMarket. Made in Zimbabwe. All rights reserved.</span>
-    <div class="foot-bottom-links">
-      <a href="terms">Terms</a>
-      <a href="privacy">Privacy</a>
-      <a href="cookie-policy">Cookies</a>
-      <a href="#" data-cookie-settings>Cookie Settings</a>
-      <a href="community-guidelines">Guidelines</a>
-      <a href="contact">Contact</a>
-    </div>
-  </div>
+<footer class="bg-surface-container-lowest border-t border-outline-variant">
+<div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl grid grid-cols-1 lg:grid-cols-5 gap-space-2xl">
+<div class="lg:col-span-1"><div class="flex items-center gap-2"><img alt="PaMarket Zimbabwe Logo" class="h-7 w-auto object-contain" src="img/icon-192.png"/><span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket</span></div><p class="mt-3 text-body-sm font-body-sm text-on-surface-variant">Zimbabwe's primary institutional digital marketplace. Empowering commercial transactions across all 10 provinces with multi-currency pricing and a real jobs board.</p><div class="mt-4 flex items-center gap-2"><a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" aria-label="Get it on Google Play"><img src="img/google-play-badge.png" alt="Get it on Google Play" class="h-9 w-auto"/></a><a href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" aria-label="Download on the App Store"><img src="img/app-store-badge.svg" alt="Download on the App Store" class="h-9 w-auto"/></a></div></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Marketplace Categories</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="browse.html?cat=vehicles">Vehicles &amp; Car Rental</a></li><li><a class="hover:text-primary" href="browse.html?cat=property">Residential &amp; Commercial Property</a></li><li><a class="hover:text-primary" href="browse.html?cat=electronics">Mobile Phones &amp; Tech Hardware</a></li><li><a class="hover:text-primary" href="browse.html?cat=furniture">Home, Living &amp; Furniture</a></li><li><a class="hover:text-primary" href="browse.html?cat=agriculture">Agriculture, Inputs &amp; Produce</a></li><li><a class="hover:text-primary" href="browse.html?cat=fashion">Fashion, Apparel &amp; Beauty</a></li></ul></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Dedicated Hubs</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="jobs.html">PaMarket Jobs (Seekers &amp; Employers)</a></li><li><a class="hover:text-primary" href="businesses.html">Verified Business Storefronts</a></li><li><a class="hover:text-primary" href="institutions.html">High Schools &amp; Universities Campus Hub</a></li><li><a class="hover:text-primary font-bold text-secondary" href="advertise.html">Advertise With Us &amp; Banner Placements &rarr;</a></li></ul></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Trust, Safety &amp; Legal</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="safety.html">Safety Guidelines for Buyers &amp; Sellers</a></li><li><a class="hover:text-primary" href="terms.html">Terms of Service &amp; Compliance</a></li><li><a class="hover:text-primary" href="privacy.html">Privacy &amp; Data Protection Policy</a></li><li><a class="hover:text-primary" href="cookie-policy.html">Cookie Policy</a></li><li><a class="hover:text-primary" href="community-guidelines.html">Prohibited Items &amp; Penalties</a></li></ul></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Support &amp; Provincial Offices</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="contact.html">24/7 Help Desk &amp; Inquiries</a></li><li><a class="hover:text-primary" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp Helpline (+971 589 772 645)</a></li></ul></div>
+</div>
+<div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span>&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. Serving all 10 provinces across Zimbabwe. All rights reserved.</span><span>Multi-Currency Clearing Engine (USD / ZiG)</span></div></div>
 </footer>
-<script src="js/cookie-consent.js" defer></script>
-<script src="js/site-content.js" defer></script>
-<script defer>
-// Overlays admin-managed contact/social/store links onto the footer above.
-// Every element already has its current hardcoded value as href/text, so a
-// failed or slow request just leaves the page exactly as it renders today —
-// this only ever upgrades what's already correct and visible.
-(function () {
-  function apply(content) {
-    if (!content) return;
-    var map = [
-      ['footWhatsapp', content.whatsappNumber ? 'https://wa.me/' + String(content.whatsappNumber).replace(/[^0-9]/g, '') : null, content.whatsappNumber ? 'WhatsApp: ' + content.whatsappNumber : null],
-      ['footEmail', content.supportEmail ? 'mailto:' + content.supportEmail : null, content.supportEmail],
-      ['footFacebook', content.socialLinks && content.socialLinks.facebook, null],
-      ['footInstagram', content.socialLinks && content.socialLinks.instagram, null],
-      ['footTiktok', content.socialLinks && content.socialLinks.tiktok, null],
-      ['footPlayStore', content.playStoreUrl, null],
-      ['footAppStore', content.appStoreUrl, null],
-    ];
-    map.forEach(function (row) {
-      var id = row[0], href = row[1], text = row[2];
-      var el = document.getElementById(id);
-      if (!el) return;
-      var safe = window.PMContent ? window.PMContent.safeHref(href) : '';
-      if (safe) el.setAttribute('href', safe);
-      if (text) el.textContent = text;
-    });
-  }
-  function init() {
-    if (!window.PMContent) return;
-    window.PMContent.fetchSiteSettings().then(apply);
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
 <!-- FOOTER:END -->
 
-<!-- WhatsApp float -->
-<div class="wa">
-  <a class="wa-btn" id="waFloat" href="https://wa.me/971589772645" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3M12 21.5c-1.7 0-3.3-.4-4.7-1.3l-3.4.9.9-3.3c-1-1.5-1.5-3.2-1.5-5C3.8 7.6 7.5 3.9 12 3.9s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2m0-18C6.5 3.5 2 8 2 13.5c0 1.9.5 3.7 1.5 5.3L2 24l5.3-1.4c1.5.8 3.1 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 3.5 12 3.5"/></svg>
-  </a>
-</div>
-
-<script src="js/utils/urls.js"></script><script src="js/utils/escape.js"></script><script src="js/components/feedback.js"></script>
-<script src="js/session.js"></script>
-<script src="js/marketplace-data.js"></script>
-<script src="js/listing-schema.js"></script>
-<script src="js/nav-dropdowns.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/core/supabase-client.js"></script>
+<script src="js/services/service-transport.js"></script>
+<script src="js/services/listings.js"></script>
+<script src="js/services/businesses.js"></script>
+<script src="js/services/fx-rate.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="js/session.js" defer></script>
+<script src="js/cookie-consent.js" defer></script>
 <script>
-'use strict';
-var BIZ_TYPE_LABEL = { individual: 'Individual Seller', company: 'Registered Company', agency: 'Agency' };
-var CAT_LABEL = { property:'Property', vehicles:'Vehicles', electronics:'Electronics', furniture:'Furniture', fashion:'Fashion', services:'Services', agriculture:'Agriculture', rooms:'Rooms', pets:'Pets', kids:'Baby & Kids', jobs:'Jobs', other:'Other' };
+(function(){
+  'use strict';
+  var ZIG_RATE = 27.42;
+  window.PM_CURRENCY = window.PM_CURRENCY || 'USD';
+  var CATEGORY_LABEL = { electronics:'Electronics', fashion:'Fashion', kids:'Kids & Baby', services:'Services', other:'General', vehicles:'Vehicles', property:'Property', furniture:'Furniture', pets:'Pets', agriculture:'Agriculture', jobs:'Jobs' };
+  var TOWN_COORDS = {
+    'harare cbd':[-17.8292,31.0522],'harare':[-17.8292,31.0522],'msasa':[-17.8283,31.1264],'murewa':[-17.6500,31.7833],
+    'chitungwiza - st marys':[-18.0127,31.0755],'mutare':[-18.9707,32.6709],'bulawayo':[-20.1500,28.5833]
+  };
+  var PROVINCE_COORDS = {
+    'Harare':[-17.8292,31.0522],'Bulawayo':[-20.1500,28.5833],'Manicaland':[-18.9707,32.6709],'Mashonaland East':[-18.1853,31.5514],
+    'Mashonaland West':[-17.3667,30.2000],'Mashonaland Central':[-17.0058,31.3306],'Masvingo':[-20.0637,30.8277],
+    'Matabeleland North':[-18.9333,27.8000],'Matabeleland South':[-20.9333,29.0000],'Midlands':[-19.4500,29.8167]
+  };
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function fmtPrice(n){ if(n==null) return 'N/A'; return '$' + Number(n).toLocaleString('en-US'); }
+  function fmtZig(n){ if(n==null) return ''; return Math.round(Number(n)*ZIG_RATE).toLocaleString('en-US'); }
+  function priceHtml(n){
+    if (n == null) return '<span class="font-price-primary text-price-primary text-primary">Contact for price</span>';
+    if (window.PM_CURRENCY === 'ZiG') return '<span class="font-price-primary text-price-primary text-primary">ZiG '+fmtZig(n)+'</span> <span class="font-label-sm text-label-sm text-on-surface-variant">approx '+fmtPrice(n)+' USD</span>';
+    return '<span class="font-price-primary text-price-primary text-primary">'+fmtPrice(n)+'</span><span class="font-label-sm text-label-sm text-on-surface-variant"> USD</span>';
+  }
+  function timeAgo(iso){
+    if (!iso) return '';
+    var d = new Date(iso), mins = Math.floor((Date.now()-d)/60000);
+    if (mins < 60) return mins + ' min' + (mins===1?'':'s') + ' ago';
+    var hrs = Math.floor(mins/60);
+    if (hrs < 24) return hrs + ' hr' + (hrs===1?'':'s') + ' ago';
+    var days = Math.floor(hrs/24);
+    if (days === 1) return 'Yesterday';
+    if (days < 30) return days + ' days ago';
+    return d.toLocaleDateString('en-ZW', {day:'numeric', month:'short', year:'numeric'});
+  }
+  function doHeaderSearch(){
+    var q = (document.getElementById('headerSearchInput')||{}).value || '';
+    window.location.href = 'browse.html' + (q.trim() ? '?q=' + encodeURIComponent(q.trim()) : '');
+  }
+  window.doHeaderSearch = doHeaderSearch;
+  var lastCatalogRows = [];
+  window.setCurrency = function(cur){
+    window.PM_CURRENCY = cur;
+    var usdBtn = document.getElementById('currencyUsdBtn'), zigBtn = document.getElementById('currencyZigBtn');
+    var activeCls = 'px-2 py-1 rounded bg-primary text-on-primary font-bold shadow-sm';
+    var inactiveCls = 'px-2 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors font-medium';
+    if (usdBtn && zigBtn) { usdBtn.className = cur==='USD'?activeCls:inactiveCls; zigBtn.className = cur==='ZiG'?activeCls:inactiveCls; }
+    if (lastCatalogRows.length) document.getElementById('catalogGrid').innerHTML = lastCatalogRows.map(catalogCard).join('');
+  };
 
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function initials(name){ return (name||'Shop').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
-function stars(r){ var full=Math.round(r); return '★★★★★'.slice(0,full)+'☆☆☆☆☆'.slice(0,5-full); }
-function qparam(k){ return new URLSearchParams(location.search).get(k); }
+  var params = new URLSearchParams(window.location.search);
+  var bizId = params.get('id');
+  var biz = null;
 
-function prodCard(l){
-  var photo = l.photos && l.photos.length ? l.photos[0] : null;
-  var loc = [l.suburb, l.city].filter(Boolean).join(', ') || l.province || 'Zimbabwe';
-  var media = photo
-    ? '<img class="pm-card-img-el" src="'+esc(photo)+'" alt="'+esc(l.title)+'" loading="lazy" decoding="async">'
-    : '<div class="pm-card-ph" style="color:var(--navy)">'+esc(l.title.split(' ').slice(0,3).join(' '))+'</div>';
-  return '<a class="pm-card" href="'+esc(PMUrls.listingPath(l))+'">'+
-    '<div class="pm-card-img" style="background:var(--paper)">'+media+'</div>'+
-    '<div class="pm-card-body">'+
-      '<div class="pm-card-price">'+esc(PM.money(l.price,l.currency))+'</div>'+
-      '<div class="pm-card-title">'+esc(l.title)+'</div>'+
-      '<div class="pm-card-loc">📍 '+esc(loc)+'</div>'+
-    '</div></a>';
-}
-
-function bizCard(b){
-  var loc = [b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
-  var bizCardImg = b.logo || (Array.isArray(b.photos) && b.photos[0]);
-  var logo = bizCardImg
-    ? '<img src="'+esc(bizCardImg)+'" alt="'+esc(b.name)+'" loading="lazy" decoding="async">'
-    : esc(initials(b.name));
-  var vf = b.verification_level >= 2 ? '<span class="pm-biz-verified" title="Verified">✓</span>' : '';
-  return '<a class="pm-biz" href="business?id='+esc(b.id)+'">'+
-    '<div class="pm-biz-logo">'+logo+'</div>'+
-    '<div class="pm-biz-body">'+
-      '<div class="pm-biz-name">'+esc(b.name)+' '+vf+'</div>'+
-      '<div class="pm-biz-loc">📍 '+esc(loc)+'</div>'+
-    '</div></a>';
-}
-
-function setMeta(b, url){
-  var title = b.name + ' — PaMarket Zimbabwe';
-  var desc = (b.description ? b.description.slice(0,155) : 'Browse products from ' + b.name + ' on PaMarket, Zimbabwe\'s free marketplace.');
-  var img = b.cover || (Array.isArray(b.photos) && b.photos[0]) || b.logo || 'https://pamarketzw.com/img/icon-512.png';
-  document.title = title;
-  document.getElementById('pageTitle').textContent = title;
-  var set = function(id, attr, val){ var el=document.getElementById(id); if(el) el.setAttribute(attr, val); };
-  set('metaDesc','content',desc);
-  set('canonicalLink','href',url);
-  set('ogTitle','content',title); set('ogDesc','content',desc); set('ogImage','content',img); set('ogUrl','content',url);
-  set('twTitle','content',title); set('twDesc','content',desc); set('twImage','content',img);
-  // A non-active shop is only ever fetchable by its own owner (RLS) or an
-  // admin -- never index a page a real visitor can never actually reach.
-  if (b.status !== 'active') set('robotsMeta','content','noindex, nofollow');
-}
-
-// Dynamic JSON-LD — real data only. AggregateRating/Review are emitted ONLY
-// when the seller actually has reviews (no fabricated ratings).
-function injectSchema(b, url, reviews, listings){
-  // Schema built by the shared module (js/listing-schema.js) so this page and
-  // the static /b/ pre-render emit identical Store/ProfilePage/Breadcrumb JSON-LD.
-  (window.PMSchema ? PMSchema.buildBusinessSchema(b, url, reviews, listings || []) : []).forEach(function(obj){
-    var s=document.createElement("script"); s.type="application/ld+json";
-    s.textContent=JSON.stringify(obj); document.head.appendChild(s);
-  });
-}
-
-function render(b, extras){
-  // Canonical points at the static, pre-rendered b/*.html page (real content,
-  // no JS required to index) rather than this page's own URL — that page's
-  // own canonical points back here in agreement (tools/prerender.js).
-  var url = PMSchema.businessUrl(b);
-  var reviews = extras.reviews || [], listings = extras.listings || [];
-  var followers = extras.followers || 0, related = extras.related || [];
-  setMeta(b, url);
-  injectSchema(b, url, reviews, listings);
-
-  var loc = [b.suburb, b.city, b.province].filter(Boolean).filter(function(v,i,a){ return a.indexOf(v) === i; }).join(', ') || 'Zimbabwe';
-  var avg = reviews.length ? (reviews.reduce(function(a,r){return a+(Number(r.rating)||0);},0)/reviews.length) : 0;
-  var year = b.created_at ? new Date(b.created_at).getFullYear() : '';
-  var cats = (b.category || '').split('|').filter(Boolean);
-  var verified = b.verification_level >= 2;
-
-  // Shop photos (businesses.photos) is what the mobile Create Shop /
-  // Manage Shop flow actually uploads — a real array the owner picks
-  // during onboarding. b.cover/b.logo are separate, older columns that
-  // flow sets neither, so falling back to photos[0] for the cover is
-  // what makes a newly-approved shop's own images ever appear here at
-  // all instead of a blank navy banner. Keep this fallback and the
-  // gallery below in sync with tools/prerender.js's renderBusiness().
-  var photos = Array.isArray(b.photos) ? b.photos.filter(Boolean) : [];
-  var cover = b.cover ? '<img src="'+esc(b.cover)+'" alt="'+esc(b.name)+' cover" fetchpriority="high" decoding="async">'
-    : (photos.length ? '<img src="'+esc(photos[0])+'" alt="'+esc(b.name)+' cover" fetchpriority="high" decoding="async">' : '');
-  var logo = b.logo ? '<img src="'+esc(b.logo)+'" alt="'+esc(b.name)+' logo" loading="eager" decoding="async">' : esc(initials(b.name));
-
-  // Owner-only: buy extra featured slots for this shop (Paynow).
-  var viewer = PM.currentUserId && PM.currentUserId();
-  var isOwner = !!(viewer && b.owner_user_id && viewer === b.owner_user_id);
-
-  // Contact actions — brand-preserving .btn variants
-  var actions = '';
-  if (!isOwner) actions += '<a class="btn btn-navy" href="chats?biz='+encodeURIComponent(b.id)+'"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-3px;margin-right:6px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Message Business</a>';
-  var wa = b.whatsapp || b.phone;
-  if (wa) actions += '<a class="btn btn-whatsapp" href="https://wa.me/'+esc(String(wa).replace(/[^0-9]/g,''))+'" target="_blank" rel="noopener">WhatsApp</a>';
-  if (b.phone) actions += '<a class="btn btn-navy" href="tel:'+esc(b.phone)+'">Call</a>';
-  if (b.email) actions += '<a class="btn btn-outline" href="mailto:'+esc(b.email)+'">Email</a>';
-
-  var statHtml = '';
-  if (reviews.length) statHtml += '<div class="biz-stat"><div class="n">'+avg.toFixed(1)+' ★</div><div class="l">'+reviews.length+' review'+(reviews.length>1?'s':'')+'</div></div>';
-  statHtml += '<div class="biz-stat"><div class="n">'+(extras.listingCount||listings.length)+'</div><div class="l">Listings</div></div>';
-  statHtml += '<div class="biz-stat"><div class="n">'+followers+'</div><div class="l">Followers</div></div>';
-  if (year) statHtml += '<div class="biz-stat"><div class="n">'+year+'</div><div class="l">On PaMarket since</div></div>';
-
-  var statusBanner = (isOwner && b.status !== 'active')
-    ? '<div class="biz-section" style="background:#FBF4E6;border:1px solid #E8A33D33;border-radius:12px;padding:14px 18px;margin-bottom:16px">'+
-      '<b>'+(b.status==='suspended'?'This shop is suspended.':'This shop is pending review.')+'</b> '+
-      (b.status==='suspended'
-        ? 'Contact support if you believe this is a mistake.'
-        : 'Only you can see this page until PaMarket approves it — usually within 24 hours. It is not visible to buyers yet.')+
-      '</div>'
-    : '';
-
-  var ownerPanel = isOwner
-    ? '<div class="biz-section owner-panel"><h2>Manage your shop</h2>'+
-      '<div class="sub">Keep your shop details current and stay on top of buyer messages.</div>'+
-      '<div class="biz-actions" style="margin-top:14px"><a class="btn btn-navy" href="open-shop?id='+encodeURIComponent(b.id)+'">Edit Shop</a>'+
-      '<a class="btn btn-outline" href="chats">View Conversations</a></div>'+
-      '<h2 style="margin-top:22px">Featured slots for your shop</h2>'+
-      '<div class="sub">Featured slots let you keep more of your listings pinned to the top of their category at once. '+
-      '<span id="slotBalance">Checking your balance…</span></div>'+
-      '<div class="slot-buy" id="slotBuy"></div></div>'
-    : '';
-
-  var html =
-    '<div class="biz-cover">'+cover+'</div>'+
-    '<div class="biz-head">'+
-      '<div class="biz-id">'+
-        '<div class="biz-logo">'+logo+'</div>'+
-        '<div class="biz-id-name">'+
-          '<div class="biz-name-row"><h1 class="biz-name">'+esc(b.name)+'</h1>'+
-            (verified?'<span class="biz-verified">✓ Verified</span>':'')+'</div>'+
-        '</div>'+
-      '</div>'+
-      '<div class="biz-meta">'+
-        '<span>🏷️ '+esc(BIZ_TYPE_LABEL[b.biz_type]||'Seller')+'</span>'+
-        '<span>📍 '+esc(loc)+'</span>'+
-      '</div>'+
-      '<div class="biz-stats">'+statHtml+'</div>'+
-      '<div class="biz-actions">'+(actions||'<span class="sub" style="color:var(--mute);font-size:13px">No contact details provided</span>')+'</div>'+
-    '</div>'+
-    '<div class="biz-body">'+
-      statusBanner+
-      ownerPanel+
-      (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>'+esc(b.description)+'</p>'+
-        (cats.length?'<div class="cat-chips">'+cats.map(function(c){return '<span class="pm-chip">'+esc(CAT_LABEL[c]||c)+'</span>';}).join('')+'</div>':'')+'</div>' : '')+
-
-      (photos.length ? '<div class="biz-section"><h2>Shop Photos</h2><div class="sub">Photos '+esc(b.name)+' added about their business</div>'+
-        '<div class="biz-photos-grid">'+photos.map(function(p,i){return '<img src="'+esc(p)+'" alt="'+esc(b.name)+' photo '+(i+1)+'" loading="lazy" decoding="async">';}).join('')+
-        '</div></div>' : '')+
-
-      '<div class="biz-section"><h2>Listings</h2><div class="sub">Products &amp; services from '+esc(b.name)+'</div>'+
-        (listings.length
-          ? '<div class="prod-grid">'+listings.map(prodCard).join('')+'</div>'
-          : PMFeedback.empty('No live listings yet. Check back soon.'))+
-      '</div>'+
-
-      '<div class="biz-section"><h2>Reviews &amp; Ratings</h2>'+
-        (reviews.length
-          ? '<div class="rating-hero"><div class="rating-big">'+avg.toFixed(1)+'</div><div><div class="rating-stars">'+stars(avg)+'</div>'+
-            '<div class="rating-count">Based on '+reviews.length+' verified review'+(reviews.length>1?'s':'')+'</div></div></div>'+
-            '<div class="rev-list">'+reviews.map(function(r){
-              return '<div class="rev"><div class="rev-top"><div class="rev-av">'+esc(initials(r.reviewer_name))+'</div>'+
-                '<div><div class="rev-who">'+esc(r.reviewer_name||'PaMarket user')+'</div>'+
-                '<div class="rev-date">'+esc(PM.timeAgo(r.created_at))+'</div></div>'+
-                '<div class="rev-stars">'+stars(r.rating)+'</div></div>'+
-                (r.body?'<div class="rev-body">'+esc(r.body)+'</div>':'')+'</div>';
-            }).join('')+'</div>'
-          : PMFeedback.empty('This shop has no reviews yet.'))+
-      '</div>'+
-
-      (related.length
-        ? '<div class="biz-section"><h2>Related Shops</h2><div class="sub">Other businesses on PaMarket</div>'+
-          '<div class="rel-grid">'+related.map(bizCard).join('')+'</div></div>'
-        : '')+
-    '</div>';
-
-  document.getElementById('bizLoading').classList.add('hidden');
-  var c = document.getElementById('bizContent');
-  c.innerHTML = html;
-  c.classList.remove('hidden');
-
-  // WhatsApp float → this shop
-  if (wa) document.getElementById('waFloat').setAttribute('href','https://wa.me/'+String(wa).replace(/[^0-9]/g,''));
-
-  if (isOwner) initSlotBuy(b.id);
-}
-
-// Owner-only featured-slot purchase (Paynow). Shows the current balance and
-// buy buttons priced identically to the app.
-function initSlotBuy(businessId){
-  var buy = document.getElementById('slotBuy');
-  if (!buy) return;
-  PM.fetchExtraSlotBalance(businessId).then(function(n){
-    var el = document.getElementById('slotBalance');
-    if (el) el.textContent = n>0 ? ('You have '+n+' extra slot'+(n===1?'':'s')+'.') : 'You have no extra slots yet.';
-  });
-  buy.innerHTML = (PM.SLOT_PACK_PRODUCTS||[]).map(function(p){
-    return '<button type="button" class="slot-opt" data-product="'+p.productId+'">'+
-      '<span class="so-label">'+p.label+'</span>'+(p.tag?'<span class="so-tag">'+p.tag+'</span>':'')+
-      '<span class="so-price">$'+p.priceUsd+'</span></button>';
-  }).join('');
-  buy.querySelectorAll('.slot-opt').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      buy.querySelectorAll('.slot-opt').forEach(function(b){ b.disabled = true; });
-      btn.querySelector('.so-label').textContent = 'Starting checkout…';
-      PM.createSlotPackPayment(businessId, btn.getAttribute('data-product')).then(function(r){
-        window.location.href = r.redirectUrl;
-      }).catch(function(err){
-        buy.querySelectorAll('.slot-opt').forEach(function(b){ b.disabled = false; });
-        initSlotBuy(businessId);
-        alert(err && err.message==='not-authenticated'
-          ? 'Please sign in again to buy featured slots.'
-          : 'Could not start the payment: '+((err&&err.message)||'unknown error'));
-      });
+  if (!bizId) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('notFoundState').classList.remove('hidden');
+  } else {
+    window.PMBusinesses.fetchBusinessById(bizId).then(function(row){
+      document.getElementById('loadingState').classList.add('hidden');
+      if (!row) { document.getElementById('notFoundState').classList.remove('hidden'); return; }
+      biz = row;
+      render(biz);
+      document.getElementById('bizContent').classList.remove('hidden');
+      loadCatalog();
+      loadReviews();
+      if (window.PMFxRate) window.PMFxRate.getRate().then(function(r){ ZIG_RATE = r.rate; if (lastCatalogRows.length) document.getElementById('catalogGrid').innerHTML = lastCatalogRows.map(catalogCard).join(''); });
+    }).catch(function(){
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('notFoundState').classList.remove('hidden');
     });
-  });
-}
+  }
 
-function showNotFound(){
-  // A shop that isn't active must not be indexed (SEO — don't index removed
-  // content). Backend RLS/PM filters already keep hidden shops out of the fetch.
-  var rm=document.getElementById('robotsMeta');if(rm)rm.setAttribute('content','noindex, nofollow');
-  document.getElementById('bizLoading').classList.add('hidden');
-  var c = document.getElementById('bizContent');
-  c.innerHTML = '<div class="biz-body"><div class="empty-state" style="margin-top:60px">'+
-    '<h2 style="margin-bottom:8px">Shop not found</h2>'+
-    '<p>This business may have been removed or is not active. <a href="browse?shops=1">Browse all shops</a>.</p></div></div>';
-  c.classList.remove('hidden');
-  document.getElementById('pageTitle').textContent = 'Shop not found — PaMarket';
-}
+  function abbreviation(name){ return (name||'B').trim().charAt(0).toUpperCase(); }
 
-function init(){
-  var id = qparam('id');
-  if (!id){ showNotFound(); return; }
-  PM.fetchBusinessById(id).then(function(b){
-    if (!b){ showNotFound(); return; }
-    Promise.all([
-      PM.fetchListings({ businessId: id, limit: 12 }).catch(function(){ return []; }),
-      PM.fetchSellerReviews(b.owner_user_id, 20),
-      PM.fetchExactCount('business_followers', 'business_id=eq.' + id, 'user_id').catch(function(){ return 0; }),
-      PM.fetchExactCount('listings', 'business_id=eq.' + id + '&status=eq.active').catch(function(){ return 0; }),
-      PM.fetchBusinesses({ limit: 6 }).catch(function(){ return []; })
-    ]).then(function(res){
-      var extras = {
-        listings: res[0] || [],
-        reviews: res[1] || [],
-        followers: res[2] || 0,
-        listingCount: res[3] || (res[0] || []).length,
-        related: (res[4] || []).filter(function(x){ return x.id !== id; }).slice(0, 6)
-      };
-      // Fallback: some shops attach listings by owner rather than business_id.
-      if (!extras.listings.length && b.owner_user_id){
-        PM.fetchListings({ sellerId: b.owner_user_id, limit: 12 })
-          .then(function(rows){
-            extras.listings = rows || [];
-            if (!extras.listingCount) extras.listingCount = extras.listings.length;
-            render(b, extras);
-          })
-          .catch(function(){ render(b, extras); });
-      } else {
-        render(b, extras);
-      }
+  function render(b){
+    var name = b.name || 'Unnamed Business';
+    document.getElementById('pageTitle').textContent = name + ' - PaMarket Zimbabwe';
+    document.getElementById('metaDesc').setAttribute('content', name + ' on PaMarket. ' + (b.description||'').slice(0,120));
+    document.getElementById('canonicalLink').setAttribute('href', 'https://pamarketzw.com/business?id=' + b.id);
+
+    var cover = (Array.isArray(b.photos) && b.photos[0]) || b.cover;
+    if (cover) document.getElementById('coverBg').style.backgroundImage = 'url(\''+cover+'\')';
+
+    var logoEl = document.getElementById('logoBox');
+    logoEl.innerHTML = b.logo
+      ? '<img class="w-full h-full object-cover" src="'+b.logo+'" alt="'+esc(name)+'"/>'
+      : '<span class="font-headline-lg text-headline-lg font-black text-primary">'+esc(abbreviation(name))+'</span>';
+
+    var badgeHtml = '';
+    if (b.verification_level > 0) badgeHtml += '<span class="material-symbols-outlined text-[#1D9BF0] text-[20px]" style="font-variation-settings:\'FILL\' 1" title="Verified business">verified</span>';
+    badgeHtml += '<span class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold px-2 py-0.5 rounded capitalize">'+esc(b.biz_type||'Seller')+'</span>';
+    document.getElementById('badgeRow').innerHTML = badgeHtml;
+
+    document.getElementById('bizName').textContent = name;
+    if (b.created_at) document.getElementById('joinedBadge').textContent = 'Joined ' + new Date(b.created_at).toLocaleDateString('en-ZW',{month:'long',year:'numeric'});
+    var loc = [b.suburb, b.city, b.province].filter(Boolean).join(', ') || 'Zimbabwe';
+    document.getElementById('bizLocation').innerHTML = '<span class="material-symbols-outlined text-secondary text-[18px]">location_on</span>'+esc(loc);
+    document.getElementById('mapLocationText').textContent = loc;
+
+    var phoneDigits = (b.whatsapp||b.phone||'').replace(/[^0-9+]/g,'');
+    var waText = encodeURIComponent('Hi '+name+', I found your business on PaMarket.');
+    var waHref = phoneDigits ? 'https://wa.me/'+phoneDigits.replace('+','')+'?text='+waText : null;
+    var callDigits = (b.phone||'').replace(/[^0-9+]/g,'');
+    var waBtn = document.getElementById('waBtn'), callBtn = document.getElementById('callBtn');
+    if (waHref) { waBtn.href = waHref; } else { waBtn.classList.add('opacity-50','pointer-events-none'); }
+    if (callDigits) { callBtn.href = 'tel:'+callDigits; } else { callBtn.classList.add('opacity-50','pointer-events-none'); }
+    document.getElementById('shareBtn').href = 'https://wa.me/?text='+encodeURIComponent(name+' on PaMarket: '+window.location.href);
+    document.getElementById('directionsBtn').href = 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc);
+
+    document.getElementById('bizDescription').textContent = b.description || 'No description provided.';
+    if (!b.description) document.getElementById('descriptionSection').classList.add('hidden');
+
+    // Real approximate map (no exact geocoding stored for businesses yet)
+    var cityKey = (b.city||'').trim().toLowerCase();
+    var coords = TOWN_COORDS[cityKey] || PROVINCE_COORDS[b.province];
+    if (coords && window.L) {
+      var mapEl = document.getElementById('mapContainer');
+      mapEl.classList.remove('hidden');
+      document.getElementById('mapCaption').textContent = 'Approximate area, exact address shared once you contact the business.';
+      setTimeout(function(){
+        try {
+          var map = L.map(mapEl).setView(coords, 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+          L.circle(coords, { radius: 3000, color: '#0f5132', fillColor: '#0f5132', fillOpacity: 0.15 }).addTo(map);
+        } catch(e) {}
+      }, 50);
+    }
+
+    var rfqForm = document.getElementById('rfqForm');
+    rfqForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var nm = document.getElementById('rfqName').value.trim();
+      var ph = document.getElementById('rfqPhone').value.trim();
+      var msg = document.getElementById('rfqMessage').value.trim();
+      var text = 'Hi '+name+', my name is '+nm+' ('+ph+'). '+msg+' - via PaMarket';
+      var target = phoneDigits ? 'https://wa.me/'+phoneDigits.replace('+','')+'?text='+encodeURIComponent(text) : 'https://wa.me/?text='+encodeURIComponent(text);
+      window.open(target, '_blank');
     });
-  }).catch(showNotFound);
-}
+  }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+  function catalogCard(l){
+    var photo = (Array.isArray(l.photos) && l.photos[0]) || 'img/icon-512.png';
+    return '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">' +
+      '<div><a href="detail.html?id='+encodeURIComponent(l.id)+'" class="relative w-full h-52 rounded-lg overflow-hidden bg-surface-container-low mb-3 block">' +
+      '<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="'+photo+'" alt="'+esc(l.title||'')+'"/>' +
+      (l.condition ? '<span class="absolute top-2.5 left-2.5 bg-primary-container text-on-primary font-label-sm text-label-sm font-bold px-2 py-0.5 rounded">'+esc(l.condition==='new'?'Brand New':(l.condition.charAt(0).toUpperCase()+l.condition.slice(1)))+'</span>' : '') +
+      '</a>' +
+      '<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant mb-1"><span>'+esc(CATEGORY_LABEL[l.category]||l.category||'')+'</span><span class="text-on-surface-variant">'+timeAgo(l.created_at)+'</span></div>' +
+      '<a href="detail.html?id='+encodeURIComponent(l.id)+'" class="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight mb-3 block hover:text-primary">'+esc(l.title||'Untitled listing')+'</a>' +
+      '</div>' +
+      '<div class="pt-3 bg-surface-container-low/40 p-3 rounded-lg flex flex-col gap-2">' +
+      '<div class="flex items-baseline justify-between"><div>'+priceHtml(l.price)+'</div></div>' +
+      '<div class="flex items-center gap-2 pt-1">' +
+      '<a href="detail.html?id='+encodeURIComponent(l.id)+'" class="flex-1 bg-primary text-on-primary py-2 rounded-lg font-label-md text-label-md font-bold hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-[16px]">visibility</span> View Listing</a>' +
+      '</div></div></div>';
+  }
+
+  function loadCatalog(){
+    window.PMListings.fetchListings({ businessId: bizId, limit: 24 }).then(function(rows){
+      lastCatalogRows = rows || [];
+      var grid = document.getElementById('catalogGrid');
+      var empty = document.getElementById('catalogEmpty');
+      document.getElementById('catalogHeading').textContent = 'Catalog (' + lastCatalogRows.length + ')';
+      document.getElementById('catalogTabLabel').textContent = 'Catalog (' + lastCatalogRows.length + ')';
+      if (!lastCatalogRows.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      grid.innerHTML = lastCatalogRows.map(catalogCard).join('');
+    }).catch(function(){});
+  }
+
+  function loadReviews(){
+    window.PMServiceTransport.fetchJson('business_reviews?business_id=eq.'+encodeURIComponent(bizId)+'&select=*&order=created_at.desc').then(function(rows){
+      document.getElementById('reviewsTabLabel').textContent = 'Reviews (' + rows.length + ')';
+      if (!rows.length) { document.getElementById('reviewsEmpty').classList.remove('hidden'); return; }
+      document.getElementById('reviewsEmpty').classList.add('hidden');
+      var sum = rows.reduce(function(s,r){ return s + r.rating; }, 0);
+      var avg = (sum / rows.length).toFixed(1);
+      var chip = document.getElementById('ratingChip');
+      chip.classList.remove('hidden'); chip.classList.add('flex');
+      document.getElementById('ratingChipText').textContent = avg + ' / 5.0';
+      document.getElementById('reviewsList').innerHTML = rows.map(function(r){
+        var initial = (r.reviewer_name||'A').trim().charAt(0).toUpperCase();
+        var stars = '';
+        for (var i=0;i<5;i++) stars += '<span class="material-symbols-outlined text-[16px]" style="font-variation-settings:\'FILL\' '+(i<r.rating?1:0)+'">star</span>';
+        return '<div class="bg-surface-container-low/50 p-4 rounded-lg flex flex-col gap-2">' +
+          '<div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-primary text-on-primary font-bold text-label-md flex items-center justify-center">'+esc(initial)+'</span><span class="font-label-md text-label-md font-bold text-on-surface">'+esc(r.reviewer_name||'Anonymous')+'</span></div><span class="text-secondary flex">'+stars+'</span></div>' +
+          (r.comment ? '<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">'+esc(r.comment)+'</p>' : '') +
+          '</div>';
+      }).join('');
+    }).catch(function(){
+      document.getElementById('reviewsEmpty').classList.remove('hidden');
+    });
+  }
+})();
 </script>
-</body>
-</html>
+</body></html>

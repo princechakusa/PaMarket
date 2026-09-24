@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signing in... — PaMarket</title>
+<title>Signing in...: PaMarket</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&family=Manrope:wght@900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F5F7FA}
+body{font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F5F7FA}
 .box{text-align:center;padding:48px 32px;background:#fff;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.08);max-width:360px;width:100%;margin:16px}
-.logo{font-size:28px;font-weight:900;color:#1A3A8F;margin-bottom:24px;letter-spacing:-.5px}
-.logo span{color:#F5A623}
-.spinner{width:44px;height:44px;border:3px solid #E4E8F0;border-top-color:#1A3A8F;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px}
+.logo{font-family:'Manrope',system-ui,sans-serif;font-size:28px;font-weight:900;color:#003820;margin-bottom:24px;letter-spacing:-.5px}
+.logo span{color:#904d00}
+.spinner{width:44px;height:44px;border:3px solid #E4E8F0;border-top-color:#003820;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .msg{color:#667085;font-size:15px;line-height:1.5}
 .error{color:#ef4444;font-size:14px;margin-top:12px}
@@ -22,7 +23,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:
   <div class="spinner" id="spinner"></div>
   <p class="msg" id="msg">Signing you in...</p>
   <p class="error hidden" id="errMsg"></p>
-  <button class="confirm-btn hidden" id="confirmBtn" style="margin-top:20px;padding:12px 28px;border:none;border-radius:10px;background:#1A3A8F;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Confirm my email</button>
+  <button class="confirm-btn hidden" id="confirmBtn" style="margin-top:20px;padding:12px 28px;border:none;border-radius:10px;background:#003820;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Confirm my email</button>
 </div>
 <script>
 const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
@@ -44,7 +45,7 @@ function safeReturnUrl(url){
 }
 
 // PaMarket's Android/Capacitor app can't be opened directly from links inside
-// HTML emails — most mail clients strip or refuse custom URI schemes
+// HTML emails, most mail clients strip or refuse custom URI schemes
 // (com.pamarket.app://...). So Supabase's Site URL/email templates point here
 // (a normal https page every mail client opens fine), and this page forwards
 // into the app via the custom scheme, which mail-client restrictions don't
@@ -64,7 +65,7 @@ function forwardToApp(query){
 // ever taps it. Supabase's confirmation token is single-use, so an
 // auto-verify on page load gets silently burned by that prefetch and the
 // real click sees "invalid or expired". Requiring an explicit button tap
-// avoids this — scanners fetch the page but don't click buttons.
+// avoids this, scanners fetch the page but don't click buttons.
 async function verifyEmailToken(tokenHash, type){
   document.getElementById('confirmBtn').classList.add('hidden');
   document.getElementById('spinner').style.display='block';
@@ -110,7 +111,7 @@ async function handleCallback(){
     return;
   }
   // NOTE: this page is only ever reached by the WEBSITE's own auth flows
-  // (auth.html's doGoogle()/doForgot()) — the Android app's Google Sign-In
+  // (auth.html's doGoogle()/doForgot()), the Android app's Google Sign-In
   // never lands here at all; it opens Supabase's authorize URL directly in
   // an in-app Browser tab and catches the com.pamarket.app://login-callback
   // deep link itself, via _oauthInCap in auth.js. So both a query-string
@@ -158,7 +159,7 @@ async function handleCallback(){
   }
 
   try{
-    // Password reset flow — redirect to set-new-password screen
+    // Password reset flow, redirect to set-new-password screen
     if(type==='recovery'){
       document.getElementById('msg').textContent='Loading password reset…';
       sessionStorage.setItem('pm_recovery_token',accessToken);

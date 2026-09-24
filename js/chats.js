@@ -172,7 +172,7 @@
     if(!unique.length)return Promise.resolve();
     // profiles_public, not the base table — cross-user reads of public.profiles
     // are owner-or-staff-only since harden_profiles_owner_or_staff_read.sql.
-    return request('/rest/v1/profiles_public?id=in.('+unique.map(encodeURIComponent).join(',')+')&select=id,name,avatar,verified,privacy').then(function(rows){
+    return request('/rest/v1/profiles_public?id=in.('+unique.map(encodeURIComponent).join(',')+')&select=id,name,avatar,verified').then(function(rows){
       (rows||[]).forEach(function(p){profiles[p.id]=p});
     }).catch(function(){});
   }
@@ -311,6 +311,17 @@
       document.getElementById('dealPrice').textContent=money(listing.price);
       document.getElementById('dealLink').href='detail?id='+encodeURIComponent(listing.id);
     } else { dealCard.style.display='none'; }
+    var ccPane=document.getElementById('chatContextPane'), ccCard=document.getElementById('ccListingCard');
+    if(ccPane){
+      ccPane.classList.add('show');
+      if(listing&&ccCard){
+        ccCard.style.display='';
+        document.getElementById('ccListingImg').src=(listing.photos&&listing.photos[0])||'img/icon-512.png';
+        document.getElementById('ccListingTitle').textContent=listing.title||'Listing';
+        document.getElementById('ccListingPrice').textContent=money(listing.price);
+        document.getElementById('ccListingLink').href='detail?id='+encodeURIComponent(listing.id);
+      } else if(ccCard){ ccCard.style.display='none'; }
+    }
     document.getElementById('mobileBack').addEventListener('click',function(){shell.classList.remove('thread-open')});
     document.getElementById('messageComposer').addEventListener('submit',function(e){e.preventDefault();sendMessage()});
     document.getElementById('messageInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});

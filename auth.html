@@ -5,38 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
-<title id="pageTitle">Sign In — PaMarket Zimbabwe</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<title id="pageTitle">Sign In: PaMarket Zimbabwe</title>
 <meta name="description" content="Sign in or create your free PaMarket account to buy, sell and find work across Zimbabwe.">
 <link rel="canonical" href="https://pamarketzw.com/auth">
 <link rel="icon" href="img/icon-192.png" type="image/png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 <link rel="manifest" href="/manifest.json">
-<meta property="og:title" content="Sign In — PaMarket Zimbabwe">
+<meta property="og:title" content="Sign In: PaMarket Zimbabwe">
 <meta property="og:description" content="Sign in or create your free PaMarket account to buy, sell and find work across Zimbabwe.">
 <meta property="og:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta property="og:url" content="https://pamarketzw.com/auth">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_ZW">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Sign In — PaMarket Zimbabwe">
+<meta name="twitter:title" content="Sign In: PaMarket Zimbabwe">
 <meta name="twitter:description" content="Sign in or create your free PaMarket account to buy, sell and find work across Zimbabwe.">
 <meta name="twitter:image" content="https://pamarketzw.com/img/icon-512.png">
 <meta name="robots" content="noindex, follow">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --blue:#1A3A8F;--blue-dark:#0B1C4D;--blue-mid:#2952CC;--blue-light:#EEF2FF;
-  --gold:#E8A33D;--gold-dark:#B9791E;
-  --bg:#F7F4EE;--text:#151A2E;--sub:#5B6478;--border:#E6DFD1;
-  --success:#1F7A4D;--danger:#DC2626;
+  --blue:#003820;--blue-dark:#002111;--blue-mid:#0f5132;--blue-light:#eff4ff;
+  --gold:#904d00;--gold-dark:#663500;
+  --bg:#f8f9ff;--text:#0b1c30;--sub:#404942;--border:#c0c9c0;
+  --success:#0f5132;--danger:#DC2626;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-pill:999px;
-  --shadow-blue:0 4px 20px rgba(26,58,143,.3);
-  --shadow-gold:0 4px 16px rgba(232,163,61,.35);
-  --font:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --shadow-blue:0 4px 20px rgba(0,56,32,.3);
+  --shadow-gold:0 4px 16px rgba(144,77,0,.35);
+  --font:'Hanken Grotesk',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-display:'Manrope',system-ui,sans-serif;
 }
-body{font-family:var(--font);background:var(--blue-dark);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--blue-dark);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;display:flex;flex-direction:column}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:var(--font);border:none;background:none}
 input,select,textarea{font-family:var(--font)}
@@ -44,50 +47,71 @@ input,select,textarea{font-family:var(--font)}
 
 /* PAGE BACKGROUND */
 .auth-page{
-  min-height:100vh;
-  background:
-    linear-gradient(160deg,rgba(5,16,48,.46) 0%,rgba(11,28,77,.58) 48%,rgba(8,24,65,.72) 100%),
-    url('img/auth/sign-in-create-account-bg.jpg') center center/cover no-repeat;
+  flex:1;min-height:0;
+  background:var(--bg);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:24px 16px 40px;
-  position:relative;overflow:hidden;
-}
-.auth-page::before{
-  content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
-  background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);
-}
-.auth-page::after{
-  content:'';position:absolute;bottom:-80px;left:-80px;width:400px;height:400px;
-  border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.08) 0%,transparent 70%);
-  pointer-events:none;
+  padding:20px 24px;
+  position:relative;
 }
 
 /* BACK LINK */
 .auth-back{
   position:absolute;top:20px;left:20px;display:flex;align-items:center;gap:6px;
-  font-size:13px;font-weight:600;color:rgba(255,255,255,.6);transition:color .2s;z-index:10;
+  font-size:13px;font-weight:600;color:var(--sub);transition:color .2s;z-index:10;
 }
-.auth-back:hover{color:#fff}
+.auth-back:hover{color:var(--blue)}
 .auth-back svg{flex-shrink:0}
 
-/* BRAND (wordmark + tagline — shown on landing screen only) */
-.auth-brand-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:32px;position:relative;z-index:1}
+/* SPLIT CONTAINER */
+.auth-split{
+  width:100%;max-width:1360px;background:#fff;border-radius:28px;overflow:hidden;
+  box-shadow:0 24px 70px rgba(0,17,8,.14);display:grid;grid-template-columns:5fr 7fr;
+  min-height:min(760px,calc(100vh - 200px));position:relative;z-index:1;
+}
+.auth-form-panel{overflow-y:auto}
+@media(max-width:900px){.auth-split{grid-template-columns:1fr;max-width:460px;min-height:auto}}
+
+/* LEFT HERO PANEL */
+.auth-hero-panel{
+  background:linear-gradient(155deg,var(--blue-dark) 0%,var(--blue) 60%,#2d6a48 100%);
+  color:#fff;padding:44px 38px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.auth-hero-panel::before{content:'';position:absolute;top:-90px;right:-90px;width:280px;height:280px;border-radius:50%;background:rgba(149,212,172,.15);pointer-events:none}
+.auth-hero-panel::after{content:'';position:absolute;bottom:-70px;left:-60px;width:240px;height:240px;border-radius:50%;background:rgba(255,183,125,.1);pointer-events:none}
+@media(max-width:900px){.auth-hero-panel{display:none}}
+.auth-hero-top{position:relative;z-index:1}
+.auth-hero-logo{font-size:26px;font-weight:900;letter-spacing:-.5px;color:#fff;display:inline-flex;align-items:center;line-height:1}
+.auth-hero-logo em{color:var(--gold);font-style:normal}
+.auth-hero-headline{font-family:var(--font-display);font-size:clamp(26px,2.6vw,32px);line-height:1.15;letter-spacing:-.02em;margin-top:24px}
+.auth-hero-sub{font-size:14px;color:rgba(255,255,255,.78);line-height:1.6;margin-top:12px;max-width:360px}
+.auth-hero-features{display:flex;flex-direction:column;gap:14px;margin-top:32px;position:relative;z-index:1}
+.auth-hero-feature{display:flex;align-items:flex-start;gap:12px}
+.auth-hero-feature-icon{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.auth-hero-feature-copy b{display:block;font-size:13.5px;font-weight:800}
+.auth-hero-feature-copy span{display:block;font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;line-height:1.5}
+.auth-hero-bottom{position:relative;z-index:1;font-size:11.5px;color:rgba(255,255,255,.55);margin-top:20px}
+.auth-hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:28px;padding:14px;border-radius:14px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.1);text-align:center;position:relative;z-index:1}
+.auth-hero-stat b{display:block;font-size:19px;font-weight:900;color:#fff}
+.auth-hero-stat span{display:block;font-size:9.5px;color:rgba(255,255,255,.65);margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+
+/* BRAND (wordmark + tagline, mobile fallback when the hero panel is hidden, landing screen only) */
+.auth-brand-wrap{display:none;flex-direction:column;align-items:center;gap:6px;margin-bottom:24px;position:relative;z-index:1}
+@media(max-width:900px){.auth-brand-wrap{display:flex}}
 .auth-brand{
-  font-size:36px;font-weight:900;letter-spacing:-1px;color:#fff;
+  font-size:30px;font-weight:900;letter-spacing:-1px;color:var(--text);
   display:inline-flex;align-items:center;gap:0;line-height:1;
 }
 .auth-brand em{color:var(--gold);font-style:normal}
-.auth-tagline{font-size:14px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.2px;margin:0}
+.auth-tagline{font-size:14px;color:var(--sub);font-weight:500;letter-spacing:.2px;margin:0}
 .auth-badge img{border-radius:16px;display:block}
 
 /* CARD */
-.auth-card-wrap{width:100%;max-width:400px;position:relative;z-index:1}
-.auth-card{
-  background:#fff;border-radius:24px;padding:32px 28px 28px;
-  box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 0 .5px rgba(255,255,255,.1);
-  width:100%;
-}
-@media(max-width:440px){.auth-card{padding:24px 20px 20px;border-radius:20px}}
+.auth-form-panel{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:900px){.auth-form-panel{padding:36px 26px}}
+.auth-card-wrap{width:100%;max-width:400px;margin:0 auto;position:relative;z-index:1}
+.auth-card{width:100%}
+@media(max-width:440px){.auth-card{padding:0}}
 
 /* FORM ELEMENTS */
 .fg{margin-bottom:16px}
@@ -153,6 +177,17 @@ input,select,textarea{font-family:var(--font)}
 .screen-hd h2{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-.3px;margin-bottom:4px}
 .screen-hd p{font-size:14px;color:var(--sub);line-height:1.5}
 
+/* TAB SWITCHER (Sign In / Create Account) */
+.auth-tabs-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.auth-tabs-row .eyebrow{font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.auth-tabs{display:inline-flex;padding:4px;border-radius:12px;background:var(--bg);border:1px solid var(--border)}
+.auth-tab{padding:8px 14px;border-radius:9px;font-size:11px;font-weight:800;color:var(--sub);background:transparent;white-space:nowrap}
+.auth-tab.active{background:#fff;color:var(--blue);box-shadow:0 2px 8px rgba(0,17,8,.1)}
+
+/* GOOGLE DIVIDER BLOCK */
+.auth-alt{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.auth-alt-label{text-align:center;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+
 /* LINKS */
 .auth-link{color:var(--blue);font-weight:700;cursor:pointer;text-decoration:none}
 .auth-link:hover{text-decoration:underline}
@@ -160,14 +195,13 @@ input,select,textarea{font-family:var(--font)}
 
 /* FOOTER UNDER CARD */
 .auth-foot{
-  margin-top:24px;text-align:center;font-size:12px;color:rgba(255,255,255,.45);
-  line-height:1.8;position:relative;z-index:1;
+  margin-top:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  font-size:11px;color:var(--mute,var(--sub));position:relative;z-index:1;
 }
-.auth-foot a{color:rgba(255,255,255,.55);font-weight:600;transition:color .2s}
-.auth-foot a:hover{color:#fff}
+.auth-foot a{color:var(--sub);font-weight:500;transition:color .2s}
+.auth-foot a:hover{color:var(--blue)}
 .auth-foot .sep{margin:0 6px;opacity:.4}
-.auth-foot-flag-row{display:flex;align-items:center;justify-content:center;gap:6px}
-.zw-flag-sm{width:16px;height:11px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.25);display:inline-block}
+.zw-flag-sm{width:16px;height:11px;border-radius:2px;object-fit:cover;display:inline-block}
 
 /* REGISTER LINK ROW */
 .auth-switch{text-align:center;margin-top:16px;font-size:14px;color:var(--sub)}
@@ -222,36 +256,118 @@ input,select,textarea{font-family:var(--font)}
 .slide-in{animation:slideIn .22s ease}
 .slide-back{animation:slideBack .22s ease}
 
-h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em}
+h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:var(--font-display);font-weight:700;letter-spacing:-.02em}
+
+/* TOP INSTITUTIONAL BAR */
+.auth-topbar{width:100%;background:#fff;border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.auth-topbar-left{display:flex;align-items:center;gap:16px}
+.auth-topbar-brand{display:flex;align-items:center;gap:10px}
+.auth-topbar-icon{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--blue),var(--blue-dark));display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.auth-topbar-name{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900;color:var(--text)}
+.auth-topbar-name span{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;background:var(--gold-tint,#ffdcc3);color:var(--gold-dark)}
+.auth-topbar-sub{font-size:10px;color:var(--sub);margin-top:1px}
+.auth-topbar-divider{width:1px;height:26px;background:var(--border)}
+.auth-topbar-return{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--sub)}
+.auth-topbar-return:hover{color:var(--blue)}
+.auth-topbar-right{display:flex;align-items:center;gap:14px}
+.auth-rate-pill{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;background:#eff4ff;border:1px solid var(--blue-light,#eff4ff);font-size:11px}
+.auth-rate-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.auth-rate-pill b{color:var(--blue);font-weight:800}
+.auth-flag-chip{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text);background:var(--bg);padding:5px 10px;border-radius:7px;border:1px solid var(--border)}
+.auth-hotline{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--sub)}
+.auth-hotline:hover{color:var(--blue)}
+@media(max-width:900px){.auth-topbar-right>*:not(:last-child){display:none}}
+
+/* BOTTOM INSTITUTIONAL STRIP */
+.auth-foot-wrap{width:100%;max-width:1100px;margin-top:18px;background:#fff;border-radius:14px;padding:16px 22px}
+.auth-compliance-strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:22px;font-size:11.5px;color:var(--sub);font-weight:600;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.auth-compliance-strip span{display:flex;align-items:center;gap:6px}
+.auth-compliance-strip svg{color:var(--sub);flex-shrink:0}
 </style>
 </head>
 <body>
 
+<header class="auth-topbar">
+  <div class="auth-topbar-left">
+    <div class="auth-topbar-brand">
+      <div class="auth-topbar-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div>
+      <div><div class="auth-topbar-name">PaMarket <span>ZW</span></div><div class="auth-topbar-sub">Zimbabwe Free Marketplace</div></div>
+    </div>
+    <div class="auth-topbar-divider"></div>
+    <a href="/" class="auth-topbar-return">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Return to PaMarket.zw
+    </a>
+  </div>
+  <div class="auth-topbar-right">
+    <div class="auth-rate-pill"><span class="auth-rate-dot"></span><span>Rate: <b id="topbarRate">1 USD = &hellip; ZiG</b></span></div>
+    <div class="auth-flag-chip"><img src="img/zimbabwe-flag.jpg" alt="" style="width:16px;height:11px;border-radius:2px;object-fit:cover"> Zimbabwe</div>
+    <a href="https://wa.me/971589772645" target="_blank" rel="noopener" class="auth-hotline">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      WhatsApp Support
+    </a>
+  </div>
+</header>
+
 <div class="auth-page" id="authPage">
 
-  <!-- Back to site -->
-  <a href="/" class="auth-back">
-    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-    Back to site
-  </a>
+  <div class="auth-split">
 
-  <!-- Brand -->
-  <div class="auth-brand-wrap" id="authIllustration">
-    <a href="/" class="auth-brand"><h1 style="font:inherit;color:inherit;display:inline">Pa<em>Market</em></h1></a>
-    <p class="auth-tagline">Sign in to Zimbabwe's Free Marketplace</p>
+    <!-- Left: institutional hero panel (static across all auth screens) -->
+    <section class="auth-hero-panel">
+      <div class="auth-hero-top">
+        <a href="/" class="auth-hero-logo">Pa<em>Market</em></a>
+        <h1 class="auth-hero-headline">Zimbabwe's Free Marketplace</h1>
+        <p class="auth-hero-sub">Buy, sell, find work and grow your business across all 10 provinces. No fees, no commissions, ever.</p>
+        <div class="auth-hero-features">
+          <div class="auth-hero-feature">
+            <div class="auth-hero-feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+            <div class="auth-hero-feature-copy"><b>100% Free to Use</b><span>Post ads, browse listings and message sellers with no fees or commissions.</span></div>
+          </div>
+          <div class="auth-hero-feature">
+            <div class="auth-hero-feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="auth-hero-feature-copy"><b>Direct Contact</b><span>Message buyers and sellers directly, or reach them on WhatsApp.</span></div>
+          </div>
+          <div class="auth-hero-feature">
+            <div class="auth-hero-feature-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="auth-hero-feature-copy"><b>All 10 Provinces</b><span>Real listings from Harare to Bulawayo and everywhere in between.</span></div>
+          </div>
+        </div>
+        <div class="auth-hero-stats">
+          <div class="auth-hero-stat"><b>0%</b><span>Fees Ever</span></div>
+          <div class="auth-hero-stat"><b>10</b><span>Provinces</span></div>
+          <div class="auth-hero-stat"><b>24/7</b><span>WhatsApp Support</span></div>
+        </div>
+      </div>
+      <div class="auth-hero-bottom">&copy; 2026 PaMarket &middot; Made in Zimbabwe</div>
+    </section>
+
+    <!-- Right: sign in / create account form -->
+    <section class="auth-form-panel">
+      <div class="auth-brand-wrap" id="authIllustration">
+        <a href="/" class="auth-brand"><h1 style="font:inherit;color:inherit;display:inline">Pa<em>Market</em></h1></a>
+        <p class="auth-tagline">Sign in to Zimbabwe's Free Marketplace</p>
+      </div>
+      <div class="auth-card-wrap">
+        <div class="auth-card" id="authCard">
+          <!-- JS populates this -->
+        </div>
+      </div>
+    </section>
+
   </div>
 
-  <!-- Auth Card -->
-  <div class="auth-card-wrap">
-    <div class="auth-card" id="authCard">
-      <!-- JS populates this -->
+  <!-- Page footer: compliance badges + copyright, one cohesive block -->
+  <div class="auth-foot-wrap">
+    <div class="auth-compliance-strip">
+      <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Zero Listing Fees</span>
+      <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>All 10 Provinces</span>
+      <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bot-Protected Sign-In</span>
     </div>
-  </div>
-
-  <!-- Page footer -->
-  <div class="auth-foot">
-    <div class="auth-foot-flag-row">&copy; 2026 PaMarket &nbsp;&middot;&nbsp; Made in Zimbabwe <img src="img/zimbabwe-flag.jpg" alt="Zimbabwe flag" class="zw-flag-sm" loading="eager" decoding="async"></div>
-    <div><a href="terms">Terms of Service</a><span class="sep">|</span><a href="privacy">Privacy Policy</a><span class="sep">|</span><a href="cookie-policy">Cookie Policy</a></div>
+    <div class="auth-foot">
+      <div>&copy; 2026 PaMarket Zimbabwe. Made in Zimbabwe.</div>
+      <div><a href="terms">Terms of Service</a><span class="sep">|</span><a href="privacy">Privacy Policy</a><span class="sep">|</span><a href="cookie-policy">Cookie Policy</a></div>
+    </div>
   </div>
 
 </div>
@@ -260,6 +376,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
 
 <script src="js/supabase-config.js"></script>
 <script src="js/session.js"></script>
+<script src="js/services/fx-rate.js"></script>
 <script>
 const SB_URL='https://gxgytumhknmnwspxjzxw.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4Z3l0dW1oa25tbndzcHhqenh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzMwNDUsImV4cCI6MjA5MzY0OTA0NX0.ddJhWdUy7JVrSfdaSK8a0On3zuwssY2H4DWsxBhgbJs';
@@ -342,7 +459,7 @@ function saveSession(data){
 (function checkExisting(){
   const s=window.PMSession.getSession();
   if(s&&s.access_token){
-    // Already signed in — redirect
+    // Already signed in, redirect
     const returnUrl=getReturnUrl();
     window.location.href=returnUrl;
   }
@@ -365,10 +482,30 @@ async function sbPost(path,body,token){
   return{ok:r.ok,status:r.status,data:json};
 }
 
+/* ---- Cloudflare Turnstile (bot protection) ---- */
+const TURNSTILE_SITE_KEY='0x4AAAAAAFAxDYw42O3tIBEL';
+const turnstileWidgets={in:null,up:null};
+function renderTurnstile(containerId,formKey){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  const tryRender=()=>{
+    if(!window.turnstile){setTimeout(tryRender,150);return}
+    turnstileWidgets[formKey]=window.turnstile.render('#'+containerId,{sitekey:TURNSTILE_SITE_KEY});
+  };
+  tryRender();
+}
+function getTurnstileToken(formKey){
+  if(!window.turnstile||turnstileWidgets[formKey]==null)return'';
+  return window.turnstile.getResponse(turnstileWidgets[formKey])||'';
+}
+function resetTurnstile(formKey){
+  if(window.turnstile&&turnstileWidgets[formKey]!=null)window.turnstile.reset(turnstileWidgets[formKey]);
+}
+
 /* ---- SCREEN: LANDING ---- */
 function showLanding(anim){
   showIllustration(true);
-  document.getElementById('pageTitle').textContent='Sign In — PaMarket Zimbabwe';
+  document.getElementById('pageTitle').textContent='Sign In: PaMarket Zimbabwe';
   const card=document.getElementById('authCard');
   card.className='auth-card'+(anim?' slide-back':'');
   card.innerHTML=`
@@ -389,13 +526,13 @@ function showLanding(anim){
 /* ---- SCREEN: SIGN IN ---- */
 function showSignIn(anim){
   showIllustration(false);
-  document.getElementById('pageTitle').textContent='Sign In — PaMarket Zimbabwe';
+  document.getElementById('pageTitle').textContent='Sign In: PaMarket Zimbabwe';
   const card=document.getElementById('authCard');
   card.className='auth-card slide-'+anim;
   card.innerHTML=`
-    <div class="screen-hd">
-      <h2>Sign In</h2>
-      <p>Welcome back to PaMarket</p>
+    <div class="auth-tabs-row">
+      <div><span class="eyebrow">Secure Trade Gate</span><h2 style="margin-top:2px">Sign In</h2></div>
+      <div class="auth-tabs"><button type="button" class="auth-tab active">Sign In</button><button type="button" class="auth-tab" onclick="showSignUp('in')">Create Free Account</button></div>
     </div>
     <div id="signInError"></div>
     <div class="fg">
@@ -411,24 +548,29 @@ function showSignIn(anim){
         </button>
       </div>
     </div>
+    <div id="turnstileSignIn" style="margin:4px 0"></div>
     <button class="auth-btn" id="signInBtn" onclick="doSignIn()">Sign In</button>
-    <button class="auth-btn secondary" onclick="showLanding('back')">Back</button>
+    <div class="auth-alt">
+      <div class="auth-alt-label">Or continue with</div>
+      <button class="social-btn" onclick="doGoogle()">${GOOGLE_SVG}Continue with Google</button>
+    </div>
     <div class="auth-switch" style="margin-top:14px">
       No account? <span class="auth-link" onclick="showSignUp('in')">Create one free</span>
     </div>`;
   setTimeout(()=>focusId('siEmail'),80);
+  renderTurnstile('turnstileSignIn','in');
 }
 
 /* ---- SCREEN: SIGN UP ---- */
 function showSignUp(anim){
   showIllustration(false);
-  document.getElementById('pageTitle').textContent='Create Account — PaMarket Zimbabwe';
+  document.getElementById('pageTitle').textContent='Create Account: PaMarket Zimbabwe';
   const card=document.getElementById('authCard');
   card.className='auth-card slide-'+anim;
   card.innerHTML=`
-    <div class="screen-hd">
-      <h2>Create Account</h2>
-      <p>Join PaMarket — Zimbabwe's free marketplace</p>
+    <div class="auth-tabs-row">
+      <div><span class="eyebrow">Secure Trade Gate</span><h2 style="margin-top:2px">Create Free Account</h2></div>
+      <div class="auth-tabs"><button type="button" class="auth-tab" onclick="showSignIn('in')">Sign In</button><button type="button" class="auth-tab active">Create Free Account</button></div>
     </div>
     <div id="signUpError"></div>
     <div class="fg">
@@ -467,16 +609,24 @@ function showSignUp(anim){
       <input type="checkbox" id="ageConsent">
       <span>I am 18 or older and agree to the <a class="auth-link" href="terms" target="_blank">Terms of Service</a> and <a class="auth-link" href="privacy" target="_blank">Privacy Policy</a></span>
     </label>
+    <div id="turnstileSignUp" style="margin:4px 0"></div>
     <button class="auth-btn" id="signUpBtn" onclick="doSignUp()">Create Account</button>
-    <button class="auth-btn secondary" onclick="showLanding('back')">Back to Sign In</button>`;
+    <div class="auth-alt">
+      <div class="auth-alt-label">Or continue with</div>
+      <button class="social-btn" onclick="doGoogle()">${GOOGLE_SVG}Continue with Google</button>
+    </div>
+    <div class="auth-switch" style="margin-top:14px">
+      Already have an account? <span class="auth-link" onclick="showSignIn('in')">Sign in</span>
+    </div>`;
   setTimeout(()=>focusId('newName'),80);
+  renderTurnstile('turnstileSignUp','up');
 }
 
 /* ---- SCREEN: OTP ---- */
 function showOtp(email){
   otpEmail=email;
   showIllustration(false);
-  document.getElementById('pageTitle').textContent='Verify Email — PaMarket Zimbabwe';
+  document.getElementById('pageTitle').textContent='Verify Email: PaMarket Zimbabwe';
   const card=document.getElementById('authCard');
   card.className='auth-card slide-in';
   card.innerHTML=`
@@ -499,14 +649,14 @@ function showOtp(email){
       Didn't get it? <span class="auth-link gold" onclick="doResendOtp()">Resend code</span>
     </div>
     <div style="text-align:center;margin-top:4px;font-size:12px;color:var(--sub)">Check your spam folder if not received</div>
-    <button class="auth-btn secondary" style="margin-top:12px" onclick="showLanding('back')">Back to Sign In</button>`;
+    <button class="auth-btn secondary" style="margin-top:12px" onclick="showSignIn('in')">Back to Sign In</button>`;
   setTimeout(()=>focusId('otpIn'),80);
 }
 
 /* ---- SCREEN: FORGOT PASSWORD ---- */
 function showForgot(anim){
   showIllustration(false);
-  document.getElementById('pageTitle').textContent='Reset Password — PaMarket Zimbabwe';
+  document.getElementById('pageTitle').textContent='Reset Password: PaMarket Zimbabwe';
   const card=document.getElementById('authCard');
   card.className='auth-card slide-'+anim;
   card.innerHTML=`
@@ -582,8 +732,7 @@ function doGoogle(){
 /* ---- ACTION: SIGN IN ---- */
 // Client-side-only speed bump against scripted brute force from THIS browser.
 // Not a substitute for server-side protection (a caller can hit
-// /auth/v1/token?grant_type=password directly, bypassing this file entirely) —
-// real throttling has to live on the Supabase Auth side or an edge proxy.
+// /auth/v1/token?grant_type=password directly, bypassing this file entirely), // real throttling has to live on the Supabase Auth side or an edge proxy.
 function signInLockKey(email){return 'pm_signin_fails_'+email.trim().toLowerCase()}
 function signInLockState(email){
   try{return JSON.parse(sessionStorage.getItem(signInLockKey(email))||'null')||{count:0,until:0}}catch{return{count:0,until:0}}
@@ -605,11 +754,14 @@ async function doSignIn(){
   if(!pass){showError('signInError','Please enter your password.');return}
   const lock=signInLockState(email);
   if(lock.until>Date.now()){showError('signInError','Too many failed attempts. Please wait '+Math.ceil((lock.until-Date.now())/1000)+'s and try again.');return}
+  const captchaToken=getTurnstileToken('in');
+  if(!captchaToken){showError('signInError','Please complete the verification check.');return}
   setBusy(true);
   const btn=document.getElementById('signInBtn');
   btn.innerHTML='<div class="spinner"></div> Signing in…';
   try{
-    const res=await sbPost('/auth/v1/token?grant_type=password',{email,password:pass});
+    const res=await sbPost('/auth/v1/token?grant_type=password',{email,password:pass,gotrue_meta_security:{captcha_token:captchaToken}});
+    resetTurnstile('in');
     if(!res.ok){
       signInLockRecord(email,false);
       let msg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign in failed';
@@ -649,6 +801,8 @@ async function doSignUp(){
   if(!/[0-9]/.test(pass)&&!/[^A-Za-z0-9]/.test(pass)){showError('signUpError','Password must include a number or special character.');focusId('newPass');return}
   if(pass!==pass2){showError('signUpError','Passwords do not match.');focusId('newPass2');return}
   if(!consent){showError('signUpError','Please confirm you are 18 or older and agree to our Terms and Privacy Policy.');return}
+  const captchaToken=getTurnstileToken('up');
+  if(!captchaToken){showError('signUpError','Please complete the verification check.');return}
 
   setBusy(true);
   const btn=document.getElementById('signUpBtn');
@@ -657,12 +811,14 @@ async function doSignUp(){
     const res=await sbPost('/auth/v1/signup',{
       email,password:pass,
       data:{full_name:name},
-      options:{data:{full_name:name}}
+      options:{data:{full_name:name}},
+      gotrue_meta_security:{captcha_token:captchaToken}
     });
+    resetTurnstile('up');
     if(!res.ok){
       const rawMsg=res.data?.error_description||res.data?.msg||res.data?.error||'Sign up failed';
       if(rawMsg.toLowerCase().includes('already registered')||rawMsg.toLowerCase().includes('already exists')||rawMsg.toLowerCase().includes('unique constraint')){
-        // Safe controlled HTML — not from server
+        // Safe controlled HTML, not from server
         document.getElementById('signUpError').innerHTML=`<div class="auth-error">This email is already registered. <span class="auth-link" onclick="showSignIn('in')">Sign in instead</span></div>`;
       }else{
         showError('signUpError',rawMsg);  // esc() applied inside showError
@@ -679,7 +835,7 @@ async function doSignUp(){
       saveSession(res.data.session);
       showSuccess(name.split(' ')[0],'signup');
     } else {
-      // Email confirmation required — show OTP
+      // Email confirmation required, show OTP
       showOtp(email);
     }
   }catch(err){
@@ -731,7 +887,7 @@ async function doResendOtp(){
   otpResendTimes.push(now);
   try{
     const res=await sbPost('/auth/v1/resend',{type:'signup',email:otpEmail});
-    toast(res.ok?'Code resent — check your inbox':'Could not resend. Try again.',res.ok?'success':'error');
+    toast(res.ok?'Code resent, check your inbox':'Could not resend. Try again.',res.ok?'success':'error');
   }catch{toast('Connection error','error')}
 }
 
@@ -766,7 +922,7 @@ async function doForgot(){
 /* ---- SCREEN: SET NEW PASSWORD (from password reset email) ---- */
 function showResetPassword(){
   showIllustration(false);
-  document.getElementById('pageTitle').textContent='Set New Password — PaMarket Zimbabwe';
+  document.getElementById('pageTitle').textContent='Set New Password: PaMarket Zimbabwe';
   const card=document.getElementById('authCard');
   card.className='auth-card slide-in';
   card.innerHTML=`
@@ -841,9 +997,12 @@ async function doResetPassword(){
   const q=new URLSearchParams(location.search);
   const mode=q.get('mode')||'';
   if(mode==='reset')showResetPassword();
-  else if(mode==='signup')showSignUp('in');
-  else if(mode==='signin')showSignIn('in');
-  else showLanding(false);
+  else if(mode==='signup')showSignUp(false);
+  else showSignIn(false);
+  if(window.PMFxRate){window.PMFxRate.getRate().then(function(r){
+    var el=document.getElementById('topbarRate');
+    if(el)el.textContent='1 USD = '+r.rate.toFixed(2)+' ZiG';
+  }).catch(function(){})}
 })();
 </script>
 <script src="js/cookie-consent.js" defer></script>

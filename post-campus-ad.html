@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Post a free ad tagged to your school or university on PaMarket Zimbabwe.">
+<title>Post in Your Campus Hub - PaMarket Zimbabwe</title>
+<link rel="canonical" href="https://pamarketzw.com/post-campus-ad">
+<link rel="icon" href="img/icon-192.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet"/>
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style>
+<style id="pmAntiFlicker">body{opacity:0}</style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tailwind-config.js"></script>
+<style>
+.step-tab{transition:.15s}
+.step-tab.active{background:#dce9ff}
+.step-num{width:2.5rem;height:2.5rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.step-num.active{background:#0f5132;color:#fff}
+.step-num.inactive{background:#e5eeff;color:#707971}
+.cat-card{cursor:pointer;padding:.875rem;border-radius:.5rem;background:#eff4ff;display:flex;flex-direction:column;gap:.5rem;position:relative;transition:.15s}
+.cat-card:hover{background:#e5eeff}
+.cat-card.selected{background:#dce9ff;box-shadow:0 0 0 2px #0f5132 inset}
+.cat-check{opacity:0}
+.cat-card.selected .cat-check{opacity:1}
+.thumb{position:relative;border-radius:.375rem;overflow:hidden;aspect-ratio:1;background:#e5eeff}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border-radius:9999px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+</style>
+</head>
+<script id="pmAntiFlickerReveal">
+(function(){
+  var revealed = false;
+  function reveal(){
+    if (revealed) return;
+    revealed = true;
+    document.body.style.transition = 'opacity .15s ease';
+    document.body.style.opacity = '1';
+  }
+  // Two animation frames guarantee at least one full paint has happened
+  // with Tailwind's CDN-generated styles applied (it scans + injects
+  // reactively via MutationObserver as the DOM parses, so there's no
+  // single synchronous "ready" signal to wait on instead).
+  requestAnimationFrame(function(){ requestAnimationFrame(reveal); });
+  setTimeout(reveal, 500); // hard fallback so the page is never stuck invisible
+})();
+</script>
+<body class="bg-surface-container font-body-md text-on-surface antialiased min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-surface-container text-on-surface-variant text-label-sm font-label-sm py-1.5 px-margin md:px-margin-desktop"><div class="max-w-7xl mx-auto flex items-center justify-between gap-4"><div class="flex items-center gap-2 overflow-hidden whitespace-nowrap"><span class="material-symbols-outlined text-primary text-[14px]">verified_user</span><span class="truncate"><strong class="text-on-surface font-semibold">Safe Trading in Zimbabwe:</strong> Always inspect goods in public spaces &amp; verify before payment. 24/7 WhatsApp Support active.</span></div><div class="hidden md:flex items-center gap-6 shrink-0"><a class="hover:text-primary transition-colors" href="browse.html">Browse</a><a class="hover:text-primary transition-colors" href="advertise.html">Advertise</a><a class="hover:text-primary transition-colors" href="about.html">About Us</a><a class="hover:text-primary transition-colors" href="blog.html">Blog</a><a class="hover:text-primary transition-colors" href="contact.html">Contact Us</a><a class="text-secondary font-bold hover:underline flex items-center gap-1" href="download.html">Download App</a></div></div></div><div class="h-20 max-w-7xl mx-auto px-margin md:px-margin-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-4 shrink-0"><a class="flex items-center gap-2" href="index.html"><img alt="PaMarket Zimbabwe Logo" class="h-8 w-auto object-contain" src="img/icon-192.png"/><span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket<span class="text-secondary">.zw</span></span></a></div><div class="flex items-center gap-space-sm shrink-0 ml-auto"><a href="auth.html" id="signInBtn" class="flex items-center gap-1.5 text-label-sm font-label-sm text-on-surface hover:text-primary pl-2"><span class="material-symbols-outlined text-[20px]">account_circle</span><span class="hidden md:inline">Sign In</span></a></div></div><div class="bg-surface-container-lowest px-margin md:px-margin-desktop py-1 border-t border-outline-variant/20"><div class="max-w-7xl mx-auto flex items-center justify-between"><nav class="flex items-center gap-6 overflow-x-auto text-body-md font-body-md py-1.5"><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 transition-all" href="index.html">Marketplace</a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 flex items-center gap-1.5 transition-all" href="jobs.html"><span>Jobs</span></a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 flex items-center gap-1.5 transition-all" href="businesses.html"><span>Businesses</span></a><a aria-current="page" class="text-primary font-bold border-b-2 border-primary whitespace-nowrap pb-1 flex items-center gap-1.5 transition-all" href="institutions.html"><span class="material-symbols-outlined text-[16px] text-primary">school</span><span>Institutions</span></a><a class="text-on-surface-variant hover:text-on-surface whitespace-nowrap pb-1 transition-all" href="browse.html">All Listings</a></nav></div></div></header>
+
+<main class="w-full pt-[148px] bg-surface-container min-h-screen">
+
+<div class="bg-surface-container-low py-2 px-margin md:px-margin-desktop">
+<div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-label-sm font-label-sm">
+<div class="flex items-center gap-1.5 text-on-surface-variant"><a href="institutions.html" class="hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">school</span>Institutions Directory</a><span class="text-outline">/</span><span class="text-primary font-bold">Post in Your Campus Hub</span></div>
+<span class="inline-flex items-center gap-1 bg-surface-container-lowest px-2.5 py-1 rounded shadow-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[15px]">shield</span>0% Commission Campus Swap</span>
+</div>
+</div>
+
+<div class="max-w-7xl mx-auto w-full px-margin md:px-margin-desktop py-space-xl">
+
+<div id="gateShell">
+<div class="bg-surface-container-lowest rounded-xl p-space-2xl text-center shadow-sm max-w-xl mx-auto" id="gateBox">
+<span class="material-symbols-outlined text-[40px] text-primary">school</span>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface mt-2">Sign in to post in your campus hub</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Your account keeps your listing linked to you so classmates can reach you directly.</p>
+<a href="auth.html?return=post-campus-ad" class="inline-block mt-4 bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md text-label-md font-bold">Sign In</a>
+</div>
+</div>
+
+<div id="wizardShell" class="hidden">
+
+<div class="mb-space-xl flex flex-col md:flex-row md:items-end justify-between gap-space-base">
+<div class="max-w-3xl">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container rounded font-label-sm text-label-sm text-primary mb-2 font-bold uppercase tracking-wider"><span class="material-symbols-outlined text-[16px] text-primary-container">verified</span>Verified Campus Clearance System</div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">Sell in Your Campus Community</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-1">Reach fellow students, parents, and alumni within your school or university on PaMarket.</p>
+</div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-space-2xl bg-surface-container-lowest p-2 rounded-xl shadow-sm">
+<button class="step-tab flex items-center gap-3 p-3 rounded-lg text-left active" id="tab-step-1" onclick="switchStep(1)" type="button">
+<div class="step-num active" id="num-1">1</div>
+<div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm uppercase font-bold text-primary">Step 1</span><span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate">Institution &amp; Category</span></div>
+</button>
+<button class="step-tab flex items-center gap-3 p-3 rounded-lg text-left" id="tab-step-2" onclick="switchStep(2)" type="button">
+<div class="step-num inactive" id="num-2">2</div>
+<div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm uppercase font-semibold text-outline">Step 2</span><span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate">Item, Photos &amp; Price</span></div>
+</button>
+<button class="step-tab flex items-center gap-3 p-3 rounded-lg text-left" id="tab-step-3" onclick="switchStep(3)" type="button">
+<div class="step-num inactive" id="num-3">3</div>
+<div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm uppercase font-semibold text-outline">Step 3</span><span class="font-headline-sm text-headline-sm font-bold text-on-surface truncate">Meetup &amp; Contact</span></div>
+</button>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+
+<div id="section-step-1" class="flex flex-col gap-space-xl">
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-lg">
+<div>
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary tracking-wider">Institution Registry Check</span>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">Select Your Campus or School</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Your listing appears in this institution's campus marketplace hub.</p>
+</div>
+<div class="bg-surface-container p-space-md rounded-lg flex items-center justify-between gap-3 hidden" id="selectedInstBanner">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded bg-primary text-on-primary flex items-center justify-center font-headline-sm font-black shrink-0" id="selInstAvatar"></div>
+<div><div class="font-headline-sm text-headline-sm font-bold text-primary" id="selInstName"></div><div class="font-body-sm text-body-sm text-on-surface-variant" id="selInstSub"></div></div>
+</div>
+<button class="px-3 py-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-label-md text-label-md rounded shadow-sm" onclick="document.getElementById('schoolSearchInput').focus()" type="button">Change</button>
+</div>
+<div class="relative">
+<label class="block font-label-md text-label-md font-bold text-on-surface mb-1" for="schoolSearchInput">Search Registered Schools &amp; Universities</label>
+<div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2"><span class="material-symbols-outlined text-outline mr-2">account_balance</span><input class="w-full bg-transparent border-0 font-body-md text-body-md text-on-surface focus:outline-none" id="schoolSearchInput" oninput="searchInstitutions(this.value)" placeholder="Type institution name (e.g. UZ, NUST, Prince Edward)..." type="text"/></div>
+<div id="instResults" class="mt-2 flex flex-col gap-1"></div>
+<div class="mt-3 flex flex-col gap-1.5">
+<span class="font-label-sm text-label-sm text-outline font-semibold uppercase">Popular Campus Hubs:</span>
+<div id="instQuickPicks" class="flex flex-wrap gap-1.5"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-lg">
+<div><span class="font-label-sm text-label-sm uppercase font-bold text-primary tracking-wider">Item Classification</span><h2 class="font-headline-md text-headline-md font-bold text-on-surface">Category</h2></div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="categoryGrid"></div>
+<div class="flex justify-end pt-2"><button class="px-6 py-2.5 bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md rounded-lg flex items-center gap-1.5" onclick="switchStep(2)" type="button"><span>Continue</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button></div>
+</div>
+</div>
+
+<div id="section-step-2" class="flex flex-col gap-space-xl hidden">
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-lg">
+<div><span class="font-label-sm text-label-sm uppercase font-bold text-primary tracking-wider">Item Manifest</span><h2 class="font-headline-md text-headline-md font-bold text-on-surface">Item Details</h2></div>
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="itemTitle">Item Title *</label><input class="w-full bg-surface-container-low rounded-lg p-3 font-body-md text-body-md text-on-surface focus:outline-none" id="itemTitle" maxlength="80" oninput="syncPreview()" placeholder="e.g. Casio fx-991EX Calculator, Cambridge Chemistry Guide" type="text"/></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="itemCondition">Condition *</label><select class="w-full bg-surface-container-low rounded-lg p-3 font-body-md text-body-md text-on-surface focus:outline-none" id="itemCondition" onchange="syncPreview()"><option value="used">Used / Pre-Owned</option><option value="new">Brand New</option></select></div>
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="itemProvince">Province *</label><select class="w-full bg-surface-container-low rounded-lg p-3 font-body-md text-body-md text-on-surface focus:outline-none" id="itemProvince"><option value="">Select province</option><option>Harare</option><option>Bulawayo</option><option>Manicaland</option><option>Mashonaland East</option><option>Mashonaland West</option><option>Mashonaland Central</option><option>Masvingo</option><option>Matabeleland North</option><option>Matabeleland South</option><option>Midlands</option></select></div>
+</div>
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="itemDesc">Description *</label><textarea class="w-full bg-surface-container-low rounded-lg p-3 font-body-md text-body-md text-on-surface focus:outline-none" id="itemDesc" maxlength="1000" rows="4" placeholder="Describe the item's condition and anything a buyer should know. Be honest, it builds trust."></textarea></div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md font-bold text-on-surface flex items-center justify-between"><span>Photographs (up to 6)</span></label>
+<input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+<div class="p-space-lg bg-surface-container-low rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container transition-colors" onclick="document.getElementById('photoFile').click()">
+<div class="w-12 h-12 rounded-full bg-surface-container-high text-primary flex items-center justify-center mb-2"><span class="material-symbols-outlined text-[24px]">add_photo_alternate</span></div>
+<span class="font-label-md text-label-md font-bold text-on-surface">Tap to add photos</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-1">JPG / PNG, up to 8MB each</span>
+</div>
+<div class="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-2" id="photoThumbs"></div>
+<div id="photoState" class="text-label-sm font-label-sm text-primary min-h-[16px]"></div>
+</div>
+<div class="p-space-lg bg-surface-container rounded-xl flex flex-col gap-3">
+<div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[18px]">currency_exchange</span><span class="font-headline-sm text-headline-sm font-bold text-on-surface">Price</span></div><span class="px-2 py-0.5 rounded bg-primary text-on-primary font-label-sm text-label-sm font-bold" id="fxRateBadge">Live RBZ Rate</span></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="itemPrice">Asking Price (USD) *</label><div class="flex items-center bg-surface-container-lowest rounded-lg px-3 py-2 shadow-sm"><span class="font-price-primary text-price-primary font-bold text-primary mr-1">$</span><input class="w-full bg-transparent font-price-primary text-price-primary font-bold text-on-surface focus:outline-none" id="itemPrice" min="0" oninput="syncPreview()" step="0.5" type="number"/></div></div>
+<div class="flex flex-col gap-1"><span class="font-label-md text-label-md font-bold text-on-surface">Calculated ZiG Equivalent</span><div class="bg-surface-container-high rounded-lg px-3 py-3"><span class="font-price-primary text-price-primary font-bold text-primary" id="zigPrice">&mdash;</span></div></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<button class="px-5 py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg flex items-center gap-1.5" onclick="switchStep(1)" type="button"><span class="material-symbols-outlined text-[18px]">arrow_back</span><span>Back</span></button>
+<button class="px-6 py-2.5 bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md rounded-lg flex items-center gap-1.5" onclick="switchStep(3)" type="button"><span>Continue</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
+</div>
+</div>
+</div>
+
+<div id="section-step-3" class="flex flex-col gap-space-xl hidden">
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-lg">
+<div><span class="font-label-sm text-label-sm uppercase font-bold text-primary tracking-wider">Campus Safeguards</span><h2 class="font-headline-md text-headline-md font-bold text-on-surface">Meetup &amp; Contact</h2><p class="font-body-sm text-body-sm text-on-surface-variant">Prevent scams: trade at busy, well-known campus locations.</p></div>
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-1.5" for="meetupSpot"><span class="material-symbols-outlined text-[18px] text-primary">near_me</span>Suggested Campus Meetup Spot</label><input class="w-full bg-surface-container-low rounded-lg p-3 font-body-md text-body-md text-on-surface focus:outline-none" id="meetupSpot" oninput="syncPreview()" placeholder="e.g. Students Union building, Main Library entrance" type="text"/><span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-primary">info</span>Choose a busy, well-lit, public spot on campus.</span></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="contactWhatsapp">WhatsApp Number *</label><div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2"><span class="material-symbols-outlined text-outline mr-2">call</span><input class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none" id="contactWhatsapp" placeholder="e.g. 0771234567" type="tel"/></div></div>
+<div class="flex flex-col gap-1"><label class="font-label-md text-label-md font-bold text-on-surface" for="sellerName">Display Name</label><div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2"><span class="material-symbols-outlined text-outline mr-2">person</span><input class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none" id="sellerName" oninput="syncPreview()" type="text"/></div></div>
+</div>
+<div class="p-space-md bg-surface-container rounded-lg flex items-center gap-3"><span class="material-symbols-outlined text-[28px] text-primary shrink-0">volunteer_activism</span><div><span class="font-label-md text-label-md font-bold text-primary block">PaMarket Zero-Fee Campus Pledge</span><span class="font-body-sm text-body-sm text-on-surface-variant">100% free listing for students and parents. No commission is ever deducted.</span></div></div>
+<div id="wizardError" class="hidden bg-error-container text-on-error-container p-3 rounded font-body-sm text-body-sm"></div>
+<div class="flex items-center justify-between pt-2">
+<button class="px-5 py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg flex items-center gap-1.5" onclick="switchStep(2)" type="button"><span class="material-symbols-outlined text-[18px]">arrow_back</span><span>Back</span></button>
+<button class="px-6 py-3 bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md font-bold rounded-lg flex items-center gap-1.5 shadow-md" id="publishBtn" onclick="publishListing()" type="button"><span class="material-symbols-outlined text-[18px]">rocket_launch</span><span>Publish to Campus Hub</span></button>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="lg:col-span-4 sticky top-32 flex flex-col gap-3">
+<div class="flex items-center justify-between px-1"><span class="font-label-sm text-label-sm uppercase font-bold text-on-surface">Live Preview</span><span class="font-label-sm text-label-sm text-outline">What classmates see</span></div>
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col">
+<div class="relative h-48 w-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover hidden" id="previewImage" alt="">
+<div class="w-full h-full flex items-center justify-center text-outline" id="previewImagePlaceholder"><span class="material-symbols-outlined text-[40px]">image</span></div>
+<div class="absolute top-2 left-2 bg-primary/90 text-on-primary px-2 py-1 rounded font-label-sm text-label-sm font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">school</span><span id="previewSchoolTag">Select a school</span></div>
+<div class="absolute top-2 right-2 bg-surface-container-lowest/90 px-2 py-1 rounded font-label-sm text-label-sm font-bold" id="previewCondition">Used</div>
+<div class="absolute bottom-2 right-2 bg-secondary text-on-secondary font-label-sm text-label-sm px-2 py-0.5 rounded font-bold">0% Fee</div>
+</div>
+<div class="p-space-lg flex flex-col gap-3">
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight" id="previewTitle">Your item title</h3>
+<div class="bg-surface-container-low p-2 rounded-lg flex items-baseline justify-between"><span class="font-price-primary text-price-primary font-black text-primary" id="previewPrice">$0.00</span><span class="font-price-secondary text-price-secondary text-on-surface-variant" id="previewZig">&mdash;</span></div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-container">
+<div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-[13px] shrink-0" id="previewInitials">S</div><span class="font-label-md text-label-md font-bold text-on-surface" id="previewSeller">You</span></div>
+</div>
+<div class="bg-surface-container-high/60 p-2 rounded flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-primary shrink-0">pin_drop</span><span class="font-label-sm text-label-sm text-on-surface truncate" id="previewSpot">No meetup spot set</span></div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+</main>
+
+<footer class="bg-surface-container-lowest border-t border-outline-variant">
+<div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl grid grid-cols-1 lg:grid-cols-5 gap-space-2xl">
+<div class="lg:col-span-1"><div class="flex items-center gap-2"><img alt="PaMarket Zimbabwe Logo" class="h-7 w-auto object-contain" src="img/icon-192.png"/><span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket</span></div><p class="mt-3 text-body-sm font-body-sm text-on-surface-variant">Zimbabwe's primary institutional digital marketplace serving all 10 provinces.</p></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Dedicated Hubs</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="jobs.html">PaMarket Jobs</a></li><li><a class="hover:text-primary" href="businesses.html">Verified Businesses</a></li><li><a class="hover:text-primary" href="institutions.html">Institutions Hub</a></li></ul></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Trust &amp; Safety</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="safety.html">Safety Guidelines</a></li><li><a class="hover:text-primary" href="terms.html">Terms of Service</a></li></ul></div>
+<div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Support</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="contact.html">Help Desk</a></li><li><a class="hover:text-primary" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp Helpline</a></li></ul></div>
+</div>
+<div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span>&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd.</span></div></div>
+</footer>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/session.js"></script>
+<script src="js/cookie-consent.js" defer></script>
+<script src="js/marketplace-data.js"></script>
+<script src="js/core/supabase-client.js"></script>
+<script src="js/services/service-transport.js"></script>
+<script src="js/services/institutions.js"></script>
+<script src="js/services/fx-rate.js"></script>
+<script>
+(function(){
+  'use strict';
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  var CATEGORIES=[{id:'property',name:'Property',icon:'🏠'},{id:'vehicles',name:'Vehicles',icon:'🚗'},{id:'electronics',name:'Electronics',icon:'📱'},{id:'furniture',name:'Furniture',icon:'🛋️'},{id:'fashion',name:'Fashion',icon:'👗'},{id:'services',name:'Services',icon:'🛠️'},{id:'agriculture',name:'Agriculture',icon:'🌾'},{id:'rooms',name:'Rooms',icon:'🛏️'},{id:'pets',name:'Pets',icon:'🐾'},{id:'kids',name:'Baby & Kids',icon:'🧸'},{id:'other',name:'Other',icon:'📦'}];
+  var selectedCat = 'other';
+  var selectedInst = null;
+  var ZIG_RATE = 27.42;
+  var photos = [];
+  var MAX_PHOTOS = 6;
+
+  function renderCategoryGrid(){
+    document.getElementById('categoryGrid').innerHTML = CATEGORIES.map(function(c){
+      return '<div class="cat-card'+(selectedCat===c.id?' selected':'')+'" data-cat="'+c.id+'" onclick="selectCategory(\''+c.id+'\')"><div class="flex items-start justify-between"><span style="font-size:22px">'+c.icon+'</span><span class="material-symbols-outlined text-primary cat-check">check_circle</span></div><span class="font-headline-sm text-headline-sm font-bold text-on-surface">'+esc(c.name)+'</span></div>';
+    }).join('');
+  }
+  window.selectCategory = function(id){
+    selectedCat = id;
+    document.querySelectorAll('.cat-card').forEach(function(el){ el.classList.toggle('selected', el.dataset.cat === id); });
+  };
+
+  function instAbbr(inst){ return (inst.short_name && inst.short_name.trim()) || (inst.official_name||'I').trim().charAt(0).toUpperCase(); }
+  function selectInstitution(inst){
+    selectedInst = inst;
+    var name = inst.short_name || inst.official_name;
+    document.getElementById('selectedInstBanner').classList.remove('hidden');
+    document.getElementById('selInstAvatar').textContent = instAbbr(inst);
+    document.getElementById('selInstName').textContent = name;
+    document.getElementById('selInstSub').textContent = [inst.suburb, inst.city_name].filter(Boolean).join(', ') || inst.province_name || 'Zimbabwe';
+    document.getElementById('instResults').innerHTML = '';
+    document.getElementById('schoolSearchInput').value = '';
+    syncPreview();
+  }
+  window.selectInstitution = selectInstitution;
+
+  var searchTimer;
+  window.searchInstitutions = function(q){
+    clearTimeout(searchTimer);
+    if (!q || q.trim().length < 2) { document.getElementById('instResults').innerHTML = ''; return; }
+    searchTimer = setTimeout(function(){
+      window.PMInstitutions.fetchInstitutions({ q: q.trim(), limit: 6 }).then(function(rows){
+        document.getElementById('instResults').innerHTML = (rows||[]).map(function(r){
+          var name = esc(r.short_name || r.official_name);
+          var loc = esc([r.suburb, r.city_name].filter(Boolean).join(', ') || r.province_name || '');
+          return '<button type="button" class="text-left px-3 py-2 bg-surface-container-low hover:bg-surface-container rounded flex items-center justify-between" onclick=\'selectInstitution('+JSON.stringify(r).replace(/'/g,"&#39;")+')\'><span class="font-body-md text-body-md text-on-surface font-semibold">'+name+'</span><span class="font-label-sm text-label-sm text-on-surface-variant">'+loc+'</span></button>';
+        }).join('') || '<span class="font-body-sm text-body-sm text-on-surface-variant px-1">No institutions found.</span>';
+      }).catch(function(){});
+    }, 250);
+  };
+
+  window.PMInstitutions.fetchInstitutions({ limit: 6 }).then(function(rows){
+    document.getElementById('instQuickPicks').innerHTML = (rows||[]).map(function(r){
+      var name = esc(r.short_name || r.official_name);
+      return '<button type="button" class="px-2.5 py-1 bg-surface-container hover:bg-primary hover:text-on-primary text-on-surface-variant rounded font-label-sm text-label-sm font-semibold transition-colors" onclick=\'selectInstitution('+JSON.stringify(r).replace(/'/g,"&#39;")+')\'>'+name+'</button>';
+    }).join('');
+  }).catch(function(){});
+
+  window.switchStep = function(n){
+    [1,2,3].forEach(function(i){
+      document.getElementById('section-step-'+i).classList.toggle('hidden', i!==n);
+      document.getElementById('tab-step-'+i).classList.toggle('active', i===n);
+      var num = document.getElementById('num-'+i);
+      num.className = 'step-num ' + (i===n ? 'active' : 'inactive');
+    });
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
+
+  function syncPreview(){
+    var title = document.getElementById('itemTitle').value.trim();
+    document.getElementById('previewTitle').textContent = title || 'Your item title';
+    var cond = document.getElementById('itemCondition').value;
+    document.getElementById('previewCondition').textContent = cond === 'new' ? 'Brand New' : 'Used';
+    var price = parseFloat(document.getElementById('itemPrice').value) || 0;
+    document.getElementById('previewPrice').textContent = '$' + price.toFixed(2);
+    var zig = (price * ZIG_RATE).toFixed(2);
+    document.getElementById('zigPrice').textContent = price ? ('≈ ' + zig + ' ZiG') : ', ';
+    document.getElementById('previewZig').textContent = price ? ('≈ ' + zig + ' ZiG') : ', ';
+    var seller = document.getElementById('sellerName').value.trim();
+    document.getElementById('previewSeller').textContent = seller || 'You';
+    document.getElementById('previewInitials').textContent = (seller||'You').trim().charAt(0).toUpperCase();
+    var spot = document.getElementById('meetupSpot').value.trim();
+    document.getElementById('previewSpot').textContent = spot || 'No meetup spot set';
+    document.getElementById('previewSchoolTag').textContent = selectedInst ? (selectedInst.short_name || selectedInst.official_name) : 'Select a school';
+  }
+  window.syncPreview = syncPreview;
+
+  function renderThumbs(){
+    document.getElementById('photoThumbs').innerHTML = photos.map(function(p, i){
+      return '<div class="thumb"><img src="'+(p.url||'')+'" alt=""><span class="rm" onclick="removePhoto('+i+')">✕</span></div>';
+    }).join('');
+    document.getElementById('previewImage').classList.toggle('hidden', !photos.length || !photos[0].url);
+    document.getElementById('previewImagePlaceholder').classList.toggle('hidden', !!(photos.length && photos[0].url));
+    if (photos.length && photos[0].url) document.getElementById('previewImage').src = photos[0].url;
+  }
+  window.removePhoto = function(i){ photos.splice(i,1); renderThumbs(); };
+  function compress(file){return new Promise(function(resolve,reject){var img=new Image(),url=URL.createObjectURL(file);img.onload=function(){try{var max=1000,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(function(blob){URL.revokeObjectURL(url);blob?resolve(blob):reject(new Error('compress failed'))},'image/jpeg',.85)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('read failed'))};img.src=url})}
+  document.getElementById('photoFile').addEventListener('change', function(e){
+    var files = Array.prototype.slice.call(e.target.files || []).slice(0, MAX_PHOTOS - photos.length);
+    if (!files.length) return;
+    document.getElementById('photoState').textContent = 'Uploading ' + files.length + ' photo' + (files.length===1?'':'s') + '…';
+    Promise.all(files.map(function(file){
+      return compress(file).then(function(blob){ return window.PM.uploadListingPhoto(blob, 'image/jpeg'); }).then(function(url){ photos.push({url:url}); renderThumbs(); }).catch(function(){});
+    })).then(function(){ document.getElementById('photoState').textContent = ''; renderThumbs(); });
+  });
+
+  function showError(msg){ var el = document.getElementById('wizardError'); el.textContent = msg; el.classList.remove('hidden'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+
+  window.publishListing = function(){
+    var title = document.getElementById('itemTitle').value.trim();
+    var desc = document.getElementById('itemDesc').value.trim();
+    var price = document.getElementById('itemPrice').value;
+    var prov = document.getElementById('itemProvince').value;
+    var wa = document.getElementById('contactWhatsapp').value.trim();
+    var cond = document.getElementById('itemCondition').value;
+    var spot = document.getElementById('meetupSpot').value.trim();
+    var seller = document.getElementById('sellerName').value.trim();
+
+    if (!selectedInst) { switchStep(1); showError('Select your school or university first.'); return; }
+    if (title.length < 4) { switchStep(2); showError('Enter a title of at least 4 characters.'); return; }
+    if (desc.length < 10) { switchStep(2); showError('Add a description of at least 10 characters.'); return; }
+    if (price === '' || Number(price) < 0) { switchStep(2); showError('Enter a valid price (0 for "contact for price").'); return; }
+    if (!prov) { switchStep(2); showError('Select a province.'); return; }
+    if (!wa) { switchStep(3); showError('Enter a WhatsApp contact number.'); return; }
+
+    var btn = document.getElementById('publishBtn');
+    btn.disabled = true; btn.textContent = 'Publishing…';
+
+    window.PM.createListing({
+      title: title, description: desc, price: Number(price), currency: 'USD',
+      category: selectedCat, province: prov, city: '', suburb: '',
+      photos: photos.filter(function(p){ return p.url; }).map(function(p){ return p.url; }),
+      condition: cond, institutionId: selectedInst.id,
+      sellerName: seller || undefined,
+      attributes: spot ? { meetup_location: spot } : undefined
+    }).then(function(res){
+      var listing = res && res.listing;
+      document.getElementById('wizardShell').innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-space-2xl text-center shadow-sm max-w-xl mx-auto"><span class="material-symbols-outlined text-[40px] text-primary">task_alt</span><h2 class="font-headline-md text-headline-md font-bold text-on-surface mt-2">Posted to '+esc(selectedInst.short_name||selectedInst.official_name)+' Campus Hub!</h2><p class="font-body-md text-body-md text-on-surface-variant mt-1">Classmates can now find your listing and reach you on WhatsApp.</p><div class="flex items-center justify-center gap-3 mt-4">'+(listing&&listing.id?'<a href="detail.html?id='+listing.id+'" class="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-label-md text-label-md font-bold">View Listing</a>':'')+'<a href="institution.html?id='+encodeURIComponent(selectedInst.id)+'" class="bg-surface-container text-on-surface px-5 py-2.5 rounded-lg font-label-md text-label-md font-bold">Back to Campus Hub</a></div></div>';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }).catch(function(err){
+      btn.disabled = false; btn.textContent = 'Publish to Campus Hub';
+      showError((err && err.message) || 'Could not publish your listing. Please try again.');
+    });
+  };
+
+  function init(){
+    var refresh = window.PMSession && window.PMSession.maybeRefresh ? window.PMSession.maybeRefresh() : Promise.resolve();
+    Promise.resolve(refresh).catch(function(){}).then(function(){
+      var s = window.PMSession && window.PMSession.getSession ? window.PMSession.getSession() : null;
+      if (!s || !s.user || !s.access_token) { return; }
+      document.getElementById('gateShell').classList.add('hidden');
+      document.getElementById('wizardShell').classList.remove('hidden');
+      var meta = s.user.user_metadata || {};
+      document.getElementById('sellerName').value = meta.full_name || meta.name || '';
+      document.getElementById('contactWhatsapp').value = meta.phone || s.user.phone || '';
+      renderCategoryGrid();
+      syncPreview();
+      if (window.PMFxRate) window.PMFxRate.getRate().then(function(r){ ZIG_RATE = r.rate; syncPreview(); }).catch(function(){});
+      var params = new URLSearchParams(window.location.search);
+      var instId = params.get('institution');
+      if (instId) window.PMInstitutions.fetchInstitutionById(instId).then(function(inst){ if (inst) selectInstitution(inst); }).catch(function(){});
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+</body>
+</html>

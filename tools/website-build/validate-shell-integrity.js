@@ -6,8 +6,8 @@ const { PARTIALS, markerState } = require('./shell');
 
 const REPRESENTATIVE_PAGES = ['index.html', 'browse.html', 'profile.html', 'business.html', 'rentals.html', 'privacy.html'];
 const REQUIRED_LINKS = {
-  HEADER: ['href="browse"', 'href="post-ad"', 'href="auth"', 'href="dashboard"'],
-  FOOTER: ['href="terms"', 'href="privacy"', 'href="cookie-policy"'],
+  HEADER: ['href="browse', 'href="post-ad', 'href="auth', 'href="dashboard'],
+  FOOTER: ['href="terms', 'href="privacy', 'href="cookie-policy'],
 };
 
 function validateShellIntegrity() {

@@ -130,8 +130,8 @@ export default function HomeScreen() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   // Dedicated, business-scoped active listings for the Verified Shops rail --
   // deliberately NOT derived from the global `listings` feed above, which is
-  // capped to the 60 most-recently-created listings site-wide. A shop whose
-  // real active items simply weren't among the newest 60 platform-wide would
+  // capped to the 300 most-recently-created listings site-wide. A shop whose
+  // real active items simply weren't among the newest 300 platform-wide would
   // show "0 items" and no thumbnails on Home despite having real stock,
   // because the rail's client-side business_id filter only ever saw that
   // capped, recency-ordered slice. This query is scoped directly to the
@@ -140,10 +140,10 @@ export default function HomeScreen() {
   const [shopListings, setShopListings] = useState<Listing[]>([]);
   // Featured, per-category and Near-<city> rails each get their own
   // indexed, limited query instead of being client-side slices of the
-  // capped `listings` feed above. A slice of only the newest 60 listings
+  // capped `listings` feed above. A slice of only the newest 300 listings
   // site-wide starves every other rail once the marketplace has more than
-  // ~60 active listings total -- a featured or category item that's real
-  // and active but not among the single newest 60 platform-wide would
+  // ~300 active listings total -- a featured or category item that's real
+  // and active but not among the single newest 300 platform-wide would
   // simply never appear anywhere on Home. Each rail's own query stays
   // cheap (small LIMIT, indexed WHERE) no matter how large the full
   // active-listings table grows, so nothing is hidden and Home stays fast.
@@ -193,7 +193,7 @@ export default function HomeScreen() {
 
   // Near-<city> is its own indexed query (city + status), not a slice of
   // the capped global feed -- a city's real active listings can easily sit
-  // outside the newest 60 platform-wide once the marketplace has grown.
+  // outside the newest 300 platform-wide once the marketplace has grown.
   // Refetches whenever the selected city changes; cleared for "All
   // Zimbabwe" since that rail only ever renders when a specific city is
   // picked.
@@ -213,7 +213,7 @@ export default function HomeScreen() {
         `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
       )
       .order("created_at", { ascending: false })
-      .limit(20)
+      .limit(300)
       .then((result) => {
         if (cancelled || result.error) return;
         setNearCityListings((result.data as Listing[]) ?? []);
@@ -241,7 +241,7 @@ export default function HomeScreen() {
         `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
       )
       .order("created_at", { ascending: false })
-      .limit(60)
+      .limit(300)
       .then((result) => result);
     // Verified Shops is meant to surface actually-verified businesses, not
     // just "recently active" ones — the checkmark used to be purely
@@ -278,7 +278,7 @@ export default function HomeScreen() {
 
     // Business-scoped listings for the Verified Shops rail -- see the
     // shopListings state comment for why this can't reuse the global,
-    // 60-row-capped `listings` feed above. Only fires once we actually know
+    // 300-row-capped `listings` feed above. Only fires once we actually know
     // which businesses are being shown, and only queries those exact IDs.
     let freshShopListings: Listing[] = [];
     if (freshBusinesses && freshBusinesses.length) {
@@ -312,7 +312,7 @@ export default function HomeScreen() {
       .or(institutionVisibilityFilter)
       .gt("featured_until", new Date().toISOString())
       .order("featured_until", { ascending: false })
-      .limit(20)
+      .limit(300)
       .then((result) => result);
 
     // One small, indexed query per category instead of slicing the capped
@@ -327,7 +327,7 @@ export default function HomeScreen() {
         .or(publicListingExpiryFilter())
         .or(institutionVisibilityFilter)
         .order("created_at", { ascending: false })
-        .limit(8)
+        .limit(300)
         .then((result) => ({ id: cat.id, result }))
     );
 
@@ -541,10 +541,12 @@ export default function HomeScreen() {
   // once the marketplace has more active listings than that cap.
   const featured = useMemo(() => featuredListings.filter((l) => isPublicListingEligible(l)), [featuredListings]);
 
-  const recent = useMemo(() => {
-    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    return filtered.filter((l) => new Date(l.created_at).getTime() >= dayAgo).slice(0, 12);
-  }, [filtered]);
+  // Previously restricted to the last 24 hours and capped at 12 -- with a
+  // marketplace this size that left the rail showing almost nothing most of
+  // the time. Home is meant to surface most of the real catalog, so this
+  // now just takes the query's own recency order (newest first) without an
+  // artificial time window.
+  const recent = useMemo(() => filtered.slice(0, 100), [filtered]);
 
   const nearCity = useMemo(() => {
     if (cityFilter === "All Zimbabwe") return [];

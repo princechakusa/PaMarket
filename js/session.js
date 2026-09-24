@@ -22,6 +22,67 @@
     global.location.replace(clean + global.location.search + global.location.hash);
   })();
 
+  // Belt-and-suspenders mobile fix: the header's utility cluster (currency
+  // toggle, favourites/chat icons, post-ad, account chip) is a plain flex
+  // row with no wrap and no hamburger fallback. On narrow phones its total
+  // width exceeds the viewport, and because the header is position:fixed
+  // the overflow isn't reachable by scrolling the page — it's just clipped
+  // off-screen. Making the cluster itself horizontally scrollable guarantees
+  // every control stays reachable regardless of how many buttons it holds.
+  (function fixMobileHeaderOverflow() {
+    if (document.getElementById('pmHeaderOverflowFix')) return;
+    var style = document.createElement('style');
+    style.id = 'pmHeaderOverflowFix';
+    style.textContent =
+      '@media(max-width:640px){' +
+      'div:has(> #currencyUsdBtn){padding:2px!important;gap:0!important}' +
+      '#currencyUsdBtn,#currencyZigBtn{padding:4px 6px!important;font-size:11px!important}' +
+      'div.shrink-0:has(#currencyUsdBtn){gap:2px!important}' +
+      'div.shrink-0:has(#currencyUsdBtn) a.relative.p-2,div.shrink-0:has(#currencyUsdBtn) a[href="post-ad.html"],div.shrink-0:has(#currencyUsdBtn) a[href="post-ad"]{padding:6px!important}' +
+      'div.shrink-0:has(#currencyUsdBtn) > div.border-l{border-left:0!important;padding-left:0!important}' +
+      '}';
+    document.head.appendChild(style);
+
+    // Every page hardcodes a fixed padding-top (148px/104px) on the element
+    // right after the fixed header, assuming a constant header height. But
+    // the header's own top safety-strip and subnav pill row can grow taller
+    // at narrow widths (text wrapping, scrollable pill row), so that guess
+    // comes up short and the page heading renders half-hidden underneath
+    // the header. Measure the real header height and correct the content
+    // wrapper's padding-top to match, on load and on every resize.
+    function fixHeaderClearance() {
+      var header = document.querySelector('header');
+      if (!header) return;
+      var content = header.nextElementSibling;
+      while (content && (content.tagName === 'SCRIPT' || content.tagName === 'STYLE')) {
+        content = content.nextElementSibling;
+      }
+      if (!content) return;
+      var h = header.getBoundingClientRect().height;
+      if (h > 40) content.style.paddingTop = (h + 8) + 'px';
+    }
+    fixHeaderClearance();
+    window.addEventListener('resize', fixHeaderClearance);
+    window.addEventListener('load', fixHeaderClearance);
+
+    // Shorten "USD ($)" / "ZiG" to "$" / "Z" on narrow screens so both
+    // currency options stay visible (never hide the toggle outright) while
+    // freeing up the ~50px they otherwise cost in the header's tight
+    // mobile width budget. Original labels are restored above 640px.
+    var usdBtn = document.getElementById('currencyUsdBtn');
+    var zigBtn = document.getElementById('currencyZigBtn');
+    if (usdBtn && zigBtn) {
+      var usdFull = usdBtn.textContent, zigFull = zigBtn.textContent;
+      var mq = window.matchMedia('(max-width:640px)');
+      function applyLabels(e) {
+        usdBtn.textContent = e.matches ? '$' : usdFull;
+        zigBtn.textContent = e.matches ? 'Z' : zigFull;
+      }
+      applyLabels(mq);
+      mq.addEventListener ? mq.addEventListener('change', applyLabels) : mq.addListener(applyLabels);
+    }
+  })();
+
   var APP_URL = 'https://play.google.com/store/apps/details?id=com.pamarket.app';
   var sharedClient = global.PMSupabaseClient && global.PMSupabaseClient.get();
   var SB_URL = sharedClient ? sharedClient.url : global.SUPABASE_URL;
@@ -146,6 +207,7 @@
       '.acct-avatar{width:26px;height:26px;border-radius:50%;background:#1A3A8F;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;overflow:hidden}' +
       '.acct-avatar img{width:100%;height:100%;object-fit:cover}' +
       '.acct-name{font-size:13px;font-weight:600;color:#0F172A;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '@media(max-width:640px){.acct-chip{padding:4px;border:none;background:transparent}.acct-name,.acct-caret{display:none}}' +
       '.acct-caret{color:#94A3B8;transition:transform .15s}' +
       '.acct-wrap.open .acct-caret{transform:rotate(180deg)}' +
       '.acct-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 16px 40px rgba(15,36,96,.15);min-width:220px;padding:6px;z-index:400}' +
@@ -195,9 +257,10 @@
 
     var wrap = document.createElement('div');
     wrap.className = 'acct-wrap';
+    wrap.style.display = 'flex';
     wrap.innerHTML =
       '<div class="acct-chip" id="acctChipBtn">' +
-        '<span class="acct-avatar">' + (initials || 'U') + '</span>' +
+        '<span class="acct-avatar" id="acctAvatarSlot">' + (initials || 'U') + '</span>' +
         '<span class="acct-name">' + name.split(' ')[0] + '</span>' +
         '<svg class="acct-caret" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>' +
       '</div>' +
@@ -218,6 +281,27 @@
       '</div>';
 
     signInBtn.replaceWith(wrap);
+
+    // Real profile photo, when the user has uploaded one to profiles_public
+    // (auth session metadata never carries it for email/password accounts).
+    // Falls back to the initials already rendered if there's no photo, the
+    // fetch fails, or the image itself fails to load.
+    if (SB_URL && SB_KEY) {
+      fetch(SB_URL + '/rest/v1/profiles_public?id=eq.' + encodeURIComponent(user.id) + '&select=avatar', {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token },
+      }).then(function (res) { return res.ok ? res.json() : []; }).then(function (rows) {
+        var avatar = rows && rows[0] && rows[0].avatar;
+        if (!avatar) return;
+        var slot = document.getElementById('acctAvatarSlot');
+        if (!slot) return;
+        var img = document.createElement('img');
+        img.src = avatar;
+        img.alt = name;
+        img.onerror = function () { slot.textContent = initials || 'U'; };
+        slot.textContent = '';
+        slot.appendChild(img);
+      }).catch(function () {});
+    }
 
     wrap.querySelector('#acctChipBtn').addEventListener('click', function (e) {
       e.stopPropagation();

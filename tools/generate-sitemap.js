@@ -23,6 +23,7 @@ const STATIC_PAGES = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
   { loc: '/browse', changefreq: 'daily', priority: '0.9' },
   { loc: '/institutions', changefreq: 'daily', priority: '0.7' },
+  { loc: '/businesses', changefreq: 'daily', priority: '0.8' },
   { loc: '/download', changefreq: 'monthly', priority: '0.8' },
   // /browse?cat=X, ?shops=1 and ?city=X were previously listed here as
   // separate indexable URLs, but browse.html serves byte-identical initial
