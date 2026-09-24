@@ -58,6 +58,12 @@ const RAIL_CARD_WIDTH = 160;
 const RAIL_CARD_WIDTH_COMPACT = 122;
 const CITY_STORAGE_KEY = "pamarket.home-city-filter";
 
+// Single place to change how many listings each Home rail query pulls
+// (main feed, near-city, featured, and each category rail). Raise this if
+// the marketplace grows past it; every rail stays a small, indexed,
+// server-side query no matter the value.
+const HOME_RAIL_QUERY_LIMIT = 300;
+
 // Horizontal rail of ListingCards with a SectionHeader — used for Featured,
 // Recently posted, and Near-<city> sections.
 function ListingRail({
@@ -213,7 +219,7 @@ export default function HomeScreen() {
         `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
       )
       .order("created_at", { ascending: false })
-      .limit(300)
+      .limit(HOME_RAIL_QUERY_LIMIT)
       .then((result) => {
         if (cancelled || result.error) return;
         setNearCityListings((result.data as Listing[]) ?? []);
@@ -241,7 +247,7 @@ export default function HomeScreen() {
         `attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.is.null,attributes->>${INSTITUTION_VISIBILITY_ATTR_KEY}.neq.institution_only`
       )
       .order("created_at", { ascending: false })
-      .limit(300)
+      .limit(HOME_RAIL_QUERY_LIMIT)
       .then((result) => result);
     // Verified Shops is meant to surface actually-verified businesses, not
     // just "recently active" ones — the checkmark used to be purely
@@ -312,7 +318,7 @@ export default function HomeScreen() {
       .or(institutionVisibilityFilter)
       .gt("featured_until", new Date().toISOString())
       .order("featured_until", { ascending: false })
-      .limit(300)
+      .limit(HOME_RAIL_QUERY_LIMIT)
       .then((result) => result);
 
     // One small, indexed query per category instead of slicing the capped
@@ -327,7 +333,7 @@ export default function HomeScreen() {
         .or(publicListingExpiryFilter())
         .or(institutionVisibilityFilter)
         .order("created_at", { ascending: false })
-        .limit(300)
+        .limit(HOME_RAIL_QUERY_LIMIT)
         .then((result) => ({ id: cat.id, result }))
     );
 
