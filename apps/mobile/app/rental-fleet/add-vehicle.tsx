@@ -1,37 +1,28 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { toast } from "../../components/ui/Toast";
+import { Card, SelectField } from "../../components/ui";
 import type { RentalLookupOption } from "../../lib/rentals";
 import { RENTAL_DRIVE_TYPES, RENTAL_FUEL_TYPES, RENTAL_TRANSMISSIONS } from "../../lib/rentals";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
-// Mirrors www/js/rentals-business.js H.pages.RentalAddVehicle — a single
-// scrollable form (RN chip/picker style) instead of the web's 4-step wizard,
-// covering the same required fields before an insert into
-// rental_vehicle_listings + rental_vehicle_specs.
-function Chip({
-  label,
-  selected,
-  onPress,
-  styles,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  styles: ReturnType<typeof buildStyles>;
-}) {
-  return (
-    <Pressable style={[styles.chip, selected && styles.chipSelected]} onPress={onPress}>
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
-    </Pressable>
-  );
+// Mirrors www/js/rental-fleet.js vehicleForm() field-for-field (Vehicle
+// details / Pricing & terms / Specs & description / Features sections,
+// engine capacity, mileage, features list, availability toggle) so a
+// provider gets the same capability on mobile as on the web -- previously
+// mobile had no engine capacity, mileage, features or availability toggle
+// at all, and used inline chip walls instead of dropdowns for long option
+// lists (category/brand/city), which read as a wall of buttons rather than
+// a structured form.
+function capitalize(s: string): string {
+  return s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
 export default function RentalAddVehicleScreen() {
@@ -55,6 +46,8 @@ export default function RentalAddVehicleScreen() {
   const [transmission, setTransmission] = useState<string | null>(null);
   const [fuelType, setFuelType] = useState<string | null>(null);
   const [driveType, setDriveType] = useState<string | null>(null);
+  const [engineCapacity, setEngineCapacity] = useState("");
+  const [mileageKm, setMileageKm] = useState("");
   const [dailyRate, setDailyRate] = useState("");
   const [weeklyRate, setWeeklyRate] = useState("");
   const [monthlyRate, setMonthlyRate] = useState("");
@@ -62,6 +55,8 @@ export default function RentalAddVehicleScreen() {
   const [minDays, setMinDays] = useState("1");
   const [driverRate, setDriverRate] = useState("");
   const [description, setDescription] = useState("");
+  const [features, setFeatures] = useState("");
+  const [isAvailable, setIsAvailable] = useState(true);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -81,6 +76,17 @@ export default function RentalAddVehicleScreen() {
       setCities(cityRows);
     })();
   }, []);
+
+  // SelectField works on plain label strings; these keep the slug<->label
+  // round trip so the rest of the screen still only deals in slugs (what
+  // submit() needs to look up ids by).
+  const categoryLabelBySlug = useMemo(() => Object.fromEntries(categories.map((c) => [c.slug, c.label])), [categories]);
+  const brandLabelBySlug = useMemo(() => Object.fromEntries(brands.map((b) => [b.slug, b.label])), [brands]);
+  const slugByCategoryLabel = useMemo(() => Object.fromEntries(categories.map((c) => [c.label, c.slug])), [categories]);
+  const slugByBrandLabel = useMemo(() => Object.fromEntries(brands.map((b) => [b.label, b.slug])), [brands]);
+  const transmissionLabels = useMemo(() => RENTAL_TRANSMISSIONS.map(capitalize), []);
+  const fuelTypeLabels = useMemo(() => RENTAL_FUEL_TYPES.map(capitalize), []);
+  const driveTypeLabels = useMemo(() => RENTAL_DRIVE_TYPES.map((d) => d.toUpperCase()), []);
 
   async function pickPhotos() {
     const remaining = Math.max(0, 5 - photoUris.length);
@@ -152,7 +158,7 @@ export default function RentalAddVehicleScreen() {
           description: description.trim() || null,
           status: "active",
           admin_status: "pending_review",
-          is_available: true,
+          is_available: isAvailable,
         })
         .select("id")
         .single();
@@ -164,7 +170,17 @@ export default function RentalAddVehicleScreen() {
         fuel_type: fuelType,
         drive_type: driveType,
         seats: seats ? parseInt(seats, 10) : null,
+        engine_capacity: engineCapacity.trim() || null,
+        mileage_km: mileageKm ? parseInt(mileageKm, 10) : null,
       });
+
+      const featureRows = features
+        .split("\n")
+        .map((f) => f.trim())
+        .filter(Boolean);
+      if (featureRows.length) {
+        await supabase.from("rental_vehicle_features").insert(featureRows.map((feature) => ({ listing_id: listing.id, feature })));
+      }
 
       if (session?.user && photoUris.length) {
         for (let index = 0; index < photoUris.length; index++) {
@@ -206,115 +222,174 @@ export default function RentalAddVehicleScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
-      <Text style={styles.sectionLabel}>Photos</Text>
-      <Text style={styles.helperText}>Add clear real photos now. The first photo becomes the cover image.</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
-        {photoUris.map((uri, index) => (
-          <View key={`${uri}-${index}`} style={styles.photoThumbWrap}>
-            <Image source={{ uri }} style={styles.photoThumb} contentFit="cover" />
-            {index === 0 ? (
-              <View style={styles.coverPill}>
-                <Text style={styles.coverPillText}>Cover</Text>
-              </View>
-            ) : null}
-            <Pressable style={styles.removePhotoBtn} onPress={() => setPhotoUris((prev) => prev.filter((_, i) => i !== index))}>
-              <Text style={styles.removePhotoText}>×</Text>
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Photos</Text>
+        <Text style={styles.helperText}>Add clear real photos now. The first photo becomes the cover image.</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
+          {photoUris.map((uri, index) => (
+            <View key={`${uri}-${index}`} style={styles.photoThumbWrap}>
+              <Image source={{ uri }} style={styles.photoThumb} contentFit="cover" />
+              {index === 0 ? (
+                <View style={styles.coverPill}>
+                  <Text style={styles.coverPillText}>Cover</Text>
+                </View>
+              ) : null}
+              <Pressable style={styles.removePhotoBtn} onPress={() => setPhotoUris((prev) => prev.filter((_, i) => i !== index))}>
+                <Text style={styles.removePhotoText}>×</Text>
+              </Pressable>
+            </View>
+          ))}
+          {photoUris.length < 5 ? (
+            <Pressable style={styles.addPhotoBtn} onPress={pickPhotos}>
+              <Text style={styles.addPhotoText}>+ Add Photos</Text>
             </Pressable>
+          ) : null}
+        </ScrollView>
+      </Card>
+
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Vehicle Details</Text>
+        <View style={styles.fieldGap}>
+          <SelectField
+            label="Category *"
+            value={categorySlug ? categoryLabelBySlug[categorySlug] ?? "" : ""}
+            placeholder="Select category"
+            options={categories.map((c) => c.label)}
+            onSelect={(label) => setCategorySlug(slugByCategoryLabel[label] ?? null)}
+          />
+          <SelectField
+            label="Brand *"
+            value={brandSlug ? brandLabelBySlug[brandSlug] ?? "" : ""}
+            placeholder="Select brand"
+            options={brands.map((b) => b.label)}
+            onSelect={(label) => setBrandSlug(slugByBrandLabel[label] ?? null)}
+          />
+          <View>
+            <Text style={styles.label}>Model *</Text>
+            <TextInput style={styles.input} value={model} onChangeText={setModel} placeholder="e.g. Fortuner, Aqua, Hilux" placeholderTextColor={tones.textMuted} />
           </View>
-        ))}
-        {photoUris.length < 5 ? (
-          <Pressable style={styles.addPhotoBtn} onPress={pickPhotos}>
-            <Text style={styles.addPhotoText}>+ Add Photos</Text>
-          </Pressable>
-        ) : null}
-      </ScrollView>
-
-      <Text style={styles.sectionLabel}>Category *</Text>
-      <View style={styles.chipRow}>
-        {categories.map((c) => (
-          <Chip key={c.slug} label={c.label} selected={categorySlug === c.slug} onPress={() => setCategorySlug(c.slug)} styles={styles} />
-        ))}
-      </View>
-
-      <Text style={styles.sectionLabel}>Brand *</Text>
-      <View style={styles.chipRow}>
-        {brands.map((b) => (
-          <Chip key={b.slug} label={b.label} selected={brandSlug === b.slug} onPress={() => setBrandSlug(b.slug)} styles={styles} />
-        ))}
-      </View>
-
-      <Text style={styles.label}>Model *</Text>
-      <TextInput style={styles.input} value={model} onChangeText={setModel} placeholder="e.g. Fortuner, Aqua, Hilux" placeholderTextColor={tones.textMuted} />
-
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Year</Text>
-          <TextInput style={styles.input} value={year} onChangeText={setYear} placeholder="2022" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Year</Text>
+              <TextInput style={styles.input} value={year} onChangeText={setYear} placeholder="2022" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Seats</Text>
+              <TextInput style={styles.input} value={seats} onChangeText={setSeats} placeholder="5" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
+            </View>
+          </View>
+          <SelectField
+            label="City / Location *"
+            value={citySlug ?? ""}
+            placeholder="Select city"
+            options={cities.map((c) => c.label)}
+            onSelect={(label) => setCitySlug(label)}
+          />
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Seats</Text>
-          <TextInput style={styles.input} value={seats} onChangeText={setSeats} placeholder="5" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
+      </Card>
+
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Specs</Text>
+        <View style={styles.fieldGap}>
+          <SelectField
+            label="Transmission *"
+            value={transmission ? capitalize(transmission) : ""}
+            placeholder="Select transmission"
+            options={transmissionLabels}
+            onSelect={(label) => setTransmission(label.toLowerCase())}
+          />
+          <SelectField
+            label="Fuel Type *"
+            value={fuelType ? capitalize(fuelType) : ""}
+            placeholder="Select fuel type"
+            options={fuelTypeLabels}
+            onSelect={(label) => setFuelType(label.toLowerCase())}
+          />
+          <SelectField
+            label="Drive Type"
+            value={driveType ? driveType.toUpperCase() : ""}
+            placeholder="Select drive type"
+            options={driveTypeLabels}
+            onSelect={(label) => setDriveType(label.toLowerCase())}
+          />
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Engine Capacity</Text>
+              <TextInput style={styles.input} value={engineCapacity} onChangeText={setEngineCapacity} placeholder="e.g. 2.8L" placeholderTextColor={tones.textMuted} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Mileage (km)</Text>
+              <TextInput style={styles.input} value={mileageKm} onChangeText={setMileageKm} placeholder="0" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
+            </View>
+          </View>
         </View>
-      </View>
+      </Card>
 
-      <Text style={styles.sectionLabel}>Transmission *</Text>
-      <View style={styles.chipRow}>
-        {RENTAL_TRANSMISSIONS.map((t) => (
-          <Chip key={t} label={t[0].toUpperCase() + t.slice(1)} selected={transmission === t} onPress={() => setTransmission(t)} styles={styles} />
-        ))}
-      </View>
-
-      <Text style={styles.sectionLabel}>Fuel Type *</Text>
-      <View style={styles.chipRow}>
-        {RENTAL_FUEL_TYPES.map((f) => (
-          <Chip key={f} label={f[0].toUpperCase() + f.slice(1)} selected={fuelType === f} onPress={() => setFuelType(f)} styles={styles} />
-        ))}
-      </View>
-
-      <Text style={styles.sectionLabel}>Drive Type</Text>
-      <View style={styles.chipRow}>
-        {RENTAL_DRIVE_TYPES.map((d) => (
-          <Chip key={d} label={d.toUpperCase()} selected={driveType === d} onPress={() => setDriveType(d)} styles={styles} />
-        ))}
-      </View>
-
-      <Text style={styles.sectionLabel}>City / Location *</Text>
-      <View style={styles.chipRow}>
-        {cities.map((c) => (
-          <Chip key={c.slug} label={c.label} selected={citySlug === c.slug} onPress={() => setCitySlug(c.slug)} styles={styles} />
-        ))}
-      </View>
-
-      <Text style={styles.sectionLabel}>Pricing</Text>
-      <Text style={styles.label}>Daily Rate (USD) *</Text>
-      <TextInput style={styles.input} value={dailyRate} onChangeText={setDailyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Weekly Rate</Text>
-          <TextInput style={styles.input} value={weeklyRate} onChangeText={setWeeklyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Pricing &amp; Terms</Text>
+        <View style={styles.fieldGap}>
+          <View>
+            <Text style={styles.label}>Daily Rate (USD) *</Text>
+            <TextInput style={styles.input} value={dailyRate} onChangeText={setDailyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+          </View>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Weekly Rate</Text>
+              <TextInput style={styles.input} value={weeklyRate} onChangeText={setWeeklyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Monthly Rate</Text>
+              <TextInput style={styles.input} value={monthlyRate} onChangeText={setMonthlyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+            </View>
+          </View>
+          <View>
+            <Text style={styles.label}>Security Deposit</Text>
+            <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+          </View>
+          <View>
+            <Text style={styles.label}>Minimum Rental Days</Text>
+            <TextInput style={styles.input} value={minDays} onChangeText={setMinDays} placeholder="1" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
+          </View>
+          <View>
+            <Text style={styles.label}>Driver Rate / Day (leave blank for self-drive only)</Text>
+            <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Monthly Rate</Text>
-          <TextInput style={styles.input} value={monthlyRate} onChangeText={setMonthlyRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
-        </View>
-      </View>
-      <Text style={styles.label}>Security Deposit</Text>
-      <TextInput style={styles.input} value={deposit} onChangeText={setDeposit} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
-      <Text style={styles.label}>Minimum Rental Days</Text>
-      <TextInput style={styles.input} value={minDays} onChangeText={setMinDays} placeholder="1" keyboardType="number-pad" placeholderTextColor={tones.textMuted} />
-      <Text style={styles.label}>Driver Rate / Day (leave blank for self-drive only)</Text>
-      <TextInput style={styles.input} value={driverRate} onChangeText={setDriverRate} placeholder="0.00" keyboardType="decimal-pad" placeholderTextColor={tones.textMuted} />
+      </Card>
 
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={styles.textarea}
-        value={description}
-        onChangeText={setDescription}
-        placeholder="Describe the vehicle condition, included accessories, rental terms..."
-        placeholderTextColor={tones.textMuted}
-        multiline
-        numberOfLines={4}
-      />
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Features &amp; Availability</Text>
+        <Text style={styles.label}>Features (one per line)</Text>
+        <TextInput
+          style={styles.textarea}
+          value={features}
+          onChangeText={setFeatures}
+          placeholder={"Air conditioning\nBluetooth\nGPS navigation"}
+          placeholderTextColor={tones.textMuted}
+          multiline
+          numberOfLines={3}
+        />
+        <View style={styles.availabilityRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>Available for enquiries</Text>
+            <Text style={styles.helperText}>Turn off to pause new booking requests without unlisting the vehicle.</Text>
+          </View>
+          <Switch value={isAvailable} onValueChange={setIsAvailable} trackColor={{ true: tones.brand }} />
+        </View>
+      </Card>
+
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Description</Text>
+        <TextInput
+          style={styles.textarea}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Describe the vehicle condition, included accessories, rental terms..."
+          placeholderTextColor={tones.textMuted}
+          multiline
+          numberOfLines={4}
+        />
+      </Card>
 
       <Pressable style={[styles.primaryBtn, isSubmitting && styles.disabled]} onPress={submit} disabled={isSubmitting}>
         {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Create Vehicle</Text>}
@@ -324,7 +399,7 @@ export default function RentalAddVehicleScreen() {
 }
 
 function buildTones(color: ColorPalette) {
-  return { textMuted: color.textMuted, textOnBrand: color.textOnBrand };
+  return { textMuted: color.textMuted, textOnBrand: color.textOnBrand, brand: color.brand };
 }
 
 function buildStyles(color: ColorPalette) {
@@ -333,9 +408,11 @@ function buildStyles(color: ColorPalette) {
     centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
     blockedTitle: { fontSize: 14, fontWeight: "700", color: color.textSub, marginBottom: 6, textAlign: "center" },
     blockedBody: { fontSize: 12.5, color: color.textMuted, textAlign: "center", lineHeight: 18 },
-    sectionLabel: { fontSize: 13, fontWeight: "700", color: color.textSub, marginTop: 16, marginBottom: 8 },
-    helperText: { fontSize: 12.5, color: color.textMuted, lineHeight: 18, marginBottom: 10 },
-    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6, marginTop: 12 },
+    section: { marginBottom: 14 },
+    sectionTitle: { fontSize: 14, fontWeight: "800", color: color.text, marginBottom: 12 },
+    fieldGap: { gap: 14 },
+    helperText: { fontSize: 12.5, color: color.textMuted, lineHeight: 18, marginTop: 4, marginBottom: 10 },
+    label: { fontSize: 12, fontWeight: "700", color: color.textSub, marginBottom: 6 },
     input: {
       height: 46,
       borderWidth: 1.5,
@@ -358,6 +435,7 @@ function buildStyles(color: ColorPalette) {
       textAlignVertical: "top",
     },
     row: { flexDirection: "row", gap: 10 },
+    availabilityRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 14 },
     photoRow: { gap: 10, paddingBottom: 4 },
     photoThumbWrap: { width: 104, height: 84, borderRadius: 14, overflow: "hidden", backgroundColor: color.skeleton },
     photoThumb: { width: "100%", height: "100%" },
@@ -396,19 +474,7 @@ function buildStyles(color: ColorPalette) {
       paddingHorizontal: 8,
     },
     addPhotoText: { color: color.brand, fontSize: 12.5, fontWeight: "800", textAlign: "center" },
-    chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-    chip: {
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: 999,
-      borderWidth: 1.5,
-      borderColor: color.border,
-      backgroundColor: color.surface,
-    },
-    chipSelected: { borderColor: color.brand, backgroundColor: color.brandTint },
-    chipText: { fontSize: 13, fontWeight: "600", color: color.textSub },
-    chipTextSelected: { color: color.brand },
-    primaryBtn: { marginTop: 24, backgroundColor: color.brand, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
+    primaryBtn: { marginTop: 10, backgroundColor: color.brand, borderRadius: 14, paddingVertical: 15, alignItems: "center" },
     primaryBtnText: { color: color.textOnBrand, fontSize: 14, fontWeight: "700" },
     disabled: { opacity: 0.6 },
   });

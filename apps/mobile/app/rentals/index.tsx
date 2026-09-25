@@ -203,6 +203,7 @@ export default function RentalsListScreen() {
         <View style={styles.filterBackdrop}>
           <Pressable style={styles.filterBackdropTouch} onPress={() => setFilterVisible(false)} />
           <View style={styles.filterSheet}>
+            <View style={styles.filterDragHandle} />
             {categoryMenuOpen || brandMenuOpen ? (
               // Rendered inline inside this same Modal instead of stacking a
               // second <Modal> on top -- Android's native Modal is known to
@@ -210,6 +211,7 @@ export default function RentalsListScreen() {
               // is already visible (the exact "nothing responds to taps"
               // bug reported here).
               <View style={styles.filterSheet}>
+                <View style={styles.filterDragHandle} />
                 <View style={styles.filterHeader}>
                   <Text style={styles.filterTitle}>{categoryMenuOpen ? "Vehicle Type" : "Brand"}</Text>
                   <Pressable onPress={() => { setCategoryMenuOpen(false); setBrandMenuOpen(false); }} hitSlop={12}>
@@ -263,8 +265,13 @@ export default function RentalsListScreen() {
             ) : (
               <>
             <View style={styles.filterHeader}>
-              <Text style={styles.filterTitle}>Filter Rentals</Text>
-              <Pressable onPress={() => setFilterVisible(false)} hitSlop={12}>
+              <View style={styles.filterHeaderTitleRow}>
+                <View style={styles.filterHeaderIcon}>
+                  <FilterIcon stroke={tones.brand} />
+                </View>
+                <Text style={styles.filterTitle}>Filter Rentals</Text>
+              </View>
+              <Pressable onPress={() => setFilterVisible(false)} hitSlop={12} style={styles.filterCloseBtn}>
                 <Text style={styles.filterClose}>Close</Text>
               </Pressable>
             </View>
@@ -412,9 +419,23 @@ function buildStyles(color: ColorPalette) {
     },
     filterSheet: {
       backgroundColor: color.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
       maxHeight: "80%",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    filterDragHandle: {
+      alignSelf: "center",
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: color.border,
+      marginTop: 10,
+      marginBottom: 2,
     },
     filterHeader: {
       flexDirection: "row",
@@ -425,13 +446,32 @@ function buildStyles(color: ColorPalette) {
       borderBottomWidth: 1,
       borderBottomColor: color.divider,
     },
+    filterHeaderTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    filterHeaderIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: color.brandTint,
+    },
     filterTitle: {
       fontSize: 17,
       fontWeight: "800",
       color: color.text,
     },
+    filterCloseBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 10,
+      backgroundColor: color.surfaceAlt,
+    },
     filterClose: {
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: "700",
       color: color.brand,
     },
