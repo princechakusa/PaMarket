@@ -136,3 +136,8 @@ button{font-family:inherit;cursor:pointer}
 }
 
 h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,.logo,.auth-brand{font-family:'Manrope',system-ui,sans-serif;font-weight:700;letter-spacing:-.02em}
+
+/* Filters the search API can't back yet are shown disabled, not faked. */
+.rt-soon{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:20px;background:var(--gold-tint);color:var(--gold);font-size:9px;font-weight:800;letter-spacing:.04em;vertical-align:1px}
+.rt-check:has(input:disabled){opacity:.55;cursor:not-allowed}
+.rgrid>.empty-state{grid-column:1/-1}

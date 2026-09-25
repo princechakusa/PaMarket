@@ -35,6 +35,14 @@ img{max-width:100%;height:auto;display:block}
 img.img-broken{font-size:0;color:transparent;min-height:60px;background:var(--paper,#F7F4EE);object-fit:contain}
 button{font-family:inherit;cursor:pointer}
 .hidden{display:none!important}
+/* .hidden above is !important, which beats Tailwind's non-important
+   responsive reveals (hidden lg:block etc.) and silently hid the header
+   search, ribbon links and button labels on every page loading this
+   file. Re-assert the reveals at equal strength, after .hidden. */
+@media(min-width:640px){.sm\:block{display:block!important}.sm\:flex{display:flex!important}.sm\:inline{display:inline!important}.sm\:inline-flex{display:inline-flex!important}}
+@media(min-width:768px){.md\:flex{display:flex!important}.md\:inline{display:inline!important}}
+@media(min-width:1024px){.lg\:block{display:block!important}.lg\:flex{display:flex!important}.lg\:grid{display:grid!important}}
+@media(min-width:1280px){.xl\:flex{display:flex!important}}
 /* Shared page container */
 .w{max-width:1200px;margin:0 auto;padding:0 32px}
 
