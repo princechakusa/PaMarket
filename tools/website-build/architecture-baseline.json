@@ -3,16 +3,16 @@
   "policy": "Existing review-level debt may not grow; new review-level debt fails.",
   "debt": {
     "account-settings.html": {
-      "bytes": 86459,
+      "bytes": 86969,
       "lines": 799,
       "inlineJs": 42955,
       "inlineCss": 12980
     },
     "applications.html": {
-      "bytes": 27302,
+      "bytes": 28270,
       "lines": 322,
       "inlineJs": 9794,
-      "inlineCss": 3955
+      "inlineCss": 4413
     },
     "auth.html": {
       "bytes": 54804,
@@ -21,97 +21,97 @@
       "inlineCss": 14523
     },
     "blog-post.html": {
-      "bytes": 30110,
+      "bytes": 31078,
       "lines": 434,
       "inlineJs": 9763,
-      "inlineCss": 4207
+      "inlineCss": 4665
     },
     "blog.html": {
-      "bytes": 41999,
+      "bytes": 42515,
       "lines": 416,
       "inlineJs": 13325,
       "inlineCss": 209
     },
     "browse.html": {
-      "bytes": 41098,
+      "bytes": 41319,
       "lines": 485,
       "inlineJs": 19088,
       "inlineCss": 209
     },
     "business.html": {
-      "bytes": 40139,
+      "bytes": 40360,
       "lines": 418,
       "inlineJs": 16323,
       "inlineCss": 209
     },
     "businesses.html": {
-      "bytes": 34535,
+      "bytes": 34830,
       "lines": 320,
       "inlineJs": 12556,
       "inlineCss": 209
     },
     "chats.html": {
-      "bytes": 37919,
+      "bytes": 38429,
       "lines": 286,
       "inlineJs": 3459,
       "inlineCss": 16079
     },
     "css/site.css": {
-      "bytes": 24606,
-      "lines": 301,
+      "bytes": 25347,
+      "lines": 309,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "dashboard.html": {
-      "bytes": 35459,
+      "bytes": 36427,
       "lines": 446,
       "inlineJs": 12597,
-      "inlineCss": 7112
+      "inlineCss": 7570
     },
     "delete-account.html": {
-      "bytes": 27924,
+      "bytes": 28434,
       "lines": 445,
       "inlineJs": 10303,
       "inlineCss": 2538
     },
     "detail.html": {
-      "bytes": 47582,
+      "bytes": 48098,
       "lines": 513,
       "inlineJs": 24225,
       "inlineCss": 209
     },
     "help.html": {
-      "bytes": 49303,
+      "bytes": 50271,
       "lines": 680,
       "inlineJs": 18099,
-      "inlineCss": 3934
+      "inlineCss": 4392
     },
     "index.html": {
-      "bytes": 82863,
+      "bytes": 83084,
       "lines": 888,
       "inlineJs": 32564,
       "inlineCss": 209
     },
     "institution.html": {
-      "bytes": 45789,
+      "bytes": 46084,
       "lines": 461,
       "inlineJs": 20535,
       "inlineCss": 209
     },
     "institutions.html": {
-      "bytes": 30286,
+      "bytes": 30581,
       "lines": 291,
       "inlineJs": 9737,
       "inlineCss": 209
     },
     "job.html": {
-      "bytes": 41812,
+      "bytes": 42107,
       "lines": 510,
       "inlineJs": 18250,
       "inlineCss": 209
     },
     "jobs.html": {
-      "bytes": 50052,
+      "bytes": 50347,
       "lines": 575,
       "inlineJs": 21454,
       "inlineCss": 209
@@ -159,16 +159,16 @@
       "inlineCss": 0
     },
     "open-shop.html": {
-      "bytes": 67549,
+      "bytes": 67844,
       "lines": 572,
       "inlineJs": 28309,
       "inlineCss": 8898
     },
     "post-ad.html": {
-      "bytes": 51811,
+      "bytes": 52779,
       "lines": 798,
       "inlineJs": 19991,
-      "inlineCss": 9449
+      "inlineCss": 9907
     },
     "post-campus-ad.html": {
       "bytes": 39680,
@@ -177,22 +177,22 @@
       "inlineCss": 1216
     },
     "post-job.html": {
-      "bytes": 50653,
+      "bytes": 51621,
       "lines": 714,
       "inlineJs": 19824,
-      "inlineCss": 6354
+      "inlineCss": 6812
     },
     "profile.html": {
-      "bytes": 54567,
+      "bytes": 55246,
       "lines": 758,
       "inlineJs": 21020,
-      "inlineCss": 10620
+      "inlineCss": 11078
     },
     "rental-detail.html": {
-      "bytes": 35773,
+      "bytes": 37143,
       "lines": 531,
       "inlineJs": 12930,
-      "inlineCss": 4594
+      "inlineCss": 5052
     }
   }
 }
