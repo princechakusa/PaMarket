@@ -72,38 +72,49 @@ function getImageSize(uri: string): Promise<{ width: number; height: number }> {
 }
 
 export async function uploadImageUriToR2(uri: string, key: string): Promise<string> {
-  let uploadUri = uri;
+  // Always re-encode through the manipulator — never only when resizing is
+  // needed. This used to run only when the image exceeded MAX_DIMENSION,
+  // which meant an already-small-enough HEIC photo (the iPhone default
+  // format) skipped conversion entirely and got uploaded as raw HEIC bytes
+  // labeled "image/jpeg". HEIC only decodes on Apple devices, so that
+  // listing's photo rendered blank on Android and on the web — see
+  // project_heic_listing_photos memory. Re-encoding through
+  // expo-image-manipulator with SaveFormat.JPEG guarantees genuine JPEG
+  // bytes leave this device regardless of the source format (HEIC, PNG,
+  // WebP, or anything else the picker could hand back).
+  //
+  // A prior version of this function fell back to uploading the original,
+  // unconverted file whenever re-encoding threw, to "never block the
+  // upload" — but that silently reopened the exact bug this function
+  // exists to close: a photo that fails to re-encode (still commonly a
+  // HEIC quirk) would publish as raw bytes mislabeled "image/jpeg" and
+  // render blank for every viewer, with nothing telling the poster it
+  // happened. Throwing here instead is the safe direction: the caller
+  // (post.tsx's submit()) already surfaces any error from this call and
+  // lets the user retry, matching how the web uploader already treats a
+  // failed photo (post-ad.html's uploadOne: marked failed, "Tap to retry",
+  // never submitted) instead of silently shipping a broken image.
+  const { width, height } = await getImageSize(uri);
+  const needsResize = Math.max(width, height) > MAX_DIMENSION;
+  // Only one dimension is passed when resizing so the manipulator preserves
+  // aspect ratio itself — passing both would stretch non-square images.
+  // With no resize needed, an empty transform list still forces the JPEG
+  // re-encode.
+  const resizeParam = width >= height ? { width: MAX_DIMENSION } : { height: MAX_DIMENSION };
+  const pipeline = needsResize ? ImageManipulator.manipulate(uri).resize(resizeParam) : ImageManipulator.manipulate(uri);
+  let saved;
   try {
-    // Always re-encode through the manipulator — never only when resizing
-    // is needed. This used to run only when the image exceeded
-    // MAX_DIMENSION, which meant an already-small-enough HEIC photo (the
-    // iPhone default format) skipped conversion entirely and got uploaded
-    // as raw HEIC bytes labeled "image/jpeg". HEIC only decodes on Apple
-    // devices, so that listing's photo rendered blank on Android and on
-    // the web — see project_heic_listing_photos memory. Re-encoding through
-    // expo-image-manipulator with SaveFormat.JPEG guarantees genuine JPEG
-    // bytes leave this device regardless of the source format (HEIC, PNG,
-    // WebP, or anything else the picker could hand back), closing that gap
-    // for every new upload from here on. Existing HEIC objects already in
-    // R2 are unaffected by this change and still need a separate backfill.
-    const { width, height } = await getImageSize(uri);
-    const needsResize = Math.max(width, height) > MAX_DIMENSION;
-    // Only one dimension is passed when resizing so the manipulator
-    // preserves aspect ratio itself — passing both would stretch
-    // non-square images. With no resize needed, an empty transform list
-    // still forces the JPEG re-encode.
-    const resizeParam = width >= height ? { width: MAX_DIMENSION } : { height: MAX_DIMENSION };
-    const pipeline = needsResize ? ImageManipulator.manipulate(uri).resize(resizeParam) : ImageManipulator.manipulate(uri);
     const rendered = await pipeline.renderAsync();
-    const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
-    uploadUri = saved.uri;
+    saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
   } catch {
-    // If re-encoding fails for any reason, fall back to uploading the
-    // original — never block the user's upload entirely on this safety
-    // step. This is the one remaining path a non-JPEG file could still
-    // reach R2 through, and it's now the exception rather than the rule.
+    // Rethrown with a message the caller's friendlyError() has nothing
+    // specific to map, so it would otherwise fall through to either a raw
+    // native error string or the generic "Something went wrong" — neither
+    // tells the user which of several photos failed or what to do about it.
+    throw new Error("This photo couldn't be processed. Please try a different photo.");
   }
-  const response = await fetch(uploadUri);
+
+  const response = await fetch(saved.uri);
   const blob = await response.blob();
   return uploadToR2(blob, key, "image/jpeg");
 }
