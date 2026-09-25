@@ -23,11 +23,14 @@ function rcard(v){
   const availTxt=v.is_available?'Available':'Booked';
   const badges=[];
   if(v.is_featured)badges.push('<span class="rcard-badge">★ Tier 1 Operator</span>');
-  if(v.driver_rate)badges.push('<span class="rcard-badge transport">Driver Available</span>');
+  else if(v._verified)badges.push('<span class="rcard-badge">✓ Verified Operator</span>');
+  if(v._driver)badges.push('<span class="rcard-badge transport">Driver Available</span>');
   const chips=[];
   if(v.transmission)chips.push(esc(human(v.transmission)));
   if(v.seats)chips.push(v.seats+' Seats');
   if(v.drive_type)chips.push(esc(v.drive_type.toUpperCase()));
+  if(v._cross)chips.push('Cross-Border');
+  if(v._insured)chips.push('Insured');
   return`<a class="rcard" href="${esc(PMUrls.rentalPath(v))}">
     <div class="rcard-img">
       ${img}
@@ -51,6 +54,31 @@ const RT_PAGE_SIZE=6;
 // locally, since rental_search_listings only orders featured-first/newest.
 const RT_SORT_FETCH=100;
 let rtOffset=0,rtTotal=0,rtSortedRows=null;
+
+// Fold the per-listing extras (see PMRentals.fetchRentalListingExtras) into
+// each search row as the flags the filters and cards use. A listing-level
+// setting or its operator's default both count.
+function withExtras(rows,map){
+  return rows.map(r=>{
+    const x=map[r.id];if(!x)return r;
+    const co=x.rental_companies||{},sp=x.rental_vehicle_specs;const spec=Array.isArray(sp)?sp[0]||{}:sp||{};
+    const biz=co.businesses||{};
+    return Object.assign({},r,{
+      transmission:spec.transmission,seats:spec.seats,drive_type:spec.drive_type,
+      _driver:Number(x.driver_rate)>0||!!co.driver_available,
+      _cross:!!x.cross_border||!!co.cross_border,
+      _insured:!!x.insurance_included||!!co.insurance_included,
+      _noDeposit:!(Number(x.deposit)>0),
+      _verified:Number(biz.verification_level)>=2
+    });
+  });
+}
+const RT_FLAG_KEYS={verified:'_verified',noDeposit:'_noDeposit',insurance:'_insured',driver:'_driver',crossBorder:'_cross'};
+function activeFlags(){return [...document.querySelectorAll('.rtFlag:checked')].map(c=>c.value).filter(k=>RT_FLAG_KEYS[k])}
+function enrich(rows){
+  if(!rows.length||!PMRentals.fetchRentalListingExtras)return Promise.resolve(rows);
+  return PMRentals.fetchRentalListingExtras(rows.map(r=>r.id)).then(map=>withExtras(rows,map));
+}
 
 function rtToday(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
 
@@ -121,26 +149,34 @@ function showLoadError(err){
   document.getElementById('rtPager').innerHTML='';
 }
 
-// paging=true reuses an already-sorted price result instead of refetching.
+// Price sorts and the operator/scope filters aren't supported by the search
+// RPC, so those fetch up to RT_SORT_FETCH matches once, then filter, sort and
+// paginate locally. paging=true reuses that local result instead of refetching.
 function loadRentals(paging){
   const opts=currentFilters();
+  const flags=activeFlags();
   const priceSort=opts.sort==='price_asc'||opts.sort==='price_desc';
-  if(priceSort && paging && rtSortedRows){
+  const local=priceSort||flags.length>0;
+  if(local && paging && rtSortedRows){
     renderRows(rtSortedRows.slice(rtOffset,rtOffset+RT_PAGE_SIZE),opts,rtSortedRows.length);
     return;
   }
   document.getElementById('rtGrid').innerHTML=skeletons(RT_PAGE_SIZE);
-  const req=priceSort?Object.assign({},opts,{limit:RT_SORT_FETCH,offset:0}):opts;
-  PMRentals.fetchRentalListings(req).then(rows=>{
-    if(priceSort){
-      const dir=opts.sort==='price_asc'?1:-1;
-      rtSortedRows=rows.slice().sort((a,b)=>{
-        const x=Number(a.daily_rate)||0,y=Number(b.daily_rate)||0;
-        if(!x!==!y)return x?-1:1; // unpriced (POA) listings last either way
-        return (x-y)*dir;
-      });
-      updateHeroRate(rtSortedRows);
-      renderRows(rtSortedRows.slice(rtOffset,rtOffset+RT_PAGE_SIZE),opts,rtSortedRows.length);
+  const req=local?Object.assign({},opts,{limit:RT_SORT_FETCH,offset:0}):opts;
+  PMRentals.fetchRentalListings(req).then(enrich).then(rows=>{
+    if(local){
+      let out=rows.filter(r=>flags.every(k=>r[RT_FLAG_KEYS[k]]));
+      if(priceSort){
+        const dir=opts.sort==='price_asc'?1:-1;
+        out=out.slice().sort((a,b)=>{
+          const x=Number(a.daily_rate)||0,y=Number(b.daily_rate)||0;
+          if(!x!==!y)return x?-1:1; // unpriced (POA) listings last either way
+          return (x-y)*dir;
+        });
+      }
+      rtSortedRows=out;
+      updateHeroRate(out);
+      renderRows(out.slice(rtOffset,rtOffset+RT_PAGE_SIZE),opts,out.length);
     }else{
       rtSortedRows=null;
       if(rtOffset===0)updateHeroRate(rows);
@@ -156,6 +192,7 @@ function resetRentalFilters(){
   document.getElementById('rtEnd').min=rtToday();
   document.getElementById('rtCategory').value='';
   document.querySelectorAll('.rtCatCheck').forEach(c=>c.checked=false);
+  document.querySelectorAll('.rtFlag').forEach(c=>c.checked=false);
   document.getElementById('fltPriceMin').value='';
   document.getElementById('fltPriceMax').value='';
   document.querySelectorAll('input[name="fltTrans"]').forEach(r=>r.checked=(r.value===''));
@@ -179,7 +216,8 @@ document.getElementById('rtCategoryChecks').addEventListener('change',e=>{
 });
 document.getElementById('rtCategory').addEventListener('change',syncCategoryChecks);
 
-// Transmission and price apply as soon as they change.
+// Transmission, price and the operator/scope filters apply as soon as they change.
+document.querySelectorAll('.rtFlag').forEach(c=>c.addEventListener('change',runRentalSearch));
 document.querySelectorAll('input[name="fltTrans"]').forEach(r=>r.addEventListener('change',runRentalSearch));
 ['fltPriceMin','fltPriceMax'].forEach(id=>document.getElementById(id).addEventListener('change',runRentalSearch));
 

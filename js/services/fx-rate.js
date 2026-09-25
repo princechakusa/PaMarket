@@ -66,4 +66,19 @@
   }
 
   global.PMFxRate = Object.freeze({ getRate: getRate, FALLBACK_RATE: FALLBACK_RATE });
+
+  // Fill the shared header's rate slot on any page that loads this file,
+  // so pages don't each need their own copy of this wiring. Pages that
+  // still set it themselves write the same text; harmless.
+  function fillHeader() {
+    if (!global.document || !global.document.getElementById('fxRateHeader')) return;
+    getRate().then(function (r) {
+      var el = global.document.getElementById('fxRateHeader');
+      if (el) el.textContent = r.isLive ? ('Live Rate: 1 USD = ' + r.rate.toFixed(2) + ' ZiG') : 'Official Rates Synced Daily';
+    });
+  }
+  if (global.document) {
+    if (global.document.readyState === 'loading') global.document.addEventListener('DOMContentLoaded', fillHeader);
+    else fillHeader();
+  }
 })(typeof self !== 'undefined' ? self : this);

@@ -166,10 +166,10 @@ window.setCurrency = function(cur){
     <div class="rt-filters-head"><h3>Filters &amp; Standards</h3><button onclick="resetRentalFilters()">Reset</button></div>
 
     <div class="rt-filter-group">
-      <b>Operator Status <span class="rt-soon">Coming soon</span></b>
-      <label class="rt-check"><span><input type="checkbox" id="fltVerified" disabled>Verified Fleet Operator (CR14)</span></label>
-      <label class="rt-check"><span><input type="checkbox" id="fltLocal" disabled>Local Certified Trade Indenture</span></label>
-      <label class="rt-check"><span><input type="checkbox" id="fltEscrow" disabled>Escrow Deposit Enabled</span></label>
+      <b>Operator &amp; Terms</b>
+      <label class="rt-check"><span><input type="checkbox" class="rtFlag" value="verified">Verified Business Operator</span></label>
+      <label class="rt-check"><span><input type="checkbox" class="rtFlag" value="noDeposit">No Deposit Required</span></label>
+      <label class="rt-check"><span><input type="checkbox" class="rtFlag" value="insurance">Insurance Included</span></label>
     </div>
 
     <div class="rt-filter-group">
@@ -178,10 +178,9 @@ window.setCurrency = function(cur){
     </div>
 
     <div class="rt-filter-group">
-      <b>Rental Scope &amp; Compliance <span class="rt-soon">Coming soon</span></b>
-      <label class="rt-check"><span><input type="checkbox" id="fltSelfDrive" disabled>Self-Drive Approved</span></label>
-      <label class="rt-check"><span><input type="checkbox" id="fltDriver" disabled>Chauffeur / Driver Included</span></label>
-      <label class="rt-check"><span><input type="checkbox" id="fltCrossBorder" disabled>Cross-Border Permitted (SADC)</span></label>
+      <b>Rental Scope</b>
+      <label class="rt-check"><span><input type="checkbox" class="rtFlag" value="driver">Driver Available</span></label>
+      <label class="rt-check"><span><input type="checkbox" class="rtFlag" value="crossBorder">Cross-Border Permitted (SADC)</span></label>
     </div>
 
     <div class="rt-filter-group">

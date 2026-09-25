@@ -20,6 +20,16 @@
   // Lookup taxonomy — public, read-only. Used to populate vehicle-class
   // filters without hardcoding a category list that can drift from the DB.
   function fetchRentalCategories(){return transport.fetchJson('rental_categories?select=slug,label&order=label').catch(function(){return [];});}
+  // rental_search_listings returns only card basics; this adds the fields
+  // the listing filters and card chips need (driver, cross-border,
+  // insurance, deposit, specs, operator verification) in one request.
+  var EXTRA_COLUMNS='id,driver_rate,cross_border,insurance_included,deposit,rental_vehicle_specs(transmission,seats,drive_type),rental_companies(driver_available,cross_border,insurance_included,businesses(verification_level))';
+  function fetchRentalListingExtras(ids){
+    ids=(ids||[]).filter(Boolean);if(!ids.length)return Promise.resolve({});
+    return transport.fetchJson('rental_vehicle_listings?id=in.('+ids.map(esc).join(',')+')&select='+EXTRA_COLUMNS)
+      .then(function(rows){var map={};(rows||[]).forEach(function(r){map[r.id]=r;});return map;})
+      .catch(function(){return {};});
+  }
 
   // ── Phase 1: bookings ──────────────────────────────────────────────────
   // Every call below requires a real signed-in session (request_rental_
@@ -85,7 +95,7 @@
 
   return Object.freeze({
     fetchRentalListings:fetchRentalListings,fetchRentalListingById:fetchRentalListingById,fetchRentalBusyRanges:fetchRentalBusyRanges,
-    fetchRentalCategories:fetchRentalCategories,
+    fetchRentalCategories:fetchRentalCategories,fetchRentalListingExtras:fetchRentalListingExtras,
     quoteRentalBooking:quoteRentalBooking,requestRentalBooking:requestRentalBooking,
     listMyRentalBookings:listMyRentalBookings,listCompanyRentalBookings:listCompanyRentalBookings,fetchRentalBookingDetail:fetchRentalBookingDetail,
     acceptRentalBooking:acceptRentalBooking,declineRentalBooking:declineRentalBooking,cancelRentalBooking:cancelRentalBooking,
