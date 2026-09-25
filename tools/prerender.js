@@ -73,7 +73,10 @@ async function fetchReviewsBySeller(cfg) {
 }
 
 async function fetchActiveRentals(cfg) {
-  const select = '*,rental_brands(label),rental_categories(label),rental_locations(city,province),' +
+  // Explicit columns: registration is not readable with the anon key, so
+  // select=* on rental_vehicle_listings is refused (rental Phase 0 migration).
+  const select = 'id,model,year,daily_rate,weekly_rate,monthly_rate,deposit,min_rental_days,pickup_suburb,description,is_available,created_at,updated_at,' +
+    'rental_brands(label),rental_categories(label),rental_locations(city,province),' +
     'rental_vehicle_media(url,is_cover,sort_order),rental_vehicle_features(feature),' +
     'rental_companies(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,' +
     'year_established,deposit_policy,driver_available,cross_border,insurance_included,avg_rating,review_count)';
@@ -305,7 +308,7 @@ function renderRental(v, chrome) {
   const main = '<div id="detailContent"><div class="detail-wrap"><div>' +
     '<div class="gallery"><div class="gallery-main" id="galleryMain">' + mainImg + '</div>' + thumbs + '</div>' +
     '<h1 class="d-title">' + esc(title) + '</h1>' +
-    '<div class="d-avail"><span class="d-avail ' + (v.is_available ? 'yes' : 'no') + '">' + (v.is_available ? 'Available Now' : 'Currently Booked') + '</span></div>' +
+    '<div class="d-avail"><span class="d-avail ' + (v.is_available ? 'yes' : 'no') + '">' + (v.is_available ? 'Taking rental requests' : 'Not taking new requests') + '</span></div>' +
     '<div class="d-price">' + esc(priceStr) + '</div>' +
     (rates.length ? '<div class="d-rates">' + rates.join('') + '</div>' : '') +
     '<div class="d-meta"><span>' + esc(loc) + '</span>' + (catLabel ? '<span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">' + esc(catLabel) + '</span>' : '') + (v.min_rental_days ? '<span>Min ' + v.min_rental_days + ' day' + (v.min_rental_days === 1 ? '' : 's') + '</span>' : '') + '</div>' +

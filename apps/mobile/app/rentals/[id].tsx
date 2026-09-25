@@ -21,7 +21,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import { brandLabel, type RentalSpecs, type RentalVehicleDetail } from "../../lib/rentals";
+import { ConfirmModal } from "../../components/ui/ConfirmModal";
+import { RentalBookingSheet } from "../../components/rentals/RentalBookingSheet";
+import {
+  addDaysIso,
+  brandLabel,
+  type BusyRange,
+  daysInclusive,
+  fetchBusyRanges,
+  isDateBusy,
+  nextBusyDateAfter,
+  rangeOverlapsBusy,
+  rentalToday,
+  type RentalSpecs,
+  type RentalVehicleDetail,
+} from "../../lib/rentals";
 import { businessInitials } from "../../lib/businesses";
 import { hitSlop, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -73,36 +87,23 @@ type BusinessInfo = {
   owner_user_id: string;
 };
 
-type AvailabilityBlock = { starts_on: string; ends_on: string };
+// How far ahead customers can pick dates; busy ranges are fetched for the
+// same window so every chip shown has real availability behind it.
+const BOOKING_WINDOW_DAYS = 60;
 
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function isBlocked(dateIso: string, blocks: AvailabilityBlock[]): boolean {
-  return blocks.some((b) => dateIso >= b.starts_on && dateIso <= b.ends_on);
-}
-
-function eachDateInRange(startIso: string, endIso: string): string[] {
-  const dates: string[] = [];
-  const cursor = new Date(`${startIso}T00:00:00`);
-  const end = new Date(`${endIso}T00:00:00`);
-  while (cursor <= end) {
-    dates.push(isoDate(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return dates;
-}
-
-function rangeHasBlockedDate(startIso: string, endIso: string, blocks: AvailabilityBlock[]): boolean {
-  return eachDateInRange(startIso, endIso).some((dateIso) => isBlocked(dateIso, blocks));
-}
-
-function dayChipLabel(d: Date): { top: string; bottom: string } {
+function dayChipLabel(iso: string): { top: string; bottom: string } {
+  // Local noon, so formatting never shifts the calendar day across timezones.
+  const d = new Date(`${iso}T12:00:00`);
   return {
     top: d.toLocaleDateString(undefined, { weekday: "short" }),
     bottom: d.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
   };
+}
+
+function formatRangeLabel(startIso: string, endIso: string): string {
+  const fmt = (iso: string) =>
+    new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return startIso === endIso ? fmt(startIso) : `${fmt(startIso)} – ${fmt(endIso)}`;
 }
 
 const DETAIL_COLUMNS =
@@ -132,7 +133,11 @@ export default function RentalVehicleDetailScreen() {
   const [company, setCompany] = useState<RentalCompany | null>(null);
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [availability, setAvailability] = useState<AvailabilityBlock[]>([]);
+  const [busyRanges, setBusyRanges] = useState<BusyRange[]>([]);
+  // null = loaded fine. Without real availability we cannot let the customer
+  // pick dates, so a failed load disables date selection instead of
+  // silently treating every day as free.
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
@@ -142,37 +147,72 @@ export default function RentalVehicleDetailScreen() {
     title: vehicle ? `${brandLabel(brandSlug)} ${vehicle.model}` : "Vehicle",
     androidNative: true,
   });
-  const [isBooking, setIsBooking] = useState(false);
+  const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
+
+  const today = useMemo(() => rentalToday(), []);
+  const windowEnd = useMemo(() => addDaysIso(today, BOOKING_WINDOW_DAYS - 1), [today]);
 
   const upcomingDays = useMemo(() => {
-    const days: Date[] = [];
-    const today = new Date();
-    for (let i = 0; i < 45; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      days.push(d);
-    }
+    const days: string[] = [];
+    for (let i = 0; i < BOOKING_WINDOW_DAYS; i++) days.push(addDaysIso(today, i));
     return days;
-  }, []);
+  }, [today]);
 
-  const minRentalDays = vehicle?.min_rental_days ?? 1;
-  const minEndDate = useMemo(() => {
+  const minRentalDays = Math.max(vehicle?.min_rental_days ?? 1, 1);
+  const minEndDate = useMemo(
+    () => (startDate ? addDaysIso(startDate, minRentalDays - 1) : null),
+    [startDate, minRentalDays]
+  );
+  // The return date can go up to the day before the next busy period —
+  // never across it — or to the end of the bookable window.
+  const maxEndDate = useMemo(() => {
     if (!startDate) return null;
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + Math.max(minRentalDays - 1, 0));
-    return isoDate(d);
-  }, [startDate, minRentalDays]);
+    const nextBusy = nextBusyDateAfter(startDate, busyRanges);
+    return nextBusy ? addDaysIso(nextBusy, -1) : windowEnd;
+  }, [startDate, busyRanges, windowEnd]);
 
-  const rentalDayCount = useMemo(() => {
-    if (!startDate || !endDate) return 0;
-    const ms = new Date(endDate).getTime() - new Date(startDate).getTime();
-    return Math.round(ms / 86400000) + 1;
-  }, [startDate, endDate]);
+  // A pick-up day is selectable only if it is free AND enough consecutive
+  // free days follow it to satisfy the minimum rental.
+  const canStartOn = useCallback(
+    (iso: string) => {
+      if (isDateBusy(iso, busyRanges)) return false;
+      const minEnd = addDaysIso(iso, minRentalDays - 1);
+      return minEnd <= windowEnd && !rangeOverlapsBusy(iso, minEnd, busyRanges);
+    },
+    [busyRanges, minRentalDays, windowEnd]
+  );
+
+  const upcomingBusy = useMemo(
+    () => busyRanges.filter((r) => r.ends_on >= today && r.starts_on <= windowEnd),
+    [busyRanges, today, windowEnd]
+  );
+  const busyToday = isDateBusy(today, busyRanges);
+
+  const rentalDayCount = useMemo(
+    () => (startDate && endDate ? daysInclusive(startDate, endDate) : 0),
+    [startDate, endDate]
+  );
 
   const estimatedTotal = useMemo(() => {
     if (!rentalDayCount || vehicle?.daily_rate == null) return null;
     return rentalDayCount * vehicle.daily_rate;
   }, [rentalDayCount, vehicle?.daily_rate]);
+
+  // Returns the fresh ranges (or null on failure) so callers can decide on
+  // the latest data rather than on state that has not re-rendered yet.
+  const reloadAvailability = useCallback(async (): Promise<BusyRange[] | null> => {
+    if (!id) return null;
+    const { ranges, error } = await fetchBusyRanges(id, today, windowEnd);
+    if (error) {
+      console.warn("rental availability:", error);
+      setAvailabilityError("We couldn't load this vehicle's availability.");
+      return null;
+    }
+    setAvailabilityError(null);
+    setBusyRanges(ranges);
+    return ranges;
+  }, [id, today, windowEnd]);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -206,11 +246,7 @@ export default function RentalVehicleDetailScreen() {
     setFeatures(((featuresRes.data as { feature: string }[]) ?? []).map((f) => f.feature));
     setBrandSlug((brandRes.data as { slug: string } | null)?.slug ?? null);
 
-    const { data: avail } = await supabase
-      .from("rental_vehicle_availability")
-      .select("starts_on,ends_on")
-      .eq("listing_id", id);
-    setAvailability((avail as AvailabilityBlock[]) ?? []);
+    await reloadAvailability();
 
     if ((v as RentalVehicleDetail).company_id) {
       const { data: companyData } = await supabase
@@ -229,7 +265,7 @@ export default function RentalVehicleDetailScreen() {
         setBusiness((businessData as BusinessInfo) ?? null);
       }
     }
-  }, [id]);
+  }, [id, reloadAvailability]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -312,6 +348,12 @@ export default function RentalVehicleDetailScreen() {
     });
     if (!rpcError && typeof rpcLeadId === "string") return rpcLeadId;
 
+    // A booking request is only valid if the server accepted its dates —
+    // the guard trigger rejects busy/past/too-short ranges. Retrying the
+    // same row through a direct insert would hit the same guard, and must
+    // never be how a rejected request gets through.
+    if (leadSource === "booking_request") throw rpcError ?? new Error("Booking request was not recorded.");
+
     const payload = {
       listing_id: id,
       company_id: company.id,
@@ -363,37 +405,71 @@ export default function RentalVehicleDetailScreen() {
     }
   }
 
-  async function requestBooking() {
+  // Opens the booking options sheet (time, fulfillment, driver, price
+  // breakdown). The actual booking is only created once the customer
+  // confirms inside the sheet — see handleBookingRequested below. This is
+  // the real, database-backed booking flow (Phase 1); it replaces the old
+  // behaviour of merely sending a chat message with the dates typed into it.
+  async function openBookingSheet() {
     if (!session?.user) {
       router.push("/(auth)/sign-in");
       return;
     }
-    if (!business || !company || !startDate || !endDate) return;
+    if (!business || !startDate || !endDate) return;
     if (business.owner_user_id === session.user.id) {
       Alert.alert("Your rental listing", "You cannot request a booking from your own rental company.");
       return;
     }
-    if (rangeHasBlockedDate(startDate, endDate, availability)) {
-      Alert.alert("Dates unavailable", "One or more days in this rental period are already blocked. Please pick different dates.");
+    // Re-check against live data before opening the sheet: the provider may
+    // have blocked these dates since the screen loaded. The sheet's own
+    // request_rental_booking() call re-checks again at submit time — this
+    // is just to avoid opening a sheet for dates already known to be gone.
+    const fresh = await reloadAvailability();
+    if (!fresh) {
+      Alert.alert("Couldn't check availability", "Please check your connection and try again.");
       return;
     }
-    setIsBooking(true);
+    if (rangeOverlapsBusy(startDate, endDate, fresh)) {
+      setStartDate(null);
+      setEndDate(null);
+      Alert.alert("Dates unavailable", "Some of those days were just booked. Please choose new dates.");
+      return;
+    }
+    setBookingSheetOpen(true);
+  }
+
+  function handleDatesNoLongerAvailable() {
+    setBookingSheetOpen(false);
+    setStartDate(null);
+    setEndDate(null);
+    reloadAvailability();
+    Alert.alert("Dates unavailable", "Some of those days are no longer available. Please choose new dates.");
+  }
+
+  async function handleBookingRequested(bookingId: string) {
+    setBookingSheetOpen(false);
+    setStartDate(null);
+    setEndDate(null);
+    reloadAvailability();
+    setConfirmedBookingId(bookingId);
+    // Also opens (or reuses) the chat thread with the provider so the
+    // customer has a direct line while the request is pending, matching the
+    // brief's "communicate" step — the booking itself is authoritative,
+    // this message is just a heads-up.
     try {
       const convId = await getOrCreateRentalConversation();
-      if (!convId) return;
-      await captureLead("booking_request", convId, startDate, endDate);
-      const { data: profile } = await supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle();
-      const totalText = estimatedTotal != null ? ` (est. $${estimatedTotal} for ${rentalDayCount} day${rentalDayCount === 1 ? "" : "s"})` : "";
-      await supabase.from("messages").insert({
-        conversation_id: convId,
-        sender_id: session.user.id,
-        sender_name: profile?.name ?? "",
-        text: `Hi! I'd like to book the ${brandLabel(brandSlug)} ${vehicle?.model} from ${startDate} to ${endDate}${totalText}. Is it available?`,
-        read: false,
-      });
-      router.push({ pathname: "/chat/[id]", params: { id: convId } });
-    } finally {
-      setIsBooking(false);
+      if (convId && session?.user) {
+        const { data: profile } = await supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle();
+        await supabase.from("messages").insert({
+          conversation_id: convId,
+          sender_id: session.user.id,
+          sender_name: profile?.name ?? "",
+          text: `Hi! I've sent a booking request for the ${brandLabel(brandSlug)} ${vehicle?.model}. Looking forward to your confirmation!`,
+          read: false,
+        });
+      }
+    } catch (e) {
+      console.warn("rental booking confirmation message:", e);
     }
   }
 
@@ -518,55 +594,104 @@ export default function RentalVehicleDetailScreen() {
             ) : null}
           </View>
 
-          <View style={[styles.availabilityBanner, !vehicle.is_available && styles.availabilityBannerBusy]}>
-            <Text style={styles.availabilityBannerText}>
-              {vehicle.is_available ? "Available Now" : "Currently Unavailable"}
-            </Text>
-          </View>
+          {/* Date availability comes from real busy ranges. is_available is
+              only the provider's manual pause switch for new requests. */}
+          {!vehicle.is_available ? (
+            <View style={[styles.availabilityBanner, styles.availabilityBannerBusy]}>
+              <Text style={[styles.availabilityBannerText, styles.availabilityBannerTextBusy]}>
+                Not taking new requests right now
+              </Text>
+            </View>
+          ) : availabilityError ? null : (
+            <View style={[styles.availabilityBanner, busyToday && styles.availabilityBannerBusy]}>
+              <Text style={[styles.availabilityBannerText, busyToday && styles.availabilityBannerTextBusy]}>
+                {busyToday ? "Booked today" : "Available today"}
+              </Text>
+            </View>
+          )}
 
-          {vehicle.is_available ? (
+          {vehicle.is_available && availabilityError ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Select Rental Dates</Text>
+              <Text style={styles.dateHint}>{availabilityError}</Text>
+              <Pressable
+                accessibilityRole="button"
+                style={styles.retryButton}
+                onPress={() => {
+                  reloadAvailability();
+                }}
+              >
+                <Text style={styles.retryButtonText}>Try again</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {vehicle.is_available && !availabilityError ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Select Rental Dates</Text>
+              {upcomingBusy.length ? (
+                <View style={styles.busyList}>
+                  <Text style={styles.busyListTitle}>Unavailable</Text>
+                  {upcomingBusy.map((r) => (
+                    <Text key={`${r.starts_on}_${r.ends_on}`} style={styles.busyListItem}>
+                      {formatRangeLabel(r.starts_on, r.ends_on)}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.dateHint}>No booked dates in the next {BOOKING_WINDOW_DAYS} days.</Text>
+              )}
               <Text style={styles.dateSubLabel}>Pick-up date</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateChipRow}>
-                {upcomingDays.map((d) => {
-                  const iso = isoDate(d);
-                  const blocked = isBlocked(iso, availability);
-                  const label = dayChipLabel(d);
+                {upcomingDays.map((iso) => {
+                  const busy = isDateBusy(iso, busyRanges);
+                  const disabled = !canStartOn(iso);
+                  const label = dayChipLabel(iso);
                   const active = startDate === iso;
                   return (
                     <Pressable
                       key={iso}
-                      disabled={blocked}
-                      style={[styles.dateChip, active && styles.dateChipActive, blocked && styles.dateChipBlocked]}
+                      disabled={disabled}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled, selected: active }}
+                      accessibilityLabel={`${label.top} ${label.bottom}${busy ? ", unavailable" : disabled ? ", too few free days" : ""}`}
+                      style={[styles.dateChip, active && styles.dateChipActive, disabled && styles.dateChipBlocked]}
                       onPress={() => {
                         setStartDate(iso);
-                        if (endDate && endDate < iso) setEndDate(null);
+                        setEndDate(null);
                       }}
                     >
                       <Text style={[styles.dateChipTop, active && styles.dateChipTextActive]}>{label.top}</Text>
-                      <Text style={[styles.dateChipBottom, active && styles.dateChipTextActive]}>{label.bottom}</Text>
+                      <Text
+                        style={[
+                          styles.dateChipBottom,
+                          active && styles.dateChipTextActive,
+                          busy && styles.dateChipTextBusy,
+                        ]}
+                      >
+                        {label.bottom}
+                      </Text>
                     </Pressable>
                   );
                 })}
               </ScrollView>
 
-              {startDate ? (
+              {startDate && minEndDate && maxEndDate ? (
                 <>
                   <Text style={styles.dateSubLabel}>Return date</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateChipRow}>
                     {upcomingDays
-                      .filter((d) => isoDate(d) >= (minEndDate ?? startDate))
-                      .map((d) => {
-                        const iso = isoDate(d);
-                        const blocked = isBlocked(iso, availability);
-                        const label = dayChipLabel(d);
+                      .filter((iso) => iso >= minEndDate && iso <= maxEndDate)
+                      .map((iso) => {
+                        const label = dayChipLabel(iso);
                         const active = endDate === iso;
                         return (
                           <Pressable
                             key={iso}
-                            disabled={blocked}
-                            style={[styles.dateChip, active && styles.dateChipActive, blocked && styles.dateChipBlocked]}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: active }}
+                            accessibilityLabel={`Return ${label.top} ${label.bottom}`}
+                            style={[styles.dateChip, active && styles.dateChipActive]}
                             onPress={() => setEndDate(iso)}
                           >
                             <Text style={[styles.dateChipTop, active && styles.dateChipTextActive]}>{label.top}</Text>
@@ -575,6 +700,11 @@ export default function RentalVehicleDetailScreen() {
                         );
                       })}
                   </ScrollView>
+                  {maxEndDate < windowEnd ? (
+                    <Text style={styles.dateHint}>
+                      Return by {formatRangeLabel(maxEndDate, maxEndDate)}: the vehicle is booked from the next day.
+                    </Text>
+                  ) : null}
                 </>
               ) : null}
 
@@ -666,13 +796,9 @@ export default function RentalVehicleDetailScreen() {
               <WhatsAppIcon fill={tones.textOnBrand} />
             </Pressable>
           ) : null}
-          {vehicle.is_available && startDate && endDate ? (
-            <Pressable style={styles.ctaMessageButton} onPress={requestBooking} disabled={isBooking}>
-              {isBooking ? (
-                <ActivityIndicator color={tones.textOnBrand} />
-              ) : (
-                <Text style={styles.ctaMessageText}>Request to Book</Text>
-              )}
+          {vehicle.is_available && !availabilityError && startDate && endDate ? (
+            <Pressable style={styles.ctaMessageButton} onPress={openBookingSheet}>
+              <Text style={styles.ctaMessageText}>Request to Book</Text>
             </Pressable>
           ) : (
             <Pressable style={styles.ctaMessageButton} onPress={contactViaChat}>
@@ -725,6 +851,36 @@ export default function RentalVehicleDetailScreen() {
           </Pressable>
         </View>
       </Modal>
+
+      {startDate && endDate ? (
+        <RentalBookingSheet
+          visible={bookingSheetOpen}
+          vehicle={{
+            id: vehicle.id,
+            title: `${brandLabel(brandSlug)} ${vehicle.model}`.trim(),
+            daily_rate: vehicle.daily_rate,
+            driver_rate: vehicle.driver_rate,
+          }}
+          startDate={startDate}
+          endDate={endDate}
+          onClose={() => setBookingSheetOpen(false)}
+          onRequested={handleBookingRequested}
+          onDatesUnavailable={handleDatesNoLongerAvailable}
+        />
+      ) : null}
+
+      <ConfirmModal
+        visible={!!confirmedBookingId}
+        title="Request sent"
+        body="Your booking request has been sent to the provider. You'll be notified as soon as they respond — you can track it anytime from My Rentals."
+        confirmText="View My Rentals"
+        cancelText="Stay here"
+        onConfirm={() => {
+          setConfirmedBookingId(null);
+          router.push("/rentals/my-bookings");
+        }}
+        onCancel={() => setConfirmedBookingId(null)}
+      />
     </View>
   );
 }
@@ -926,6 +1082,43 @@ function buildStyles(color: ColorPalette) {
       fontSize: 12,
       color: color.textMuted,
       marginTop: 8,
+    },
+    availabilityBannerTextBusy: {
+      color: color.danger,
+    },
+    dateChipTextBusy: {
+      textDecorationLine: "line-through",
+    },
+    busyList: {
+      backgroundColor: color.dangerTint,
+      borderRadius: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      marginBottom: 4,
+      gap: 2,
+    },
+    busyListTitle: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: color.danger,
+    },
+    busyListItem: {
+      fontSize: 13,
+      color: color.text,
+    },
+    retryButton: {
+      alignSelf: "flex-start",
+      marginTop: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: color.border,
+    },
+    retryButtonText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: color.brand,
     },
     estimateRow: {
       flexDirection: "row",

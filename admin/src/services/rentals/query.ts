@@ -164,9 +164,9 @@ export async function getRentalAnalyticsSummary(): Promise<QueryResult<RentalAna
   const results = await Promise.all([
     client.from('rental_companies').select('*', { count: 'exact', head: true }),
     client.from('rental_companies').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-    client.from('rental_vehicle_listings').select('*', { count: 'exact', head: true }),
-    client.from('rental_vehicle_listings').select('*', { count: 'exact', head: true }).eq('admin_status', 'approved'),
-    client.from('rental_vehicle_listings').select('*', { count: 'exact', head: true }).eq('admin_status', 'pending_review'),
+    client.from('rental_vehicle_listings').select('id', { count: 'exact', head: true }),
+    client.from('rental_vehicle_listings').select('id', { count: 'exact', head: true }).eq('admin_status', 'approved'),
+    client.from('rental_vehicle_listings').select('id', { count: 'exact', head: true }).eq('admin_status', 'pending_review'),
     client.from('rental_vehicle_listings').select('view_count, inquiry_count'),
   ] as const);
   const failed = results.find((r) => r.error);

@@ -175,7 +175,7 @@ export default function RentalsListScreen() {
                   </View>
                 ) : null}
                 <View style={[styles.availabilityPill, !item.is_available && styles.availabilityPillBusy]}>
-                  <Text style={styles.availabilityPillText}>{item.is_available ? "Available" : "Booked"}</Text>
+                  <Text style={styles.availabilityPillText}>{item.is_available ? "Available today" : "Unavailable today"}</Text>
                 </View>
               </View>
               <View style={styles.cardBody}>

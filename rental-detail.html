@@ -373,7 +373,7 @@ function render(v){
   showPhoto(0);
 
   document.getElementById('dTitle').textContent=title||'Rental Vehicle';
-  document.getElementById('dAvail').innerHTML=`<span class="d-avail ${v.is_available?'yes':'no'}">${v.is_available?'Available Now':'Currently Booked'}</span>`;
+  document.getElementById('dAvail').innerHTML='<span class="d-avail">Checking live availability...</span>';
   document.getElementById('dPrice').innerHTML=v.daily_rate?('$'+Number(v.daily_rate).toLocaleString()+'<small>/day</small>'):'Price on application';
 
   const rates=[];

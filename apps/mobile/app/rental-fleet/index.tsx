@@ -71,6 +71,7 @@ function QuickAction({
   sub,
   icon,
   disabled,
+  badge,
   onPress,
   styles,
 }: {
@@ -78,6 +79,7 @@ function QuickAction({
   sub: string;
   icon: React.ReactNode;
   disabled?: boolean;
+  badge?: number;
   onPress: () => void;
   styles: ReturnType<typeof buildStyles>;
 }) {
@@ -86,10 +88,27 @@ function QuickAction({
       style={[styles.actionCard, disabled && styles.actionCardDisabled]}
       onPress={disabled ? undefined : onPress}
     >
-      <View style={styles.actionIconWrap}>{icon}</View>
+      <View style={styles.actionIconWrap}>
+        {icon}
+        {badge ? (
+          <View style={styles.actionBadge}>
+            <Text style={styles.actionBadgeText}>{badge > 9 ? "9+" : badge}</Text>
+          </View>
+        ) : null}
+      </View>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSub}>{sub}</Text>
     </Pressable>
+  );
+}
+
+function BookingsIcon({ stroke }: { stroke: string }) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2}>
+      <Rect x="3" y="4" width="18" height="17" rx="2" />
+      <Path d="M3 9h18M8 2v4M16 2v4" />
+      <Path d="M9 14l2 2 4-4" />
+    </Svg>
   );
 }
 
@@ -107,6 +126,7 @@ export default function RentalFleetDashboard() {
   const [company, setCompany] = useState<RentalCompanyRecord | null>(null);
   const [fleet, setFleet] = useState<RentalFleetVehicle[]>([]);
   const [leads, setLeads] = useState<RentalLead[]>([]);
+  const [pendingBookings, setPendingBookings] = useState(0);
 
   useIOSNativeHeader({
     backgroundColor: tones.brand,
@@ -183,7 +203,7 @@ export default function RentalFleetDashboard() {
       company_name: bizRow?.name,
     });
 
-    const [fleetRes, leadsRes] = await Promise.all([
+    const [fleetRes, leadsRes, bookingsRes] = await Promise.all([
       supabase
         .from("rental_vehicle_listings")
         .select(
@@ -199,7 +219,9 @@ export default function RentalFleetDashboard() {
         .eq("company_id", rc.id)
         .order("created_at", { ascending: false })
         .limit(30),
+      supabase.from("rental_bookings").select("id", { count: "exact", head: true }).eq("company_id", rc.id).eq("status", "requested"),
     ]);
+    setPendingBookings(bookingsRes.count ?? 0);
 
     const fleetRows = (fleetRes.data as any[]) ?? [];
     const brandIds = Array.from(new Set(fleetRows.map((v) => v.brand_id).filter(Boolean)));
@@ -412,6 +434,15 @@ export default function RentalFleetDashboard() {
           styles={styles}
         />
         <QuickAction
+          title="Bookings"
+          sub={pendingBookings ? `${pendingBookings} new request${pendingBookings === 1 ? "" : "s"}` : "Requests & rentals"}
+          icon={<BookingsIcon stroke={tones.brand} />}
+          disabled={isPending}
+          badge={pendingBookings}
+          onPress={() => router.push(`/rental-fleet/bookings?bizId=${biz.id}`)}
+          styles={styles}
+        />
+        <QuickAction
           title="Analytics"
           sub="Views, leads, trends"
           icon={<AnalyticsIcon stroke={tones.brand} />}
@@ -534,6 +565,21 @@ function buildStyles(color: ColorPalette) {
       justifyContent: "center",
       marginBottom: 10,
     },
+    actionBadge: {
+      position: "absolute",
+      top: -4,
+      right: -4,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      paddingHorizontal: 4,
+      backgroundColor: color.danger,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: color.bg,
+    },
+    actionBadgeText: { fontSize: 10, fontWeight: "800", color: color.textOnBrand },
     actionTitle: { fontSize: 14, fontWeight: "700", color: color.text },
     actionSub: { fontSize: 12, color: color.textMuted, marginTop: 2 },
     leadsCard: { backgroundColor: color.surface, marginHorizontal: 16, borderRadius: 14, overflow: "hidden" },
