@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('fs');const path=require('path');const{ROOT,walkFiles}=require('./file-utils');
 const BASELINE_PATH=path.join(__dirname,'architecture-baseline.json');
-const IGNORED=new Set(['.git','node_modules','dist-site','l','b','r','www','apps','android','ios','supabase','qa-system']);
+const IGNORED=new Set(['.git','node_modules','dist-site','l','b','r','c','www','apps','android','ios','supabase','qa-system']);
 function lines(s){return s===''?0:s.split(/\r?\n/).length;}function inline(html,tag){return[...html.matchAll(new RegExp('<'+tag+'([^>]*)>([\\s\\S]*?)<\\/'+tag+'>','gi'))].filter(m=>tag!=='script'||!m[1].includes('src=')).reduce((n,m)=>n+Buffer.byteLength(m[2]),0);}
 function kind(relative){if(relative.endsWith('.html'))return'html';if(relative.includes('/components/'))return'component';if(relative.includes('/controllers/'))return'controller';if(relative.includes('/services/')||['js/marketplace-data.js','js/chats.js'].includes(relative))return'service';return'utility';}
 const LIMITS={utility:{warning:200,review:300},component:{warning:250,review:400},service:{warning:350,review:500},controller:{warning:400,review:600},html:{warning:400,review:700}};

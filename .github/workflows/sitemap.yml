@@ -8,6 +8,7 @@ on:
       - 'l/**'
       - 'r/**'
       - 'b/**'
+      - 'c/**'
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
@@ -24,12 +25,6 @@ jobs:
         with:
           ref: master
 
-      - name: Generate sitemap.xml
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: node tools/generate-sitemap.js
-
       - name: Pre-render static listing/job pages
         # Same proven CI context (secrets) that generates the sitemap. Writes
         # l/<slug>-<id>.html with real HTML + baked JSON-LD for every active
@@ -40,6 +35,17 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: node tools/prerender.js
 
+      - name: Generate category & city landing pages
+        # Built from the l/ pages just pre-rendered above (no secrets needed).
+        run: node tools/generate-landing-pages.js
+
+      - name: Generate sitemap.xml
+        # After the landing pages, so the sitemap lists every c/ page.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node tools/generate-sitemap.js
+
       - name: Commit sitemap + static pages if changed
         id: commit
         run: |
@@ -47,7 +53,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Remove pages for entities that are no longer active, then re-add the
           # current set so deleted/sold ones drop out of the deploy.
-          git add -A sitemap.xml l r b
+          git add -A sitemap.xml l r b c
           if git diff --cached --quiet; then
             echo "sitemap + static pages unchanged, nothing to commit"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -72,7 +78,7 @@ jobs:
             echo "push rejected (attempt $attempt/5) — re-syncing to the new master tip"
             git fetch origin master
             git reset --soft origin/master
-            git add -A sitemap.xml l r b
+            git add -A sitemap.xml l r b c
             if git diff --cached --quiet; then
               echo "sitemap + static pages now match latest master already, nothing left to commit"
               echo "changed=false" >> "$GITHUB_OUTPUT"

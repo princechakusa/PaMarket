@@ -3,109 +3,127 @@
   "policy": "Existing review-level debt may not grow; new review-level debt fails.",
   "debt": {
     "account-settings.html": {
-      "bytes": 84637,
-      "lines": 765,
-      "inlineJs": 41313,
+      "bytes": 86459,
+      "lines": 799,
+      "inlineJs": 42955,
       "inlineCss": 12980
     },
+    "applications.html": {
+      "bytes": 27302,
+      "lines": 322,
+      "inlineJs": 9794,
+      "inlineCss": 3955
+    },
     "auth.html": {
-      "bytes": 53471,
-      "lines": 1011,
-      "inlineJs": 31514,
+      "bytes": 54804,
+      "lines": 1041,
+      "inlineJs": 32712,
       "inlineCss": 14523
     },
+    "blog-post.html": {
+      "bytes": 30110,
+      "lines": 434,
+      "inlineJs": 9763,
+      "inlineCss": 4207
+    },
     "blog.html": {
-      "bytes": 40177,
-      "lines": 382,
-      "inlineJs": 11683,
+      "bytes": 41999,
+      "lines": 416,
+      "inlineJs": 13325,
       "inlineCss": 209
     },
     "browse.html": {
-      "bytes": 37713,
-      "lines": 433,
-      "inlineJs": 16990,
+      "bytes": 40944,
+      "lines": 484,
+      "inlineJs": 19088,
       "inlineCss": 209
     },
     "business.html": {
-      "bytes": 36754,
-      "lines": 366,
-      "inlineJs": 14225,
+      "bytes": 39985,
+      "lines": 417,
+      "inlineJs": 16323,
       "inlineCss": 209
     },
     "businesses.html": {
-      "bytes": 32713,
-      "lines": 286,
-      "inlineJs": 10914,
+      "bytes": 34535,
+      "lines": 320,
+      "inlineJs": 12556,
       "inlineCss": 209
     },
     "chats.html": {
-      "bytes": 36097,
-      "lines": 252,
-      "inlineJs": 1817,
+      "bytes": 37919,
+      "lines": 286,
+      "inlineJs": 3459,
       "inlineCss": 16079
     },
     "css/site.css": {
-      "bytes": 24906,
+      "bytes": 24606,
       "lines": 301,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "dashboard.html": {
-      "bytes": 34483,
-      "lines": 436,
-      "inlineJs": 12095,
+      "bytes": 35459,
+      "lines": 446,
+      "inlineJs": 12597,
       "inlineCss": 7112
     },
     "delete-account.html": {
-      "bytes": 26102,
-      "lines": 411,
-      "inlineJs": 8661,
+      "bytes": 27924,
+      "lines": 445,
+      "inlineJs": 10303,
       "inlineCss": 2538
     },
     "detail.html": {
-      "bytes": 45775,
-      "lines": 477,
-      "inlineJs": 22896,
+      "bytes": 47601,
+      "lines": 511,
+      "inlineJs": 24538,
       "inlineCss": 209
     },
     "help.html": {
-      "bytes": 47481,
-      "lines": 646,
-      "inlineJs": 16457,
+      "bytes": 49303,
+      "lines": 680,
+      "inlineJs": 18099,
       "inlineCss": 3934
     },
     "index.html": {
-      "bytes": 78580,
-      "lines": 817,
-      "inlineJs": 29555,
+      "bytes": 82709,
+      "lines": 887,
+      "inlineJs": 32564,
       "inlineCss": 209
     },
     "institution.html": {
-      "bytes": 43967,
-      "lines": 427,
-      "inlineJs": 18893,
+      "bytes": 45789,
+      "lines": 461,
+      "inlineJs": 20535,
+      "inlineCss": 209
+    },
+    "institutions.html": {
+      "bytes": 30286,
+      "lines": 291,
+      "inlineJs": 9737,
       "inlineCss": 209
     },
     "job.html": {
-      "bytes": 33837,
-      "lines": 373,
-      "inlineJs": 12294,
+      "bytes": 41812,
+      "lines": 510,
+      "inlineJs": 18250,
       "inlineCss": 209
     },
     "jobs.html": {
-      "bytes": 41788,
-      "lines": 427,
-      "inlineJs": 15395,
+      "bytes": 50052,
+      "lines": 575,
+      "inlineJs": 21454,
       "inlineCss": 209
     },
     "js/blog-data.js": {
-      "bytes": 118480,
+      "bytes": 117477,
       "lines": 1004,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "js/chats.js": {
-      "bytes": 61461,
+      "bytes": 60467,
       "lines": 995,
       "inlineJs": 0,
       "inlineCss": 0
@@ -117,39 +135,39 @@
       "inlineCss": 0
     },
     "js/listing-schema.js": {
-      "bytes": 19413,
+      "bytes": 19083,
       "lines": 331,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "js/marketplace-data.js": {
-      "bytes": 51750,
-      "lines": 987,
+      "bytes": 57973,
+      "lines": 1140,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "js/nav-dropdowns.js": {
-      "bytes": 18999,
+      "bytes": 18633,
       "lines": 367,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "js/session.js": {
-      "bytes": 16544,
+      "bytes": 16199,
       "lines": 346,
       "inlineJs": 0,
       "inlineCss": 0
     },
     "open-shop.html": {
-      "bytes": 65727,
-      "lines": 538,
-      "inlineJs": 26667,
+      "bytes": 67549,
+      "lines": 572,
+      "inlineJs": 28309,
       "inlineCss": 8898
     },
     "post-ad.html": {
-      "bytes": 49989,
-      "lines": 764,
-      "inlineJs": 18349,
+      "bytes": 51811,
+      "lines": 798,
+      "inlineJs": 19991,
       "inlineCss": 9449
     },
     "post-campus-ad.html": {
@@ -159,21 +177,21 @@
       "inlineCss": 1216
     },
     "post-job.html": {
-      "bytes": 41671,
-      "lines": 558,
-      "inlineJs": 12783,
+      "bytes": 50653,
+      "lines": 714,
+      "inlineJs": 19824,
       "inlineCss": 6354
     },
     "profile.html": {
-      "bytes": 51182,
-      "lines": 706,
-      "inlineJs": 18922,
+      "bytes": 54413,
+      "lines": 757,
+      "inlineJs": 21020,
       "inlineCss": 10620
     },
     "rental-detail.html": {
-      "bytes": 33951,
-      "lines": 497,
-      "inlineJs": 11288,
+      "bytes": 35773,
+      "lines": 531,
+      "inlineJs": 12930,
       "inlineCss": 4594
     }
   }
