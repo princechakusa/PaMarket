@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "PaMarket",
   slug: "pamarket",
   owner: "princechakusa",
-  version: "1.29.21",
+  version: "1.29.22",
   orientation: "portrait",
   icon: "./assets/icon.png",
   // "automatic" (not "light") so the OS actually reports dark-mode changes to
@@ -124,7 +124,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // positioning. Also carries the Rentals nested-Modal touch-bug fix and
     // the dropdown chevron/border styling pass. 27 was already submitted
     // to App Store Connect, so it's burned -- 28 is the next number.
-    buildNumber: "29",
+    buildNumber: "30",
     googleServicesFile: "./GoogleService-Info.plist",
     usesAppleSignIn: true,
     icon: {
@@ -153,7 +153,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pamarket.app",
-    versionCode: 139,
+    versionCode: 140,
     googleServicesFile: "./google-services.json",
     adaptiveIcon: {
       backgroundColor: "#06266F",
