@@ -225,7 +225,7 @@ export default function RentalBookingDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{booking.fulfillment === "delivery" ? "Delivery" : "Pick-up"} Information</Text>
           {booking.fulfillment === "delivery" ? (
-            <InfoRow label="Address" value={booking.delivery_address || "—"} styles={styles} />
+            <InfoRow label="Address" value={booking.delivery_address || "-"} styles={styles} />
           ) : (
             <InfoRow label="Location" value={vehicle?.pickup_suburb || "Arranged with provider"} styles={styles} />
           )}

@@ -148,7 +148,7 @@ export default function RentalsListScreen() {
             error ? (
               <View style={styles.offlineBanner}>
                 <Text style={styles.offlineBannerText}>
-                  {showingCached ? "You're offline — showing your last saved vehicles." : "Couldn't refresh — showing what we last loaded."}
+                  {showingCached ? "You're offline, showing your last saved vehicles." : "Couldn't refresh, showing what we last loaded."}
                 </Text>
               </View>
             ) : null

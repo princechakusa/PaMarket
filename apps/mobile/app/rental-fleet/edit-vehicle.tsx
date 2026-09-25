@@ -142,7 +142,7 @@ export default function RentalEditVehicleScreen() {
         supabase.from("rental_vehicle_specs").upsert({ listing_id: id, ...specsUpdate }, { onConflict: "listing_id" }),
       ]);
       if (lstRes.error) throw lstRes.error;
-      if (!lstRes.data?.length) throw new Error("Update matched 0 rows — your company must be active to edit vehicles.");
+      if (!lstRes.data?.length) throw new Error("Update matched 0 rows, your company must be active to edit vehicles.");
       // Not resetting isSaving here — router.back() below unmounts this
       // screen; see project_fabric_navigation_crash memory.
       toast("Vehicle updated.");

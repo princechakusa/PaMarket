@@ -195,7 +195,7 @@ export default function RentalBookingsInboxScreen() {
                 {formatDateTime(b.pickup_at)} → {formatDateTime(b.return_at)}
               </Text>
               <Text style={styles.meta}>
-                {b.fulfillment === "delivery" ? `Delivery: ${b.delivery_address || "—"}` : "Pick-up"}
+                {b.fulfillment === "delivery" ? `Delivery: ${b.delivery_address || "-"}` : "Pick-up"}
                 {b.with_driver ? " · With driver" : ""}
               </Text>
               {b.customer_note ? <Text style={styles.note}>“{b.customer_note}”</Text> : null}

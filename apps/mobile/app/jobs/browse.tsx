@@ -362,7 +362,7 @@ export default function JobsListScreen() {
               {hasError ? (
                 <View style={styles.offlineBanner}>
                   <Text style={styles.offlineBannerText}>
-                    {showingCached ? "You're offline — showing your last saved jobs." : "Couldn't refresh — showing what we last loaded."}
+                    {showingCached ? "You're offline, showing your last saved jobs." : "Couldn't refresh, showing what we last loaded."}
                   </Text>
                 </View>
               ) : null}
@@ -379,7 +379,7 @@ export default function JobsListScreen() {
               subtitle={
                 query || typeFilter !== "all"
                   ? "Try a different search or clear your filters."
-                  : "New roles are posted every day — check back soon."
+                  : "New roles are posted every day, check back soon."
               }
             />
           }

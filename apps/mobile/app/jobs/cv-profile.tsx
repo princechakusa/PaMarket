@@ -446,7 +446,7 @@ export default function CvProfileScreen() {
     // otherwise land in the same tick as that navigation, which is exactly
     // the race that produced a real production crash elsewhere in the app
     // (see project_fabric_navigation_crash memory).
-    toast(publish ? "Profile saved — employers can now find you!" : "Profile saved");
+    toast(publish ? "Profile saved, employers can now find you!" : "Profile saved");
     router.back();
   }
 
@@ -569,7 +569,7 @@ export default function CvProfileScreen() {
                 ))}
               </View>
             ) : (
-              <Text style={styles.emptyHint}>No skills yet — add a few to stand out.</Text>
+              <Text style={styles.emptyHint}>No skills yet, add a few to stand out.</Text>
             )}
           </Card>
 
@@ -694,7 +694,7 @@ export default function CvProfileScreen() {
               onPress={pickAndUploadCv}
               style={{ marginBottom: space.md }}
             />
-            <Text style={styles.hintText}>PDF only, up to 5 MB. This file is private — only you and employers you apply to can view it.</Text>
+            <Text style={styles.hintText}>PDF only, up to 5 MB. This file is private, only you and employers you apply to can view it.</Text>
             <Text style={[styles.label, styles.spacedLabel]}>Or paste a link (CV hosted elsewhere)</Text>
             <Input value={cvFileUrl} onChangeText={setCvFileUrl} placeholder="https://…" last  styles={styles} />
           </Card>
@@ -747,7 +747,7 @@ export default function CvProfileScreen() {
           <SectionRow title="Job matching preferences" styles={styles} />
           <Card>
             <Text style={styles.hintText}>
-              Used to suggest jobs and alerts to you — separate from the profile employers see above.
+              Used to suggest jobs and alerts to you, separate from the profile employers see above.
             </Text>
             {jobTaxonomy.jobTypes.length ? (
               <>

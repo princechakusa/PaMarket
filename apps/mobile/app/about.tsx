@@ -99,7 +99,7 @@ export default function AboutScreen() {
           <BrandSymbol size={72} contained />
         </View>
         <BrandWordmark size={24} style={styles.brand} />
-        <Text style={styles.tagline}>Zimbabwe's marketplace — buy, sell, hire, and rent.</Text>
+        <Text style={styles.tagline}>Zimbabwe's marketplace: buy, sell, hire, and rent.</Text>
         <Text style={styles.version}>
           Version {version}
           {buildNumber ? ` (Build ${buildNumber})` : ""}
@@ -109,7 +109,7 @@ export default function AboutScreen() {
       <Card style={{ marginTop: space.xl }}>
         <Text style={styles.sectionTitle}>About PaMarket</Text>
         <Text style={styles.body}>
-          PaMarket connects buyers and sellers across Zimbabwe — from cars, property and electronics to jobs, services
+          PaMarket connects buyers and sellers across Zimbabwe, from cars, property and electronics to jobs, services
           and rentals. Post a free ad in minutes, chat directly with sellers, and find verified businesses you can
           trust. Built in Zimbabwe, for Zimbabwe.
         </Text>

@@ -285,7 +285,7 @@ export default function JobApplicantsScreen() {
     setMessagingId(null);
     const result = data as { ok?: boolean; conversation_id?: string; code?: string } | null;
     if (error || !result?.ok || !result.conversation_id) {
-      toast("Could not open chat — please try again", 3500, true);
+      toast("Could not open chat, please try again", 3500, true);
       return;
     }
     router.push({

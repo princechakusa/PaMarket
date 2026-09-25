@@ -86,11 +86,11 @@ export default function CandidateCvScreen() {
       return;
     }
     if (error || !result?.ok || !result.request) {
-      toast("Could not send request — please try again");
+      toast("Could not send request, please try again");
       return;
     }
     setRequest(result.request);
-    toast("Request sent — we'll notify you once approved.");
+    toast("Request sent, we'll notify you once approved.");
   }
 
   // Recruitment chat has its own server-checked authority (approved contact
@@ -110,7 +110,7 @@ export default function CandidateCvScreen() {
     setIsMessaging(false);
     const result = data as { ok?: boolean; conversation_id?: string; code?: string } | null;
     if (error || !result?.ok || !result.conversation_id) {
-      toast("Could not open chat — please try again");
+      toast("Could not open chat, please try again");
       return;
     }
     router.push({

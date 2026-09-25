@@ -206,7 +206,7 @@ export default function ApplyJobScreen() {
         <View style={styles.centered}>
           <Text style={styles.blockedTitle}>Complete your Candidate Profile</Text>
           <Text style={styles.blockedBody}>
-            You need a Candidate Profile before applying for jobs. It only takes a minute — add your title, category
+            You need a Candidate Profile before applying for jobs. It only takes a minute, add your title, category
             and location so employers know who you are.
           </Text>
           <Pressable
@@ -261,7 +261,7 @@ export default function ApplyJobScreen() {
               style={[styles.input, styles.textarea]}
               value={message}
               onChangeText={setMessage}
-              placeholder="Tell the employer a bit about yourself — optional but recommended."
+              placeholder="Tell the employer a bit about yourself, optional but recommended."
               placeholderTextColor={color.textMuted}
               multiline
               numberOfLines={4}

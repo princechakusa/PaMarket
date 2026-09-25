@@ -103,7 +103,7 @@ export default function MyContactRequestsScreen() {
                 </View>
                 <Text style={styles.statusBody}>
                   {approved
-                    ? "Contact unlocked — tap to view this candidate's profile."
+                    ? "Contact unlocked, tap to view this candidate's profile."
                     : item.status === "declined"
                       ? "This request was not approved. You can try another candidate."
                       : "We're reviewing your request. You'll be notified once it's approved."}

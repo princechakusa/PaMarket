@@ -144,7 +144,7 @@ export default function RentalCompanyProfileScreen() {
       if (profRes.error) throw profRes.error;
       if (coRes.error) throw coRes.error;
       if ((bizRes as any).error) throw (bizRes as any).error;
-      if (!coRes.data?.length) throw new Error("Update matched 0 rows — your company must be active to save changes.");
+      if (!coRes.data?.length) throw new Error("Update matched 0 rows, your company must be active to save changes.");
       // Not resetting isSaving here — router.back() below unmounts this
       // screen; see project_fabric_navigation_crash memory.
       toast("Company profile updated.");
@@ -213,7 +213,7 @@ export default function RentalCompanyProfileScreen() {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNum}>{avgRating ? Number(avgRating).toFixed(1) : "—"}</Text>
+          <Text style={styles.statNum}>{avgRating ? Number(avgRating).toFixed(1) : "-"}</Text>
           <Text style={styles.statLabel}>Rating</Text>
         </View>
         <View style={styles.statDivider} />

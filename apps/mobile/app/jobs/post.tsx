@@ -519,7 +519,7 @@ export default function PostJobScreen() {
     if (!result?.ok) {
       setIsSubmitting(false);
       toast(
-        result?.msg || "Could not post job — please try again",
+        result?.msg || "Could not post job, please try again",
         4000,
         true
       );
@@ -824,7 +824,7 @@ export default function PostJobScreen() {
                 minHeight={90}
               />
               <Text style={styles.helperText}>
-                One duty per line — each line becomes its own bullet on the job page.
+                One duty per line, each line becomes its own bullet on the job page.
               </Text>
             </View>
 
@@ -903,7 +903,7 @@ export default function PostJobScreen() {
         <Padded styles={styles}>
           <CollapsibleCard
             title="Compensation"
-            subtitle="Optional — postings with a salary get more applications"
+            subtitle="Optional, postings with a salary get more applications"
             icon={<MoneyIcon c={tones.brand} />}
             defaultOpen={false}
           >
@@ -977,7 +977,7 @@ export default function PostJobScreen() {
           {descriptionLength.toLocaleString()} /{" "}
           {JOB_DESCRIPTION_MAX.toLocaleString()} characters used
           {descriptionOver
-            ? ` — remove about ${(
+            ? `, remove about ${(
                 descriptionLength - JOB_DESCRIPTION_MAX
               ).toLocaleString()}`
             : ""}

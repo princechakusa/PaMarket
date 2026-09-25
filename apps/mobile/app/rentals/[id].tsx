@@ -872,7 +872,7 @@ export default function RentalVehicleDetailScreen() {
       <ConfirmModal
         visible={!!confirmedBookingId}
         title="Request sent"
-        body="Your booking request has been sent to the provider. You'll be notified as soon as they respond — you can track it anytime from My Rentals."
+        body="Your booking request has been sent to the provider. You'll be notified as soon as they respond, you can track it anytime from My Rentals."
         confirmText="View My Rentals"
         cancelText="Stay here"
         onConfirm={() => {
