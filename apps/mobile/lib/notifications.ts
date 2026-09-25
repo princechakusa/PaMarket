@@ -159,6 +159,15 @@ function parseLegacyWebRoute(s: string): ExpoRoute | null {
     case "Profile":
       return anyId ? { pathname: "/profile/[id]", params: { id: anyId } } : null;
     case "Business":
+    // "BusinessShop" was the deep-link page name notify_business_activation_decision()
+    // and run_shop_new_arrivals() used before both were fixed to the "kind:id"
+    // convention (2026-09-25) — rows written before that fix still carry this
+    // string. It's the audience-generic fallback (public shop page); the
+    // owner-specific business_activated/business_rejected notification types
+    // intercept their own legacy id before ever reaching this parser (see
+    // resolveNotifRoute), so this case only ever serves shop_new_arrivals and
+    // any other viewer-side reference to a shop.
+    case "BusinessShop":
       return anyId ? { pathname: "/business/[id]", params: { id: anyId } } : null;
     default:
       return null;
@@ -308,6 +317,27 @@ export function resolveNotifRoute(n: {
   }
   if (type === "shop_order_status") {
     if (orderId) return { pathname: "/shop-order/[id]", params: { id: orderId } };
+    const parsed = parseDeepLinkString(meta.deepLink);
+    if (parsed) return parsed;
+    return SAFE_FALLBACK;
+  }
+
+  // 0b. Business activation decision (owner's business submission approved
+  // or rejected by an admin). Always the owner's Seller Center management
+  // dashboard — it renders the live/pending/rejected state and, for a
+  // rejection, the reason + a resubmit button — never the public shop page.
+  // The DB trigger (notify_business_activation_decision, fixed 2026-09-25)
+  // now writes deepLink as "businessmanage:<id>"; rows created before that
+  // fix still carry the older "BusinessShop?id=<id>" string (which the
+  // generic legacy parser below maps to the PUBLIC shop page for other
+  // notification types, e.g. shop_new_arrivals) — so extract that id here
+  // first, before falling through to the generic parser.
+  if (type === "business_activated" || type === "business_rejected") {
+    if (businessId) return { pathname: "/business-manage/[id]", params: { id: businessId } };
+    if (typeof meta.deepLink === "string" && meta.deepLink.startsWith("BusinessShop?")) {
+      const legacyId = new URLSearchParams(meta.deepLink.split("?")[1] || "").get("id");
+      if (legacyId) return { pathname: "/business-manage/[id]", params: { id: legacyId } };
+    }
     const parsed = parseDeepLinkString(meta.deepLink);
     if (parsed) return parsed;
     return SAFE_FALLBACK;
