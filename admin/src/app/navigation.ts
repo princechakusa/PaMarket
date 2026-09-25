@@ -52,6 +52,7 @@ export const opsNavigationGroups: OpsNavigationGroup[] = [
     { label: 'Help & FAQ', path: '/content/faq', permission: 'content.view', icon: 'quiz' },
     { label: 'Blog Videos', path: '/content/videos', permission: 'content.view', icon: 'smart_display' },
     { label: 'Contact & Social', path: '/content/contact', permission: 'content.view', icon: 'contact_mail' },
+    { label: 'Company & Legal', path: '/content/company', permission: 'content.view', icon: 'apartment' },
     { label: 'Institutions', path: '/institutions', permission: 'institutions.view', icon: 'school' },
     { label: 'Taxonomy', path: '/taxonomy', permission: 'taxonomy.view', icon: 'category' },
     { label: 'AMOS', path: '/amos', permission: 'amos.view', icon: 'smart_toy' },
@@ -79,6 +80,7 @@ export const navigationGroups: NavigationGroup[] = [
   { label: 'Content', items: [
     { label: 'Legal & policies', path: '/content/legal', permission: 'legal.view' }, { label: 'Help & FAQ', path: '/content/faq', permission: 'content.view' },
     { label: 'Blog videos', path: '/content/videos', permission: 'content.view' }, { label: 'Contact & social', path: '/content/contact', permission: 'content.view' },
+    { label: 'Company & legal', path: '/content/company', permission: 'content.view' },
   ] },
   { label: 'Taxonomy', items: [{ label: 'Marketplace taxonomy', path: '/taxonomy', permission: 'taxonomy.view' }] },
   { label: 'Institutions', items: [{ label: 'Institutions', path: '/institutions', permission: 'institutions.view' }] },

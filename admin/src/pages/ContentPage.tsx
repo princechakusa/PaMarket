@@ -5,13 +5,14 @@ import {
   listContentPages, getContentPage, updateContentPage, listContentPageVersions,
   listBlogVideos, setBlogVideoPublished, createBlogVideo, updateBlogVideo,
   getContactSocialLinks, updateContactSocialLinks,
-  type ContentPageRow, type ContentPageDetail, type ContentPageVersionRow, type BlogVideoRow, type ContactSocialLinks,
+  getCompanySettings, updateCompanySettings,
+  type ContentPageRow, type ContentPageDetail, type ContentPageVersionRow, type BlogVideoRow, type ContactSocialLinks, type CompanySettings,
 } from '../services/content/query';
 
 function Icon({ name }: { name: string }) { return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>; }
 
-type Tab = 'legal' | 'faq' | 'videos' | 'contact';
-const tabFromPath: Record<string, Tab> = { '/content/legal': 'legal', '/content/faq': 'faq', '/content/videos': 'videos', '/content/contact': 'contact' };
+type Tab = 'legal' | 'faq' | 'videos' | 'contact' | 'company';
+const tabFromPath: Record<string, Tab> = { '/content/legal': 'legal', '/content/faq': 'faq', '/content/videos': 'videos', '/content/contact': 'contact', '/content/company': 'company' };
 
 type LegalSection = { heading: string; body: string };
 type FaqItem = { q: string; a: string; group: string };
@@ -69,6 +70,7 @@ export function ContentPage() {
   const [editTitle, setEditTitle] = useState(''); const [editDesc, setEditDesc] = useState(''); const [editProvider, setEditProvider] = useState('youtube'); const [editEmbed, setEditEmbed] = useState(''); const [editOrder, setEditOrder] = useState(0);
 
   const [links, setLinks] = useState<ContactSocialLinks | null>(null);
+  const [company, setCompany] = useState<CompanySettings | null>(null);
 
   const load = useCallback(async () => {
     if (auth.mode !== 'live') { setPhase('ready'); return; }
@@ -81,6 +83,10 @@ export function ContentPage() {
       const result = await listBlogVideos();
       if (result.error) { setError(result.error.message); setPhase('error'); return; }
       setVideos(result.data);
+    } else if (tab === 'company') {
+      const result = await getCompanySettings();
+      if (result.error) { setError(result.error.message); setPhase('error'); return; }
+      setCompany(result.data);
     } else {
       const result = await getContactSocialLinks();
       if (result.error) { setError(result.error.message); setPhase('error'); return; }
@@ -156,6 +162,14 @@ export function ContentPage() {
     setMessage(result.error ? `Save failed: ${result.error.message}` : 'Saved.');
   }
 
+  async function saveCompany() {
+    if (!company) return;
+    setSaving(true);
+    const result = await updateCompanySettings(company);
+    setSaving(false);
+    setMessage(result.error ? `Save failed: ${result.error.message}` : 'Saved.');
+  }
+
   return <div className="directory-page">
     {auth.mode === 'mock' && <div className="directory-reference" role="note"><Icon name="science" /><b>REFERENCE DATA MODE</b><span>Live Supabase is not configured in this environment.</span></div>}
     <div className="directory-breadcrumb">PAMARKET OPS / SHARED & ADVANCED / <b>CONTENT</b></div>
@@ -166,6 +180,7 @@ export function ContentPage() {
       <button className={tab === 'faq' ? 'active' : ''} onClick={() => setTab('faq')}>Help & FAQ</button>
       <button className={tab === 'videos' ? 'active' : ''} onClick={() => setTab('videos')}>Blog Videos</button>
       <button className={tab === 'contact' ? 'active' : ''} onClick={() => setTab('contact')}>Contact & Social</button>
+      <button className={tab === 'company' ? 'active' : ''} onClick={() => setTab('company')}>Company & Legal</button>
     </div></nav>
 
     {phase === 'error' && <div className="directory-empty" role="alert">Could not load: {error}</div>}
@@ -267,6 +282,25 @@ export function ContentPage() {
         <label className="policy-field">Play Store URL<input value={links.playStoreUrl} onChange={(e) => setLinks({ ...links, playStoreUrl: e.target.value })} /></label>
       </div>
       <footer><button disabled={saving} onClick={() => void saveLinks()}>{saving ? 'Saving…' : 'Save'}</button></footer>
+      {message && <p role="status">{message}</p>}
+    </section>}
+
+    {tab === 'company' && phase !== 'error' && company && <section className="policy-panel">
+      <header><h2><Icon name="apartment" />Company & Legal</h2><p>Stored in app_settings.settings.content.company — read by the website footer and the mobile app's About screen. Public read, admin-only write (same RLS as Contact & Social).</p></header>
+      <div className="policy-controls">
+        <label className="policy-field">Legal / trading name<input value={company.legalName} onChange={(e) => setCompany({ ...company, legalName: e.target.value })} placeholder="PaMarket Zimbabwe (Pvt) Ltd." /></label>
+        <label className="policy-field">Registration number<input value={company.registrationNumber} onChange={(e) => setCompany({ ...company, registrationNumber: e.target.value })} placeholder="e.g. 12345/2024" /></label>
+        <label className="policy-field">Registered address<textarea value={company.registeredAddress} onChange={(e) => setCompany({ ...company, registeredAddress: e.target.value })} style={{ minHeight: 60 }} /></label>
+        <label className="policy-field">Regulatory / government info<textarea value={company.regulatoryInfo} onChange={(e) => setCompany({ ...company, regulatoryInfo: e.target.value })} style={{ minHeight: 60 }} placeholder="e.g. licensing/regulatory body statement" /></label>
+        <label className="policy-field">Legal notice<textarea value={company.legalNotice} onChange={(e) => setCompany({ ...company, legalNotice: e.target.value })} style={{ minHeight: 60 }} /></label>
+        <label className="policy-field">Copyright holder name<input value={company.copyrightHolder} onChange={(e) => setCompany({ ...company, copyrightHolder: e.target.value })} placeholder="Defaults to legal name if left blank" /></label>
+        <label className="policy-field">Copyright start year<input type="number" value={company.copyrightStartYear} onChange={(e) => setCompany({ ...company, copyrightStartYear: Number(e.target.value) })} /></label>
+        <p style={{ fontSize: '0.85em', opacity: 0.8 }}>
+          Preview: &copy; {company.copyrightStartYear === new Date().getFullYear() ? company.copyrightStartYear : `${company.copyrightStartYear}–${new Date().getFullYear()}`} {company.copyrightHolder || company.legalName || 'PaMarket'}. All rights reserved.
+          <br />No code change is ever needed to advance the year — it's computed at runtime from this start year.
+        </p>
+      </div>
+      <footer><button disabled={saving} onClick={() => void saveCompany()}>{saving ? 'Saving…' : 'Save'}</button></footer>
       {message && <p role="status">{message}</p>}
     </section>}
   </div>;

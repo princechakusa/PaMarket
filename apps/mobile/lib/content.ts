@@ -82,6 +82,21 @@ export function useLegalDocUpgrade(slug: string, staticDoc: LegalDoc): LegalDoc 
   return doc;
 }
 
+// Admin-managed company/legal info — same app_settings.content.company key
+// the website footer and admin's Company & Legal tab read/write (see
+// supabase/migrations/20260925150000_company_legal_settings.sql). All
+// fields are optional; every consumer must supply its own sensible default
+// so a missing/empty field never blanks a screen.
+export type CompanySettings = {
+  legalName?: string | null;
+  registrationNumber?: string | null;
+  registeredAddress?: string | null;
+  regulatoryInfo?: string | null;
+  legalNotice?: string | null;
+  copyrightHolder?: string | null;
+  copyrightStartYear?: number | null;
+};
+
 export type PublicSettings = {
   supportEmail?: string | null;
   whatsappNumber?: string | null;
@@ -89,7 +104,18 @@ export type PublicSettings = {
   appStoreUrl?: string | null;
   playStoreUrl?: string | null;
   websiteUrl?: string | null;
+  company?: CompanySettings | null;
 };
+
+// Formats the admin-configured copyright start year into "2026" or, once
+// the current year has advanced past it, "2026–2027" — computed at
+// runtime so advancing the year is never a code change. Falls back to just
+// the current year if no start year is configured yet.
+export function formatCopyrightYear(startYear?: number | null, now = new Date()): string {
+  const currentYear = now.getFullYear();
+  if (!startYear || Number.isNaN(startYear)) return String(currentYear);
+  return currentYear > startYear ? `${startYear}–${currentYear}` : String(startYear);
+}
 
 // Same app_settings.content record the website footer reads (Stage 1) —
 // support email, WhatsApp, social links, store/website links. Never

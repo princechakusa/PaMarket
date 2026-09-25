@@ -171,8 +171,42 @@
 <div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Trust, Safety &amp; Legal</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="safety.html">Safety Guidelines for Buyers &amp; Sellers</a></li><li><a class="hover:text-primary" href="terms.html">Terms of Service &amp; Compliance</a></li><li><a class="hover:text-primary" href="privacy.html">Privacy &amp; Data Protection Policy</a></li><li><a class="hover:text-primary" href="cookie-policy.html">Cookie Policy</a></li><li><a class="hover:text-primary" href="community-guidelines.html">Prohibited Items &amp; Penalties</a></li></ul></div>
 <div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Support &amp; Provincial Offices</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="contact.html">24/7 Help Desk &amp; Inquiries</a></li><li><a class="hover:text-primary" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp Helpline (+971 589 772 645)</a></li></ul></div>
 </div>
-<div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span>&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. Serving all 10 provinces across Zimbabwe. All rights reserved.</span><span>Multi-Currency Clearing Engine (USD / ZiG)</span></div></div>
+<div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span id="footerCopyright" data-copyright-holder="PaMarket Zimbabwe (Pvt) Ltd." data-copyright-start-year="2026">&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. Serving all 10 provinces across Zimbabwe. All rights reserved.</span><span>Multi-Currency Clearing Engine (USD / ZiG)</span></div></div>
 </footer>
+<script src="js/site-content.js" defer></script>
+<script defer>
+// Admin-managed company/copyright info (app_settings.settings.content.company
+// -- see supabase/migrations/20260925150000_company_legal_settings.sql and
+// the Company & Legal tab in the admin app). Mirrors the identical script in
+// partials/footer.html for pages not yet migrated onto the shared
+// FOOTER:START/END include (tools/build-includes.js only reaches marked
+// pages). Safe to include js/site-content.js again even where a page
+// already loads it elsewhere -- it only assigns window.PMContent.
+(function () {
+  var el = document.getElementById('footerCopyright');
+  if (!el) return;
+  var currentYear = new Date().getFullYear();
+  function render(startYear, holder) {
+    var year = startYear && !isNaN(startYear)
+      ? (currentYear > startYear ? startYear + '\u2013' + currentYear : String(startYear))
+      : String(currentYear);
+    el.textContent = '\u00A9 ' + year + ' ' + holder + '. Serving all 10 provinces across Zimbabwe. All rights reserved.';
+  }
+  var fallbackStart = parseInt(el.getAttribute('data-copyright-start-year'), 10);
+  var fallbackHolder = el.getAttribute('data-copyright-holder') || 'PaMarket Zimbabwe (Pvt) Ltd.';
+  render(fallbackStart, fallbackHolder);
+  if (window.PMContent && window.PMContent.fetchSiteSettings) {
+    window.PMContent.fetchSiteSettings().then(function (content) {
+      var company = content && content.company;
+      if (!company) return;
+      render(
+        typeof company.copyrightStartYear === 'number' ? company.copyrightStartYear : fallbackStart,
+        company.copyrightHolder || company.legalName || fallbackHolder
+      );
+    }).catch(function () {});
+  }
+})();
+</script>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/core/supabase-client.js"></script>

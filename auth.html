@@ -339,7 +339,7 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
           <div class="auth-hero-stat"><b>24/7</b><span>WhatsApp Support</span></div>
         </div>
       </div>
-      <div class="auth-hero-bottom">&copy; 2026 PaMarket &middot; Made in Zimbabwe</div>
+      <div class="auth-hero-bottom"><span id="authHeroYear">&copy; 2026</span> PaMarket &middot; Made in Zimbabwe</div>
     </section>
 
     <!-- Right: sign in / create account form -->
@@ -365,12 +365,42 @@ h1,h2,.hero h1,.cat-hero h1,.j-hero h1,.p-hero h1,.pa-hero h1,.sec-h,.sec-title,
       <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bot-Protected Sign-In</span>
     </div>
     <div class="auth-foot">
-      <div>&copy; 2026 PaMarket Zimbabwe. Made in Zimbabwe.</div>
+      <div><span id="authFootYear">&copy; 2026</span> PaMarket Zimbabwe. Made in Zimbabwe.</div>
       <div><a href="terms">Terms of Service</a><span class="sep">|</span><a href="privacy">Privacy Policy</a><span class="sep">|</span><a href="cookie-policy">Cookie Policy</a></div>
     </div>
   </div>
 
 </div>
+<script src="js/site-content.js" defer></script>
+<script defer>
+// Same admin-managed copyright-year source as partials/footer.html
+// (app_settings.settings.content.company.copyrightStartYear) -- auth.html
+// has its own compact footer tagline instead of the shared footer partial,
+// so this mirrors just the year-computation piece rather than pulling in
+// the full "All rights reserved" copyright line, which doesn't fit this
+// layout's tone.
+(function () {
+  var currentYear = new Date().getFullYear();
+  function label(startYear) {
+    startYear = startYear && !isNaN(startYear) ? startYear : 2026;
+    return '© ' + (currentYear > startYear ? startYear + '–' + currentYear : String(startYear));
+  }
+  var ids = ['authHeroYear', 'authFootYear'];
+  function apply(startYear) {
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = label(startYear);
+    });
+  }
+  apply(2026);
+  if (window.PMContent && window.PMContent.fetchSiteSettings) {
+    window.PMContent.fetchSiteSettings().then(function (content) {
+      var company = content && content.company;
+      if (company && typeof company.copyrightStartYear === 'number') apply(company.copyrightStartYear);
+    }).catch(function () {});
+  }
+})();
+</script>
 
 <div id="toastC"></div>
 

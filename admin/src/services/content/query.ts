@@ -151,3 +151,67 @@ export async function updateContactSocialLinks(patch: Partial<ContactSocialLinks
   if (error) return { data: null, error: normalizeError(error) };
   return { data: true, error: null };
 }
+
+// ── Company & Legal (a nested key inside app_settings.settings.content) ──
+// Same read-merge-write pattern as Contact & Social above, one level
+// deeper: app_settings.settings.content.company. See migration
+// 20260925150000_company_legal_settings.sql for the seeded defaults and
+// the RLS this reuses (public read, admin-only write via public.is_admin()).
+
+export type CompanySettings = {
+  legalName: string;
+  registrationNumber: string;
+  registeredAddress: string;
+  regulatoryInfo: string;
+  legalNotice: string;
+  copyrightHolder: string;
+  copyrightStartYear: number;
+};
+
+const emptyCompany: CompanySettings = {
+  legalName: '',
+  registrationNumber: '',
+  registeredAddress: '',
+  regulatoryInfo: '',
+  legalNotice: '',
+  copyrightHolder: '',
+  copyrightStartYear: new Date().getFullYear(),
+};
+
+export async function getCompanySettings(): Promise<QueryResult<CompanySettings>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.from('app_settings').select('settings').eq('id', 1).maybeSingle();
+  if (error) return { data: null, error: normalizeError(error) };
+  const content = ((data?.settings as Record<string, unknown> | null)?.content ?? {}) as Record<string, unknown>;
+  const company = (content.company && typeof content.company === 'object' ? content.company : {}) as Record<string, unknown>;
+  return {
+    data: {
+      legalName: typeof company.legalName === 'string' ? company.legalName : '',
+      registrationNumber: typeof company.registrationNumber === 'string' ? company.registrationNumber : '',
+      registeredAddress: typeof company.registeredAddress === 'string' ? company.registeredAddress : '',
+      regulatoryInfo: typeof company.regulatoryInfo === 'string' ? company.regulatoryInfo : '',
+      legalNotice: typeof company.legalNotice === 'string' ? company.legalNotice : '',
+      copyrightHolder: typeof company.copyrightHolder === 'string' ? company.copyrightHolder : '',
+      copyrightStartYear: typeof company.copyrightStartYear === 'number' ? company.copyrightStartYear : new Date().getFullYear(),
+    },
+    error: null,
+  };
+}
+
+/** Merge-only write: reads the full settings row first so every other
+ * app_settings key (operational toggles, contact/social links) is
+ * preserved untouched -- only settings.content.company is replaced. */
+export async function updateCompanySettings(patch: Partial<CompanySettings>): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data: current, error: readError } = await client.from('app_settings').select('settings').eq('id', 1).maybeSingle();
+  if (readError) return { data: null, error: normalizeError(readError) };
+  const currentSettings = (current?.settings as Record<string, unknown> ?? {});
+  const currentContent = (currentSettings.content as Record<string, unknown> ?? {});
+  const currentCompany = (currentContent.company as Record<string, unknown> ?? emptyCompany);
+  const merged = { ...currentSettings, content: { ...currentContent, company: { ...currentCompany, ...patch } } };
+  const { error } = await client.from('app_settings').update({ settings: merged }).eq('id', 1);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}

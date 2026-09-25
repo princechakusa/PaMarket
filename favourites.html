@@ -58,12 +58,6 @@ window.doHeaderSearch = function(){
 </script>
 <main class="account-shell" style="padding-top:148px"><div class="account-head"><div><h1>My Favourites</h1><p>Your saved listings, synced securely across devices.</p></div><a class="account-primary" href="browse">Browse Listings</a></div><div id="accountPage" class="account-empty">Loading favourites…</div></main>
 <!-- FOOTER:START -->
-<!-- ============================================================
-     PaMarket shared footer, SINGLE SOURCE OF TRUTH.
-     Edit here only; run `node tools/build-includes.js` to stamp
-     it into every page between the FOOTER:START/END markers.
-     Styling lives in css/site.css.
-     ============================================================ -->
 <footer class="bg-surface-container-lowest border-t border-outline-variant">
 <div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl grid grid-cols-1 lg:grid-cols-5 gap-space-2xl">
 <div class="lg:col-span-1"><div class="flex items-center gap-2"><img alt="PaMarket Zimbabwe Logo" class="h-7 w-auto object-contain" src="img/icon-192.png"/><span class="font-headline-md text-headline-sm font-bold tracking-tight text-primary uppercase">PaMarket</span></div><p class="mt-3 text-body-sm font-body-sm text-on-surface-variant">Zimbabwe's primary institutional digital marketplace. Empowering commercial transactions across all 10 provinces with multi-currency pricing and a real jobs board.</p><div class="mt-4 flex items-center gap-2"><a href="https://play.google.com/store/apps/details?id=com.pamarket.app" target="_blank" rel="noopener" aria-label="Get it on Google Play"><img src="img/google-play-badge.png" alt="Get it on Google Play" class="h-9 w-auto"/></a><a href="https://apps.apple.com/app/id6794616959" target="_blank" rel="noopener" aria-label="Download on the App Store"><img src="img/app-store-badge.svg" alt="Download on the App Store" class="h-9 w-auto"/></a></div></div>
@@ -72,41 +66,57 @@ window.doHeaderSearch = function(){
 <div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Trust, Safety &amp; Legal</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="safety.html">Safety Guidelines for Buyers &amp; Sellers</a></li><li><a class="hover:text-primary" href="terms.html">Terms of Service &amp; Compliance</a></li><li><a class="hover:text-primary" href="privacy.html">Privacy &amp; Data Protection Policy</a></li><li><a class="hover:text-primary" href="cookie-policy.html">Cookie Policy</a></li><li><a class="hover:text-primary" href="community-guidelines.html">Prohibited Items &amp; Penalties</a></li></ul></div>
 <div><h5 class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant mb-3">Support &amp; Provincial Offices</h5><ul class="flex flex-col gap-2 text-body-sm font-body-sm"><li><a class="hover:text-primary" href="contact.html">24/7 Help Desk &amp; Inquiries</a></li><li><a class="hover:text-primary" href="https://wa.me/971589772645" target="_blank" rel="noopener">WhatsApp Helpline (+971 589 772 645)</a></li></ul></div>
 </div>
-<div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span>&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. Serving all 10 provinces across Zimbabwe. All rights reserved.</span><span>Multi-Currency Clearing Engine (USD / ZiG)</span></div></div>
+<div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span data-copyright-holder="PaMarket Zimbabwe (Pvt) Ltd." data-copyright-start-year="2026" id="footerCopyright">&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. Serving all 10 provinces across Zimbabwe. All rights reserved.</span><span>Multi-Currency Clearing Engine (USD / ZiG)</span></div></div>
 </footer>
-<script src="js/cookie-consent.js" defer></script>
+<!-- js/site-content.js may already be loaded by this specific page (several
+     pages load it directly for their own contact-info wiring); including it
+     again here is harmless -- it only assigns window.PMContent, idempotently
+     -- and guarantees it's present on every page, not just the ones that
+     happened to add it themselves. Deferred, like every other inclusion of
+     this file, so it runs after parsing and before the copyright script
+     below (deferred scripts run in document order). -->
 <script src="js/site-content.js" defer></script>
 <script defer>
-// Overlays admin-managed contact/social/store links onto the footer above.
-// Every element already has its current hardcoded value as href/text, so a
-// failed or slow request just leaves the page exactly as it renders today, // this only ever upgrades what's already correct and visible.
+// Admin-managed company/copyright info (app_settings.settings.content.company
+// -- see supabase/migrations/20260925150000_company_legal_settings.sql and
+// the Company & Legal tab in the admin app) upgrades the static copyright
+// line above in place, the same silent-upgrade pattern already used for
+// contact.html's WhatsApp/email fields. Runs on every page since this
+// script is stamped inside the shared footer partial itself (tools/build-
+// includes.js), not injected per-page -- so it can never be dropped by a
+// deploy the way a page-specific <script> placed elsewhere could be.
+// Deferred (not inline-blocking) so it always runs after js/site-content.js
+// above, regardless of where in <head>/<body> either script tag physically
+// ends up once stamped into a page.
 (function () {
-  function apply(content) {
-    if (!content) return;
-    var map = [
-      ['footWhatsapp', content.whatsappNumber ? 'https://wa.me/' + String(content.whatsappNumber).replace(/[^0-9]/g, '') : null, content.whatsappNumber ? 'WhatsApp: ' + content.whatsappNumber : null],
-      ['footEmail', content.supportEmail ? 'mailto:' + content.supportEmail : null, content.supportEmail],
-      ['footFacebook', content.socialLinks && content.socialLinks.facebook, null],
-      ['footInstagram', content.socialLinks && content.socialLinks.instagram, null],
-      ['footTiktok', content.socialLinks && content.socialLinks.tiktok, null],
-      ['footPlayStore', content.playStoreUrl, null],
-      ['footAppStore', content.appStoreUrl, null],
-    ];
-    map.forEach(function (row) {
-      var id = row[0], href = row[1], text = row[2];
-      var el = document.getElementById(id);
-      if (!el) return;
-      var safe = window.PMContent ? window.PMContent.safeHref(href) : '';
-      if (safe) el.setAttribute('href', safe);
-      if (text) el.textContent = text;
-    });
+  var el = document.getElementById('footerCopyright');
+  if (!el) return;
+  var currentYear = new Date().getFullYear();
+
+  function render(startYear, holder) {
+    var year = startYear && !isNaN(startYear)
+      ? (currentYear > startYear ? startYear + '–' + currentYear : String(startYear))
+      : String(currentYear);
+    el.textContent = '© ' + year + ' ' + holder + '. Serving all 10 provinces across Zimbabwe. All rights reserved.';
   }
-  function init() {
-    if (!window.PMContent) return;
-    window.PMContent.fetchSiteSettings().then(apply);
+
+  // Fallback: even with no DB reachable, the year itself must never go
+  // stale purely because it's hardcoded -- recompute from the static
+  // start year baked into the markup above.
+  var fallbackStart = parseInt(el.getAttribute('data-copyright-start-year'), 10);
+  var fallbackHolder = el.getAttribute('data-copyright-holder') || 'PaMarket Zimbabwe (Pvt) Ltd.';
+  render(fallbackStart, fallbackHolder);
+
+  if (window.PMContent && window.PMContent.fetchSiteSettings) {
+    window.PMContent.fetchSiteSettings().then(function (content) {
+      var company = content && content.company;
+      if (!company) return;
+      render(
+        typeof company.copyrightStartYear === 'number' ? company.copyrightStartYear : fallbackStart,
+        company.copyrightHolder || company.legalName || fallbackHolder
+      );
+    }).catch(function () {});
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
 })();
 </script>
 <!-- FOOTER:END -->

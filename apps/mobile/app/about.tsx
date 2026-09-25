@@ -8,7 +8,7 @@ import { DARK_COLORS, LIGHT_COLORS, font, space, type ColorPalette } from "../li
 import { useThemedStyles, useThemePreference } from "../lib/theme-provider";
 import { Card } from "../components/ui";
 import { BrandSymbol, BrandWordmark } from "../components/BrandLogo";
-import { fetchPublicSettings } from "../lib/content";
+import { fetchPublicSettings, formatCopyrightYear, type CompanySettings } from "../lib/content";
 
 const SUPPORT_EMAIL = "support@pamarketzw.com";
 const SUPPORT_PHONE = "+971589772645";
@@ -67,6 +67,7 @@ export default function AboutScreen() {
 
   const [supportEmail, setSupportEmail] = useState(SUPPORT_EMAIL);
   const [socialUrls, setSocialUrls] = useState<Record<string, string>>({});
+  const [company, setCompany] = useState<CompanySettings | null>(null);
   useEffect(() => {
     let cancelled = false;
     fetchPublicSettings()
@@ -77,6 +78,7 @@ export default function AboutScreen() {
         if (settings.socialLinks?.tiktok) overrides.tiktok = settings.socialLinks.tiktok;
         if (settings.socialLinks?.instagram) overrides.instagram = settings.socialLinks.instagram;
         setSocialUrls(overrides);
+        if (settings.company) setCompany(settings.company);
       })
       .catch(() => {
         // Failed — the hardcoded values above stay exactly as they are.
@@ -85,6 +87,10 @@ export default function AboutScreen() {
       cancelled = true;
     };
   }, []);
+
+  const copyrightHolder = company?.copyrightHolder || company?.legalName || "PaMarket Zimbabwe";
+  const copyrightYear = formatCopyrightYear(company?.copyrightStartYear);
+  const hasCompanyDetails = !!(company?.legalName || company?.registrationNumber || company?.registeredAddress || company?.regulatoryInfo);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: space.lg, paddingBottom: space.huge }}>
@@ -108,6 +114,21 @@ export default function AboutScreen() {
           trust. Built in Zimbabwe, for Zimbabwe.
         </Text>
       </Card>
+
+      {hasCompanyDetails ? (
+        <>
+          <Text style={styles.groupLabel}>Company</Text>
+          <Card style={{ marginBottom: space.sm }}>
+            {company?.legalName ? <Text style={styles.body}>{company.legalName}</Text> : null}
+            {company?.registrationNumber ? (
+              <Text style={styles.footerText}>Registration No. {company.registrationNumber}</Text>
+            ) : null}
+            {company?.registeredAddress ? <Text style={styles.footerText}>{company.registeredAddress}</Text> : null}
+            {company?.regulatoryInfo ? <Text style={styles.footerText}>{company.regulatoryInfo}</Text> : null}
+            {company?.legalNotice ? <Text style={styles.footerText}>{company.legalNotice}</Text> : null}
+          </Card>
+        </>
+      ) : null}
 
       <Text style={styles.groupLabel}>Legal</Text>
       <Card padded={false} style={styles.group}>
@@ -147,7 +168,9 @@ export default function AboutScreen() {
       </Card>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>© {new Date().getFullYear()} PaMarket Zimbabwe</Text>
+        <Text style={styles.footerText}>
+          © {copyrightYear} {copyrightHolder}
+        </Text>
         <Text style={styles.footerText}>All rights reserved · Made in Zimbabwe</Text>
       </View>
     </ScrollView>
