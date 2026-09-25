@@ -122,6 +122,9 @@ function usePushNotifications() {
   // closing over one, so a token that arrives after sign-out is dropped
   // instead of being written back under the user who just left.
   useEffect(() => {
+    // React Native Firebase has no web app in the Expo web runtime. Calling
+    // getMessaging() there throws before the requested route can render.
+    if (Platform.OS === "web") return;
     // Modular API (RN Firebase v22+) — messaging().onTokenRefresh(...) is
     // the deprecated namespaced form; onTokenRefresh(instance, listener) is
     // its direct, functionally identical replacement.
