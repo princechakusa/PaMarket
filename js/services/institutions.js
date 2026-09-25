@@ -126,8 +126,32 @@
     });
   }
 
+  // Listings tagged to any institution, for the directory's "Campus
+  // Listings" feed. Institution-only listings are excluded (they stay on
+  // their institution's own page), same rule as the mobile directory.
+  // opts: { type, q, sort: 'newest'|'price_asc'|'price_desc', limit, offset }
+  // Resolves { rows, total }. type/q filter by the listing's institution via
+  // an inner embed so pagination and the total stay correct.
+  var CAMPUS_COLUMNS='id,title,price,currency,category,province,city,suburb,photos,created_at,institution_id';
+  function fetchCampusListings(opts){
+    opts=opts||{};
+    var inner=!!(opts.type||opts.q);
+    var qp=['status=eq.active','institution_id=not.is.null',
+      'or=(attributes->>institution_visibility.is.null,attributes->>institution_visibility.neq.institution_only)'];
+    if(opts.type)qp.push('institutions.type=eq.'+esc(opts.type));
+    if(opts.q){var q=esc(opts.q.replace(/[(),*]/g,' ').trim());if(q)qp.push('institutions.or=(official_name.ilike.*'+q+'*,short_name.ilike.*'+q+'*)');}
+    var filters=qp.join('&');
+    var embed='institutions'+(inner?'!inner':'')+'(id,official_name,short_name,type)';
+    var order=opts.sort==='price_asc'?'price.asc.nullslast,created_at.desc':opts.sort==='price_desc'?'price.desc.nullslast,created_at.desc':'created_at.desc';
+    var page='listings?'+filters+'&select='+CAMPUS_COLUMNS+','+embed+'&order='+order+'&limit='+(opts.limit||12)+'&offset='+(opts.offset||0);
+    var count='listings?'+filters+'&select=id'+(inner?',institutions!inner(id)':'');
+    return Promise.all([transport.fetchJson(page),transport.exactCount(count).catch(function(){return null;})])
+      .then(function(r){return {rows:r[0]||[],total:r[1]};});
+  }
+
   return Object.freeze({
     TYPE_LABEL:TYPE_LABEL,
+    fetchCampusListings:fetchCampusListings,
     TYPES:TYPES,
     fetchInstitutions:fetchInstitutions,
     fetchInstitutionById:fetchInstitutionById,

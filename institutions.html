@@ -79,6 +79,33 @@
 
 <div class="px-margin md:px-margin-desktop max-w-7xl mx-auto w-full pt-space-lg pb-space-2xl">
 
+<section id="campusListings" class="mb-space-xl scroll-mt-40">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm mb-space-md">
+<div class="flex flex-col gap-1 max-w-2xl">
+<span class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">From every campus</span>
+<h2 class="font-headline-sm text-headline-sm text-on-background" id="campusHeading">Campus Listings</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Items students, parents and staff have posted to their school or university, shown here and on the institution's own page.</p>
+</div>
+<div class="flex items-center gap-3 flex-wrap shrink-0">
+<span id="campusCount" class="font-body-sm text-body-sm text-on-surface-variant"></span>
+<label class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">Sort
+<select id="campusSort" class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-1.5 font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary">
+<option value="newest">Newest</option>
+<option value="price_asc">Price: Low to High</option>
+<option value="price_desc">Price: High to Low</option>
+</select></label>
+<a href="post-campus-ad.html" class="px-4 py-2 bg-secondary hover:bg-on-secondary-container text-on-secondary rounded-lg font-label-md text-label-md font-bold flex items-center gap-1.5 transition-colors"><span class="material-symbols-outlined text-[18px]">add_circle</span>Post a campus item</a>
+</div>
+</div>
+<div id="campusGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-space-base"></div>
+<div id="campusEmpty" class="hidden bg-surface-container-lowest rounded-xl p-space-xl text-center">
+<span class="material-symbols-outlined text-[40px] text-on-surface-variant">storefront</span>
+<h3 class="font-headline-sm text-body-lg font-bold text-on-surface mt-2" id="campusEmptyTitle">No campus listings yet</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1" id="campusEmptyText">Be the first to post an item for your school or university.</p>
+</div>
+<div class="flex justify-center mt-space-md"><button id="campusMore" type="button" class="hidden px-6 py-2.5 bg-surface-container-lowest border border-outline-variant hover:border-primary text-primary rounded-lg font-label-md text-label-md font-bold transition-colors">Load more</button></div>
+</section>
+
 <div class="flex items-center justify-between gap-3 flex-wrap mb-space-md">
 <h2 class="font-headline-sm text-headline-sm text-on-background" id="listHeading">All Institutions</h2>
 </div>
@@ -179,113 +206,6 @@
 <script src="js/services/institutions.js"></script>
 <script src="js/session.js" defer></script>
 <script src="js/cookie-consent.js" defer></script>
-<script>
-(function(){
-  'use strict';
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function doHeaderSearch(){
-    var q = (document.getElementById('headerSearchInput')||{}).value || '';
-    window.location.href = 'browse.html' + (q.trim() ? '?q=' + encodeURIComponent(q.trim()) : '');
-  }
-  window.doHeaderSearch = doHeaderSearch;
-  window.PM_CURRENCY = window.PM_CURRENCY || 'USD';
-  window.setCurrency = function(cur){
-    window.PM_CURRENCY = cur;
-    var usdBtn = document.getElementById('currencyUsdBtn'), zigBtn = document.getElementById('currencyZigBtn');
-    var activeCls = 'px-2 py-1 rounded bg-primary text-on-primary font-bold shadow-sm';
-    var inactiveCls = 'px-2 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors font-medium';
-    if (usdBtn && zigBtn) { usdBtn.className = cur==='USD'?activeCls:inactiveCls; zigBtn.className = cur==='ZiG'?activeCls:inactiveCls; }
-  };
-
-  var TYPE_LABEL = window.PMInstitutions.TYPE_LABEL;
-  var TYPES = window.PMInstitutions.TYPES;
-  var TYPE_ICON = { university: 'account_balance', high_school: 'school', organization: 'groups' };
-  var state = { type: '', q: '' };
-
-  window.onSearch = function(){
-    state.q = document.getElementById('instSearchInput').value.trim();
-    loadList();
-  };
-  window.setType = function(t){
-    state.type = state.type === t ? '' : t;
-    renderChips();
-    loadList();
-  };
-
-  var METRIC_ICON = { university: 'account_balance', high_school: 'backpack', organization: 'groups' };
-  function metricTile(icon, value, label){
-    return '<div class="bg-surface-container-low p-3.5 rounded-lg flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm shrink-0"><span class="material-symbols-outlined text-[22px]">'+icon+'</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold text-on-surface">'+value+'</span><span class="font-label-sm text-label-sm text-outline">'+label+'</span></div></div>';
-  }
-  function renderMetricsLedger(counts){
-    var total = TYPES.reduce(function(sum,t){ return sum + (counts[t]||0); }, 0);
-    var html = metricTile('school', total, 'Accredited Institutions');
-    TYPES.forEach(function(t){ html += metricTile(METRIC_ICON[t], counts[t]||0, TYPE_LABEL[t]+'s'); });
-    document.getElementById('metricsLedger').innerHTML = html;
-  }
-
-  function renderChips(){
-    var html = '<button onclick="setType(\'\')" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-body-sm font-body-sm font-bold border transition-colors ' + (!state.type ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container-lowest text-on-surface border-outline-variant hover:border-primary') + '">All Institutions</button>';
-    TYPES.forEach(function(t){
-      html += '<button onclick="setType(\''+t+'\')" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-body-sm font-body-sm font-bold border transition-colors ' + (state.type===t ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container-lowest text-on-surface border-outline-variant hover:border-primary') + '"><span class="material-symbols-outlined text-[16px]">'+TYPE_ICON[t]+'</span>'+TYPE_LABEL[t]+' <span id="typeCount-'+t+'" class="'+(state.type===t?'bg-on-primary/20':'bg-surface-container')+' rounded-full px-2 py-0.5 text-label-sm font-label-sm"></span></button>';
-    });
-    document.getElementById('typeChipRow').innerHTML = html;
-    window.PMInstitutions.fetchInstitutionTypeCounts().then(function(counts){
-      TYPES.forEach(function(t){
-        var el = document.getElementById('typeCount-'+t);
-        if (el) el.textContent = counts[t] || 0;
-      });
-      renderMetricsLedger(counts);
-    }).catch(function(){});
-  }
-
-  var listingCounts = {};
-  function abbreviation(inst){
-    return (inst.short_name && inst.short_name.trim()) || (inst.official_name||'I').trim().charAt(0).toUpperCase();
-  }
-  function instCard(inst){
-    var name = inst.short_name || inst.official_name;
-    var loc = [inst.suburb, inst.city_name].filter(Boolean).join(', ') || inst.province_name || 'Zimbabwe';
-    var abbr = abbreviation(inst);
-    var logo = inst.logo_url ? '<img src="'+inst.logo_url+'" alt="'+esc(name)+'" class="w-full h-full object-contain"/>' : '<span class="font-headline-sm font-extrabold text-primary '+(abbr.length>3?'text-[13px]':'text-[15px]')+'">'+esc(abbr)+'</span>';
-    var count = listingCounts[inst.id] || 0;
-    return '<article class="bg-surface-container-lowest rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow group">' +
-      '<div class="flex flex-col gap-3">' +
-      '<div class="flex items-center gap-3"><div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center overflow-hidden shrink-0">'+logo+'</div>' +
-      '<div class="min-w-0"><h3 class="font-headline-sm text-headline-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">'+esc(name)+'</h3><span class="font-label-sm text-label-sm text-outline truncate block">'+esc(loc)+'</span></div></div>' +
-      '<span class="w-fit px-2 py-0.5 rounded bg-surface-container-low text-secondary font-label-sm text-label-sm font-semibold uppercase tracking-wide">'+esc(TYPE_LABEL[inst.type]||inst.type)+'</span>' +
-      (inst.description ? '<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">'+esc(inst.description)+'</p>' : '') +
-      '</div>' +
-      '<div class="pt-3 mt-3 border-t border-outline-variant/30 flex flex-col gap-2">' +
-      '<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm"><span class="flex items-center gap-1">'+count+' Active Peer Listing'+(count===1?'':'s')+'</span></div>' +
-      '<a href="institution.html?id='+encodeURIComponent(inst.id)+'" class="w-full py-2 bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md rounded-lg flex items-center justify-center gap-1.5 transition-colors"><span>Enter Campus Marketplace</span><span class="material-symbols-outlined text-[16px]">arrow_forward</span></a>' +
-      '</div></article>';
-  }
-  function loadList(){
-    var opts = { limit: 100 };
-    if (state.type) opts.type = state.type;
-    if (state.q) opts.q = state.q;
-    document.getElementById('listHeading').textContent = state.type ? (TYPE_LABEL[state.type] + 's') : 'All Institutions';
-    window.PMInstitutions.fetchInstitutions(opts).then(function(rows){
-      var grid = document.getElementById('instGrid');
-      var empty = document.getElementById('emptyState');
-      if (!rows.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); document.getElementById('showingCount').textContent = ''; return; }
-      empty.classList.add('hidden');
-      grid.innerHTML = rows.map(instCard).join('');
-      document.getElementById('showingCount').textContent = 'Showing ' + rows.length + ' institution' + (rows.length===1?'':'s');
-    }).catch(function(){
-      document.getElementById('instGrid').innerHTML = '';
-      document.getElementById('emptyState').classList.remove('hidden');
-    });
-  }
-
-  window.PMInstitutions.fetchInstitutionListingCounts().then(function(counts){
-    listingCounts = counts || {};
-    loadList();
-  }).catch(function(){});
-
-  renderChips();
-  loadList();
-})();
-</script>
+<script src="js/pages-institutions.js"></script>
 <script src="js/services/fx-rate.js" defer></script>
 </body></html>
