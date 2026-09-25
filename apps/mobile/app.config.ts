@@ -276,4 +276,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       projectId: "d3ca5977-65b4-4690-b686-198e1a83ffd1",
     },
   },
+  // OTA updates for JS/asset-only changes (bug fixes, copy, config) without
+  // an App Store/Play Store release. "appVersion" ties each update to the
+  // native `version` above, matching how this app already tracks builds by
+  // hand (see the ios.buildNumber comment history) -- an update built
+  // against one version is only ever offered to installs on that same
+  // version, so a change that needs a new native module or permission still
+  // requires a real store build, never a silent OTA push of incompatible JS.
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/d3ca5977-65b4-4690-b686-198e1a83ffd1",
+    enabled: true,
+    checkAutomatically: "ON_LOAD",
+    fallbackToCacheTimeout: 0,
+  },
 });
