@@ -1,26 +1,34 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
-import type { JobApplication } from "../../lib/jobs";
+import {
+  APPLICATION_STATUS_LABEL,
+  APPLICATION_TERMINAL_STATUSES,
+  withdrawApplication,
+  type ApplicationStatus,
+  type JobApplication,
+} from "../../lib/jobs";
 import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { toast } from "../../components/ui/Toast";
 
-function buildStatusTones(color: ColorPalette): Record<string, string> {
+function buildStatusTones(color: ColorPalette): Record<ApplicationStatus, string> {
   return {
     pending: color.gold,
+    reviewing: color.gold,
     shortlisted: color.success,
+    interview: color.success,
+    offered: color.success,
+    hired: color.success,
     declined: color.danger,
+    withdrawn: color.textMuted,
   };
 }
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  shortlisted: "Shortlisted",
-  declined: "Not selected",
-};
+const STATUS_LABELS = APPLICATION_STATUS_LABEL;
 
 function timeAgo(dateString: string): string {
   const days = Math.floor((Date.now() - new Date(dateString).getTime()) / 86400000);
@@ -89,6 +97,7 @@ export default function MyApplicationsScreen() {
           renderItem={({ item }) => {
             const statusColor = statusTones[item.status] || color.textMuted;
             const label = STATUS_LABELS[item.status] || item.status;
+            const canWithdraw = !APPLICATION_TERMINAL_STATUSES.includes(item.status);
             return (
               <Pressable
                 style={styles.card}
@@ -104,6 +113,35 @@ export default function MyApplicationsScreen() {
                 </View>
                 <Text style={styles.company}>{item.company}</Text>
                 <Text style={styles.appliedAt}>Applied {timeAgo(item.applied_at)}</Text>
+                {canWithdraw ? (
+                  <Pressable
+                    style={styles.withdrawBtn}
+                    onPress={() =>
+                      Alert.alert(
+                        "Withdraw application?",
+                        "You can't undo this once withdrawn.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Withdraw",
+                            style: "destructive",
+                            onPress: async () => {
+                              const result = await withdrawApplication(item.id);
+                              if (result.ok) {
+                                toast("Application withdrawn");
+                                load();
+                              } else {
+                                toast(result.error || "Could not withdraw application");
+                              }
+                            },
+                          },
+                        ]
+                      )
+                    }
+                  >
+                    <Text style={styles.withdrawBtnText}>Withdraw</Text>
+                  </Pressable>
+                ) : null}
               </Pressable>
             );
           }}
@@ -137,5 +175,7 @@ function buildStyles(color: ColorPalette) {
   statusPillText: { fontSize: 11, fontWeight: "700" },
   company: { fontSize: 13, color: color.textSub, marginBottom: 4 },
   appliedAt: { fontSize: 12, color: color.textMuted },
+  withdrawBtn: { alignSelf: "flex-start", marginTop: 10 },
+  withdrawBtnText: { fontSize: 12.5, fontWeight: "700", color: color.danger },
   });
 }

@@ -77,6 +77,7 @@
 <div class="lg:col-span-5 flex items-center bg-surface-container-low px-3 py-2 rounded"><span class="material-symbols-outlined text-outline text-[20px] mr-2">search</span><input id="jobKeywordInput" class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="Job title, skill, or company keyword..." type="text"/></div>
 <div class="lg:col-span-4 flex items-center bg-surface-container-low px-3 py-2 rounded"><span class="material-symbols-outlined text-outline text-[20px] mr-2">location_on</span><select id="jobProvinceInput" class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none cursor-pointer"><option value="">All 10 Provinces</option><option value="Harare">Harare Metropolitan</option><option value="Bulawayo">Bulawayo Metropolitan</option><option value="Manicaland">Manicaland</option><option value="Mashonaland East">Mashonaland East</option><option value="Mashonaland West">Mashonaland West</option><option value="Mashonaland Central">Mashonaland Central</option><option value="Masvingo">Masvingo</option><option value="Matabeleland North">Matabeleland North</option><option value="Matabeleland South">Matabeleland South</option><option value="Midlands">Midlands</option></select></div>
 <div class="lg:col-span-3"><button class="w-full h-full min-h-[44px] bg-secondary hover:bg-on-secondary-container text-on-secondary font-label-md text-label-md font-bold px-4 py-2.5 rounded flex items-center justify-center gap-1.5 transition-colors shadow-sm" type="submit"><span class="material-symbols-outlined text-[18px]">manage_search</span><span>Find Vacancies</span></button></div>
+<div class="lg:col-span-3 flex items-center bg-surface-container-low px-3 py-2 rounded"><span class="material-symbols-outlined text-outline text-[20px] mr-2">location_city</span><input id="jobCityInput" class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="City / town" type="text"/></div>
 </form>
 </div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -109,6 +110,24 @@
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold block mb-1">Industry</span>
 <div id="industryFilters" class="space-y-1"></div>
 </div>
+<div class="space-y-1 pt-2 border-t border-surface-container-high">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold block mb-1">Experience</span>
+<div id="experienceFilters" class="flex flex-wrap gap-1.5"></div>
+</div>
+<div class="space-y-1 pt-2 border-t border-surface-container-high">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold block mb-1">Work Mode</span>
+<div id="remoteFilters" class="flex flex-wrap gap-1.5"></div>
+</div>
+<div class="space-y-2 pt-2 border-t border-surface-container-high">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold block mb-1">Salary Range (USD)</span>
+<div class="flex items-center gap-2">
+<input id="jobSalaryMinInput" type="number" min="0" class="w-full bg-surface-container-low px-2 py-1.5 rounded font-body-sm text-body-sm text-on-surface focus:outline-none" placeholder="Min"/>
+<span class="text-on-surface-variant">&ndash;</span>
+<input id="jobSalaryMaxInput" type="number" min="0" class="w-full bg-surface-container-low px-2 py-1.5 rounded font-body-sm text-body-sm text-on-surface focus:outline-none" placeholder="Max"/>
+</div>
+<label class="flex items-center gap-2 pt-1 cursor-pointer"><input id="jobNegotiableInput" type="checkbox" class="w-4 h-4 accent-primary rounded"/><span class="font-body-sm text-body-sm text-on-surface-variant">Negotiable only</span></label>
+<button onclick="applySalaryFilters()" type="button" class="w-full mt-1 bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold px-3 py-1.5 rounded transition-colors">Apply salary filter</button>
+</div>
 </div>
 
 <div id="sectorChartCard" class="hidden bg-surface-container-lowest p-space-base rounded-xl shadow-sm space-y-2">
@@ -122,7 +141,7 @@
 <div class="lg:col-span-8 flex flex-col gap-3">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-surface-container-lowest p-3 rounded-xl shadow-sm">
 <span id="listHeading" class="font-headline-sm text-headline-sm text-on-surface font-bold">Active Vacancy Ledger</span>
-<div class="flex items-center gap-2 text-label-sm font-label-sm text-on-surface-variant shrink-0"><span>Sort:</span><select id="sortSelect" onchange="applyFilters()" class="bg-surface-container-low text-on-surface px-2 py-1 rounded font-semibold focus:outline-none cursor-pointer"><option value="created_at.desc">Latest Published</option><option value="price.desc">Highest Pay</option><option value="price.asc">Lowest Pay</option></select></div>
+<div class="flex items-center gap-2 text-label-sm font-label-sm text-on-surface-variant shrink-0"><span>Sort:</span><select id="sortSelect" class="bg-surface-container-low text-on-surface px-2 py-1 rounded font-semibold focus:outline-none cursor-pointer" disabled><option value="created_at.desc">Latest Published</option></select></div>
 </div>
 <div id="jobsList" class="flex flex-col gap-3"></div>
 <div id="jobsEmpty" class="hidden bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-xl p-space-2xl text-center">
@@ -174,6 +193,7 @@
 <script src="js/services/saved-content.js"></script>
 <script src="js/services/listings.js"></script>
 <script src="js/services/fx-rate.js"></script>
+<script src="js/marketplace-data.js"></script>
 <script src="js/session.js" defer></script>
 <script src="js/cookie-consent.js" defer></script>
 <script>
@@ -233,40 +253,99 @@
     });
     return out;
   }
+  // Structured fields (job_type_label/industry_label/salary_*/remote_type)
+  // come directly from search_active_jobs() once a job has a job_postings
+  // row (migration 2+). A job without one yet (not backfilled, or posted
+  // before the structured columns existed) reports these as null — fall
+  // back to the legacy description-blob parse for that one job only, never
+  // for the whole list, so old and new jobs render identically either way.
   function jobType(l){
+    if (l.job_type_label) return l.job_type_label;
     var parsed = parseJobDescription(l.description);
     return (parsed['JOB TYPE'] || '').split('\n')[0].trim() || null;
   }
   function industryOf(l){
+    if (l.industry_label) return l.industry_label;
     var parsed = parseJobDescription(l.description);
     return (parsed.INDUSTRY || '').split('\n')[0].trim() || null;
   }
+  var REMOTE_LABEL = { on_site: 'On-site', hybrid: 'Hybrid', remote: 'Remote' };
+  var EXPERIENCE_LABEL = { entry: 'Entry level', mid: 'Mid level', senior: 'Senior', expert: 'Expert' };
+  function salaryText(l){
+    if (l.salary_negotiable) return 'Negotiable';
+    if (l.salary_min == null && l.salary_max == null) return null;
+    var cur = l.salary_currency || 'USD';
+    if (l.salary_min != null && l.salary_max != null && l.salary_min !== l.salary_max) return cur + ' ' + l.salary_min + '–' + l.salary_max;
+    return cur + ' ' + (l.salary_min != null ? l.salary_min : l.salary_max);
+  }
 
-  var state = { q: '', province: '', workType: '', industry: '', sort: 'created_at.desc', page: 0 };
+  // Filtering/search/pagination all happen server-side via search_active_jobs()
+  // (the same RPC the mobile app uses — PM.searchJobsStructured wraps it with
+  // the same fallback to the original 4-param signature). jobTypeId/industryId
+  // are resolved against the live taxonomy fetched once below, matching the
+  // exact 5 job_types / 20 job_industries rows seeded in Supabase — never a
+  // second hardcoded copy of that list.
+  var state = {
+    q: '', province: '', city: '',
+    jobTypeId: null, industryId: null, experienceLevel: null, remoteType: null,
+    salaryMin: null, salaryMax: null, negotiableOnly: false,
+    page: 0,
+  };
   var PAGE_SIZE = 8;
   var lastRows = [];
+  var hasMore = false;
   var savedIds = {};
+  var taxonomy = { jobTypes: [], industries: [] };
 
   window.applyFilters = function(){
     state.q = document.getElementById('jobKeywordInput').value.trim();
     state.province = document.getElementById('jobProvinceInput').value;
-    state.sort = document.getElementById('sortSelect').value;
+    state.city = document.getElementById('jobCityInput').value.trim();
+    state.page = 0;
+    loadJobs();
+  };
+  window.applySalaryFilters = function(){
+    var min = document.getElementById('jobSalaryMinInput').value;
+    var max = document.getElementById('jobSalaryMaxInput').value;
+    state.salaryMin = min ? Number(min) : null;
+    state.salaryMax = max ? Number(max) : null;
+    state.negotiableOnly = document.getElementById('jobNegotiableInput').checked;
     state.page = 0;
     loadJobs();
   };
   window.resetFilters = function(){
-    state.workType = ''; state.industry = '';
-    renderWorkTypeFilters(); renderIndustryFilters(); renderList();
+    state.jobTypeId = null; state.industryId = null; state.experienceLevel = null; state.remoteType = null;
+    state.salaryMin = null; state.salaryMax = null; state.negotiableOnly = false;
+    document.getElementById('jobSalaryMinInput').value = '';
+    document.getElementById('jobSalaryMaxInput').value = '';
+    document.getElementById('jobNegotiableInput').checked = false;
+    state.page = 0;
+    renderTaxonomyFilters();
+    loadJobs();
   };
-  window.setWorkType = function(t){
-    state.workType = state.workType === t ? '' : t;
-    renderWorkTypeFilters();
-    renderList();
+  window.setJobTypeId = function(id){
+    state.jobTypeId = state.jobTypeId === id ? null : id;
+    state.page = 0;
+    renderTaxonomyFilters();
+    loadJobs();
   };
-  window.setIndustry = function(t){
-    state.industry = state.industry === t ? '' : t;
-    renderIndustryFilters();
-    renderList();
+  window.setIndustryId = function(id){
+    state.industryId = state.industryId === id ? null : id;
+    state.page = 0;
+    renderTaxonomyFilters();
+    loadJobs();
+  };
+  window.setExperienceLevel = function(v){
+    state.experienceLevel = state.experienceLevel === v ? null : v;
+    state.page = 0;
+    renderTaxonomyFilters();
+    loadJobs();
+  };
+  window.setRemoteType = function(v){
+    state.remoteType = state.remoteType === v ? null : v;
+    state.page = 0;
+    renderTaxonomyFilters();
+    loadJobs();
   };
   window.changePage = function(dir){
     state.page = Math.max(0, state.page + dir);
@@ -274,28 +353,31 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  function checkboxFilterRow(label, count, checked, onclick){
-    return '<label onclick="event.preventDefault();'+onclick+'" class="flex items-center justify-between p-2 rounded-lg '+(checked?'bg-primary/10':'hover:bg-surface-container-low')+' cursor-pointer transition-colors"><div class="flex items-center gap-2"><input type="checkbox" '+(checked?'checked':'')+' class="w-4 h-4 accent-primary rounded pointer-events-none" readonly><span class="font-body-md text-body-md text-on-surface">'+esc(label)+'</span></div><span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">'+count+'</span></label>';
+  function chipRow(label, active, onclick){
+    return '<button type="button" onclick="'+onclick+'" class="px-2.5 py-1.5 rounded-lg font-body-sm text-body-sm text-left transition-colors '+(active?'bg-primary text-on-primary font-semibold':'bg-surface-container-low text-on-surface hover:bg-surface-container-high')+'">'+esc(label)+'</button>';
   }
 
-  function renderWorkTypeFilters(){
-    var counts = {};
-    lastRows.forEach(function(l){ var t = jobType(l); if (t) counts[t] = (counts[t]||0) + 1; });
-    var types = Object.keys(counts);
-    if (!types.length) { document.getElementById('workTypeFilters').innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">No job types on active listings yet.</p>'; return; }
-    document.getElementById('workTypeFilters').innerHTML = types.map(function(t){
-      return checkboxFilterRow(t, counts[t], state.workType===t, "setWorkType('"+t.replace(/'/g,"\\'")+"')");
+  function renderTaxonomyFilters(){
+    var jtEl = document.getElementById('workTypeFilters');
+    jtEl.innerHTML = taxonomy.jobTypes.length
+      ? taxonomy.jobTypes.map(function(t){ return chipRow(t.label, state.jobTypeId===t.id, "setJobTypeId('"+t.id+"')"); }).join('')
+      : '<p class="font-body-sm text-body-sm text-on-surface-variant">Loading…</p>';
+    jtEl.className = 'flex flex-wrap gap-1.5';
+
+    var indEl = document.getElementById('industryFilters');
+    indEl.innerHTML = taxonomy.industries.length
+      ? taxonomy.industries.map(function(t){ return chipRow(t.label, state.industryId===t.id, "setIndustryId('"+t.id+"')"); }).join('')
+      : '<p class="font-body-sm text-body-sm text-on-surface-variant">Loading…</p>';
+    indEl.className = 'flex flex-wrap gap-1.5';
+
+    document.getElementById('experienceFilters').innerHTML = Object.keys(EXPERIENCE_LABEL).map(function(v){
+      return chipRow(EXPERIENCE_LABEL[v], state.experienceLevel===v, "setExperienceLevel('"+v+"')");
+    }).join('');
+    document.getElementById('remoteFilters').innerHTML = Object.keys(REMOTE_LABEL).map(function(v){
+      return chipRow(REMOTE_LABEL[v], state.remoteType===v, "setRemoteType('"+v+"')");
     }).join('');
   }
-  function renderIndustryFilters(){
-    var counts = {};
-    lastRows.forEach(function(l){ var t = industryOf(l); if (t) counts[t] = (counts[t]||0) + 1; });
-    var types = Object.keys(counts);
-    if (!types.length) { document.getElementById('industryFilters').innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">No industry tags on active listings yet.</p>'; return; }
-    document.getElementById('industryFilters').innerHTML = types.map(function(t){
-      return checkboxFilterRow(t, counts[t], state.industry===t, "setIndustry('"+t.replace(/'/g,"\\'")+"')");
-    }).join('');
-  }
+
   function renderSectorChart(){
     var counts = {}, total = 0;
     lastRows.forEach(function(l){ var t = industryOf(l); if (t) { counts[t] = (counts[t]||0) + 1; total++; } });
@@ -312,6 +394,8 @@
   function jobCard(l){
     var type = jobType(l);
     var industry = industryOf(l);
+    var remote = l.remote_type ? REMOTE_LABEL[l.remote_type] : null;
+    var salary = salaryText(l);
     var loc = [l.city, l.province].filter(Boolean).join(', ') || 'Zimbabwe';
     var parsedDesc = parseJobDescription(l.description);
     var excerptSource = parsedDesc.DESCRIPTION || l.description || '';
@@ -324,12 +408,13 @@
       '<div class="flex items-center gap-3"><div class="w-14 h-14 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-headline-sm shrink-0 shadow-inner">'+esc((l.seller_name||'J').trim().charAt(0).toUpperCase())+'</div>' +
       '<div><span class="text-label-sm font-label-sm font-bold text-on-surface-variant">'+esc(l.seller_name||'PaMarket Employer')+'</span>' +
       '<h2 class="font-headline-md text-headline-md text-on-surface font-bold hover:text-primary transition-colors"><a href="job.html?id='+l.id+'">'+esc(l.title||'Untitled role')+'</a></h2></div></div>' +
-      '<div class="flex flex-col items-end shrink-0"><span class="font-price-primary text-price-primary text-primary font-black">'+priceText(l.price)+'</span><span class="font-price-secondary text-price-secondary text-on-surface-variant">Posted '+timeAgo(l.created_at)+'</span></div>' +
+      '<div class="flex flex-col items-end shrink-0"><span class="font-price-primary text-price-primary text-primary font-black">'+(salary || priceText(l.price))+'</span><span class="font-price-secondary text-price-secondary text-on-surface-variant">Posted '+timeAgo(l.created_at)+'</span></div>' +
       '</div>' +
       '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 font-body-sm text-body-sm text-on-surface-variant py-1.5 px-3 bg-surface-container-low/70 rounded-lg">' +
       '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-primary">location_on</span>'+esc(loc)+'</span>' +
       (type ? '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-primary">work</span>'+esc(type)+'</span>' : '') +
       (industry ? '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-secondary">factory</span>'+esc(industry)+'</span>' : '') +
+      (remote ? '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-primary">home_work</span>'+esc(remote)+'</span>' : '') +
       '</div>' +
       (excerpt ? '<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">'+esc(excerpt)+(excerptSource.length>220?'…':'')+'</p>' : '') +
       '<div class="flex flex-wrap items-center justify-between gap-2 pt-1">' +
@@ -360,52 +445,64 @@
   };
 
   function renderList(){
-    var filtered = lastRows.filter(function(l){
-      if (state.workType && jobType(l) !== state.workType) return false;
-      if (state.industry && industryOf(l) !== state.industry) return false;
-      return true;
-    });
     var list = document.getElementById('jobsList');
     var empty = document.getElementById('jobsEmpty');
-    if (!filtered.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    if (!lastRows.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
-    list.innerHTML = filtered.map(jobCard).join('');
+    list.innerHTML = lastRows.map(jobCard).join('');
   }
 
+  // All filtering/search/pagination happens server-side through
+  // search_active_jobs() (via PM.searchJobsStructured, which already falls
+  // back to the RPC's original 4-param signature for an un-migrated
+  // database) — never a client-side re-filter of whatever page happened to
+  // load. Fetching PAGE_SIZE+1 rows is the standard way to know whether a
+  // "Next" page exists without a separate total-count RPC (search_active_jobs
+  // returns matching rows only, not a count) — the extra row is trimmed
+  // before rendering, never shown.
   function loadJobs(){
-    var opts = { category: 'jobs', limit: PAGE_SIZE, offset: state.page * PAGE_SIZE, order: state.sort };
-    if (state.q) opts.q = state.q;
-    if (state.province) opts.province = state.province;
-    Promise.all([
-      window.PMListings.fetchListings(opts),
-      window.PMListings.fetchListingCount(opts)
-    ]).then(function(results){
-      lastRows = results[0] || [];
-      var total = results[1] || 0;
-      renderWorkTypeFilters();
-      renderIndustryFilters();
+    var list = document.getElementById('jobsList');
+    list.innerHTML = '<div class="text-center py-space-2xl text-on-surface-variant font-body-md">Searching vacancies…</div>';
+    document.getElementById('jobsEmpty').classList.add('hidden');
+
+    window.PM.searchJobsStructured({
+      query: state.q || null,
+      province: state.province || null,
+      city: state.city || null,
+      jobTypeId: state.jobTypeId,
+      industryId: state.industryId,
+      experienceLevel: state.experienceLevel,
+      remoteType: state.remoteType,
+      salaryMin: state.salaryMin,
+      salaryMax: state.salaryMax,
+      salaryNegotiableOnly: state.negotiableOnly,
+      limit: PAGE_SIZE + 1,
+      offset: state.page * PAGE_SIZE,
+    }).then(function(rows){
+      rows = rows || [];
+      hasMore = rows.length > PAGE_SIZE;
+      lastRows = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
       renderSectorChart();
       renderList();
-      document.getElementById('statActiveJobs').textContent = total;
-      document.getElementById('listHeading').textContent = 'Active Vacancy Ledger (' + total + ')';
+      document.getElementById('listHeading').textContent = 'Active Vacancy Ledger';
       if (window.PMSavedContent) {
-        window.PMSavedContent.listFavouriteIds().then(function(rows){
-          savedIds = {}; (rows||[]).forEach(function(r){ savedIds[r.listing_id] = true; });
+        window.PMSavedContent.listFavouriteIds().then(function(favRows){
+          savedIds = {}; (favRows||[]).forEach(function(r){ savedIds[r.listing_id] = true; });
           renderList();
         }).catch(function(){});
       }
       var pag = document.getElementById('paginationBar');
-      if (total > PAGE_SIZE) {
+      if (state.page > 0 || hasMore) {
         pag.classList.remove('hidden');
-        var pages = Math.ceil(total / PAGE_SIZE);
-        document.getElementById('paginationLabel').textContent = 'Page ' + (state.page+1) + ' of ' + pages + ' (' + total + ' vacancies)';
+        document.getElementById('paginationLabel').textContent = 'Page ' + (state.page+1) + ' (' + lastRows.length + ' shown)';
         document.getElementById('prevPageBtn').disabled = state.page === 0;
-        document.getElementById('nextPageBtn').disabled = state.page+1 >= pages;
+        document.getElementById('nextPageBtn').disabled = !hasMore;
       } else {
         pag.classList.add('hidden');
       }
     }).catch(function(){
       lastRows = [];
+      hasMore = false;
       renderList();
     });
   }
@@ -418,8 +515,25 @@
     }).catch(function(){});
   }
 
+  // "Active Pipeline" is the overall open-vacancy count, independent of the
+  // filters currently applied — same intent as before (an at-a-glance market
+  // size stat), just no longer conflated with "how many match my filters"
+  // now that filtering is real and server-side.
+  function loadActivePipelineStat(){
+    if (!window.PM || !window.PM.fetchExactCount) return;
+    window.PM.fetchExactCount('listings', 'category=eq.jobs&status=eq.active&expires_at=gt.'+encodeURIComponent(new Date().toISOString()))
+      .then(function(count){ document.getElementById('statActiveJobs').textContent = count; })
+      .catch(function(){});
+  }
+
+  if (window.PM && window.PM.fetchJobTaxonomy) {
+    window.PM.fetchJobTaxonomy().then(function(t){ taxonomy = t; renderTaxonomyFilters(); }).catch(function(){});
+  } else {
+    renderTaxonomyFilters();
+  }
   loadJobs();
   loadEmployerCount();
+  loadActivePipelineStat();
   if (window.PMFxRate) window.PMFxRate.getRate().then(function(r){ ZIG_RATE = r.rate; renderList(); });
 })();
 </script>

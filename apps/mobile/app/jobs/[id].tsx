@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -27,11 +28,13 @@ import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { businessInitials } from "../../lib/businesses";
 import {
   hasStructuredJobSections,
+  getJobDetail,
   jobCompany,
   jobSalary,
   jobType,
   parseJobBlock,
   parseJobField,
+  type JobPostingDetail,
   parseJobList,
   stripJobMetadataLines,
 } from "../../lib/jobs";
@@ -205,6 +208,10 @@ export default function JobDetailScreen() {
     muted: c.textMuted,
   }));
   const [job, setJob] = useState<JobListing | null>(null);
+  // Structured fields, when this listing has a job_postings row. Absent
+  // (null) fields fall back to legacy description parsing below — this is
+  // never treated as an error, just "not structured for this posting yet."
+  const [structuredDetail, setStructuredDetail] = useState<JobPostingDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savingBusy, setSavingBusy] = useState(false);
@@ -242,6 +249,13 @@ export default function JobDetailScreen() {
       .eq("id", id)
       .maybeSingle();
     setJob((data as JobListing) ?? null);
+    // Best-effort: get_job_detail() only exists once the Jobs
+    // Reconstruction migrations are applied. A failure here (function not
+    // found on an unmigrated database, or a legacy row with no
+    // job_postings entry) just leaves structuredDetail null, and every
+    // display field below already falls back to legacy parsing for that
+    // case — this can never make the screen render less than it does today.
+    getJobDetail(id).then(setStructuredDetail).catch(() => setStructuredDetail(null));
   }, [id]);
 
   useEffect(() => {
@@ -303,25 +317,34 @@ export default function JobDetailScreen() {
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
     .join(", ");
-  const type = jobType(job.description);
-  const expLabel = parseJobField(job.description, "EXPERIENCE");
-  const industry = parseJobField(job.description, "INDUSTRY");
+  const type = structuredDetail?.job_type_label ?? jobType(job.description);
+  const expLabel = structuredDetail?.experience_level ?? parseJobField(job.description, "EXPERIENCE");
+  const industry = structuredDetail?.industry_label ?? parseJobField(job.description, "INDUSTRY");
   const about =
     parseJobBlock(job.description, "DESCRIPTION") ||
     // Fallback for posts with no DESCRIPTION: block. Metadata lines are
     // stripped first so storage markers never surface as visible prose.
     stripJobMetadataLines(job.description);
   const responsibilities = parseJobList(
-    parseJobBlock(job.description, "RESPONSIBILITIES")
+    structuredDetail?.responsibilities ?? parseJobBlock(job.description, "RESPONSIBILITIES")
   );
   const requirements = parseJobList(
-    parseJobBlock(job.description, "REQUIREMENTS")
+    structuredDetail?.requirements ?? parseJobBlock(job.description, "REQUIREMENTS")
   );
+  const benefits = parseJobList(structuredDetail?.benefits ?? "");
   const howToApply = parseJobBlock(job.description, "HOW TO APPLY");
-  const skills = parseJobField(job.description, "SKILLS")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const skills =
+    structuredDetail?.skills?.length
+      ? structuredDetail.skills
+      : parseJobField(job.description, "SKILLS")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+  const remoteTypeLabel =
+    structuredDetail?.remote_type === "on_site" ? "On-site"
+    : structuredDetail?.remote_type === "hybrid" ? "Hybrid"
+    : structuredDetail?.remote_type === "remote" ? "Remote"
+    : null;
   // Legacy and hand-edited posts have no generated headings; for those `about`
   // already falls back to the whole description, so the bulleted sections stay
   // hidden and the page still reads cleanly instead of breaking.
@@ -359,6 +382,11 @@ export default function JobDetailScreen() {
       value: location,
       icon: <PinIcon c={tones.brand} size={16} />,
     },
+    remoteTypeLabel && {
+      label: "Work mode",
+      value: remoteTypeLabel,
+      icon: <BuildingIcon c={tones.brand} size={16} />,
+    },
   ].filter(Boolean) as { label: string; value: string; icon: React.ReactNode }[];
 
   async function buyBoost(productId: string) {
@@ -392,6 +420,25 @@ export default function JobDetailScreen() {
       return;
     }
     router.push({ pathname: "/jobs/apply/[id]", params: { id: job!.id } });
+  }
+
+  // Employers can disable in-app applications and require direct contact
+  // instead (Phase B application configuration). Default to in-app when the
+  // structured row doesn't exist yet (pre-migration or a legacy posting).
+  const acceptsInApp = structuredDetail
+    ? structuredDetail.accepts_in_app_applications !== false
+    : true;
+
+  function contactEmployer() {
+    const email = structuredDetail?.how_to_apply_email;
+    const phone = structuredDetail?.how_to_apply_phone;
+    if (email) {
+      Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(job!.title)}`);
+    } else if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    } else {
+      toast("See the \"How to apply\" section below for contact details.");
+    }
   }
 
   return (
@@ -525,6 +572,12 @@ export default function JobDetailScreen() {
             styles={styles}
             tick={color.brand}
           />
+          <DetailBullets
+            title="Benefits"
+            items={benefits}
+            styles={styles}
+            tick={color.brand}
+          />
           {skills.length ? (
             <View style={styles.detailBlock}>
               <Text style={styles.sectionTitle}>Skills</Text>
@@ -645,7 +698,15 @@ export default function JobDetailScreen() {
               />
             </View>
             <View style={{ flex: 1.3 }}>
-              <Button label="Apply now" size="lg" onPress={applyNow} />
+              {acceptsInApp ? (
+                <Button label="Apply now" size="lg" onPress={applyNow} />
+              ) : (
+                <Button
+                  label="Contact employer"
+                  size="lg"
+                  onPress={contactEmployer}
+                />
+              )}
             </View>
           </View>
         )}

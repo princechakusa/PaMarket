@@ -176,6 +176,27 @@ window.setCurrency = function(cur){
     </div>
   </div>
 
+  <!-- Employer-verification gate (mirrors apps/mobile/app/jobs/post.tsx's
+       gate: same profiles.company_verified / company_verification_pending
+       check, same copy). The website has no document-upload flow of its
+       own, so an unverified employer is directed to the app, where that
+       flow already exists, rather than a new one being built here. -->
+  <div class="pj-card pf-gate hidden" id="pjVerifyGate">
+    <div class="pf-gate-ic">
+      <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+    </div>
+    <h2>Employer verification required</h2>
+    <p>We verify every employer before their roles go live. It keeps fraudulent postings off PaMarket and means candidates trust the jobs they apply to. Registered companies and sole traders are both welcome — sole traders only need a National ID or Passport, and most reviews are completed within one business day.</p>
+    <div id="pjVerifyPending" class="hidden pj-balance" style="margin-top:16px">
+      <span class="grow">Under review — your documents are with our team. We'll notify you the moment you're approved, and this page will unlock automatically.</span>
+    </div>
+    <div id="pjVerifyAction" class="pf-gate-btns">
+      <a class="btn btn-navy" href="download.html">Verify in the PaMarket App</a>
+      <a class="btn btn-outline" href="https://wa.me/971589772645" target="_blank" rel="noopener">Ask on WhatsApp</a>
+    </div>
+    <p style="margin-top:10px;font-size:12.5px;color:#6b7280">Employer verification currently happens in the PaMarket mobile app (Company Verification). Already verified in the app? Refresh this page.</p>
+  </div>
+
   <!-- Form -->
   <div class="pj-card hidden" id="pjFormCard">
     <div class="pj-balance hidden" id="pjBalance">
@@ -358,6 +379,35 @@ window.setCurrency = function(cur){
   var FREE_JOB_LIMIT = 2; // matches app RECRUITER_PLAN_ENTITLEMENTS.free.activeJobPosts
   var INDUSTRIES = ['Accounting / Finance','Administration / Office','Agriculture / Farming','Construction / Trades','Customer Service','Driving / Logistics','Education / Teaching','Engineering','Events / Hospitality','General Worker / Labour','Healthcare / Medical','Human Resources','IT / Technology','Legal','Manufacturing','Marketing / Sales','NGO / Development','Retail','Security','Other'];
   var JOB_TYPES = ['Full-time','Part-time','Contract','Freelance','Internship'];
+  // Consolidated Jobs Reconstruction taxonomy slugs (supabase/migrations/
+  // 20260925140000_jobs_recon_01_taxonomy.sql), positionally aligned with
+  // INDUSTRIES/JOB_TYPES above so the legacy label picker can resolve a
+  // structured id without changing the UI. Resolved by slug (not position)
+  // against the live-fetched taxonomy below, so a reorder on either side
+  // can't silently mismatch.
+  var INDUSTRY_SLUGS = ['accounting_finance','administration_office','agriculture_farming','construction_trades','customer_service','driving_logistics','education_training','engineering','events_hospitality','general_worker_labour','healthcare_medical','human_resources','it_technology','legal','manufacturing','sales_marketing','ngo_development','retail','security','other'];
+  var JOB_TYPE_SLUGS = ['full_time','part_time','contract','freelance','internship'];
+  var jobTaxonomy = { jobTypes: [], industries: [] };
+  if (window.PM && PM.fetchJobTaxonomy) {
+    PM.fetchJobTaxonomy().then(function(t){ jobTaxonomy = t; }).catch(function(){});
+  }
+  function idBySlug(list, slug){
+    var row = (list || []).filter(function(r){ return r.slug === slug; })[0];
+    return row ? row.id : null;
+  }
+  // Mirrors the SQL backfill's salary classification (Stage 4 migration):
+  // negotiable keyword -> {null,null,true}; "500-800" -> range; a bare
+  // number -> min=max; anything else -> all null (free-text salary field).
+  function parseSalary(raw){
+    var s = (raw || '').trim();
+    if (!s) return { min: null, max: null, negotiable: false };
+    if (/negotiable/i.test(s)) return { min: null, max: null, negotiable: true };
+    var range = s.match(/(\d[\d,.]*)\s*-\s*(\d[\d,.]*)/);
+    if (range) return { min: parseFloat(range[1].replace(/,/g,'')), max: parseFloat(range[2].replace(/,/g,'')), negotiable: false };
+    var bare = s.match(/^\$?\s*(\d[\d,.]*)\s*$/);
+    if (bare) { var v = parseFloat(bare[1].replace(/,/g,'')); return { min: v, max: v, negotiable: false }; }
+    return { min: null, max: null, negotiable: false };
+  }
 
   var $=function(id){return document.getElementById(id);};
   var session=(window.PM&&PM.getSession)?PM.getSession():null;
@@ -368,6 +418,32 @@ window.setCurrency = function(cur){
     $('pjSignIn').href='auth?return='+encodeURIComponent(location.pathname+location.search);
     return;
   }
+
+  // Employer verification (profiles.company_verified/company_verification_pending)
+  // — UX only. The RPC (create_job_listing, wrapped unchanged by v2) is the
+  // real enforcement point either way; an unverified employer who somehow
+  // reached the form and submitted would still be rejected server-side
+  // exactly as before this change. This just tells them why, up front,
+  // instead of letting them fill the whole form first — mirrors
+  // apps/mobile/app/jobs/post.tsx's gate.
+  fetch(window.SUPABASE_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id)+'&select=company_verified,company_verification_pending', {
+    headers: { apikey: window.SUPABASE_ANON_KEY, Authorization: 'Bearer '+session.access_token }
+  }).then(function(res){ return res.ok ? res.json() : []; }).then(function(rows){
+    var p = rows[0] || {};
+    if (p.company_verified) { runFormInit(); return; }
+    $('pjVerifyGate').classList.remove('hidden');
+    if (p.company_verification_pending) {
+      $('pjVerifyPending').classList.remove('hidden');
+      $('pjVerifyAction').classList.add('hidden');
+    }
+  }).catch(function(){
+    // Network/RLS failure reading the flag must never silently let an
+    // unverified employer through — fail closed to the gate, same as the
+    // RPC itself would reject the post anyway.
+    $('pjVerifyGate').classList.remove('hidden');
+  });
+
+  function runFormInit(){
   $('pjFormCard').classList.remove('hidden');
 
   // Populate selects
@@ -518,39 +594,85 @@ window.setCurrency = function(cur){
     // checks entitlement, inserts the row and spends a job credit in one
     // transaction, so a failed spend can never leave a job published but
     // unpaid. Mirrors apps/mobile/app/jobs/post.tsx exactly.
-    PM.createJobListing({
+    var catIndex = INDUSTRIES.indexOf(cat);
+    var typeIndex = JOB_TYPES.indexOf(jobType);
+    var salaryParsed = parseSalary(salary);
+
+    // v2 wraps the original create_job_listing() unchanged for every
+    // authorization/credit check (see supabase/migrations/
+    // 20260925140500_jobs_recon_06_rpcs.sql), then atomically sets the
+    // structured job_postings row, custom_questions and the 180-day Jobs
+    // visibility default in the same call — no more separate follow-up
+    // PATCH for questions that could silently fail after the job was
+    // already live.
+    function onPosted(){
+      $('pjFormCard').classList.add('hidden');
+      var s=$('pjSuccess'); s.classList.remove('hidden');
+      $('pjSuccessTitle').textContent='Job posted!';
+      $('pjSuccessMsg').textContent='Candidates can now find and apply to your vacancy on the Jobs board.';
+      window.scrollTo(0,0);
+    }
+    function onPostFailed(err){
+      btn.disabled=false; btn.textContent='Post Job';
+      alert('Could not post the job: '+((err&&err.message)||'please try again.'));
+    }
+    // Legacy fallback — the original, untouched create_job_listing() plus
+    // the old best-effort custom_questions PATCH. Used only when v2 isn't
+    // deployed to the database yet, so posting a job never breaks while
+    // the Jobs Reconstruction migrations are pending manual application.
+    function postJobLegacy(){
+      PM.createJobListing({
+        title:title, description:fullDesc,
+        price:(parseFloat(salary)||0), currency:'USD',
+        province:prov, city:city,
+        sellerName:company,
+        sellerPhone:phone
+      }).then(function(r){
+        if(!r || r.ok!==true) throw new Error((r && r.msg) || 'The job could not be posted.');
+        var afterQuestions=Promise.resolve();
+        if(QUESTIONS.length){
+          afterQuestions=PM.updateListing(r.listing_id,{custom_questions:QUESTIONS.slice()}).catch(function(){});
+        }
+        return afterQuestions.then(onPosted);
+      }).catch(onPostFailed);
+    }
+
+    PM.createJobListingV2({
       title:title, description:fullDesc,
       price:(parseFloat(salary)||0), currency:'USD',
       province:prov, city:city,
       // Jobs show the employer as the "seller"; use the company name (always,
       // for a consistent employer label, and mandatory when posting anon).
       sellerName:company,
-      sellerPhone:phone
+      sellerPhone:phone,
+      jobTypeId: typeIndex > -1 ? idBySlug(jobTaxonomy.jobTypes, JOB_TYPE_SLUGS[typeIndex]) : null,
+      industryId: catIndex > -1 ? idBySlug(jobTaxonomy.industries, INDUSTRY_SLUGS[catIndex]) : null,
+      salaryMin: salaryParsed.min,
+      salaryMax: salaryParsed.max,
+      salaryNegotiable: salaryParsed.negotiable,
+      salaryCurrency: 'USD',
+      responsibilities: resp || null,
+      requirements: reqs || null,
+      howToApplyEmail: email || null,
+      howToApplyPhone: phone || null,
+      customQuestions: QUESTIONS.length ? QUESTIONS.slice() : null,
     }).then(function(r){
       if(!r || r.ok!==true){
         throw new Error((r && r.msg) || 'The job could not be posted.');
       }
-      // Screening questions have no slot on the RPC (mobile doesn't support
-      // them either), so attach them as a best-effort follow-up PATCH on the
-      // listing we just created and own. The insert-only RPC guard trigger
-      // doesn't apply to updates, so this is allowed by normal ownership RLS.
-      // Never let this fail the post itself — the job is already live.
-      var afterQuestions=Promise.resolve();
-      if(QUESTIONS.length){
-        afterQuestions=PM.updateListing(r.listing_id,{custom_questions:QUESTIONS.slice()}).catch(function(){});
-      }
-      return afterQuestions.then(function(){
-        $('pjFormCard').classList.add('hidden');
-        var s=$('pjSuccess'); s.classList.remove('hidden');
-        $('pjSuccessTitle').textContent='Job posted!';
-        $('pjSuccessMsg').textContent='Candidates can now find and apply to your vacancy on the Jobs board.';
-        window.scrollTo(0,0);
-      });
+      onPosted();
     }).catch(function(err){
-      btn.disabled=false; btn.textContent='Post Job';
-      alert('Could not post the job: '+((err&&err.message)||'please try again.'));
+      // PGRST202 / "Could not find the function" = create_job_listing_v2
+      // doesn't exist yet on this database (migration 6 not yet applied
+      // manually in Supabase Studio) — fall back rather than fail the post.
+      if (err && /PGRST202|Could not find the function|404/i.test(err.message || '')) {
+        postJobLegacy();
+        return;
+      }
+      onPostFailed(err);
     });
   });
+  } // end runFormInit
 })();
 </script>
 </body>

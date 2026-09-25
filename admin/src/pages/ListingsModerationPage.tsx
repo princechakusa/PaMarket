@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  listListings, getListing, getListingReports, updateListingStatus, listApplicationsForJob,
+  listListings, getListing, getListingReports, updateListingStatus, listApplicationsForJob, getJobPosting,
   LISTINGS_PAGE_SIZE, LISTING_CATEGORIES, LISTING_STATUSES,
-  type ListingRow, type ListingDetail, type ListingReportRow, type ApplicationRow,
+  type ListingRow, type ListingDetail, type ListingReportRow, type ApplicationRow, type JobPostingDetail,
 } from '../services/marketplace/query';
+
+const APPLICATION_STATUS_LABEL: Record<string, string> = {
+  pending: 'New', reviewing: 'Under Review', shortlisted: 'Shortlisted', interview: 'Interview',
+  offered: 'Offer Extended', hired: 'Hired', declined: 'Declined', withdrawn: 'Withdrawn',
+};
 import { useAuth } from '../security/auth-context';
 
 const provinces = ['Harare', 'Bulawayo', 'Manicaland', 'Midlands', 'Masvingo', 'Mashonaland East', 'Mashonaland West', 'Mashonaland Central', 'Matabeleland North', 'Matabeleland South'];
@@ -35,6 +40,7 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
   const [detail, setDetail] = useState<ListingDetail | null>(null);
   const [reports, setReports] = useState<ListingReportRow[]>([]);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
+  const [jobPosting, setJobPosting] = useState<JobPostingDetail | null>(null);
   const [detailPhase, setDetailPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [detailError, setDetailError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -62,14 +68,17 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
     const reportsResult = await getListingReports(id);
     if (reportsResult.error) { setDetailError(reportsResult.error.message); setDetailPhase('error'); return; }
     let apps: ApplicationRow[] = [];
+    let posting: JobPostingDetail | null = null;
     if (listingResult.data?.category === 'jobs') {
       const appsResult = await listApplicationsForJob(id);
       if (appsResult.error) { setDetailError(appsResult.error.message); setDetailPhase('error'); return; }
       apps = appsResult.data ?? [];
+      posting = await getJobPosting(id);
     }
     setDetail(listingResult.data);
     setReports(reportsResult.data ?? []);
     setApplications(apps);
+    setJobPosting(posting);
     setDetailPhase('ready');
   }, []);
 
@@ -162,8 +171,19 @@ export function ListingsModerationPage({ fixedCategory }: { fixedCategory?: stri
             {reports.length === 0 ? <p>None</p> : <ul>{reports.map((r) => <li key={r.id}>{r.status} · {r.reason ?? 'No reason given'} · severity: {r.severity ?? '—'}</li>)}</ul>}
           </section>
 
+          {detail.category === 'jobs' && jobPosting?.has_structured_data && <section><h3>Structured job data</h3><dl>
+            {jobPosting.job_type_label && <div><dt>Job type</dt><dd>{jobPosting.job_type_label}</dd></div>}
+            {jobPosting.industry_label && <div><dt>Industry</dt><dd>{jobPosting.industry_label}</dd></div>}
+            {jobPosting.experience_level && <div><dt>Experience</dt><dd>{jobPosting.experience_level}</dd></div>}
+            {jobPosting.remote_type && <div><dt>Work mode</dt><dd>{jobPosting.remote_type}</dd></div>}
+            {(jobPosting.salary_min != null || jobPosting.salary_max != null || jobPosting.salary_negotiable) && (
+              <div><dt>Salary</dt><dd>{jobPosting.salary_negotiable ? 'Negotiable' : `${jobPosting.salary_currency ?? 'USD'} ${jobPosting.salary_min ?? '?'}${jobPosting.salary_max && jobPosting.salary_max !== jobPosting.salary_min ? `–${jobPosting.salary_max}` : ''}`}</dd></div>
+            )}
+            {jobPosting.skills && jobPosting.skills.length > 0 && <div><dt>Skills</dt><dd>{jobPosting.skills.join(', ')}</dd></div>}
+          </dl></section>}
+
           {detail.category === 'jobs' && <section><h3>Applications ({applications.length})</h3>
-            {applications.length === 0 ? <p>None</p> : <ul>{applications.map((a) => <li key={a.id}>{a.applicant_name ?? 'Applicant'} · {a.status} · {fmtDate(a.applied_at)}</li>)}</ul>}
+            {applications.length === 0 ? <p>None</p> : <ul>{applications.map((a) => <li key={a.id}>{a.applicant_name ?? 'Applicant'} · {APPLICATION_STATUS_LABEL[a.status ?? ''] ?? a.status} · {fmtDate(a.applied_at)}</li>)}</ul>}
           </section>}
 
           <section><h3>Moderation actions</h3>

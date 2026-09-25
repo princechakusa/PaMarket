@@ -61,6 +61,24 @@
 <a href="jobs.html" class="inline-block mt-4 bg-primary text-on-primary px-5 py-2.5 rounded font-label-md text-label-md font-bold">Browse All Jobs</a>
 </div>
 
+<div id="applyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+<div class="bg-surface-container-lowest rounded-lg shadow-xl w-full max-w-md p-space-lg">
+<div class="flex items-center justify-between mb-space-base">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Apply for this role</h3>
+<button onclick="closeApplyModal()" class="text-on-surface-variant hover:text-on-surface" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div id="applyModalError" class="hidden text-body-sm font-body-sm text-error mb-space-sm"></div>
+<div class="flex flex-col gap-space-sm">
+<input id="applyName" type="text" placeholder="Your full name" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface" />
+<input id="applyPhone" type="tel" placeholder="Phone number" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface" />
+<input id="applyEmail" type="email" placeholder="Email address" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface" />
+<textarea id="applyMessage" rows="4" placeholder="Cover message (optional)" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface resize-none"></textarea>
+</div>
+<button id="applySubmitBtn" onclick="submitApplication()" class="mt-space-base w-full bg-primary hover:bg-on-primary-fixed-variant text-on-primary px-6 py-3 rounded font-label-md text-label-md font-bold shadow-sm transition-all">Submit Application</button>
+<p class="mt-space-sm text-body-sm font-body-sm text-on-surface-variant text-center">You must be signed in to apply. Never pay to apply for any role on PaMarket.</p>
+</div>
+</div>
+
 <div id="jobContent" class="hidden">
 
 <div class="w-full bg-surface-container-lowest py-space-xl px-margin md:px-margin-desktop">
@@ -185,6 +203,7 @@
 <script src="js/services/service-transport.js"></script>
 <script src="js/services/listings.js"></script>
 <script src="js/services/saved-content.js"></script>
+<script src="js/marketplace-data.js"></script>
 <script src="js/session.js" defer></script>
 <script src="js/cookie-consent.js" defer></script>
 <script>
@@ -234,6 +253,67 @@
     if (!window.PMSavedContent) return;
     window.PMSavedContent.isListingSaved(id).then(setSaveUI).catch(function(){});
   }
+  window.openApplyModal = function(){
+    var s = window.PM && window.PM.getSession && window.PM.getSession();
+    if (!s || !s.access_token) {
+      window.location.href = 'auth.html?return=' + encodeURIComponent('job.html?id=' + (window._currentJob && window._currentJob.id));
+      return;
+    }
+    document.getElementById('applyModalError').classList.add('hidden');
+    document.getElementById('applyModal').classList.remove('hidden');
+  };
+  window.closeApplyModal = function(){
+    document.getElementById('applyModal').classList.add('hidden');
+  };
+  window.submitApplication = function(){
+    var l = window._currentJob;
+    if (!l || !window.PM) return;
+    var name = document.getElementById('applyName').value.trim();
+    var phone = document.getElementById('applyPhone').value.trim();
+    var email = document.getElementById('applyEmail').value.trim();
+    var message = document.getElementById('applyMessage').value.trim();
+    var errEl = document.getElementById('applyModalError');
+    if (!name || (!phone && !email)) {
+      errEl.textContent = 'Please add your name and a phone number or email.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    var btn = document.getElementById('applySubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    var parsed = parseJobDescription(l.description);
+    var company = (parsed.COMPANY || l.seller_name || 'PaMarket Employer').split('\n')[0].trim();
+    window.PM.applyToJob({
+      jobId: l.id,
+      jobTitle: l.title,
+      company: company,
+      name: name,
+      phone: phone,
+      email: email,
+      message: message,
+      employerId: l.seller_id,
+    }).then(function(result){
+      btn.disabled = false;
+      btn.textContent = 'Submit Application';
+      if (!result.ok && result.duplicate) {
+        errEl.textContent = 'You already applied for this job.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      closeApplyModal();
+      document.getElementById('applyButtons').innerHTML = '<span class="flex-1 bg-surface-container text-on-surface text-center py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary">check_circle</span>Application Submitted</span>';
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = 'Submit Application';
+      if (err && err.message === 'not-authenticated') {
+        window.location.href = 'auth.html?return=' + encodeURIComponent('job.html?id=' + l.id);
+        return;
+      }
+      errEl.textContent = 'Could not submit your application. Please try again.';
+      errEl.classList.remove('hidden');
+    });
+  };
+
   window.toggleSave = function(){
     var l = window._currentJob;
     if (!l || !window.PMSavedContent) return;
@@ -320,11 +400,34 @@
 
     document.getElementById('jobPrice').textContent = priceText(l.price);
 
-    var buttons = '';
-    if (applyHref) buttons += '<a href="'+applyHref+'" class="flex-1 bg-primary hover:bg-on-primary-fixed-variant text-on-primary px-6 py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-sm transition-all"><span class="material-symbols-outlined text-[18px] text-primary-fixed">send</span><span>Apply via Email</span></a>';
-    if (waHref) buttons += '<a href="'+waHref+'" target="_blank" rel="noopener" class="flex-1 bg-primary hover:bg-on-primary-fixed-variant text-on-primary px-6 py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-sm transition-all"><span class="material-symbols-outlined text-[18px] text-primary-fixed">chat</span><span>Apply via WhatsApp</span></a>';
-    if (!applyHref && !waHref) buttons = '<span class="flex-1 bg-surface-container text-on-surface-variant text-center py-3 rounded font-label-md text-label-md">No contact details provided</span>';
-    document.getElementById('applyButtons').innerHTML = buttons;
+    // In-app apply is the primary path when the employer allows it (default
+    // true — see accepts_in_app_applications, migration 2). getJobDetail is
+    // best-effort: null pre-migration falls back to the old contact-only
+    // buttons exactly as before, so this never regresses an unmigrated job.
+    var inAppBtn = '<button onclick="openApplyModal()" class="flex-1 bg-primary hover:bg-on-primary-fixed-variant text-on-primary px-6 py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-sm transition-all w-full"><span class="material-symbols-outlined text-[18px] text-primary-fixed">send</span><span>Apply Now</span></button>';
+    var appliedBtn = '<span class="flex-1 bg-surface-container text-on-surface text-center py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary">check_circle</span>Application Submitted</span>';
+
+    function renderContactButtons(){
+      var buttons = '';
+      if (applyHref) buttons += '<a href="'+applyHref+'" class="flex-1 bg-surface-container text-on-surface px-6 py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-sm transition-all"><span class="material-symbols-outlined text-[18px]">mail</span><span>Apply via Email</span></a>';
+      if (waHref) buttons += '<a href="'+waHref+'" target="_blank" rel="noopener" class="flex-1 bg-surface-container text-on-surface px-6 py-3 rounded font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-sm transition-all"><span class="material-symbols-outlined text-[18px]">chat</span><span>Apply via WhatsApp</span></a>';
+      if (!applyHref && !waHref && !window.PM) buttons = '<span class="flex-1 bg-surface-container text-on-surface-variant text-center py-3 rounded font-label-md text-label-md">No contact details provided</span>';
+      return buttons;
+    }
+
+    if (window.PM) {
+      window.PM.hasAppliedToJob(l.id).then(function(applied){
+        if (applied) { document.getElementById('applyButtons').innerHTML = appliedBtn; return; }
+        window.PM.getJobDetail(l.id).then(function(detail){
+          var acceptsInApp = !detail || detail.accepts_in_app_applications !== false;
+          document.getElementById('applyButtons').innerHTML = (acceptsInApp ? inAppBtn : '') + renderContactButtons();
+        });
+      }).catch(function(){
+        document.getElementById('applyButtons').innerHTML = inAppBtn + renderContactButtons();
+      });
+    } else {
+      document.getElementById('applyButtons').innerHTML = renderContactButtons();
+    }
 
     var n = 1;
     var sections = [

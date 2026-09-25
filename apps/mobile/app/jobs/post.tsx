@@ -30,9 +30,23 @@ import {
   JOB_CATEGORIES,
   JOB_DESCRIPTION_MAX,
   JOB_TYPES,
+  EXP_LEVEL_LABEL,
+  fetchJobTaxonomy,
   jobDescriptionOverflow,
+  parseSalaryText,
   recruiterPlanEntitlements,
+  type JobTaxonomyOption,
 } from "../../lib/jobs";
+
+const EXP_SLUG_BY_LABEL: Record<string, string> = Object.fromEntries(
+  Object.entries(EXP_LEVEL_LABEL).map(([slug, label]) => [label, slug])
+);
+
+const REMOTE_TYPES: { value: "on_site" | "hybrid" | "remote"; label: string }[] = [
+  { value: "on_site", label: "On-site" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "remote", label: "Remote" },
+];
 import { friendlyError } from "../../lib/safety";
 import { JOB_CREDIT_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
@@ -204,6 +218,16 @@ export default function PostJobScreen() {
   const [responsibilities, setResponsibilities] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [remoteType, setRemoteType] = useState<"on_site" | "hybrid" | "remote" | null>(null);
+  const [jobTypes, setJobTypes] = useState<JobTaxonomyOption[]>([]);
+  const [industries, setIndustries] = useState<JobTaxonomyOption[]>([]);
+
+  useEffect(() => {
+    fetchJobTaxonomy().then(({ jobTypes: jt, industries: ind }) => {
+      setJobTypes(jt);
+      setIndustries(ind);
+    });
+  }, []);
 
   const [planId, setPlanId] = useState("free");
   const [activeJobPosts, setActiveJobPosts] = useState(0);
@@ -425,7 +449,18 @@ export default function PostJobScreen() {
     // re-verified active above, never the raw route param. Omitting them
     // entirely for a normal post relies on the RPC's own defaults
     // (null / 'public'), matching today's behavior exactly.
-    const { data, error } = await supabase.rpc("create_job_listing", {
+    // Resolved by exact label match against the live taxonomy tables — a
+    // category/type that somehow doesn't match (stale client cache) is
+    // left null rather than guessed, same rule as the backfill migration.
+    const jobTypeId = jobTypes.find((t) => t.label === jobType)?.id ?? null;
+    const industryId = industries.find((i) => i.label === category)?.id ?? null;
+    const parsedSalary = parseSalaryText(salaryLabel);
+
+    // Params shared with the original create_job_listing() — identical to
+    // what this screen sent before v2 existed, so the fallback below is a
+    // byte-for-byte replay of the old, still-fully-working call, not a
+    // second/duplicate posting path.
+    const legacyParams = {
       p_title: title.trim(),
       p_description: fullDescription,
       p_price: parseFloat(finalSalary) || 0,
@@ -437,7 +472,41 @@ export default function PostJobScreen() {
       ...(institutionContext
         ? { p_institution_id: institutionContext.id, p_institution_visibility: institutionVisibility }
         : {}),
+    };
+
+    let { data, error } = await supabase.rpc("create_job_listing_v2", {
+      ...legacyParams,
+      p_job_type_id: jobTypeId,
+      p_industry_id: industryId,
+      p_experience_level: EXP_SLUG_BY_LABEL[experience] ?? null,
+      p_skills: skills.length ? skills : null,
+      p_salary_min: parsedSalary.min,
+      p_salary_max: parsedSalary.max,
+      p_salary_currency: currency,
+      p_salary_negotiable: parsedSalary.negotiable,
+      p_remote_type: remoteType,
+      p_responsibilities: responsibilities.trim() || null,
+      p_requirements: requirements.trim() || null,
+      p_how_to_apply_email: email.trim() || null,
+      p_how_to_apply_phone: phone.trim() || null,
     });
+
+    // create_job_listing_v2 doesn't exist on the live database until
+    // migration 6 is applied — PostgREST reports that as "no matching
+    // function" (PGRST202), not a normal RPC failure. Only that specific
+    // condition falls back; every other error (entitlement, validation,
+    // network) is handled by the existing error path below exactly as
+    // before, unchanged. The fallback calls the original, untouched
+    // create_job_listing() — same authorization/credit/atomicity logic
+    // this screen already relied on pre-v2 — so posting keeps working
+    // right now and upgrades to structured data the moment v2 is applied,
+    // with no further app changes needed.
+    if (
+      error &&
+      (error.code === "PGRST202" || /Could not find the function/i.test(error.message || ""))
+    ) {
+      ({ data, error } = await supabase.rpc("create_job_listing", legacyParams));
+    }
 
     if (error) {
       setIsSubmitting(false);
@@ -779,6 +848,20 @@ export default function PostJobScreen() {
                     label={lv}
                     active={experience === lv}
                     onPress={() => setExperience(experience === lv ? "" : lv)}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View>
+              <FieldLabel text="Work mode" />
+              <View style={styles.chipsWrap}>
+                {REMOTE_TYPES.map((r) => (
+                  <Chip
+                    key={r.value}
+                    label={r.label}
+                    active={remoteType === r.value}
+                    onPress={() => setRemoteType(remoteType === r.value ? null : r.value)}
                   />
                 ))}
               </View>

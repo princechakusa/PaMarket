@@ -49,8 +49,16 @@ button{font-family:inherit;cursor:pointer}
 .ap-for{font-size:12.5px;color:var(--mute)}
 .ap-status{margin-left:auto;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:20px}
 .ap-status.pending{background:#FEF3C7;color:#92400E}
-.ap-status.shortlisted{background:#DCFCE7;color:#166534}
+.ap-status.reviewing{background:#DBEAFE;color:#1E40AF}
+.ap-status.shortlisted{background:#E0E7FF;color:#3730A3}
+.ap-status.interview{background:#FEF9C3;color:#854D0E}
+.ap-status.offered{background:#DCFCE7;color:#166534}
+.ap-status.hired{background:#DCFCE7;color:#166534}
 .ap-status.declined{background:#FEE2E2;color:#991B1B}
+.ap-status.withdrawn{background:#F3F4F6;color:#4B5563}
+.ap-note{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.ap-note textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13px;font-family:inherit;resize:vertical;min-height:44px}
+.ap-note .lbl{font-size:11.5px;font-weight:700;color:var(--mute);margin-bottom:6px}
 .ap-contact{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .ap-contact a{font-size:12.5px;font-weight:700;color:var(--navy);border:1px solid var(--line);border-radius:9px;padding:6px 11px}
 .ap-msg{font-size:13.5px;color:var(--sub);line-height:1.6;margin-top:12px;background:var(--paper);border-radius:10px;padding:11px 13px;white-space:pre-wrap}
@@ -181,7 +189,13 @@ window.setCurrency = function(cur){
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function initials(n){return (String(n||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('')||'?').toUpperCase();}
-  function statusLabel(s){return s==='shortlisted'?'Shortlisted':s==='declined'?'Declined':'New';}
+  var STATUS_LABELS={pending:'New',reviewing:'Under Review',shortlisted:'Shortlisted',interview:'Interview',offered:'Offer Extended',hired:'Hired',declined:'Declined',withdrawn:'Withdrawn'};
+  function statusLabel(s){return STATUS_LABELS[s]||s;}
+  // Mirrors the exact forward path validate_application_status_transition
+  // (migration 4) allows an employer — one legal "advance" per stage.
+  var ADVANCE={pending:'reviewing',reviewing:'shortlisted',shortlisted:'interview',interview:'offered',offered:'hired'};
+  var ADVANCE_LABEL={pending:'Move to review',reviewing:'Shortlist',shortlisted:'Schedule interview',interview:'Extend offer',offered:'Mark hired'};
+  var TERMINAL=['hired','declined','withdrawn'];
 
   var ALL=[], activeJob='all';
 
@@ -217,9 +231,13 @@ window.setCurrency = function(cur){
           return '<div class="qa"><div class="q">'+esc(qa.question)+'</div><div class="a">'+esc(qa.answer)+'</div></div>';
         }).join('')+'</div>':'')+
         '<div class="ap-actions">'+
-          (st!=='shortlisted'?'<button class="btn btn-primary" data-act="shortlisted">Shortlist</button>':'')+
-          (st!=='declined'?'<button class="btn btn-outline" data-act="declined">Decline</button>':'')+
-          (st!=='pending'?'<button class="btn btn-outline" data-act="pending">Reset</button>':'')+
+          (ADVANCE[st]?'<button class="btn btn-primary" data-act="'+ADVANCE[st]+'">'+esc(ADVANCE_LABEL[st])+'</button>':'')+
+          (TERMINAL.indexOf(st)===-1?'<button class="btn btn-outline" data-act="declined">Decline</button>':'')+
+        '</div>'+
+        '<div class="ap-note">'+
+          '<div class="lbl">Private note (only you can see this)</div>'+
+          '<textarea data-note placeholder="Add a note about this candidate…"></textarea>'+
+          '<button class="btn btn-outline" data-save-note style="margin-top:8px">Save note</button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -235,6 +253,21 @@ window.setCurrency = function(cur){
           }).catch(function(){ card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=false;}); alert('Could not update.'); });
         });
       });
+      var noteBtn=card.querySelector('[data-save-note]');
+      if(noteBtn){
+        noteBtn.addEventListener('click',function(){
+          var id=card.getAttribute('data-id');
+          var textarea=card.querySelector('[data-note]');
+          var note=(textarea.value||'').trim();
+          if(!note||!PM.addApplicationNote)return;
+          noteBtn.disabled=true; noteBtn.textContent='Saving…';
+          PM.addApplicationNote(id,note).then(function(r){
+            noteBtn.disabled=false; noteBtn.textContent='Save note';
+            if(r&&r.ok){ textarea.value=''; noteBtn.textContent='Saved ✓'; setTimeout(function(){noteBtn.textContent='Save note';},1500); }
+            else alert((r&&r.error)||'Could not save note.');
+          }).catch(function(){ noteBtn.disabled=false; noteBtn.textContent='Save note'; alert('Could not save note.'); });
+        });
+      }
     });
   }
 

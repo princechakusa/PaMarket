@@ -117,6 +117,36 @@ export type ApplicationRow = {
   message: string | null; status: string | null; applied_at: string | null;
 };
 
+// Jobs Reconstruction Phase 3 — structured job_postings row, read via the
+// public get_job_detail() RPC (same one the mobile/website clients use, so
+// this stays in lockstep with whatever it returns). Best-effort: resolves
+// to null before the migration is applied, or if the listing has no
+// structured row yet, rather than erroring the whole listing detail view.
+export type JobPostingDetail = {
+  listing_id: string; job_type_label: string | null; industry_label: string | null;
+  experience_level: string | null; remote_type: string | null; skills: string[] | null;
+  salary_min: number | null; salary_max: number | null; salary_currency: string | null;
+  salary_negotiable: boolean | null; has_structured_data: boolean;
+};
+
+export async function getJobPosting(listingId: string): Promise<JobPostingDetail | null> {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  try {
+    // get_job_detail() (migration 3) doesn't exist in the generated Database
+    // types yet — those are regenerated from the live schema, which this
+    // migration hasn't been applied to. Cast rather than widen the shared
+    // rpc() signature; regenerate types and drop this cast once applied.
+    const rpc = client.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+    const { data, error } = await rpc('get_job_detail', { p_listing_id: listingId });
+    if (error || !data) return null;
+    const row = Array.isArray(data) ? data[0] : data;
+    return (row as JobPostingDetail) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** applications RLS ("applications: read") already includes is_moderator()
  * — admin/super_admin/moderator can all read every application for any job. */
 export async function listApplicationsForJob(jobId: string): Promise<QueryResult<ApplicationRow[]>> {

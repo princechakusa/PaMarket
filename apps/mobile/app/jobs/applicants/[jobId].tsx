@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { openExternalUrl, openPhone } from "../../../lib/open-url";
 import { getCvSignedUrl, openCvUrl } from "../../../lib/cv";
-import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
@@ -11,8 +11,13 @@ import { color, font, radius, shadow, space, type ColorPalette } from "../../../
 import { useThemedStyles } from "../../../lib/theme-provider";
 import { Avatar, Badge, Button, Card, EmptyState, toast, VerifiedBadge } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
-
-type ApplicationStatus = "pending" | "shortlisted" | "declined";
+import {
+  addApplicationNote,
+  APPLICATION_STATUS_LABEL,
+  APPLICATION_TERMINAL_STATUSES,
+  closeJobListing,
+  type ApplicationStatus,
+} from "../../../lib/jobs";
 
 type JobLite = {
   id: string;
@@ -45,10 +50,35 @@ type ApplicantProfile = {
   job_title: string | null;
 };
 
-const STATUS_META: Record<ApplicationStatus, { label: string; tone: "gold" | "success" | "danger" }> = {
-  pending: { label: "Pending", tone: "gold" },
-  shortlisted: { label: "Shortlisted", tone: "success" },
-  declined: { label: "Not selected", tone: "danger" },
+type BadgeTone = "brand" | "gold" | "success" | "warning" | "danger" | "info" | "neutral";
+
+const STATUS_META: Record<ApplicationStatus, { label: string; tone: BadgeTone }> = {
+  pending: { label: APPLICATION_STATUS_LABEL.pending, tone: "gold" },
+  reviewing: { label: APPLICATION_STATUS_LABEL.reviewing, tone: "info" },
+  shortlisted: { label: APPLICATION_STATUS_LABEL.shortlisted, tone: "brand" },
+  interview: { label: APPLICATION_STATUS_LABEL.interview, tone: "warning" },
+  offered: { label: APPLICATION_STATUS_LABEL.offered, tone: "success" },
+  hired: { label: APPLICATION_STATUS_LABEL.hired, tone: "success" },
+  declined: { label: APPLICATION_STATUS_LABEL.declined, tone: "danger" },
+  withdrawn: { label: APPLICATION_STATUS_LABEL.withdrawn, tone: "neutral" },
+};
+
+// Mirrors the exact forward path the validate_application_status_transition
+// trigger allows for an employer — one legal "advance" per stage, so the UI
+// never offers a move the database would reject.
+const ADVANCE_STATUS: Partial<Record<ApplicationStatus, ApplicationStatus>> = {
+  pending: "reviewing",
+  reviewing: "shortlisted",
+  shortlisted: "interview",
+  interview: "offered",
+  offered: "hired",
+};
+const ADVANCE_LABEL: Partial<Record<ApplicationStatus, string>> = {
+  pending: "Move to review",
+  reviewing: "Shortlist",
+  shortlisted: "Schedule interview",
+  interview: "Extend offer",
+  offered: "Mark hired",
 };
 
 function MailIcon({ c }: { c: string }) {
@@ -106,6 +136,9 @@ export default function JobApplicantsScreen() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [cvOpeningId, setCvOpeningId] = useState<string | null>(null);
   const [messagingId, setMessagingId] = useState<string | null>(null);
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [noteBusyId, setNoteBusyId] = useState<string | null>(null);
+  const [closingJob, setClosingJob] = useState(false);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants", androidNative: true });
 
@@ -190,7 +223,44 @@ export default function JobApplicantsScreen() {
       toast("Could not update application status", 3500, true);
       return;
     }
-    toast(status === "shortlisted" ? "Applicant shortlisted" : status === "declined" ? "Applicant marked not selected" : "Application moved to pending");
+    toast(`Status updated to ${APPLICATION_STATUS_LABEL[status]}`);
+  }
+
+  async function submitNote(app: JobApplicant) {
+    const note = (noteDrafts[app.id] || "").trim();
+    if (!note || noteBusyId) return;
+    setNoteBusyId(app.id);
+    const result = await addApplicationNote(app.id, note);
+    setNoteBusyId(null);
+    if (result.ok) {
+      setNoteDrafts((d) => ({ ...d, [app.id]: "" }));
+      toast("Note saved");
+    } else {
+      toast(result.error || "Could not save note", 3500, true);
+    }
+  }
+
+  function handleCloseJob() {
+    if (!job || closingJob) return;
+    Alert.alert("Close this job?", "Choose how to close hiring for this listing.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Mark as filled", onPress: () => runCloseJob("filled") },
+      { text: "Pause listing", onPress: () => runCloseJob("paused") },
+      { text: "Remove listing", style: "destructive", onPress: () => runCloseJob("removed") },
+    ]);
+  }
+
+  async function runCloseJob(reason: "filled" | "paused" | "removed") {
+    if (!job) return;
+    setClosingJob(true);
+    const result = await closeJobListing(job.id, reason);
+    setClosingJob(false);
+    if (result.ok) {
+      toast(reason === "filled" ? "Job marked as filled" : reason === "paused" ? "Job paused" : "Job removed");
+      router.back();
+    } else {
+      toast(result.error || "Could not update the job", 3500, true);
+    }
   }
 
   async function openChat(app: JobApplicant) {
@@ -282,6 +352,14 @@ export default function JobApplicantsScreen() {
                 <Stat label="Pending" value={counts.pending} styles={styles} />
                 <Stat label="Shortlisted" value={counts.shortlisted} styles={styles} />
               </View>
+              <Button
+                label={closingJob ? "Closing…" : "Close hiring"}
+                variant="secondary"
+                size="sm"
+                loading={closingJob}
+                onPress={handleCloseJob}
+                style={{ marginTop: space.md }}
+              />
             </Card>
             {apps.length ? <Text style={styles.countText}>{apps.length} candidate{apps.length === 1 ? "" : "s"} applied</Text> : null}
           </View>
@@ -303,6 +381,8 @@ export default function JobApplicantsScreen() {
           const meta = STATUS_META[item.status] || STATUS_META.pending;
           const answers = normalizeAnswers(item.answers);
           const isBusy = busyId === item.id;
+          const isTerminal = APPLICATION_TERMINAL_STATUSES.includes(item.status);
+          const nextStatus = ADVANCE_STATUS[item.status];
 
           return (
             <Card style={styles.appCard}>
@@ -375,21 +455,44 @@ export default function JobApplicantsScreen() {
                   loading={cvOpeningId === item.id}
                   onPress={() => viewApplicantCv(item)}
                 />
-                <Button
-                  label="Shortlist"
-                  variant={item.status === "shortlisted" ? "primary" : "secondary"}
-                  size="sm"
-                  loading={isBusy}
-                  disabled={item.status === "shortlisted"}
-                  onPress={() => updateStatus(item, "shortlisted")}
+                {nextStatus ? (
+                  <Button
+                    label={ADVANCE_LABEL[item.status] || "Advance"}
+                    variant="primary"
+                    size="sm"
+                    loading={isBusy}
+                    onPress={() => updateStatus(item, nextStatus)}
+                  />
+                ) : null}
+                {!isTerminal ? (
+                  <Button
+                    label="Decline"
+                    variant="danger"
+                    size="sm"
+                    loading={isBusy}
+                    onPress={() => updateStatus(item, "declined")}
+                  />
+                ) : null}
+              </View>
+
+              <View style={styles.noteBox}>
+                <Text style={styles.messageLabel}>Private note (only you can see this)</Text>
+                <TextInput
+                  style={styles.noteInput}
+                  placeholder="Add a note about this candidate…"
+                  placeholderTextColor={themeColor.textMuted}
+                  value={noteDrafts[item.id] || ""}
+                  onChangeText={(text) => setNoteDrafts((d) => ({ ...d, [item.id]: text }))}
+                  multiline
                 />
                 <Button
-                  label="Decline"
-                  variant={item.status === "declined" ? "danger" : "secondary"}
+                  label={noteBusyId === item.id ? "Saving…" : "Save note"}
+                  variant="secondary"
                   size="sm"
-                  loading={isBusy}
-                  disabled={item.status === "declined"}
-                  onPress={() => updateStatus(item, "declined")}
+                  loading={noteBusyId === item.id}
+                  disabled={!(noteDrafts[item.id] || "").trim()}
+                  onPress={() => submitNote(item)}
+                  style={{ alignSelf: "flex-start" }}
                 />
               </View>
             </Card>
@@ -482,5 +585,24 @@ function buildStyles(color: ColorPalette) {
     },
     contactText: { ...font.caption, color: color.brand, flexShrink: 1 },
     actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+    noteBox: {
+      backgroundColor: color.surfaceAlt,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: color.border,
+      padding: space.md,
+      gap: space.sm,
+    },
+    noteInput: {
+      ...font.sub,
+      color: color.text,
+      minHeight: 44,
+      textAlignVertical: "top",
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: color.border,
+      backgroundColor: color.surface,
+      padding: space.sm,
+    },
   });
 }

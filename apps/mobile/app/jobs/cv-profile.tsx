@@ -24,6 +24,7 @@ import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import {
   AVAILABILITY_OPTIONS,
+  fetchJobTaxonomy,
   JOB_CATEGORIES,
   LANGUAGE_PROFICIENCY,
   SALARY_CURRENCIES,
@@ -33,6 +34,7 @@ import {
   type CvLanguage,
   type CvPortfolioItem,
   type JobSeekerCv,
+  type JobTaxonomyOption,
 } from "../../lib/jobs";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { useTaxonomy } from "../../lib/taxonomy";
@@ -80,7 +82,18 @@ type ProfileRow = {
   cv_file_url: string | null;
   cv_file_path: string | null;
   cv: JobSeekerCv | null;
+  preferred_job_type_ids: string[] | null;
+  preferred_industry_ids: string[] | null;
+  preferred_remote_type: string | null;
+  salary_expectation_min: number | null;
+  salary_expectation_max: number | null;
 };
+
+const REMOTE_TYPE_OPTIONS: Array<[string, string]> = [
+  ["on_site", "On-site"],
+  ["hybrid", "Hybrid"],
+  ["remote", "Remote"],
+];
 
 const EXP_LEVELS: Array<[string, string]> = [
   ["entry", "Entry level (0-2 yrs)"],
@@ -146,6 +159,24 @@ export default function CvProfileScreen() {
   // candidate with no CV on file.
   const [cvPathPendingDelete, setCvPathPendingDelete] = useState<string | null>(null);
 
+  // Job-matching preferences (Phase F): separate from the CV's own
+  // presented sector/exp/location above — these feed recommend_jobs_for_me()
+  // and are all optional, nullable columns, so leaving them unset never
+  // blocks saving the rest of the CV.
+  const [jobTaxonomy, setJobTaxonomy] = useState<{ jobTypes: JobTaxonomyOption[]; industries: JobTaxonomyOption[] }>({
+    jobTypes: [],
+    industries: [],
+  });
+  const [preferredJobTypeIds, setPreferredJobTypeIds] = useState<string[]>([]);
+  const [preferredIndustryIds, setPreferredIndustryIds] = useState<string[]>([]);
+  const [preferredRemoteType, setPreferredRemoteType] = useState<string>("");
+  const [salaryExpectationMin, setSalaryExpectationMin] = useState("");
+  const [salaryExpectationMax, setSalaryExpectationMax] = useState("");
+
+  useEffect(() => {
+    fetchJobTaxonomy().then(setJobTaxonomy).catch(() => {});
+  }, []);
+
   const load = useCallback(async () => {
     if (!session?.user) return;
     const { data } = await supabase
@@ -153,6 +184,25 @@ export default function CvProfileScreen() {
       .select("id,name,avatar,job_title,skills,sector,exp,city,province,bio,open_to_work,expected_salary,cv_file_url,cv_file_path,cv")
       .eq("id", session.user.id)
       .maybeSingle();
+
+    // Separate, best-effort query for the new preference columns (migration
+    // 5). Kept apart from the core select above so that, before that
+    // migration is applied, an "unknown column" error here can't also take
+    // down the CV fields that already work today.
+    supabase
+      .from("profiles")
+      .select("preferred_job_type_ids,preferred_industry_ids,preferred_remote_type,salary_expectation_min,salary_expectation_max")
+      .eq("id", session.user.id)
+      .maybeSingle()
+      .then(({ data: prefs, error }) => {
+        if (error || !prefs) return;
+        const row = prefs as Partial<ProfileRow>;
+        setPreferredJobTypeIds(row.preferred_job_type_ids || []);
+        setPreferredIndustryIds(row.preferred_industry_ids || []);
+        setPreferredRemoteType(row.preferred_remote_type || "");
+        setSalaryExpectationMin(row.salary_expectation_min != null ? String(row.salary_expectation_min) : "");
+        setSalaryExpectationMax(row.salary_expectation_max != null ? String(row.salary_expectation_max) : "");
+      });
     const p = data as (ProfileRow & { name: string | null }) | null;
     if (p) {
       const cv = p.cv || {};
@@ -365,6 +415,23 @@ export default function CvProfileScreen() {
       return;
     }
     setOpenToWork(publish);
+
+    // Best-effort, separate from the save above for the same reason as the
+    // load: before migration 5 is applied these columns don't exist yet,
+    // and that must never block saving the rest of the CV.
+    const minVal = salaryExpectationMin.trim() ? Number(salaryExpectationMin) : null;
+    const maxVal = salaryExpectationMax.trim() ? Number(salaryExpectationMax) : null;
+    await supabase
+      .from("profiles")
+      .update({
+        preferred_job_type_ids: preferredJobTypeIds.length ? preferredJobTypeIds : null,
+        preferred_industry_ids: preferredIndustryIds.length ? preferredIndustryIds : null,
+        preferred_remote_type: preferredRemoteType || null,
+        salary_expectation_min: Number.isFinite(minVal) ? minVal : null,
+        salary_expectation_max: Number.isFinite(maxVal) ? maxVal : null,
+      })
+      .eq("id", session.user.id)
+      .then(() => {}, () => {});
 
     // Only remove the old CV object now that the new path is durably saved
     // — a failed save above left cvFilePath/cvPathPendingDelete untouched,
@@ -673,6 +740,82 @@ export default function CvProfileScreen() {
               {SALARY_CURRENCIES.map((c) => (
                 <Chip key={c} label={c} active={currency === c} onPress={() => setCurrency(c)} />
               ))}
+            </View>
+          </Card>
+
+          {/* ── Job matching preferences ─────────────────────── */}
+          <SectionRow title="Job matching preferences" styles={styles} />
+          <Card>
+            <Text style={styles.hintText}>
+              Used to suggest jobs and alerts to you — separate from the profile employers see above.
+            </Text>
+            {jobTaxonomy.jobTypes.length ? (
+              <>
+                <Text style={[styles.label, styles.spacedLabel]}>Job type</Text>
+                <View style={styles.chipsWrap}>
+                  {jobTaxonomy.jobTypes.map((t) => (
+                    <Chip
+                      key={t.id}
+                      label={t.label}
+                      active={preferredJobTypeIds.includes(t.id)}
+                      onPress={() =>
+                        setPreferredJobTypeIds((ids) =>
+                          ids.includes(t.id) ? ids.filter((id) => id !== t.id) : [...ids, t.id]
+                        )
+                      }
+                    />
+                  ))}
+                </View>
+              </>
+            ) : null}
+            {jobTaxonomy.industries.length ? (
+              <>
+                <Text style={[styles.label, styles.spacedLabel]}>Industry</Text>
+                <View style={styles.chipsWrap}>
+                  {jobTaxonomy.industries.map((ind) => (
+                    <Chip
+                      key={ind.id}
+                      label={ind.label}
+                      active={preferredIndustryIds.includes(ind.id)}
+                      onPress={() =>
+                        setPreferredIndustryIds((ids) =>
+                          ids.includes(ind.id) ? ids.filter((id) => id !== ind.id) : [...ids, ind.id]
+                        )
+                      }
+                    />
+                  ))}
+                </View>
+              </>
+            ) : null}
+            <Text style={[styles.label, styles.spacedLabel]}>Work mode</Text>
+            <View style={styles.chipsWrap}>
+              {REMOTE_TYPE_OPTIONS.map(([key, lbl]) => (
+                <Chip
+                  key={key}
+                  label={lbl}
+                  active={preferredRemoteType === key}
+                  onPress={() => setPreferredRemoteType(preferredRemoteType === key ? "" : key)}
+                />
+              ))}
+            </View>
+            <Text style={[styles.label, styles.spacedLabel]}>Salary expectation range</Text>
+            <View style={styles.salaryRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                value={salaryExpectationMin}
+                onChangeText={setSalaryExpectationMin}
+                placeholder="Min"
+                placeholderTextColor={color.textMuted}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                value={salaryExpectationMax}
+                onChangeText={setSalaryExpectationMax}
+                placeholder="Max"
+                placeholderTextColor={color.textMuted}
+                keyboardType="numeric"
+              />
             </View>
           </Card>
 

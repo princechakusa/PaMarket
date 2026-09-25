@@ -630,6 +630,150 @@
     }).then(function (res) { return res.ok ? res.json() : 0; }).then(function (v) { return Number(v) || 0; }).catch(function () { return 0; });
   }
 
+  // ── Structured job data (Jobs Reconstruction Phase 3) ─────────────
+  // Authenticated RPC POST — same pattern as createJobListing above, but
+  // factored out since several new RPCs (v2 create, withdraw, notes, close)
+  // all need the caller's own access token rather than the anon key.
+  function pgRpcAuth(fn, body) {
+    var s = sharedSession();
+    if (!s || !s.access_token) return Promise.reject(new Error('not-authenticated'));
+    return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        if (!res.ok) throw new Error((j && j.message) || ('request failed: ' + res.status));
+        return j;
+      });
+    });
+  }
+
+  // Live job_types / job_industries taxonomy (migration 1) — public read.
+  // Best-effort: resolves to empty lists pre-migration instead of throwing,
+  // so callers can fall back to the legacy static taxonomy.
+  function fetchJobTaxonomy() {
+    return Promise.all([
+      pgFetch('job_types?is_active=eq.true&select=id,slug,label,sort_order&order=sort_order').catch(function () { return []; }),
+      pgFetch('job_industries?is_active=eq.true&select=id,slug,label,sort_order&order=sort_order').catch(function () { return []; }),
+    ]).then(function (r) { return { jobTypes: r[0] || [], industries: r[1] || [] }; });
+  }
+
+  // search_active_jobs (migration 3) — backward-compatible extension: the
+  // original 4 params (p_query, p_job_type, p_limit, p_offset) still work
+  // unchanged; every new param here is optional and additive. Until
+  // migration 3 is actually applied, though, the LIVE function only has
+  // those 4 params, and PostgREST fails the whole call (no signature
+  // match) rather than ignoring the extras — so this retries with exactly
+  // the legacy signature on that specific failure instead of just
+  // returning an empty result.
+  function searchJobsStructured(opts) {
+    opts = opts || {};
+    var legacyBody = {
+      p_query: opts.query || null,
+      p_job_type: opts.jobType || null,
+      p_limit: opts.limit || 20,
+      p_offset: opts.offset || 0,
+    };
+    function call(body) {
+      return fetch(SB_URL + '/rest/v1/rpc/search_active_jobs', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(function (res) {
+        if (res.ok) return res.json();
+        return res.text().then(function (t) {
+          if (body !== legacyBody && /PGRST202|Could not find the function/i.test(t)) return call(legacyBody);
+          return [];
+        });
+      });
+    }
+    var extendedBody = {
+      p_query: legacyBody.p_query,
+      p_job_type: legacyBody.p_job_type,
+      p_limit: legacyBody.p_limit,
+      p_offset: legacyBody.p_offset,
+      p_job_type_id: opts.jobTypeId || null,
+      p_industry_id: opts.industryId || null,
+      p_experience_level: opts.experienceLevel || null,
+      p_province: opts.province || null,
+      p_city: opts.city || null,
+      p_remote_type: opts.remoteType || null,
+      p_salary_min: opts.salaryMin || null,
+      p_salary_max: opts.salaryMax || null,
+      p_salary_negotiable_only: opts.salaryNegotiableOnly || null,
+      p_skills: opts.skills || null,
+    };
+    return call(extendedBody).catch(function () { return []; });
+  }
+
+  // get_job_detail (migration 3) — structured job row + legacy fields
+  // merged, has_structured_data flags whether migration 2's job_postings
+  // row exists yet. Best-effort: null pre-migration, callers fall back to
+  // parsing listings.description exactly as before.
+  function getJobDetail(listingId) {
+    return pgRpc('get_job_detail', { p_listing_id: listingId }).then(function (rows) {
+      return (Array.isArray(rows) && rows[0]) || null;
+    }).catch(function () { return null; });
+  }
+
+  // create_job_listing_v2 (migration 6) — wraps the untouched, original
+  // create_job_listing() for every authorization/credit check, then adds
+  // the structured job_postings row and the Jobs-specific 180-day
+  // visibility. Same shape as createJobListing() above plus new params.
+  function createJobListingV2(opts) {
+    opts = opts || {};
+    var body = {
+      p_title: opts.title,
+      p_description: opts.description,
+      p_price: opts.price || 0,
+      p_currency: opts.currency || 'USD',
+      p_city: opts.city || null,
+      p_province: opts.province || null,
+      p_seller_name: opts.sellerName || null,
+      p_seller_phone: opts.sellerPhone || null,
+      p_job_type_id: opts.jobTypeId || null,
+      p_industry_id: opts.industryId || null,
+      p_experience_level: opts.experienceLevel || null,
+      p_skills: opts.skills || null,
+      p_salary_min: opts.salaryMin != null ? opts.salaryMin : null,
+      p_salary_max: opts.salaryMax != null ? opts.salaryMax : null,
+      p_salary_currency: opts.salaryCurrency || null,
+      p_salary_negotiable: !!opts.salaryNegotiable,
+      p_remote_type: opts.remoteType || null,
+      p_responsibilities: opts.responsibilities || null,
+      p_requirements: opts.requirements || null,
+      p_benefits: opts.benefits || null,
+      p_how_to_apply_email: opts.howToApplyEmail || null,
+      p_how_to_apply_phone: opts.howToApplyPhone || null,
+      p_accepts_in_app_applications: opts.acceptsInAppApplications !== false,
+    };
+    if (opts.institutionId) {
+      body.p_institution_id = opts.institutionId;
+      body.p_institution_visibility = opts.institutionVisibility || 'public';
+    }
+    if (opts.customQuestions) body.p_custom_questions = opts.customQuestions;
+    return pgRpcAuth('create_job_listing_v2', body);
+  }
+
+  function withdrawApplicationRpc(applicationId) {
+    return pgRpcAuth('withdraw_application', { p_application_id: applicationId })
+      .then(function () { return { ok: true }; })
+      .catch(function (e) { return { ok: false, error: e.message }; });
+  }
+
+  function addApplicationNoteRpc(applicationId, note) {
+    return pgRpcAuth('add_application_note', { p_application_id: applicationId, p_note: note })
+      .then(function () { return { ok: true }; })
+      .catch(function (e) { return { ok: false, error: e.message }; });
+  }
+
+  function closeJobListingRpc(listingId, reason) {
+    return pgRpcAuth('close_job_listing', { p_listing_id: listingId, p_reason: reason })
+      .then(function () { return { ok: true }; })
+      .catch(function (e) { return { ok: false, error: e.message }; });
+  }
+
   // ── Job applications (website) ───────────────────────────────────
   // Insert an application for a job. RLS requires applicant_id = auth.uid(),
   // and the table's unique (job_id, applicant_id) blocks duplicates (surfaced
@@ -964,6 +1108,15 @@
   global.PM.hasAppliedToJob = hasAppliedToJob;
   global.PM.fetchApplicationsForEmployer = fetchApplicationsForEmployer;
   global.PM.updateApplicationStatus = updateApplicationStatus;
+  // Jobs Reconstruction Phase 3 — structured jobs (best-effort until the
+  // matching SQL migrations are applied; see supabase/migrations/20260925*).
+  global.PM.fetchJobTaxonomy = fetchJobTaxonomy;
+  global.PM.searchJobsStructured = searchJobsStructured;
+  global.PM.getJobDetail = getJobDetail;
+  global.PM.createJobListingV2 = createJobListingV2;
+  global.PM.withdrawApplication = withdrawApplicationRpc;
+  global.PM.addApplicationNote = addApplicationNoteRpc;
+  global.PM.closeJobListing = closeJobListingRpc;
   global.PM.fetchMyListings = fetchMyListings;
   global.PM.fetchMyPayments = fetchMyPayments;
   global.PM.markListingSold = markListingSold;

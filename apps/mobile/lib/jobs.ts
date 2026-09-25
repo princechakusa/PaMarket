@@ -1,17 +1,55 @@
+import { supabase } from "./supabase";
+
+// Consolidated Jobs Reconstruction taxonomy (Phase 3, Stage 4) — merges
+// this list's previous 10 values with post-job.html's previous, different
+// 20-value INDUSTRIES list (the two clients had genuinely diverged; see
+// project_jobs_reconstruction memory). Nothing from either list was
+// dropped, only merged where the concept was a duplicate under a
+// different name (e.g. old "Healthcare" + web's "Healthcare / Medical" →
+// "Healthcare & Medical" below).
+//
+// This constant is now the LEGACY-PARSING reference only — matching
+// `INDUSTRY: <value>` text in an old-format listings.description. The
+// live create/edit job forms fetch job_industries from the database
+// (same pattern as rental_categories/rental_brands for Rentals) so a
+// taxonomy change never requires a client release.
 export const JOB_CATEGORIES = [
   "Accounting & Finance",
-  "Sales & Marketing",
-  "IT & Technology",
-  "Construction",
-  "Healthcare",
-  "Education",
-  "Hospitality",
-  "Administration",
-  "Engineering",
+  "Administration & Office",
+  "Agriculture & Farming",
+  "Construction & Trades",
+  "Customer Service",
   "Driving & Logistics",
+  "Education & Training",
+  "Engineering",
+  "Events & Hospitality",
+  "General Worker & Labour",
+  "Healthcare & Medical",
+  "Human Resources",
+  "IT & Technology",
+  "Legal",
+  "Manufacturing",
+  "Sales & Marketing",
+  "NGO & Development",
+  "Retail",
+  "Security",
+  "Other",
 ];
 
 export const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Freelance", "Internship"];
+
+export type JobTaxonomyOption = { id: string; slug: string; label: string };
+
+export async function fetchJobTaxonomy(): Promise<{ jobTypes: JobTaxonomyOption[]; industries: JobTaxonomyOption[] }> {
+  const [typesRes, industriesRes] = await Promise.all([
+    supabase.from("job_types").select("id,slug,label").order("sort_order"),
+    supabase.from("job_industries").select("id,slug,label").order("sort_order"),
+  ]);
+  return {
+    jobTypes: (typesRes.data as JobTaxonomyOption[] | null) ?? [],
+    industries: (industriesRes.data as JobTaxonomyOption[] | null) ?? [],
+  };
+}
 
 // Job-specific fields live inside the plain-text description as `KEY: value`
 // lines (see www/js/jobs.js parseLine) rather than dedicated columns.
@@ -103,6 +141,47 @@ export const LANGUAGE_PROFICIENCY = ["Basic", "Conversational", "Fluent", "Nativ
 
 export const SALARY_CURRENCIES = ["USD", "ZWL", "ZAR"];
 
+// Application lifecycle (Jobs Reconstruction Phase 3, migration 4). 'pending'
+// is kept exactly as the original value — it's what every existing
+// application row already has, not renamed to 'submitted' or similar. The
+// database's applications_validate_status_transition trigger is the single
+// source of truth for which of these transitions is actually legal; this
+// union and the label map just mirror it for display.
+export type ApplicationStatus =
+  | "pending"
+  | "reviewing"
+  | "shortlisted"
+  | "interview"
+  | "offered"
+  | "hired"
+  | "declined"
+  | "withdrawn";
+
+export const APPLICATION_STATUS_LABEL: Record<ApplicationStatus, string> = {
+  pending: "Submitted",
+  reviewing: "Under Review",
+  shortlisted: "Shortlisted",
+  interview: "Interview",
+  offered: "Offer Extended",
+  hired: "Hired",
+  declined: "Not Selected",
+  withdrawn: "Withdrawn",
+};
+
+// Terminal states an applicant can no longer withdraw from (matches the
+// database trigger's own rule exactly — kept here only so the UI can grey
+// out the withdraw action instead of letting the call fail server-side).
+export const APPLICATION_TERMINAL_STATUSES: ApplicationStatus[] = ["hired", "declined", "withdrawn"];
+
+export type ApplicationEvent = {
+  id: string;
+  application_id: string;
+  event_type: "submitted" | "status_changed" | "interview_scheduled" | "note_added" | "withdrawn";
+  actor_role: "applicant" | "employer" | "system" | null;
+  detail: Record<string, unknown>;
+  created_at: string;
+};
+
 // Row shape of public.applications (see supabase/schema/applications.sql).
 export type JobApplication = {
   id: string;
@@ -114,10 +193,243 @@ export type JobApplication = {
   applicant_phone: string;
   applicant_email: string;
   message: string;
-  status: "pending" | "shortlisted" | "declined";
+  status: ApplicationStatus;
   employer_id: string;
   applied_at: string;
+  answers?: { question: string; answer: string }[];
 };
+
+export async function withdrawApplication(applicationId: string): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.rpc("withdraw_application", { p_application_id: applicationId });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+export async function addApplicationNote(applicationId: string, note: string): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.rpc("add_application_note", { p_application_id: applicationId, p_note: note });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+export async function fetchApplicationEvents(applicationId: string): Promise<ApplicationEvent[]> {
+  const { data } = await supabase
+    .from("application_events")
+    .select("id,application_id,event_type,actor_role,detail,created_at")
+    .eq("application_id", applicationId)
+    .order("created_at", { ascending: false });
+  return (data as ApplicationEvent[] | null) ?? [];
+}
+
+export async function closeJobListing(
+  listingId: string,
+  reason: "filled" | "paused" | "removed"
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.rpc("close_job_listing", { p_listing_id: listingId, p_reason: reason });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// Mirrors the exact classification rule used by the Phase 3 backfill
+// migration's SQL (extract-then-classify, never guess): a bare number
+// (optionally currency-prefixed) becomes min=max=that number; a
+// negotiable/TBD/competitive keyword becomes negotiable=true with no
+// number; anything else (including an unrecognized range format) is left
+// ambiguous — null, not guessed — same as the server-side backfill would
+// do for it.
+export function parseSalaryText(raw: string): { min: number | null; max: number | null; negotiable: boolean } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { min: null, max: null, negotiable: false };
+  if (/negotiable|tbd|competitive/i.test(trimmed)) return { min: null, max: null, negotiable: true };
+  const rangeMatch = trimmed.match(/([0-9]+(?:\.[0-9]+)?)\s*[-–]\s*([0-9]+(?:\.[0-9]+)?)/);
+  if (rangeMatch) return { min: parseFloat(rangeMatch[1]), max: parseFloat(rangeMatch[2]), negotiable: false };
+  const singleMatch = trimmed.match(/^[A-Za-z$]*\s*([0-9]+(?:\.[0-9]+)?)\s*$/);
+  if (singleMatch) {
+    const n = parseFloat(singleMatch[1]);
+    return { min: n, max: n, negotiable: false };
+  }
+  return { min: null, max: null, negotiable: false };
+}
+
+// ── Structured job read/search (Jobs Reconstruction Phase 3) ────────────
+// Mirrors public.get_job_detail()'s return shape. Any field here can be
+// null even for a job that otherwise has a job_postings row — that's not
+// an error, it means that specific field was never structured for this
+// listing, and the UI should fall back to legacy parseJobField/parseJobBlock
+// against `description` for that field only, not the whole screen.
+export type JobPostingDetail = {
+  id: string;
+  seller_id: string;
+  seller_name: string | null;
+  seller_phone: string | null;
+  title: string;
+  description: string;
+  price: number | null;
+  currency: string | null;
+  province: string | null;
+  city: string | null;
+  suburb: string | null;
+  photos: string[] | null;
+  status: string;
+  created_at: string;
+  expires_at: string | null;
+  views: number | null;
+  custom_questions: { question: string; type?: string }[] | null;
+  job_type_id: string | null;
+  job_type_label: string | null;
+  industry_id: string | null;
+  industry_label: string | null;
+  experience_level: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_negotiable: boolean | null;
+  skills: string[] | null;
+  remote_type: string | null;
+  responsibilities: string | null;
+  requirements: string | null;
+  benefits: string | null;
+  how_to_apply_email: string | null;
+  how_to_apply_phone: string | null;
+  accepts_in_app_applications: boolean;
+  application_deadline: string | null;
+  has_structured_data: boolean;
+};
+
+export async function getJobDetail(listingId: string): Promise<JobPostingDetail | null> {
+  const { data, error } = await supabase.rpc("get_job_detail", { p_listing_id: listingId });
+  if (error || !data?.length) return null;
+  return data[0] as JobPostingDetail;
+}
+
+export type JobSearchFilters = {
+  query?: string;
+  jobTypeId?: string;
+  industryId?: string;
+  experienceLevel?: string;
+  province?: string;
+  city?: string;
+  remoteType?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  negotiableOnly?: boolean;
+  skills?: string[];
+  limit?: number;
+  offset?: number;
+};
+
+export async function searchJobs(filters: JobSearchFilters): Promise<JobPostingDetail[]> {
+  const legacyParams = {
+    p_query: filters.query || null,
+    p_job_type: null,
+    p_limit: filters.limit ?? 20,
+    p_offset: filters.offset ?? 0,
+  };
+  let { data, error } = await supabase.rpc("search_active_jobs", {
+    ...legacyParams,
+    p_job_type_id: filters.jobTypeId || null,
+    p_industry_id: filters.industryId || null,
+    p_experience_level: filters.experienceLevel || null,
+    p_province: filters.province || null,
+    p_city: filters.city || null,
+    p_remote_type: filters.remoteType || null,
+    p_salary_min: filters.salaryMin ?? null,
+    p_salary_max: filters.salaryMax ?? null,
+    p_salary_negotiable_only: filters.negotiableOnly ?? false,
+    p_skills: filters.skills?.length ? filters.skills : null,
+  });
+  // Migration 3 not applied yet — the live function only has the 4 legacy
+  // params, so the extended call above fails signature matching entirely
+  // (not just ignores the extras). Retry with exactly that signature.
+  if (error && /PGRST202|Could not find the function/i.test(error.message || "")) {
+    ({ data, error } = await supabase.rpc("search_active_jobs", legacyParams));
+  }
+  if (error) {
+    console.warn("searchJobs:", error);
+    return [];
+  }
+  return (data as JobPostingDetail[] | null) ?? [];
+}
+
+// ── Job alerts (Jobs Reconstruction Phase 3) ─────────────────────────────
+export type JobAlert = {
+  id: string;
+  user_id: string;
+  name: string;
+  keywords: string | null;
+  job_type_id: string | null;
+  industry_id: string | null;
+  province: string | null;
+  city: string | null;
+  remote_type: string | null;
+  experience_level: string | null;
+  salary_min: number | null;
+  is_active: boolean;
+  created_at: string;
+};
+
+export async function fetchMyJobAlerts(): Promise<JobAlert[]> {
+  const { data } = await supabase.from("job_alerts").select("*").order("created_at", { ascending: false });
+  return (data as JobAlert[] | null) ?? [];
+}
+
+export async function saveJobAlert(alert: Partial<JobAlert> & { name: string }): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.from("job_alerts").insert(alert as Record<string, unknown>);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// Edits the existing row in place — never a second insert. RLS ("job_alerts:
+// owner all", migration 5) already scopes every operation on this table to
+// `user_id = auth.uid()`, so a plain UPDATE-by-id is enough: it's a no-op
+// (0 rows touched, no error) against another user's alert id rather than a
+// leak or a cross-account write, without any extra client-side ownership
+// check needed — the same guarantee create/delete already rely on here.
+export async function updateJobAlert(
+  id: string,
+  changes: Partial<Omit<JobAlert, "id" | "user_id" | "created_at">>
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.from("job_alerts").update(changes as Record<string, unknown>).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+export async function deleteJobAlert(id: string): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.from("job_alerts").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// ── Recommendations (Jobs Reconstruction Phase 3, migration 5) ──────────
+// Row shape of recommend_jobs_for_me() — a strict subset of the full job
+// listing columns, so this is intentionally NOT typed as JobListing; the
+// browse screen adapts it to that shape at the call site rather than this
+// file guessing at fields the RPC doesn't actually return.
+export type RecommendedJob = {
+  id: string;
+  title: string;
+  seller_name: string | null;
+  city: string | null;
+  province: string | null;
+  job_type_label: string | null;
+  industry_label: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  remote_type: string | null;
+  score: number;
+};
+
+// Scoring/matching logic lives entirely in the RPC (transparent DB
+// scoring against profiles.preferred_* — see migration 5's own comment);
+// this is a thin fetch, not a second recommendation engine. Fails soft to
+// [] for a signed-out caller, a caller with no preferences set, or before
+// migration 5 is applied — the browse screen simply omits the section
+// rather than showing an error for what's an enhancement, not a core flow.
+export async function fetchRecommendedJobs(limit = 10): Promise<RecommendedJob[]> {
+  const { data, error } = await supabase.rpc("recommend_jobs_for_me", { p_limit: limit });
+  if (error) return [];
+  return (data as RecommendedJob[] | null) ?? [];
+}
 
 // ── Candidate search (Hire Talent) ───────────────────────────────────────
 // Row shape pulled from public.profiles for candidate browsing — mirrors the

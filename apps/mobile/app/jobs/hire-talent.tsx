@@ -95,6 +95,9 @@ export default function HireTalentScreen() {
         <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
           <Text style={styles.headerLink}>Requests</Text>
         </Pressable>
+        <Pressable onPress={() => router.push("/jobs/company-profile")} hitSlop={10}>
+          <Text style={styles.headerLink}>Company</Text>
+        </Pressable>
       </View>
     ),
   });

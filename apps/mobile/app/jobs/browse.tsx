@@ -7,7 +7,15 @@ import Svg, { Circle, Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { jobCompany, jobSalary, jobType, JOB_TYPES } from "../../lib/jobs";
+import { jobCompany, jobSalary, jobType, JOB_TYPES, fetchRecommendedJobs, type RecommendedJob } from "../../lib/jobs";
+import { useAuth } from "../../lib/auth";
+
+const REMOTE_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "all", label: "Any location" },
+  { value: "on_site", label: "On-site" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "remote", label: "Remote" },
+];
 import { businessInitials } from "../../lib/businesses";
 import { Badge, Chip, EmptyState, ErrorState, ListingRowSkeleton } from "../../components/ui";
 import { loadCache, saveCache } from "../../lib/offlineCache";
@@ -26,6 +34,17 @@ type JobListing = {
   photos: string[] | null;
   created_at: string;
   expires_at: string | null;
+  // Present only once the Jobs Reconstruction search RPC is live; null on
+  // any row without a job_postings entry (legacy row, or migration not
+  // yet applied) — the renderer below falls back to legacy description
+  // parsing for any of these that come back null.
+  job_type_label?: string | null;
+  industry_label?: string | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  salary_currency?: string | null;
+  salary_negotiable?: boolean | null;
+  remote_type?: string | null;
 };
 
 const PAGE_SIZE = 30;
@@ -51,7 +70,9 @@ export default function JobsListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
+  const { session } = useAuth();
   const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [recommendations, setRecommendations] = useState<JobListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -60,9 +81,20 @@ export default function JobsListScreen() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [remoteFilter, setRemoteFilter] = useState<string>("all");
   const pageRef = useRef(0);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Jobs", androidNative: true });
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    title: "Jobs",
+    androidNative: true,
+    headerRight: () => (
+      <Pressable onPress={() => router.push("/jobs/alerts")} hitSlop={10}>
+        <Text style={styles.headerLink}>Alerts</Text>
+      </Pressable>
+    ),
+  });
 
   // Debounced so search runs server-side (title + description) instead of
   // firing a request per keystroke or, worse, only ever filtering whatever
@@ -76,14 +108,32 @@ export default function JobsListScreen() {
 
   const buildQuery = useCallback(
     (from: number, to: number) => {
-      return supabase.rpc("search_active_jobs", {
+      const base = {
         p_query: debouncedQuery || null,
         p_job_type: typeFilter === "all" ? null : typeFilter,
         p_limit: to - from + 1,
         p_offset: from,
-      });
+      };
+      // search_active_jobs still has only these 4 params live until
+      // migration 3 is applied — sending p_remote_type today makes
+      // PostgREST fail to match the function signature at all (not just
+      // ignore the extra param), breaking every job search. Try the
+      // extended call first; on a "no matching function" error, retry with
+      // exactly the original signature so browse keeps working right now
+      // and upgrades automatically once the migration lands.
+      return supabase
+        .rpc("search_active_jobs", {
+          ...base,
+          p_remote_type: remoteFilter === "all" ? null : remoteFilter,
+        })
+        .then((result) => {
+          if (result.error && /PGRST202|Could not find the function/i.test(result.error.message || "")) {
+            return supabase.rpc("search_active_jobs", base);
+          }
+          return result;
+        });
     },
-    [debouncedQuery, typeFilter]
+    [debouncedQuery, typeFilter, remoteFilter]
   );
 
   const load = useCallback(async () => {
@@ -120,6 +170,48 @@ export default function JobsListScreen() {
     };
   }, [load]);
 
+  // "Recommended for you" — thin fetch over recommend_jobs_for_me() (see
+  // lib/jobs.ts), not a second recommendation engine; all the scoring
+  // happens in that RPC against the seeker's own preferred_* profile
+  // fields. Only fetched when signed in (matches the RPC's own
+  // "return nothing for an anonymous caller" behavior, just without the
+  // wasted round trip); fails/empties silently — this is an enhancement
+  // to the browse screen, not a state it should ever block or error on.
+  useEffect(() => {
+    if (!session?.user) {
+      setRecommendations([]);
+      return;
+    }
+    let cancelled = false;
+    fetchRecommendedJobs(10).then((rows) => {
+      if (cancelled) return;
+      setRecommendations(
+        rows.map((r: RecommendedJob) => ({
+          id: r.id,
+          seller_id: "",
+          seller_name: r.seller_name,
+          title: r.title,
+          description: null,
+          city: r.city,
+          province: r.province,
+          photos: null,
+          created_at: "",
+          expires_at: null,
+          job_type_label: r.job_type_label,
+          industry_label: r.industry_label,
+          salary_min: r.salary_min,
+          salary_max: r.salary_max,
+          salary_currency: r.salary_currency,
+          salary_negotiable: false,
+          remote_type: r.remote_type,
+        }))
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
   const loadMore = useCallback(async () => {
     if (isLoadingMore || isLoading || !hasMore || hasError) return;
     setIsLoadingMore(true);
@@ -141,6 +233,54 @@ export default function JobsListScreen() {
     }
     setIsLoadingMore(false);
   }, [buildQuery, hasMore, isLoading, isLoadingMore, hasError]);
+
+  // Shared by the main list and the "Recommended for you" row below — one
+  // card renderer, not a duplicate copy, so a recommended job navigates and
+  // looks identical to the same job found any other way.
+  function renderJobCard(item: JobListing, cardStyle?: object) {
+    const company = jobCompany(item.description, item.seller_name);
+    const type = item.job_type_label ?? jobType(item.description);
+    const salary = item.salary_negotiable
+      ? "Negotiable"
+      : item.salary_min != null
+        ? `${item.salary_currency ?? ""} ${item.salary_min}${item.salary_max && item.salary_max !== item.salary_min ? ` - ${item.salary_max}` : ""}`.trim()
+        : jobSalary(item.description);
+    const location = [item.city, item.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+    return (
+      <Pressable
+        style={({ pressed }) => [styles.card, cardStyle, pressed && styles.cardPressed]}
+        onPress={() => router.push({ pathname: "/jobs/[id]", params: { id: item.id } })}
+      >
+        <View style={styles.logoWrap}>
+          {item.photos?.[0] ? (
+            <Image source={{ uri: item.photos[0] }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+          ) : (
+            <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
+          )}
+        </View>
+        <View style={styles.cardBody}>
+          <Text style={styles.title} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.company} numberOfLines={1}>
+            {company}
+          </Text>
+          <View style={styles.chipRow}>
+            {type ? <Badge label={type} tone="brand" /> : null}
+            {item.industry_label ? <Badge label={item.industry_label} tone="neutral" /> : null}
+            {item.remote_type ? (
+              <Badge label={item.remote_type === "on_site" ? "On-site" : item.remote_type === "hybrid" ? "Hybrid" : "Remote"} tone="neutral" />
+            ) : null}
+            {location ? <Badge label={location} tone="neutral" /> : null}
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.salary}>{salary}</Text>
+            {item.created_at ? <Text style={styles.time}>{timeAgo(item.created_at)}</Text> : null}
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -175,6 +315,19 @@ export default function JobsListScreen() {
         />
       </View>
 
+      <View style={styles.filterRow}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={REMOTE_FILTER_OPTIONS}
+          keyExtractor={(item) => item.value}
+          contentContainerStyle={styles.filterContent}
+          renderItem={({ item }) => (
+            <Chip label={item.label} active={remoteFilter === item.value} onPress={() => setRemoteFilter(item.value)} />
+          )}
+        />
+      </View>
+
       {isLoading ? (
         <View style={styles.listContent}>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -193,6 +346,19 @@ export default function JobsListScreen() {
           ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
           ListHeaderComponent={
             <>
+              {recommendations.length ? (
+                <View style={styles.recommendedSection}>
+                  <Text style={styles.recommendedTitle}>Recommended for you</Text>
+                  <FlatList
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    data={recommendations}
+                    keyExtractor={(item) => `rec-${item.id}`}
+                    contentContainerStyle={styles.recommendedContent}
+                    renderItem={({ item }) => renderJobCard(item, styles.recommendedCard)}
+                  />
+                </View>
+              ) : null}
               {hasError ? (
                 <View style={styles.offlineBanner}>
                   <Text style={styles.offlineBannerText}>
@@ -217,42 +383,7 @@ export default function JobsListScreen() {
               }
             />
           }
-          renderItem={({ item }) => {
-            const company = jobCompany(item.description, item.seller_name);
-            const type = jobType(item.description);
-            const salary = jobSalary(item.description);
-            const location = [item.city, item.province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
-            return (
-              <Pressable
-                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-                onPress={() => router.push({ pathname: "/jobs/[id]", params: { id: item.id } })}
-              >
-                <View style={styles.logoWrap}>
-                  {item.photos?.[0] ? (
-                    <Image source={{ uri: item.photos[0] }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
-                  ) : (
-                    <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
-                  )}
-                </View>
-                <View style={styles.cardBody}>
-                  <Text style={styles.title} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.company} numberOfLines={1}>
-                    {company}
-                  </Text>
-                  <View style={styles.chipRow}>
-                    {type ? <Badge label={type} tone="brand" /> : null}
-                    {location ? <Badge label={location} tone="neutral" /> : null}
-                  </View>
-                  <View style={styles.metaRow}>
-                    <Text style={styles.salary}>{salary}</Text>
-                    <Text style={styles.time}>{timeAgo(item.created_at)}</Text>
-                  </View>
-                </View>
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => renderJobCard(item)}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
@@ -279,6 +410,7 @@ function buildStyles(color: ColorPalette) {
   },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerTitle: { ...font.title, color: color.textOnBrand },
+  headerLink: { fontSize: 13, fontWeight: "700", color: color.textOnBrand },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -296,6 +428,10 @@ function buildStyles(color: ColorPalette) {
     paddingVertical: space.md,
   },
   filterContent: { paddingHorizontal: space.lg, gap: space.sm },
+  recommendedSection: { marginBottom: space.lg },
+  recommendedTitle: { ...font.title, color: color.text, marginBottom: space.sm },
+  recommendedContent: { gap: space.md, paddingRight: space.lg },
+  recommendedCard: { width: 280 },
   countText: { ...font.caption, color: color.textMuted, marginBottom: space.md },
   offlineBanner: {
     marginBottom: space.md,
