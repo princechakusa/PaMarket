@@ -4,7 +4,7 @@ const ROOT_FILES = ['.nojekyll','CNAME','auth.js','favicon.ico','icon-192.png','
 const PUBLIC_TREES = [
   {dir:'css',extensions:['.css']},{dir:'js',extensions:['.js']},
   {dir:'img',extensions:['.png','.jpg','.jpeg','.gif','.webp','.svg','.avif']},
-  {dir:'l',extensions:['.html']},{dir:'b',extensions:['.html']},{dir:'r',extensions:['.html']},
+  {dir:'l',extensions:['.html']},{dir:'b',extensions:['.html']},{dir:'r',extensions:['.html']},{dir:'c',extensions:['.html']},
 ];
 const PROHIBITED_SEGMENTS = new Set(['www','apps','android','ios','supabase','tools','scripts','docs','.github','qa-system','node_modules','.git']);
-module.exports={ROOT_PAGES,ROOT_FILES,PUBLIC_TREES,PROHIBITED_SEGMENTS,GENERATED_ROUTE_DIRS:['l','b','r']};
+module.exports={ROOT_PAGES,ROOT_FILES,PUBLIC_TREES,PROHIBITED_SEGMENTS,GENERATED_ROUTE_DIRS:['l','b','r','c']};

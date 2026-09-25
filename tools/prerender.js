@@ -21,6 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const PMSchema = require('../js/listing-schema.js');
+const PMListingAttrs = require('../js/listing-attrs.js');
 
 const SITE = 'https://pamarketzw.com';
 const ROOT = path.join(__dirname, '..');
@@ -118,39 +119,115 @@ function stars(r) { const f = Math.max(0, Math.min(5, Math.round(Number(r) || 0)
 function initialsOf(name) { return esc(String(name || 'P').trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase() || 'P'); }
 function avgRating(reviews) { return reviews.length ? reviews.reduce(function (a, r) { return a + (Number(r.rating) || 0); }, 0) / reviews.length : 0; }
 
-// Styled review cards + rating summary, shared by listing and business pages.
-// The .rev/.rating-* CSS lives in the page style blocks (detail.html and
-// business.html) that shell() bakes in.
+// --- page rendering ----------------------------------------------------------
+// These pages use the site's Tailwind design system (the same one detail.html,
+// business.html and rentals.html use), so they must load Tailwind + the
+// config + fonts themselves.
+const CARD = 'bg-surface-container-lowest rounded p-5 shadow-sm';
+const H2 = 'font-headline-sm text-headline-sm text-on-surface font-bold mb-3 flex items-center gap-2';
+const LABEL = 'text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant';
+const BTN_PRIMARY = 'bg-primary text-on-primary py-3 px-4 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2';
+const BTN_WHATSAPP = 'bg-[#25D366] text-white py-3 px-4 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2';
+const BTN_SECONDARY = 'bg-surface-container-low text-on-surface py-3 px-4 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2';
+
+function icon(name, size) { return '<span class="material-symbols-outlined text-[' + (size || 18) + 'px]">' + name + '</span>'; }
+function h2(iconName, text) { return '<h2 class="' + H2 + '"><span class="material-symbols-outlined text-primary text-[22px]">' + iconName + '</span>' + text + '</h2>'; }
+function cap(s) { s = String(s || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+// Rating summary + review cards, shared by listing and business pages.
 function reviewsHtml(reviews, subjectLabel) {
   if (!reviews || !reviews.length) return '';
   const avg = avgRating(reviews);
-  const hero = '<div class="rating-hero"><div class="rating-big">' + avg.toFixed(1) + '</div><div>' +
-    '<div class="rating-stars">' + stars(avg) + '</div>' +
-    '<div class="rating-count">Based on ' + reviews.length + ' verified review' + (reviews.length > 1 ? 's' : '') + (subjectLabel ? ' of ' + esc(subjectLabel) : '') + '</div></div></div>';
-  const list = '<div class="rev-list">' + reviews.slice(0, 10).map(function (r) {
-    return '<div class="rev"><div class="rev-top"><div class="rev-av">' + initialsOf(r.reviewer_name) + '</div>' +
-      '<div><div class="rev-who">' + esc(r.reviewer_name || 'PaMarket user') + '</div><div class="rev-date">' + esc(timeAgo(r.created_at)) + '</div></div>' +
-      '<div class="rev-stars">' + stars(r.rating) + '</div></div>' +
-      (r.body ? '<div class="rev-body">' + esc(r.body) + '</div>' : '') + '</div>';
+  const hero = '<div class="flex items-center gap-4 mb-4"><div class="font-headline-lg text-headline-lg font-extrabold text-on-surface">' + avg.toFixed(1) + '</div><div>' +
+    '<div class="text-[#f59e0b] text-body-lg tracking-wider">' + stars(avg) + '</div>' +
+    '<div class="text-body-sm text-on-surface-variant">Based on ' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + (subjectLabel ? ' of ' + esc(subjectLabel) : '') + '</div></div></div>';
+  const list = '<div class="flex flex-col gap-3">' + reviews.slice(0, 10).map(function (r) {
+    return '<div class="bg-surface-container-low rounded p-4"><div class="flex items-center gap-3">' +
+      '<div class="w-9 h-9 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-body-sm">' + initialsOf(r.reviewer_name) + '</div>' +
+      '<div class="flex-1 min-w-0"><div class="font-bold text-on-surface text-body-sm">' + esc(r.reviewer_name || 'PaMarket user') + '</div><div class="text-label-sm text-on-surface-variant">' + esc(timeAgo(r.created_at)) + '</div></div>' +
+      '<div class="text-[#f59e0b] text-body-sm">' + stars(r.rating) + '</div></div>' +
+      (r.body ? '<p class="mt-2 text-body-sm text-on-surface whitespace-pre-line">' + esc(r.body) + '</p>' : '') + '</div>';
   }).join('') + '</div>';
   return hero + list;
 }
 
 function loadChrome() {
-  const detail = fs.readFileSync(path.join(ROOT, 'detail.html'), 'utf8');
-  const business = fs.readFileSync(path.join(ROOT, 'business.html'), 'utf8');
-  const styleMatch = detail.match(/<style>([\s\S]*?)<\/style>/);
-  const bizStyleMatch = business.match(/<style>([\s\S]*?)<\/style>/);
   return {
-    style: styleMatch ? styleMatch[1] : '',
-    bizStyle: bizStyleMatch ? bizStyleMatch[1] : '',
     header: fs.readFileSync(path.join(ROOT, 'partials', 'header.html'), 'utf8'),
     footer: fs.readFileSync(path.join(ROOT, 'partials', 'footer.html'), 'utf8')
   };
 }
 
+function crumbHtml(items) {
+  return '<nav aria-label="Breadcrumb" class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-sm text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1.5 flex-wrap">' +
+    items.map(function (it, i) {
+      const sep = i ? '<span class="material-symbols-outlined text-[14px]">chevron_right</span>' : '';
+      return sep + (it.href ? '<a href="' + it.href + '" class="hover:text-primary">' + esc(it.label) + '</a>' : '<span class="text-on-surface font-medium truncate max-w-[260px]">' + esc(it.label) + '</span>');
+    }).join('') + '</nav>';
+}
+
+// Photo gallery with thumbnails and a full-screen viewer. Returns
+// { html, viewer, script } so each page type can place them.
+function gallery(photos, title) {
+  const main = photos.length
+    ? '<img id="mainPhoto" src="' + esc(photos[0]) + '" alt="' + esc(title) + '" fetchpriority="high" decoding="async" class="w-full h-[300px] md:h-[440px] object-cover">' +
+      '<span id="photoCounter" class="absolute bottom-3 right-3 bg-inverse-surface/80 text-inverse-on-surface text-[12px] font-semibold px-2.5 py-1 rounded">Photo 1 of ' + photos.length + '</span>'
+    : '<div class="w-full h-[240px] flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('image', 44) + '<span class="text-body-sm">No photos yet</span></div>';
+  const thumbs = photos.length > 1
+    ? '<div class="flex gap-2 p-3 overflow-x-auto">' + photos.map(function (p, i) {
+        return '<button type="button" class="gallery-thumb shrink-0 rounded overflow-hidden border-2 ' + (i === 0 ? 'border-primary' : 'border-transparent') + '" data-photo="' + i + '" aria-label="View photo ' + (i + 1) + '"><img src="' + esc(p) + '" alt="' + esc(title) + ' photo ' + (i + 1) + '" loading="lazy" decoding="async" class="w-20 h-16 object-cover"></button>';
+      }).join('') + '</div>'
+    : '';
+  const html = '<div class="bg-surface-container-lowest rounded overflow-hidden shadow-sm">' +
+    '<div id="galleryMain" role="button" tabindex="0" aria-label="Open full-screen photo viewer" class="relative bg-surface-container ' + (photos.length ? 'cursor-zoom-in' : '') + '">' + main + '</div>' + thumbs + '</div>';
+  const pv = 'w-11 h-11 rounded-full bg-white/15 text-white text-[26px] flex items-center justify-center';
+  const viewer = photos.length ? '<div id="photoViewer" role="dialog" aria-modal="true" aria-label="Full-screen photo viewer" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 p-4">' +
+    '<button type="button" id="photoViewerClose" aria-label="Close photo viewer" class="absolute top-4 right-4 ' + pv + '">&times;</button>' +
+    '<button type="button" id="photoViewerPrev" aria-label="Previous photo" class="absolute left-3 top-1/2 -translate-y-1/2 ' + pv + '">&#8249;</button>' +
+    '<img id="photoViewerImg" alt="" class="max-w-full max-h-[85vh] object-contain">' +
+    '<button type="button" id="photoViewerNext" aria-label="Next photo" class="absolute right-3 top-1/2 -translate-y-1/2 ' + pv + '">&#8250;</button>' +
+    '<div id="photoViewerCount" class="absolute bottom-5 left-1/2 -translate-x-1/2 text-white text-body-sm"></div></div>' : '';
+  const script = photos.length ? '(function(){var photos=' + jsonld(photos) + ',title=' + jsonld(title) + ',i=0,main=document.getElementById("galleryMain"),mainImg=document.getElementById("mainPhoto"),counter=document.getElementById("photoCounter"),viewer=document.getElementById("photoViewer"),img=document.getElementById("photoViewerImg"),count=document.getElementById("photoViewerCount"),touch=0;' +
+    'function show(n){i=(n+photos.length)%photos.length;mainImg.src=photos[i];counter.textContent="Photo "+(i+1)+" of "+photos.length;document.querySelectorAll(".gallery-thumb").forEach(function(t,x){t.classList.toggle("border-primary",x===i);t.classList.toggle("border-transparent",x!==i);});img.src=photos[i];img.alt=title+" - photo "+(i+1);count.textContent=(i+1)+" of "+photos.length;}' +
+    'function open(){viewer.classList.remove("hidden");viewer.classList.add("flex");show(i);document.body.style.overflow="hidden";}' +
+    'function close(){viewer.classList.add("hidden");viewer.classList.remove("flex");document.body.style.overflow="";main.focus();}' +
+    'document.querySelectorAll(".gallery-thumb").forEach(function(t){t.onclick=function(){show(Number(t.dataset.photo));};});' +
+    'main.onclick=open;main.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}};' +
+    'document.getElementById("photoViewerClose").onclick=close;document.getElementById("photoViewerPrev").onclick=function(){show(i-1);};document.getElementById("photoViewerNext").onclick=function(){show(i+1);};' +
+    'viewer.onclick=function(e){if(e.target===viewer)close();};' +
+    'viewer.addEventListener("touchstart",function(e){touch=e.changedTouches[0].clientX;},{passive:true});viewer.addEventListener("touchend",function(e){var d=e.changedTouches[0].clientX-touch;if(Math.abs(d)>45)show(i+(d<0?1:-1));},{passive:true});' +
+    'document.addEventListener("keydown",function(e){if(viewer.classList.contains("hidden"))return;if(e.key==="Escape")close();if(e.key==="ArrowLeft")show(i-1);if(e.key==="ArrowRight")show(i+1);});})();' : '';
+  return { html: html, viewer: viewer, script: script };
+}
+
+function specsHtml(category, attributes, condition) {
+  const d = PMListingAttrs.describe(category, attributes, condition);
+  const specs = d.subcategory ? [{ label: 'Category', value: d.subcategory }].concat(d.specs) : d.specs;
+  let out = '';
+  if (specs.length) {
+    out += '<section class="' + CARD + '">' + h2('list_alt', 'Specifications') + '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">' +
+      specs.map(function (s) { return '<div class="bg-surface-container-low rounded p-3"><span class="text-label-sm font-label-sm text-on-surface-variant block">' + esc(s.label) + '</span><span class="text-body-lg text-on-surface font-bold">' + esc(s.value) + '</span></div>'; }).join('') +
+      '</div></section>';
+  }
+  if (d.features) {
+    out += '<section class="' + CARD + '">' + h2('check_circle', esc(d.features.label)) + '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-body-sm">' +
+      d.features.items.map(function (f) { return '<div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">check</span>' + esc(f) + '</div>'; }).join('') +
+      '</div></section>';
+  }
+  return out;
+}
+
+const SAFETY_BAND = '<section class="bg-primary rounded p-5 md:p-6 text-on-primary"><h2 class="font-headline-sm text-headline-sm font-bold mb-4">Trade Safely on PaMarket</h2><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">' +
+  ['Meet in Public Spaces', 'Zero Upfront Deposits', 'Inspect Before Paying', 'Report Suspicious Sellers'].map(function (t, i) {
+    return '<div class="bg-primary-container/40 rounded p-3"><span class="text-label-sm font-bold text-primary-fixed block mb-1">0' + (i + 1) + '</span><span class="text-body-sm font-semibold block">' + t + '</span></div>';
+  }).join('') + '</div><a href="safety.html" class="inline-block mt-4 text-label-md font-bold underline">Full Safety Guidelines &rarr;</a></section>';
+
+function avatar(text, img) {
+  return '<div class="w-12 h-12 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-body-lg overflow-hidden shrink-0">' + (img || text) + '</div>';
+}
+
 // Shared page shell. o: { url, pageTitle, desc, ogImg, ogType, schema[], crumb,
-// main, hydrateListingId?, chrome }
+// main, hydrateListingId?, chrome, extrasMeta?, afterScripts? }
 function shell(o) {
   const blocks = o.schema.map(function (s) { return '<script type="application/ld+json">' + jsonld(s) + '</script>'; }).join('\n');
   const hyd = o.hydrateListingId ? (
@@ -172,6 +249,7 @@ function shell(o) {
     '<link rel="canonical" href="' + o.url + '">\n' +
     '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">\n' +
     '<meta property="og:type" content="' + (o.ogType || 'website') + '">\n' +
+    '<meta property="og:site_name" content="PaMarket">\n' +
     '<meta property="og:title" content="' + esc(o.pageTitle) + '">\n' +
     '<meta property="og:description" content="' + esc(o.desc) + '">\n' +
     '<meta property="og:image" content="' + esc(o.ogImg) + '">\n' +
@@ -181,178 +259,168 @@ function shell(o) {
     '<meta name="twitter:description" content="' + esc(o.desc) + '">\n' +
     '<meta name="twitter:image" content="' + esc(o.ogImg) + '">\n' +
     '<meta name="geo.region" content="ZW">\n<meta name="geo.placename" content="Zimbabwe">\n' +
-    '<link rel="icon" href="img/icon-192.png" type="image/png">\n' +
-    '<link rel="stylesheet" href="css/site.css">\n<style>' + (o.style || o.chrome.style) + '</style>\n' +
-    blocks + '\n</head>\n<body>\n' + o.chrome.header + '\n' + o.crumb + '\n' + o.main + '\n' + o.chrome.footer + '\n' +
-    hyd +
-    '<script src="js/supabase-config.js"></script>\n<script src="js/session.js"></script>\n<script src="js/marketplace-data.js"></script>\n<script src="js/nav-dropdowns.js"></script>\n' +
+    '<link rel="icon" href="img/icon-192.png" type="image/png">\n<link rel="apple-touch-icon" href="img/icon-192.png">\n' +
+    blocks + '\n' +
+    '<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>\n' +
+    '<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet"/>\n' +
+    '<style>html,body{margin:0;padding:0;}body{overscroll-behavior:none;}::-webkit-scrollbar{display:none;}</style>\n' +
+    '<script src="https://cdn.tailwindcss.com"></script>\n<script src="js/tailwind-config.js"></script>\n' +
+    '</head>\n<body class="bg-surface-container font-body-md text-on-surface antialiased min-h-screen">\n' +
+    o.chrome.header + '\n<main class="w-full pt-[148px] bg-surface-container min-h-screen pb-space-2xl">\n' + o.crumb + '\n' + o.main + '\n</main>\n' + o.chrome.footer + '\n' +
+    (o.viewer || '') + hyd +
+    '<script src="js/supabase-config.js"></script>\n<script src="js/listing-schema.js"></script>\n<script src="js/session.js"></script>\n<script src="js/marketplace-data.js"></script>\n' +
     (o.extrasMeta ? '<script src="js/listing-extras.js"></script>\n<script>window.PMListingExtras&&PMListingExtras.init(' + jsonld(o.extrasMeta) + ');</script>\n' : '') +
     (o.afterScripts ? '<script>' + o.afterScripts + '</script>\n' : '') +
     '</body>\n</html>\n';
 }
 
 function renderListing(l, chrome) {
-  // This static page IS the canonical — it's the one with real content
-  // (detail.html is a client-rendered shell that's empty until Supabase
-  // data loads, which makes Google's indexer do extra, unreliable work for
-  // no benefit). PMSchema.listingUrl(l) is the extensionless public URL;
-  // sitemap.xml, detail.html's own canonical and this page's own canonical
-  // all agree on it (GitHub Pages serves this same file at both the
-  // extensionless URL and its on-disk l/*.html name — see PMSchema.
-  // listingFilePath). detail.html's own canonical points HERE too, so the
-  // two pages still agree — avoiding the "Duplicate, Google chose different
-  // canonical than user" alert (2026-07-28) the old self-vs-live split
-  // caused, just with the agreement flipped to the content-rich page.
+  // This static page IS the canonical: it has the real content, while
+  // detail.html is a client-rendered shell. PMSchema.listingUrl(l) is the
+  // extensionless public URL that sitemap.xml and detail.html also use.
   const url = PMSchema.listingUrl(l);
   const catLabel = PMSchema.catLabelOf(l);
   const loc = PMSchema.locOf(l);
   const photos = (l.photos && l.photos.length) ? l.photos : [];
   const isJob = l.category === 'jobs';
-  const priceStr = isJob ? (l.price ? money(l.price, l.currency) + '/mo' : 'Salary negotiable') : money(l.price, l.currency);
-  const title = esc(l.title);
-  const mainImg = photos.length ? '<img src="' + esc(photos[0]) + '" alt="' + title + '" fetchpriority="high" decoding="async"><span class="gallery-open-hint">↗ View full image</span><span class="gallery-count">1 / ' + photos.length + '</span>' : '<div class="gallery-main-ph">' + title + '</div>';
-  const thumbs = photos.length ? '<div class="gallery-thumbs" id="galleryThumbs">' + photos.map(function (p, i) { return '<button type="button" class="gallery-thumb' + (i === 0 ? ' on' : '') + '" data-photo="' + i + '" aria-label="View photo ' + (i + 1) + '"><img src="' + esc(p) + '" alt="" loading="lazy" decoding="async"></button>'; }).join('') + '</div>' : '<div class="gallery-thumbs" id="galleryThumbs"></div>';
-  const profileUrl = l.seller_id ? ('profile?id=' + esc(l.seller_id)) : null;
+  const priceStr = isJob ? (l.price ? money(l.price, l.currency) + '/mo' : 'Salary negotiable') : (l.price ? money(l.price, l.currency) : 'Contact for price');
+  const attrs = l.attributes && typeof l.attributes === 'object' ? l.attributes : {};
+  const condition = l.condition || attrs.condition || '';
   const phone = l.seller_phone ? String(l.seller_phone).replace(/[^\d+]/g, '') : '';
-  const waHref = phone ? ('https://wa.me/' + phone.replace('+', '') + '?text=' + encodeURIComponent('Hi, I saw your listing "' + l.title + '" on PaMarket. Is it still available?')) : '';
-  const waBtn = waHref ? '<a class="btn btn-whatsapp contact-btn" href="' + esc(waHref) + '" target="_blank" rel="noopener">Chat on WhatsApp</a>' : '';
-  const callBtn = phone ? '<a class="btn btn-navy contact-btn contact-primary" href="tel:' + esc(phone) + '">Call seller</a>' : '';
-  const profileBtn = profileUrl ? '<a class="btn btn-navy contact-btn" href="' + profileUrl + '">View Full Profile</a>' : '';
-  const shareBtn = '<button type="button" class="btn contact-btn" id="shareBtn" style="background:#fff;border:1.5px solid var(--line);color:var(--ink)">' +
-    '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Listing</button>';
-  const initials = esc((l.seller_name || 'Seller').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase());
+  const waHref = 'https://wa.me/' + (phone ? phone.replace('+', '') : '') + '?text=' + encodeURIComponent('Hi, I saw your listing "' + l.title + '" on PaMarket. Is it still available?');
   const reviews = l._reviews || [];
   const avg = avgRating(reviews);
-  const ratingLine = reviews.length
-    ? '<div class="seller-rating"><span class="stars">' + stars(avg) + '</span><span>' + avg.toFixed(1) + ' · ' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + '</span></div>'
-    : '';
-  const revSection = reviews.length
-    ? '<div class="d-section"><h3>Seller Reviews</h3>' + reviewsHtml(reviews, 'this seller') + '</div>'
-    : '';
   const featured = !!(l.featured_until && new Date(l.featured_until) > new Date());
-  const attrs = l.attributes && typeof l.attributes === 'object' ? l.attributes : {};
-  const condition = attrs.condition || l.condition || 'Not specified';
-  const special = l.category === 'vehicles' && (attrs.mileage || l.mileage) ? { value: String(attrs.mileage || l.mileage), label: 'Mileage' } : null;
-  const statRows = [special || { value: condition, label: 'Condition' }, { value: catLabel, label: 'Category' }, { value: Number(l.views || 0).toLocaleString(), label: 'Views' }];
-  const stats = '<div class="d-stats">' + statRows.map(function (s) { return '<div class="d-stat"><b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>'; }).join('') + '</div>';
-  const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse">Browse</a> / <a href="browse?cat=' + esc(l.category) + '">' + esc(catLabel) + '</a> / <span>' + title + '</span></div>';
-  const mainPremium = '<div id="detailContent"><div class="detail-wrap"><div class="detail-main">' +
-    '<div class="gallery"><div class="gallery-main" id="galleryMain" role="button" tabindex="0" aria-label="Open full-screen photo viewer">' + mainImg + '</div>' + thumbs + '</div>' +
-    '<section class="listing-summary"><div class="d-chips">' + (featured ? '<span class="d-chip featured">&#9733; Featured</span>' : '') + '<span class="d-chip">' + esc(catLabel) + '</span></div>' +
-    '<div class="d-heading-row"><h1 class="d-title">' + title + '</h1><div class="d-price">' + esc(priceStr) + '</div></div>' +
-    '<div class="d-meta"><span>' + esc(loc) + '</span><span>Posted ' + esc(timeAgo(l.created_at)) + '</span>' + (l.views ? '<span>' + Number(l.views).toLocaleString() + ' views</span>' : '') + '</div>' + stats + '</section>' +
-    '<div class="d-section"><h3>About this listing</h3><div class="d-desc">' + esc(l.description || 'No description provided.') + '</div></div>' + revSection +
-    '</div><div class="sidebar"><div class="seller-card">' +
-    '<div class="seller-top"><div class="seller-avatar">' + initials + '</div><div><div class="seller-name">' + esc(l.seller_name || 'PaMarket Seller') + '</div><div class="seller-sub">View profile &rarr;</div></div></div>' + ratingLine +
-    '<div class="seller-trust"><strong>Safe contact</strong><span>Check the seller profile and inspect before paying.</span></div>' +
-    '<div class="contact-actions">' + callBtn + waBtn + profileBtn + '</div><div class="seller-secondary-actions">' + shareBtn + '</div></div>' +
-    '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Meet in a public place during daylight hours</li><li>Never pay before seeing the item in person</li><li>PaMarket does not handle payments or delivery</li></ul></div>' +
-    '</div></div><div class="similar-sec hidden" id="recentSec" style="padding-top:28px"><h2>Recently <span style="color:var(--navy)">Viewed</span></h2><div class="similar-grid" id="recentGrid"></div></div></div>' +
-    '<div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="Full-screen listing photo viewer"><button type="button" class="pv-btn pv-close" id="photoViewerClose" aria-label="Close photo viewer">&times;</button><button type="button" class="pv-btn pv-prev" id="photoViewerPrev" aria-label="Previous photo">&#8249;</button><img class="photo-viewer-img" id="photoViewerImg" alt="Expanded listing photo"><button type="button" class="pv-btn pv-next" id="photoViewerNext" aria-label="Next photo">&#8250;</button><div class="pv-count" id="photoViewerCount"></div></div>' +
-    '<div id="unavailableState" class="state-msg" style="display:none">This listing is no longer available or is being reviewed.<br><br><a href="browse">Browse other listings</a></div>';
-  const photoScript = '(function(){var photos=' + jsonld(photos) + ',title=' + jsonld(l.title) + ',i=0,main=document.getElementById("galleryMain"),viewer=document.getElementById("photoViewer"),img=document.getElementById("photoViewerImg"),count=document.getElementById("photoViewerCount"),touch=0;function show(n){if(!photos.length)return;i=(n+photos.length)%photos.length;main.querySelector("img").src=photos[i];var c=main.querySelector(".gallery-count");if(c)c.textContent=(i+1)+" / "+photos.length;document.querySelectorAll(".gallery-thumb").forEach(function(t,x){t.classList.toggle("on",x===i);});img.src=String(photos[i]);img.alt=title+" - photo "+(i+1);count.textContent=(i+1)+" of "+photos.length;}function open(){if(!photos.length)return;viewer.classList.add("open");show(i);document.body.style.overflow="hidden";document.getElementById("photoViewerClose").focus();}function close(){viewer.classList.remove("open");document.body.style.overflow="";main.focus();}document.querySelectorAll(".gallery-thumb").forEach(function(t){t.onclick=function(){show(Number(t.dataset.photo));};});main.onclick=open;main.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}};document.getElementById("photoViewerClose").onclick=close;document.getElementById("photoViewerPrev").onclick=function(){show(i-1);};document.getElementById("photoViewerNext").onclick=function(){show(i+1);};viewer.onclick=function(e){if(e.target===viewer)close();};viewer.addEventListener("touchstart",function(e){touch=e.changedTouches[0].clientX;},{passive:true});viewer.addEventListener("touchend",function(e){var d=e.changedTouches[0].clientX-touch;if(Math.abs(d)>45)show(i+(d<0?1:-1));},{passive:true});document.addEventListener("keydown",function(e){if(!viewer.classList.contains("open"))return;if(e.key==="Escape")close();if(e.key==="ArrowLeft")show(i-1);if(e.key==="ArrowRight")show(i+1);});})();';
+  const g = gallery(photos, l.title);
+  const badge = 'text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1';
+  const badges = (featured ? '<span class="bg-secondary-fixed text-on-secondary-fixed text-label-sm font-bold px-2.5 py-1 rounded">&#9733; Featured</span>' : '') +
+    '<a href="browse?cat=' + esc(l.category) + '" class="bg-surface-container text-on-surface-variant text-label-sm font-label-sm px-2.5 py-1 rounded hover:text-primary">' + esc(catLabel) + '</a>' +
+    '<span class="' + badge + '">' + icon('schedule', 14) + 'Listed ' + esc(timeAgo(l.created_at)) + '</span>' +
+    '<span class="' + badge + '">' + icon('location_on', 14) + esc(loc) + '</span>' +
+    (l.views ? '<span class="' + badge + '">' + icon('visibility', 14) + Number(l.views).toLocaleString() + ' views</span>' : '');
+  const sub = [l.province, condition ? cap(condition) + ' condition' : null].filter(Boolean).join(' &bull; ');
+  const sellerName = l.seller_name || 'PaMarket Seller';
+  const sellerCard = '<section class="' + CARD + '"><div class="flex items-center gap-3">' + avatar(initialsOf(sellerName)) +
+    '<div class="min-w-0"><div class="font-bold text-on-surface text-body-lg truncate">' + esc(sellerName) + '</div>' +
+    (reviews.length ? '<div class="text-body-sm text-on-surface-variant"><span class="text-[#f59e0b]">' + stars(avg) + '</span> ' + avg.toFixed(1) + ' &middot; ' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + '</div>' : '<div class="text-body-sm text-on-surface-variant">Seller on PaMarket</div>') +
+    '</div></div>' +
+    (l.seller_id ? '<a href="profile?id=' + esc(l.seller_id) + '" class="mt-4 ' + BTN_SECONDARY + '">View seller profile</a>' : '') +
+    '<p class="mt-3 text-body-sm text-on-surface-variant">Always meet in a public place and inspect the item before paying. PaMarket never asks for deposits.</p></section>';
+  const contactCard = '<section class="' + CARD + '"><span class="' + LABEL + '">' + (isJob ? 'Salary' : 'Asking price') + '</span>' +
+    '<div class="font-price-primary text-headline-md font-extrabold text-primary mt-1 mb-4">' + esc(priceStr) + '</div>' +
+    '<div class="flex flex-col gap-2">' +
+    (l.seller_id ? '<a id="messageSellerBtn" href="chats?to=' + esc(l.seller_id) + '&amp;listing=' + esc(l.id) + '" class="' + BTN_PRIMARY + '">' + icon('forum') + 'Message Seller</a>' : '') +
+    '<a href="' + esc(waHref) + '" target="_blank" rel="noopener" class="' + BTN_WHATSAPP + '">' + icon('chat') + 'Chat on WhatsApp</a>' +
+    (phone ? '<a href="tel:' + esc(phone) + '" class="' + BTN_SECONDARY + '">' + icon('call') + 'Call seller</a>' : '') +
+    '</div><div class="flex items-center justify-between mt-3 pt-3 border-t border-outline-variant text-label-sm font-label-sm">' +
+    '<button type="button" id="shareBtn" class="flex items-center gap-1 text-on-surface-variant hover:text-primary">' + icon('share', 16) + 'Share</button>' +
+    '<a href="detail?id=' + esc(l.id) + '" class="flex items-center gap-1 text-on-surface-variant hover:text-primary">' + icon('favorite', 16) + 'Save</a>' +
+    '<a href="safety.html" class="flex items-center gap-1 text-on-surface-variant hover:text-error">' + icon('flag', 16) + 'Report</a></div></section>';
+  // data-* location is read back by tools/generate-landing-pages.js.
+  const main = '<div id="detailContent" class="max-w-7xl mx-auto px-margin md:px-margin-desktop" data-suburb="' + esc(l.suburb || '') + '" data-city="' + esc(l.city || '') + '" data-province="' + esc(l.province || '') + '">' +
+    '<div class="flex flex-col lg:flex-row lg:items-start justify-between gap-space-base mb-space-base"><div class="flex-1 min-w-0">' +
+    '<div class="flex flex-wrap items-center gap-2 mb-2">' + badges + '</div>' +
+    '<h1 class="font-headline-lg text-headline-md md:text-headline-lg text-on-surface font-bold leading-tight break-words">' + esc(l.title) + '</h1>' +
+    (sub ? '<p class="text-body-md text-on-surface-variant mt-1">' + sub + '</p>' : '') + '</div>' +
+    '<div class="bg-surface-container-lowest rounded p-4 shadow-sm shrink-0 w-full lg:w-64"><span class="' + LABEL + '">' + (isJob ? 'Salary' : 'Asking price') + '</span><div class="font-price-primary text-headline-md font-extrabold text-primary mt-1">' + esc(priceStr) + '</div></div></div>' +
+    '<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-base"><div class="lg:col-span-8 flex flex-col gap-space-base min-w-0">' +
+    g.html + specsHtml(l.category, attrs, l.condition) +
+    '<section class="' + CARD + '">' + h2('description', 'Description') + '<p class="text-body-md text-on-surface leading-relaxed whitespace-pre-line break-words">' + esc(l.description || 'No description provided.') + '</p></section>' +
+    '<section class="' + CARD + '">' + h2('location_on', 'Location') + '<p class="text-body-md text-on-surface-variant">' + esc([l.suburb, l.city, l.province].filter(Boolean).join(', ') || 'Zimbabwe') + '</p><p class="text-label-sm text-on-surface-variant mt-2">Agree on an exact meeting point with the seller before you travel.</p></section>' +
+    (reviews.length ? '<section class="' + CARD + '">' + h2('star', 'Seller Reviews') + reviewsHtml(reviews, 'this seller') + '</section>' : '') +
+    SAFETY_BAND + '</div>' +
+    '<aside class="lg:col-span-4 flex flex-col gap-space-base lg:sticky lg:top-[164px] self-start w-full">' + contactCard + sellerCard + '</aside></div>' +
+    '<section id="recentSec" class="hidden mt-space-xl"><h2 class="font-headline-sm text-headline-sm font-bold text-on-surface mb-space-base">Recently Viewed</h2><div id="recentGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-space-md"></div></section>' +
+    '</div>' +
+    '<div id="unavailableState" style="display:none" class="max-w-xl mx-auto px-margin py-space-2xl text-center"><h1 class="font-headline-md text-headline-md font-bold text-on-surface">This listing is no longer available</h1><p class="text-on-surface-variant mt-2">It may have been sold or is being reviewed.</p><a href="browse" class="inline-block mt-4 bg-primary text-on-primary px-5 py-2.5 rounded font-bold">Browse other listings</a></div>';
   return shell({
     url: url, pageTitle: l.title + ' — ' + priceStr + ' | PaMarket Zimbabwe',
     desc: l.description ? String(l.description).slice(0, 155) : (l.title + ' — ' + catLabel + ' in ' + loc + ' on PaMarket, Zimbabwe.'),
     ogImg: photos[0] || (SITE + '/img/icon-512.png'), ogType: isJob ? 'website' : 'product',
     schema: [PMSchema.buildListingSchema(l, url, reviews), PMSchema.buildBreadcrumb(l, url)],
-    crumb: crumb, main: mainPremium, hydrateListingId: l.id, chrome: chrome,
+    crumb: crumbHtml([{ label: 'Home', href: 'index.html' }, { label: 'Browse', href: 'browse' }, { label: catLabel, href: 'browse?cat=' + esc(l.category) }, { label: l.title }]),
+    main: main, viewer: g.viewer, hydrateListingId: l.id, chrome: chrome,
     extrasMeta: { id: l.id, title: l.title, price: l.price, currency: l.currency, photo: photos[0] || null, city: l.city, province: l.province, url: url },
-    afterScripts: photoScript
+    afterScripts: g.script + (l.seller_id ? '(function(){try{var s=window.PMSession&&PMSession.getSession&&PMSession.getSession();if(s&&s.user&&String(s.user.id)===' + jsonld(String(l.seller_id)) + '){var b=document.getElementById("messageSellerBtn");if(b)b.style.display="none";}}catch(e){}})();' : '')
   });
 }
 
 function renderRental(v, chrome) {
-  // See renderListing's comment: this static page is the canonical (real
-  // content, matches sitemap.xml); rental-detail.html's own canonical now
-  // points here too, so the two pages still agree.
+  // See renderListing: this static page is the canonical, and
+  // rental-detail.html's canonical points here too.
   const url = PMSchema.rentalUrl(v);
   const title = PMSchema.rentalTitle(v);
   const media = (v.rental_vehicle_media || []).slice().sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
+  const photos = media.map(function (m) { return m.url; }).filter(Boolean);
   const loc = [v.pickup_suburb, v.rental_locations && v.rental_locations.city].filter(Boolean).join(', ') || 'Zimbabwe';
   const catLabel = (v.rental_categories && v.rental_categories.label) || '';
   const company = v.rental_companies || {};
   const priceStr = v.daily_rate ? ('$' + Number(v.daily_rate).toLocaleString() + '/day') : 'Price on application';
   const rates = [];
-  if (v.weekly_rate) rates.push('<span><b>$' + Number(v.weekly_rate).toLocaleString() + '</b> /week</span>');
-  if (v.monthly_rate) rates.push('<span><b>$' + Number(v.monthly_rate).toLocaleString() + '</b> /month</span>');
-  if (v.deposit) rates.push('<span><b>$' + Number(v.deposit).toLocaleString() + '</b> deposit</span>');
+  if (v.weekly_rate) rates.push({ label: 'Weekly', value: '$' + Number(v.weekly_rate).toLocaleString() });
+  if (v.monthly_rate) rates.push({ label: 'Monthly', value: '$' + Number(v.monthly_rate).toLocaleString() });
+  if (v.deposit) rates.push({ label: 'Deposit', value: '$' + Number(v.deposit).toLocaleString() });
+  if (v.min_rental_days) rates.push({ label: 'Minimum', value: v.min_rental_days + ' day' + (v.min_rental_days === 1 ? '' : 's') });
   const features = (v.rental_vehicle_features || []).map(function (f) { return f.feature; }).filter(Boolean);
-  const featHtml = features.length ? '<div class="d-section"><h3>Features</h3><div class="feat-chips">' + features.map(function (f) { return '<span class="feat-chip">' + esc(f) + '</span>'; }).join('') + '</div></div>' : '';
-  const mainImg = media.length ? '<img src="' + esc(media[0].url) + '" alt="' + esc(title) + '">' : '<div class="gallery-main-ph">' + esc(title) + '</div>';
-  const thumbs = media.length > 1 ? '<div class="gallery-thumbs">' + media.map(function (m, i) { return '<div class="gallery-thumb' + (i === 0 ? ' on' : '') + '"><img src="' + esc(m.url) + '" alt="" loading="lazy"></div>'; }).join('') + '</div>' : '';
   const phone = company.rental_whatsapp || company.rental_phone;
-  const waHref = phone ? ('https://wa.me/' + String(phone).replace(/[^\d+]/g, '').replace('+', '') + '?text=' + encodeURIComponent('Hi, I saw your ' + title + ' rental on PaMarket. Is it available?')) : '';
-  const waBtn = waHref ? '<a class="btn btn-whatsapp contact-btn" href="' + esc(waHref) + '" target="_blank" rel="noopener">Chat on WhatsApp</a>' : '';
-  const emailBtn = company.rental_email ? '<a class="btn btn-outline contact-btn" href="mailto:' + esc(company.rental_email) + '">Email the Company</a>' : '';
-  const profileBtn = company.business_id ? '<a class="btn btn-navy contact-btn" href="business?id=' + esc(company.business_id) + '">View Business Profile</a>' : '';
-  // Parity with rental-detail.html's live JS render — same chats?biz= entry
-  // point business.html/b/*.html already use (rental companies ARE
-  // businesses via rental_companies.business_id).
-  const messageBtn = company.business_id
-    ? '<a class="btn btn-navy contact-btn" href="chats?biz=' + esc(company.business_id) + '"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-3px;margin-right:6px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Message via PaMarket</a>'
-    : '';
   const companyName = company.trading_name || 'Rental Company';
-  const companyInitials = esc(companyName.split(' ').map(function (w) { return w[0]; }).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'RC');
-  const companyRating = (company.review_count > 0 && company.avg_rating)
-    ? '<div class="seller-rating"><span class="stars">' + stars(company.avg_rating) + '</span><span>' + Number(company.avg_rating).toFixed(1) + ' · ' + company.review_count + ' review' + (company.review_count > 1 ? 's' : '') + '</span></div>'
-    : '';
+  const g = gallery(photos, title);
   const infoChips = [];
   if (company.year_established) infoChips.push('Est. ' + company.year_established);
   if (company.driver_available) infoChips.push('Driver available');
   if (company.cross_border) infoChips.push('Cross-border allowed');
   if (company.insurance_included) infoChips.push('Insurance included');
   if (company.deposit_policy) infoChips.push(company.deposit_policy);
-  const infoChipsHtml = infoChips.length ? '<div class="feat-chips" style="margin:10px 0">' + infoChips.map(function (c) { return '<span class="feat-chip">' + esc(c) + '</span>'; }).join('') + '</div>' : '';
-  const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="rentals">Vehicle Rental</a> / <span>' + esc(title) + '</span></div>';
-  const main = '<div id="detailContent"><div class="detail-wrap"><div>' +
-    '<div class="gallery"><div class="gallery-main" id="galleryMain">' + mainImg + '</div>' + thumbs + '</div>' +
-    '<h1 class="d-title">' + esc(title) + '</h1>' +
-    '<div class="d-avail"><span class="d-avail ' + (v.is_available ? 'yes' : 'no') + '">' + (v.is_available ? 'Taking rental requests' : 'Not taking new requests') + '</span></div>' +
-    '<div class="d-price">' + esc(priceStr) + '</div>' +
-    (rates.length ? '<div class="d-rates">' + rates.join('') + '</div>' : '') +
-    '<div class="d-meta"><span>' + esc(loc) + '</span>' + (catLabel ? '<span style="background:#EEF2FF;color:var(--navy);padding:3px 10px;border-radius:20px;font-weight:700">' + esc(catLabel) + '</span>' : '') + (v.min_rental_days ? '<span>Min ' + v.min_rental_days + ' day' + (v.min_rental_days === 1 ? '' : 's') + '</span>' : '') + '</div>' +
-    '<div class="d-section"><h3>Description</h3><div class="d-desc">' + esc(v.description || 'No description provided.') + '</div></div>' + featHtml +
-    '</div><div class="sidebar"><div class="seller-card">' +
-    '<div class="seller-top"><div class="seller-avatar">' + companyInitials + '</div><div><div class="seller-name">' + esc(companyName) + '</div><div class="seller-sub">Verified rental partner on PaMarket</div></div></div>' +
-    companyRating + infoChipsHtml + messageBtn + waBtn + emailBtn + profileBtn + '</div>' +
-    '<div class="safety-card"><h4>Stay Safe</h4><ul><li>Confirm the vehicle and terms before paying</li><li>Keep all conversations and payments inside PaMarket</li></ul></div>' +
-    '</div></div></div>';
+  const chip = function (t) { return '<span class="bg-surface-container-low text-on-surface text-label-sm font-semibold px-2.5 py-1 rounded-full">' + esc(t) + '</span>'; };
+  const actions = (company.business_id ? '<a href="chats?biz=' + esc(company.business_id) + '" class="' + BTN_PRIMARY + '">' + icon('forum') + 'Message via PaMarket</a>' : '') +
+    (phone ? '<a href="https://wa.me/' + esc(String(phone).replace(/[^\d]/g, '')) + '?text=' + encodeURIComponent('Hi, I saw your ' + title + ' rental on PaMarket. Is it available?') + '" target="_blank" rel="noopener" class="' + (company.business_id ? BTN_SECONDARY : BTN_PRIMARY) + '">' + icon('chat') + 'Chat on WhatsApp</a>' : '') +
+    (company.rental_email ? '<a href="mailto:' + esc(company.rental_email) + '" class="' + BTN_SECONDARY + '">' + icon('mail') + 'Email the company</a>' : '') +
+    (company.business_id ? '<a href="business?id=' + esc(company.business_id) + '" class="' + BTN_SECONDARY + '">' + icon('storefront') + 'View company profile</a>' : '');
+  const main = '<div id="detailContent" class="max-w-7xl mx-auto px-margin md:px-margin-desktop">' +
+    '<div class="flex flex-col lg:flex-row lg:items-start justify-between gap-space-base mb-space-base"><div class="flex-1 min-w-0">' +
+    '<div class="flex flex-wrap items-center gap-2 mb-2">' + (catLabel ? '<span class="bg-surface-container text-on-surface-variant text-label-sm px-2.5 py-1 rounded">' + esc(catLabel) + '</span>' : '') +
+    '<span class="text-label-sm font-bold px-2.5 py-1 rounded ' + (v.is_available ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-error-container text-on-error-container') + '">' + (v.is_available ? 'Taking rental requests' : 'Not taking new requests') + '</span>' +
+    '<span class="text-label-sm text-on-surface-variant flex items-center gap-1">' + icon('location_on', 14) + esc(loc) + '</span></div>' +
+    '<h1 class="font-headline-lg text-headline-md md:text-headline-lg text-on-surface font-bold leading-tight">' + esc(title) + '</h1></div>' +
+    '<div class="bg-surface-container-lowest rounded p-4 shadow-sm shrink-0 w-full lg:w-64"><span class="' + LABEL + '">Daily rate</span><div class="font-price-primary text-headline-md font-extrabold text-primary mt-1">' + esc(priceStr) + '</div></div></div>' +
+    '<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-base"><div class="lg:col-span-8 flex flex-col gap-space-base min-w-0">' + g.html +
+    (rates.length ? '<section class="' + CARD + '">' + h2('payments', 'Rates &amp; terms') + '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">' + rates.map(function (r) { return '<div class="bg-surface-container-low rounded p-3"><span class="text-label-sm text-on-surface-variant block">' + r.label + '</span><span class="text-body-lg text-on-surface font-bold">' + esc(r.value) + '</span></div>'; }).join('') + '</div></section>' : '') +
+    '<section class="' + CARD + '">' + h2('description', 'Description') + '<p class="text-body-md text-on-surface leading-relaxed whitespace-pre-line">' + esc(v.description || 'No description provided.') + '</p></section>' +
+    (features.length ? '<section class="' + CARD + '">' + h2('check_circle', 'Features') + '<div class="flex flex-wrap gap-2">' + features.map(chip).join('') + '</div></section>' : '') +
+    SAFETY_BAND + '</div>' +
+    '<aside class="lg:col-span-4 flex flex-col gap-space-base lg:sticky lg:top-[164px] self-start w-full"><section class="' + CARD + '"><div class="flex items-center gap-3">' + avatar(initialsOf(companyName)) +
+    '<div class="min-w-0"><div class="font-bold text-on-surface text-body-lg">' + esc(companyName) + '</div>' +
+    ((company.review_count > 0 && company.avg_rating) ? '<div class="text-body-sm text-on-surface-variant"><span class="text-[#f59e0b]">' + stars(company.avg_rating) + '</span> ' + Number(company.avg_rating).toFixed(1) + ' &middot; ' + company.review_count + ' review' + (company.review_count > 1 ? 's' : '') + '</div>' : '<div class="text-body-sm text-on-surface-variant">Rental partner on PaMarket</div>') +
+    '</div></div>' + (infoChips.length ? '<div class="flex flex-wrap gap-2 mt-3">' + infoChips.map(chip).join('') + '</div>' : '') +
+    '<div class="flex flex-col gap-2 mt-4">' + actions + '</div></section></aside></div></div>';
   return shell({
     url: url, pageTitle: title + ' Rental — PaMarket Zimbabwe',
     desc: 'Rent a ' + title + ' in Zimbabwe' + (v.daily_rate ? ' from $' + Number(v.daily_rate).toLocaleString() + '/day' : '') + '. Book directly with a verified rental company on PaMarket.',
-    ogImg: (media[0] && media[0].url) || (SITE + '/img/icon-512.png'), ogType: 'product',
+    ogImg: photos[0] || (SITE + '/img/icon-512.png'), ogType: 'product',
     schema: [PMSchema.buildRentalSchema(v, url), PMSchema.buildRentalBreadcrumb(v, url)],
-    crumb: crumb, main: main, chrome: chrome
+    crumb: crumbHtml([{ label: 'Home', href: 'index.html' }, { label: 'Car Rental', href: 'rentals' }, { label: title }]),
+    main: main, viewer: g.viewer, chrome: chrome, afterScripts: g.script
   });
 }
 
-// Mirrors the live business.html render() so the static /b/ page and the
-// client-rendered /business?id= page look identical. Uses business.html's
-// own <style> block (chrome.bizStyle) — the .biz-*/.rev-*/.rating-* classes
-// don't exist in detail.html's styles.
 const BIZ_TYPE_LABEL = { individual: 'Individual Seller', company: 'Registered Company', agency: 'Agency' };
 const CAT_LABEL = { property: 'Property', vehicles: 'Vehicles', electronics: 'Electronics', furniture: 'Furniture', fashion: 'Fashion', services: 'Services', agriculture: 'Agriculture', rooms: 'Rooms', pets: 'Pets', kids: 'Baby & Kids', jobs: 'Jobs', other: 'Other' };
 
-function bizProdCard(l) {
+function productCard(l) {
   const photo = l.photos && l.photos.length ? l.photos[0] : null;
   const loc = [l.suburb, l.city].filter(Boolean).join(', ') || l.province || 'Zimbabwe';
-  const media = photo
-    ? '<img class="pm-card-img-el" src="' + esc(photo) + '" alt="' + esc(l.title) + '" loading="lazy">'
-    : '<div class="pm-card-ph" style="color:var(--navy)">' + esc(String(l.title || '').split(' ').slice(0, 3).join(' ')) + '</div>';
-  return '<a class="pm-card" href="' + PMSchema.listingPath(l) + '">' +
-    '<div class="pm-card-img" style="background:var(--paper)">' + media + '</div>' +
-    '<div class="pm-card-body">' +
-    '<div class="pm-card-price">' + esc(money(l.price, l.currency)) + '</div>' +
-    '<div class="pm-card-title">' + esc(l.title) + '</div>' +
-    '<div class="pm-card-loc">📍 ' + esc(loc) + '</div>' +
-    '</div></a>';
+  return '<a href="' + PMSchema.listingPath(l) + '" class="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">' +
+    '<div class="aspect-[4/3] overflow-hidden bg-surface-container">' +
+    (photo ? '<img src="' + esc(photo) + '" alt="' + esc(l.title) + '" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform">'
+      : '<div class="w-full h-full flex items-center justify-center text-on-surface-variant">' + icon('image', 36) + '</div>') +
+    '</div><div class="p-3"><div class="font-bold text-primary">' + esc(money(l.price, l.currency)) + '</div>' +
+    '<div class="font-semibold text-on-surface truncate">' + esc(l.title) + '</div>' +
+    '<div class="text-label-sm text-on-surface-variant truncate">' + esc(loc) + '</div></div></a>';
 }
 
 function renderBusiness(b, chrome) {
-  // See renderListing's comment: this static page is the canonical (real
-  // content, matches sitemap.xml); business.html's own canonical now
-  // points here too, so the two pages still agree.
+  // See renderListing: this static page is the canonical, and
+  // business.html's canonical points here too.
   const url = PMSchema.businessUrl(b);
   const products = b._products || [];
   const reviews = b._reviews || [];
@@ -361,69 +429,44 @@ function renderBusiness(b, chrome) {
   const avg = avgRating(reviews);
   const year = b.created_at ? new Date(b.created_at).getFullYear() : '';
   const cats = (b.category || '').split('|').filter(Boolean);
-  // Mirrors business.html's render() -- see its comment on this same
-  // fallback for why photos[0] matters: the mobile Create/Manage Shop flow
-  // only ever writes businesses.photos, never .cover/.logo.
+  // The mobile Create/Manage Shop flow only writes businesses.photos, never
+  // .cover/.logo, so fall back to the first photo.
   const photos = Array.isArray(b.photos) ? b.photos.filter(Boolean) : [];
-  const cover = b.cover ? '<img src="' + esc(b.cover) + '" alt="' + esc(b.name) + ' cover">'
-    : (photos.length ? '<img src="' + esc(photos[0]) + '" alt="' + esc(b.name) + ' cover">' : '');
-  const logo = b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + ' logo">' : initialsOf(b.name);
-
-  // This static page has no client-side identity check (it's baked at build
-  // time for crawlers/anonymous visitors), so "Message Business" is always
-  // shown — mirrors business.html's non-owner branch. If the owner
-  // themselves lands here and clicks it, js/chats.js's resolveBizEntry
-  // already guards against messaging your own business with a clear toast.
-  let actions = '<a class="btn btn-navy" href="chats?biz=' + esc(b.id) + '"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-3px;margin-right:6px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Message Business</a>';
+  const coverSrc = b.cover || photos[0] || '';
+  const logoImg = b.logo ? '<img src="' + esc(b.logo) + '" alt="' + esc(b.name) + ' logo" class="w-full h-full object-cover">' : '';
   const wa = b.whatsapp || b.phone;
-  if (wa) actions += '<a class="btn btn-whatsapp" href="https://wa.me/' + esc(String(wa).replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener">WhatsApp</a>';
-  if (b.phone) actions += '<a class="btn btn-navy" href="tel:' + esc(b.phone) + '">Call</a>';
-  if (b.email) actions += '<a class="btn btn-outline" href="mailto:' + esc(b.email) + '">Email</a>';
-
-  let statHtml = '';
-  if (reviews.length) statHtml += '<div class="biz-stat"><div class="n">' + avg.toFixed(1) + ' ★</div><div class="l">' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + '</div></div>';
-  statHtml += '<div class="biz-stat"><div class="n">' + products.length + '</div><div class="l">Listings</div></div>';
-  if (year) statHtml += '<div class="biz-stat"><div class="n">' + year + '</div><div class="l">On PaMarket since</div></div>';
-
-  const crumb = '<div class="crumb"><a href="/">Home</a> / <a href="browse?shops=1">Shops</a> / <span>' + esc(b.name) + '</span></div>';
-  const main =
-    '<div class="biz-cover">' + cover + '</div>' +
-    '<div class="biz-head">' +
-      '<div class="biz-id">' +
-        '<div class="biz-logo">' + logo + '</div>' +
-        '<div class="biz-id-name">' +
-          '<div class="biz-name-row"><h1 class="biz-name">' + esc(b.name) + '</h1>' +
-            (verified ? '<span class="biz-verified">✓ Verified</span>' : '') + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="biz-meta">' +
-        '<span>🏷️ ' + esc(BIZ_TYPE_LABEL[b.biz_type] || 'Seller') + '</span>' +
-        '<span>📍 ' + esc(loc) + '</span>' +
-      '</div>' +
-      '<div class="biz-stats">' + statHtml + '</div>' +
-      '<div class="biz-actions">' + (actions || '<span class="sub" style="color:var(--mute);font-size:13px">No contact details provided</span>') + '</div>' +
-    '</div>' +
-    '<div class="biz-body">' +
-      (b.description ? '<div class="biz-section biz-about"><h2>About</h2><p>' + esc(b.description) + '</p>' +
-        (cats.length ? '<div class="cat-chips">' + cats.map(function (c) { return '<span class="pm-chip">' + esc(CAT_LABEL[c] || c) + '</span>'; }).join('') + '</div>' : '') + '</div>' : '') +
-      (photos.length ? '<div class="biz-section"><h2>Shop Photos</h2><div class="sub">Photos ' + esc(b.name) + ' added about their business</div>' +
-        '<div class="biz-photos-grid">' + photos.map(function (p, i) { return '<img src="' + esc(p) + '" alt="' + esc(b.name) + ' photo ' + (i + 1) + '" loading="lazy" decoding="async">'; }).join('') +
-        '</div></div>' : '') +
-      '<div class="biz-section"><h2>Listings</h2><div class="sub">Products &amp; services from ' + esc(b.name) + '</div>' +
-        (products.length
-          ? '<div class="prod-grid">' + products.slice(0, 12).map(bizProdCard).join('') + '</div>'
-          : '<div class="empty-state">No live listings yet. Check back soon.</div>') +
-      '</div>' +
-      '<div class="biz-section"><h2>Reviews &amp; Ratings</h2>' +
-        (reviews.length ? reviewsHtml(reviews) : '<div class="empty-state">This shop has no reviews yet.</div>') +
-      '</div>' +
+  const actions = '<a href="chats?biz=' + esc(b.id) + '" class="' + BTN_PRIMARY + '">' + icon('forum') + 'Message business</a>' +
+    (wa ? '<a href="https://wa.me/' + esc(String(wa).replace(/[^0-9]/g, '')) + '" target="_blank" rel="noopener" class="' + BTN_SECONDARY + '">' + icon('chat') + 'WhatsApp</a>' : '') +
+    (b.phone ? '<a href="tel:' + esc(b.phone) + '" class="' + BTN_SECONDARY + '">' + icon('call') + 'Call</a>' : '') +
+    (b.email ? '<a href="mailto:' + esc(b.email) + '" class="' + BTN_SECONDARY + '">' + icon('mail') + 'Email</a>' : '');
+  const stats = [];
+  if (reviews.length) stats.push({ n: avg.toFixed(1) + ' &#9733;', l: reviews.length + ' review' + (reviews.length > 1 ? 's' : '') });
+  stats.push({ n: String(products.length), l: 'Listings' });
+  if (year) stats.push({ n: String(year), l: 'On PaMarket since' });
+  const main = '<div id="detailContent" class="max-w-7xl mx-auto px-margin md:px-margin-desktop flex flex-col gap-space-base">' +
+    '<section class="bg-surface-container-lowest rounded overflow-hidden shadow-sm">' +
+    '<div class="h-40 md:h-64 bg-gradient-to-br from-primary to-primary-container">' + (coverSrc ? '<img src="' + esc(coverSrc) + '" alt="' + esc(b.name) + ' cover" class="w-full h-full object-cover">' : '') + '</div>' +
+    '<div class="p-5 md:p-6"><div class="flex items-end gap-4 -mt-14 md:-mt-16">' +
+    '<div class="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-primary-fixed text-on-primary-fixed border-4 border-surface-container-lowest flex items-center justify-center font-bold text-headline-sm overflow-hidden shrink-0">' + (logoImg || initialsOf(b.name)) + '</div></div>' +
+    '<div class="mt-3 flex flex-wrap items-center gap-2"><h1 class="font-headline-lg text-headline-md md:text-headline-lg text-on-surface font-bold">' + esc(b.name) + '</h1>' +
+    (verified ? '<span class="bg-primary-fixed text-on-primary-fixed text-label-sm font-bold px-2.5 py-1 rounded-full flex items-center gap-1">' + icon('verified', 14) + 'Verified</span>' : '') + '</div>' +
+    '<div class="mt-1 flex flex-wrap gap-3 text-body-sm text-on-surface-variant"><span class="flex items-center gap-1">' + icon('storefront', 16) + esc(BIZ_TYPE_LABEL[b.biz_type] || 'Seller') + '</span><span class="flex items-center gap-1">' + icon('location_on', 16) + esc(loc) + '</span></div>' +
+    '<div class="mt-4 grid grid-cols-3 gap-2.5 max-w-md">' + stats.map(function (s) { return '<div class="bg-surface-container-low rounded p-3 text-center"><div class="font-bold text-on-surface text-body-lg">' + s.n + '</div><div class="text-label-sm text-on-surface-variant">' + s.l + '</div></div>'; }).join('') + '</div>' +
+    '<div class="mt-4 grid grid-cols-2 sm:flex gap-2">' + actions + '</div></div></section>' +
+    (b.description ? '<section class="' + CARD + '">' + h2('info', 'About') + '<p class="text-body-md text-on-surface leading-relaxed whitespace-pre-line">' + esc(b.description) + '</p>' +
+      (cats.length ? '<div class="flex flex-wrap gap-2 mt-3">' + cats.map(function (c) { return '<span class="bg-surface-container-low text-on-surface text-label-sm font-semibold px-2.5 py-1 rounded-full">' + esc(CAT_LABEL[c] || c) + '</span>'; }).join('') + '</div>' : '') + '</section>' : '') +
+    (photos.length ? '<section class="' + CARD + '">' + h2('photo_library', 'Shop Photos') + '<div class="grid grid-cols-2 md:grid-cols-4 gap-2">' + photos.map(function (p, i) { return '<img src="' + esc(p) + '" alt="' + esc(b.name) + ' photo ' + (i + 1) + '" loading="lazy" decoding="async" class="w-full aspect-square object-cover rounded">'; }).join('') + '</div></section>' : '') +
+    '<section class="' + CARD + '">' + h2('sell', 'Listings') +
+    (products.length ? '<div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">' + products.slice(0, 12).map(productCard).join('') + '</div>' : '<p class="text-on-surface-variant">No live listings yet. Check back soon.</p>') + '</section>' +
+    '<section class="' + CARD + '">' + h2('star', 'Reviews &amp; Ratings') + (reviews.length ? reviewsHtml(reviews) : '<p class="text-on-surface-variant">This shop has no reviews yet.</p>') + '</section>' +
     '</div>';
   const desc = b.description ? String(b.description).slice(0, 155) : (b.name + ' — a verified business storefront on PaMarket, Zimbabwe.');
   return shell({
     url: url, pageTitle: b.name + ' — Verified Shop on PaMarket Zimbabwe', desc: desc,
     ogImg: b.cover || photos[0] || b.logo || (SITE + '/img/icon-512.png'), ogType: 'website',
     schema: PMSchema.buildBusinessSchema(b, url, reviews, products),
-    crumb: crumb, main: main, chrome: chrome, style: chrome.bizStyle
+    crumb: crumbHtml([{ label: 'Home', href: 'index.html' }, { label: 'Businesses', href: 'businesses' }, { label: b.name }]),
+    main: main, chrome: chrome
   });
 }
 

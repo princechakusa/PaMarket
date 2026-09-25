@@ -56,6 +56,18 @@ const STATIC_PAGES = [
   { loc: '/blog', changefreq: 'weekly', priority: '0.7' },
 ];
 
+// Category/city landing pages written by tools/generate-landing-pages.js,
+// which must run first. Pages with no current listings are noindex, so skip them.
+function loadLandingPages() {
+  const dir = path.join(__dirname, '..', 'c');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir)
+    .filter((f) => f.endsWith('.html'))
+    .filter((f) => !/<meta name="robots" content="noindex/.test(fs.readFileSync(path.join(dir, f), 'utf8')))
+    .sort()
+    .map((f) => '/c/' + f.replace(/\.html$/, ''));
+}
+
 function loadBlogPosts() {
   const blogDataPath = path.join(__dirname, '..', 'js', 'blog-data.js');
   const sandbox = { window: {} };
@@ -213,6 +225,11 @@ async function main() {
     xml += urlEntry(p.loc, today, p.changefreq, p.priority);
   }
 
+  const landingPages = loadLandingPages();
+  for (const loc of landingPages) {
+    xml += urlEntry(loc, today, 'daily', loc.endsWith('-zimbabwe') ? '0.9' : '0.8');
+  }
+
   for (const l of listings) {
     const lastmod = l.created_at ? l.created_at.slice(0, 10) : today;
     // Point at the static pre-rendered page (real HTML + baked JSON-LD),
@@ -250,6 +267,7 @@ async function main() {
   fs.writeFileSync(outPath, xml, 'utf8');
   console.log(
     'sitemap.xml written with ' + STATIC_PAGES.length + ' static pages, ' +
+    landingPages.length + ' landing pages, ' +
     listings.length + ' listing pages, ' + rentals.length + ' rental pages, ' +
     profiles.length + ' profile pages, ' + businesses.length + ' business pages, ' +
     institutions.length + ' institution pages, ' +
