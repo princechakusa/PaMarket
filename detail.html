@@ -214,6 +214,7 @@
 <script src="js/services/listings.js"></script>
 <script src="js/services/profiles.js"></script>
 <script src="js/services/fx-rate.js"></script>
+<script src="js/listing-attrs.js"></script>
 <script src="js/session.js" defer></script>
 <script src="js/cookie-consent.js" defer></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -243,8 +244,6 @@
     if (PROVINCE_COORDS[l.province]) return { coords:PROVINCE_COORDS[l.province], exact:false };
     return null;
   }
-  var ATTR_LABEL = { make:'Make', model:'Model', year:'Year', mileage:'Mileage', transmission:'Transmission', fuel:'Fuel Type', color:'Color', bodyType:'Body Type', condition:'Condition', bedrooms:'Bedrooms', bathrooms:'Bathrooms', size:'Size', brand:'Brand', storage:'Storage', ram:'RAM' };
-  var HIDE_ATTRS = { subcat:1, features:1, rentalType:1, condition:1 };
 
   function fmtPrice(n){ if(n==null) return 'N/A'; return '$' + Number(n).toLocaleString('en-US'); }
   function fmtZig(n){ if(n==null) return ''; return Math.round(Number(n)*ZIG_RATE).toLocaleString('en-US'); }
@@ -268,13 +267,6 @@
     return d.toLocaleDateString('en-ZW', {day:'numeric', month:'short', year:'numeric'});
   }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function fmtAttrValue(key, val){
-    if (key === 'mileage' && typeof val === 'number') return val.toLocaleString('en-US') + ' km';
-    return String(val);
-  }
-  function fmtAttrLabel(key){
-    return ATTR_LABEL[key] || (key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'));
-  }
 
   var params = new URLSearchParams(window.location.search);
   var listingId = params.get('id');
@@ -337,7 +329,8 @@
     document.getElementById('badgeRow').innerHTML = badges;
 
     document.getElementById('listingTitle').textContent = l.title || 'Untitled listing';
-    document.getElementById('listingSub').textContent = [l.province, l.condition ? (l.condition.charAt(0).toUpperCase()+l.condition.slice(1)+' condition') : null].filter(Boolean).join(' • ');
+    var cond = l.condition || (l.attributes && l.attributes.condition) || '';
+    document.getElementById('listingSub').textContent = [l.province, cond ? (String(cond).charAt(0).toUpperCase()+String(cond).slice(1)+' condition') : null].filter(Boolean).join(' • ');
     var metaPills = '<span class="inline-flex items-center gap-1 bg-surface-container-low text-on-surface text-label-sm font-label-sm font-bold px-3 py-1 rounded-full"><span class="material-symbols-outlined text-[14px] text-primary">verified</span>ID: #' + l.id.slice(0,8).toUpperCase() + '</span>';
     metaPills += '<span class="inline-flex items-center gap-1 bg-surface-container-low text-on-surface text-label-sm font-label-sm font-bold px-3 py-1 rounded-full"><span class="material-symbols-outlined text-[14px] text-primary">visibility</span>' + (typeof l.views === 'number' ? l.views.toLocaleString('en-US') : '0') + ' Views</span>';
     metaPills += '<span id="savesPill" class="inline-flex items-center gap-1 bg-surface-container-low text-on-surface text-label-sm font-label-sm font-bold px-3 py-1 rounded-full"><span class="material-symbols-outlined text-[14px] text-primary">favorite</span><span id="savesCount">0</span> Saves</span>';
@@ -393,22 +386,21 @@
       if (e.key === 'ArrowRight') lightboxNav(1);
     });
 
-    var attrs = l.attributes || {};
-    var specEntries = Object.keys(attrs).filter(function(k){ return !HIDE_ATTRS[k] && attrs[k] != null && attrs[k] !== ''; });
-    if (l.condition) specEntries = ['condition_display'].concat(specEntries);
-    if (specEntries.length) {
+    var described = window.PMListingAttrs ? window.PMListingAttrs.describe(l.category, l.attributes, l.condition) : { specs: [], features: null, subcategory: null };
+    var specs = described.subcategory ? [{ label: 'Category', value: described.subcategory }].concat(described.specs) : described.specs;
+    if (specs.length) {
       document.getElementById('specsSection').classList.remove('hidden');
-      document.getElementById('specsGrid').innerHTML = specEntries.map(function(k){
-        if (k === 'condition_display') return '<div class="bg-surface-container-low rounded p-3"><span class="text-label-sm font-label-sm text-on-surface-variant block">Condition</span><span class="font-headline-sm text-body-lg text-on-surface font-bold">' + esc(l.condition.charAt(0).toUpperCase()+l.condition.slice(1)) + '</span></div>';
-        return '<div class="bg-surface-container-low rounded p-3"><span class="text-label-sm font-label-sm text-on-surface-variant block">' + esc(fmtAttrLabel(k)) + '</span><span class="font-headline-sm text-body-lg text-on-surface font-bold">' + esc(fmtAttrValue(k, attrs[k])) + '</span></div>';
+      document.getElementById('specsGrid').innerHTML = specs.map(function(s){
+        return '<div class="bg-surface-container-low rounded p-3"><span class="text-label-sm font-label-sm text-on-surface-variant block">' + esc(s.label) + '</span><span class="font-headline-sm text-body-lg text-on-surface font-bold">' + esc(s.value) + '</span></div>';
       }).join('');
     } else {
       document.getElementById('specsSection').classList.add('hidden');
     }
 
-    if (Array.isArray(attrs.features) && attrs.features.length) {
+    if (described.features) {
       document.getElementById('featuresSection').classList.remove('hidden');
-      document.getElementById('featuresGrid').innerHTML = attrs.features.map(function(f){
+      document.getElementById('featuresSection').querySelector('h2').lastChild.textContent = described.features.label;
+      document.getElementById('featuresGrid').innerHTML = described.features.items.map(function(f){
         return '<div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">check</span>' + esc(f) + '</div>';
       }).join('');
     } else {

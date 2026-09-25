@@ -114,8 +114,11 @@ function loadListings() {
     if (data['@type'] === 'JobPosting') continue;
     const key = CATEGORY_BY_LABEL[data.category];
     if (!key) continue;
-    const loc = html.match(/class="d-meta"><span>([^<]*)<\/span>/);
-    const parts = loc ? decodeEntities(loc[1]).split(',').map((s) => s.trim()).filter(Boolean) : [];
+    const attr = (name) => {
+      const m = html.match(new RegExp('id="detailContent"[^>]*\\sdata-' + name + '="([^"]*)"'));
+      return m ? decodeEntities(m[1]).trim() : '';
+    };
+    const suburb = attr('suburb'), city = attr('city'), province = attr('province');
     const offer = data.offers || {};
     const images = Array.isArray(data.image) ? data.image : data.image ? [data.image] : [];
     out.push({
@@ -127,9 +130,9 @@ function loadListings() {
       price: offer.price,
       currency: offer.priceCurrency,
       date: offer.validFrom || '',
-      suburb: parts[0] || '',
-      province: parts[parts.length - 1] || '',
-      place: parts.length > 1 ? parts[0] + ', ' + parts[parts.length - 1] : parts[0] || 'Zimbabwe',
+      suburb: suburb || city,
+      province,
+      place: [suburb || city, province].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ') || 'Zimbabwe',
     });
   }
   out.sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.path.localeCompare(b.path));
@@ -292,19 +295,6 @@ ${faqs.map((f) => '<div><h3 class="font-bold text-on-surface">' + esc(f.q) + '</
 <!-- FOOTER:START -->
 ${readPartial('footer')}
 <!-- FOOTER:END -->
-<script>
-window.doHeaderSearch = function () {
-  var input = document.getElementById('headerSearchInput');
-  var q = input && input.value ? input.value.trim() : '';
-  window.location.href = '${SITE}/browse' + (q ? '?q=' + encodeURIComponent(q) : '');
-};
-window.setCurrency = function (cur) {
-  var on = 'px-2 py-1 rounded bg-primary text-on-primary font-bold shadow-sm';
-  var off = 'px-2 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors font-medium';
-  var usd = document.getElementById('currencyUsdBtn'), zig = document.getElementById('currencyZigBtn');
-  if (usd && zig) { usd.className = cur === 'USD' ? on : off; zig.className = cur === 'ZiG' ? on : off; }
-};
-</script>
 </body>
 </html>
 `;

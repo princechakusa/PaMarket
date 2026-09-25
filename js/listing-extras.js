@@ -26,14 +26,14 @@
     var bg = COLORS[i % COLORS.length], tc = TCOLORS[i % TCOLORS.length];
     var loc = [r.city, r.province].filter(Boolean).join(', ') || 'Zimbabwe';
     var img = r.photo
-      ? '<img src="' + escHtml(r.photo) + '" alt="' + escHtml(r.title) + '" loading="lazy">'
-      : '<div class="gcard-img-ph" style="color:' + tc + '">' + escHtml(String(r.title || '').split(' ').slice(0, 3).join(' ')) + '</div>';
-    return '<a class="gcard" href="' + escHtml(global.PMSchema.listingPath(r)) + '">' +
-      '<div class="gcard-img" style="background:' + bg + '">' + img + '</div>' +
-      '<div class="gcard-body">' +
-      '<div class="gcard-price">' + money(r.price, r.currency) + '</div>' +
-      '<div class="gcard-title">' + escHtml(r.title) + '</div>' +
-      '<div class="gcard-loc">' + PIN + ' ' + escHtml(loc) + '</div>' +
+      ? '<img src="' + escHtml(r.photo) + '" alt="' + escHtml(r.title) + '" loading="lazy" class="w-full h-full object-cover">'
+      : '<div class="w-full h-full flex items-center justify-center p-3 text-center font-bold" style="color:' + tc + '">' + escHtml(String(r.title || '').split(' ').slice(0, 3).join(' ')) + '</div>';
+    return '<a class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow" href="' + escHtml(global.PMSchema.listingPath(r)) + '">' +
+      '<div class="aspect-[4/3] overflow-hidden" style="background:' + bg + '">' + img + '</div>' +
+      '<div class="p-3">' +
+      '<div class="font-bold text-primary">' + money(r.price, r.currency) + '</div>' +
+      '<div class="font-semibold text-on-surface truncate">' + escHtml(r.title) + '</div>' +
+      '<div class="text-label-sm text-on-surface-variant truncate flex items-center gap-1">' + PIN + ' ' + escHtml(loc) + '</div>' +
       '</div></a>';
   }
 
