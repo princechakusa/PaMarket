@@ -22,6 +22,7 @@ function loadSupabaseConfig() {
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
   { loc: '/browse', changefreq: 'daily', priority: '0.9' },
+  { loc: '/vehicles', changefreq: 'daily', priority: '0.9' },
   { loc: '/institutions', changefreq: 'daily', priority: '0.7' },
   { loc: '/businesses', changefreq: 'daily', priority: '0.8' },
   { loc: '/download', changefreq: 'monthly', priority: '0.8' },
