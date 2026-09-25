@@ -17,6 +17,9 @@
   // Merged busy date ranges only (no reasons/notes/customers); the
   // availability table itself is owner-only.
   function fetchRentalBusyRanges(id,from,to){return transport.rpcJson('rental_vehicle_busy_ranges',{p_listing_id:id,p_from:from||null,p_to:to||null}).then(function(rows){return Array.isArray(rows)?rows:[];});}
+  // Lookup taxonomy — public, read-only. Used to populate vehicle-class
+  // filters without hardcoding a category list that can drift from the DB.
+  function fetchRentalCategories(){return transport.fetchJson('rental_categories?select=slug,label&order=label').catch(function(){return [];});}
 
   // ── Phase 1: bookings ──────────────────────────────────────────────────
   // Every call below requires a real signed-in session (request_rental_
@@ -82,6 +85,7 @@
 
   return Object.freeze({
     fetchRentalListings:fetchRentalListings,fetchRentalListingById:fetchRentalListingById,fetchRentalBusyRanges:fetchRentalBusyRanges,
+    fetchRentalCategories:fetchRentalCategories,
     quoteRentalBooking:quoteRentalBooking,requestRentalBooking:requestRentalBooking,
     listMyRentalBookings:listMyRentalBookings,listCompanyRentalBookings:listCompanyRentalBookings,fetchRentalBookingDetail:fetchRentalBookingDetail,
     acceptRentalBooking:acceptRentalBooking,declineRentalBooking:declineRentalBooking,cancelRentalBooking:cancelRentalBooking,

@@ -20,10 +20,28 @@
       "inlineJs": 8305,
       "inlineCss": 4314
     },
+    "blog.html": {
+      "bytes": 39798,
+      "lines": 382,
+      "inlineJs": 11683,
+      "inlineCss": 209
+    },
+    "browse.html": {
+      "bytes": 37579,
+      "lines": 433,
+      "inlineJs": 16990,
+      "inlineCss": 209
+    },
     "business.html": {
-      "bytes": 36366,
+      "bytes": 36620,
       "lines": 366,
       "inlineJs": 14225,
+      "inlineCss": 209
+    },
+    "businesses.html": {
+      "bytes": 32334,
+      "lines": 286,
+      "inlineJs": 10914,
       "inlineCss": 209
     },
     "chats.html": {
@@ -63,9 +81,21 @@
       "inlineCss": 3934
     },
     "index.html": {
-      "bytes": 81017,
-      "lines": 845,
+      "bytes": 78446,
+      "lines": 817,
       "inlineJs": 29555,
+      "inlineCss": 209
+    },
+    "institution.html": {
+      "bytes": 43588,
+      "lines": 427,
+      "inlineJs": 18893,
+      "inlineCss": 209
+    },
+    "job.html": {
+      "bytes": 33458,
+      "lines": 373,
+      "inlineJs": 12294,
       "inlineCss": 209
     },
     "jobs.html": {
@@ -110,23 +140,29 @@
       "inlineJs": 0,
       "inlineCss": 0
     },
+    "js/session.js": {
+      "bytes": 16544,
+      "lines": 346,
+      "inlineJs": 0,
+      "inlineCss": 0
+    },
     "open-shop.html": {
       "bytes": 65348,
       "lines": 538,
       "inlineJs": 26667,
       "inlineCss": 8898
     },
-    "plans.html": {
-      "bytes": 47693,
-      "lines": 711,
-      "inlineJs": 3996,
-      "inlineCss": 5830
-    },
     "post-ad.html": {
       "bytes": 49610,
       "lines": 764,
       "inlineJs": 18349,
       "inlineCss": 9449
+    },
+    "post-campus-ad.html": {
+      "bytes": 39569,
+      "lines": 400,
+      "inlineJs": 13076,
+      "inlineCss": 1216
     },
     "post-job.html": {
       "bytes": 41849,
@@ -135,70 +171,22 @@
       "inlineCss": 6433
     },
     "profile.html": {
-      "bytes": 50794,
+      "bytes": 51048,
       "lines": 706,
       "inlineJs": 18922,
       "inlineCss": 10620
     },
     "rental-detail.html": {
-      "bytes": 34003,
-      "lines": 497,
-      "inlineJs": 11340,
-      "inlineCss": 4594
+      "bytes": 34581,
+      "lines": 427,
+      "inlineJs": 11444,
+      "inlineCss": 4571
     },
     "rental-fleet.html": {
       "bytes": 13555,
       "lines": 44,
       "inlineJs": 0,
       "inlineCss": 10560
-    },
-    "rentals.html": {
-      "bytes": 33740,
-      "lines": 560,
-      "inlineJs": 8670,
-      "inlineCss": 4178
-    },
-    "blog.html": {
-      "bytes": 39798,
-      "lines": 382,
-      "inlineJs": 11683,
-      "inlineCss": 209
-    },
-    "browse.html": {
-      "bytes": 37325,
-      "lines": 433,
-      "inlineJs": 16990,
-      "inlineCss": 209
-    },
-    "businesses.html": {
-      "bytes": 32334,
-      "lines": 286,
-      "inlineJs": 10914,
-      "inlineCss": 209
-    },
-    "institution.html": {
-      "bytes": 43588,
-      "lines": 427,
-      "inlineJs": 18893,
-      "inlineCss": 209
-    },
-    "job.html": {
-      "bytes": 33458,
-      "lines": 373,
-      "inlineJs": 12294,
-      "inlineCss": 209
-    },
-    "js/session.js": {
-      "bytes": 16544,
-      "lines": 346,
-      "inlineJs": 0,
-      "inlineCss": 0
-    },
-    "post-campus-ad.html": {
-      "bytes": 39569,
-      "lines": 400,
-      "inlineJs": 13076,
-      "inlineCss": 1216
     }
   }
 }

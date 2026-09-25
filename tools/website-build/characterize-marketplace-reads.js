@@ -44,6 +44,7 @@ async function characterizeMarketplaceReads() {
     if (url.includes('/profiles_public?')) return response([profile]);
     if (url.includes('/businesses?id=')) return response([business]);
     if (url.includes('/businesses?')) return response([business]);
+    if (url.includes('/rpc/rental_vehicle_busy_ranges')) return response([{ starts_on: '2026-10-01', ends_on: '2026-10-03' }]);
     if (url.includes('/rental_vehicle_listings?id=')) return response([rental]);
     if (url.includes('/rental_vehicle_listings?')) return response([rental]);
     if (url.includes('/listings?id=eq.listing-1')) return response([listing]);
@@ -104,10 +105,16 @@ async function characterizeMarketplaceReads() {
   assert.deepEqual(await context.PM.fetchRentalListings({ city: 'Harare', limit: 6, offset: 3 }), [rental]); assertions++;
   assert.match(requests.at(-1).url, /status=eq\.active.*admin_status=eq\.approved.*deleted_at=is\.null.*rental_locations\.city=ilike\.\*Harare\*.*limit=6.*offset=3/); assertions++;
   assert.deepEqual(await context.PM.fetchRentalListingById('rental-1'), rental); assertions++;
-  assert.match(requests.at(-1).url, /rental_vehicle_listings\?id=eq\.rental-1.*admin_status=eq\.approved.*select=\*/); assertions++;
-  assert.match(requests.at(-1).url, /rental_brands\(label\),rental_categories\(label\),rental_locations\(city,province\),rental_vehicle_media\(url,is_cover,sort_order\),rental_vehicle_specs\(\*\),rental_vehicle_features\(feature\),rental_companies\(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,year_established,deposit_policy,driver_available,cross_border,insurance_included,min_rental_days,avg_rating,review_count,businesses\(owner_user_id\)\)/); assertions++;
+  assert.match(requests.at(-1).url, /rental_vehicle_listings\?id=eq\.rental-1.*admin_status=eq\.approved.*select=id,company_id,model,year,daily_rate/); assertions++;
+  // Private identifiers are not readable by anon; select=* would be refused.
+  assert.doesNotMatch(requests.at(-1).url, /select=\*|\(\*\)|registration|\bvin\b|engine_number/); assertions++;
+  assert.match(requests.at(-1).url, /rental_brands\(label\),rental_categories\(label\),rental_locations\(city,province\),rental_vehicle_media\(url,is_cover,sort_order\),rental_vehicle_specs\(transmission,fuel_type,drive_type,seats,doors,mileage_km\),rental_vehicle_features\(feature\),rental_companies\(business_id,trading_name,rental_phone,rental_whatsapp,rental_email,year_established,deposit_policy,driver_available,cross_border,insurance_included,min_rental_days,avg_rating,review_count,businesses\(owner_user_id\)\)/); assertions++;
   assert.equal(await context.PM.fetchRentalListingById('missing-1'), null); assertions++;
   await assert.rejects(context.PM.fetchRentalListingById('error-1'), /network failure/); assertions++;
+  assert.deepEqual(await context.PMRentals.fetchRentalBusyRanges('rental-1', '2026-09-24', '2026-11-22'), [{ starts_on: '2026-10-01', ends_on: '2026-10-03' }]); assertions++;
+  assert.match(requests.at(-1).url, /\/rest\/v1\/rpc\/rental_vehicle_busy_ranges$/); assertions++;
+  assert.equal(requests.at(-1).options.method, 'POST'); assertions++;
+  assert.deepEqual(JSON.parse(requests.at(-1).options.body), { p_listing_id: 'rental-1', p_from: '2026-09-24', p_to: '2026-11-22' }); assertions++;
 
   const orderedPages = ['index.html', 'browse.html', 'profile.html', 'business.html', 'rentals.html', 'rental-detail.html', 'detail.html'];
   for (const page of orderedPages) {
