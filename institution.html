@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>/* .html -> clean URL before anything renders (session.js keeps a fallback) */(function(l){var p=l.pathname;if(/\.html$/i.test(p))l.replace((p==="/index.html"?"/":p.replace(/\.html$/i,""))+l.search+l.hash)})(location)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta id="metaDesc" name="description" content="Campus marketplace hub on PaMarket. Real listings from real students and staff.">
@@ -47,7 +48,7 @@
 </div>
 </div>
 
-<div id="loadingState" class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl text-center text-on-surface-variant">Loading institution...</div>
+<div id="loadingState" class="bg-surface-container-lowest py-space-xl px-margin md:px-margin-desktop shadow-sm" aria-busy="true" aria-label="Loading institution"><div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center"><div class="lg:col-span-5 rounded-xl bg-surface-container aspect-[16/11] animate-pulse"></div><div class="lg:col-span-7 flex flex-col gap-3"><div class="h-6 w-40 rounded-full bg-surface-container animate-pulse"></div><div class="h-9 w-3/4 rounded bg-surface-container animate-pulse"></div><div class="h-4 w-full max-w-lg rounded bg-surface-container animate-pulse"></div><div class="h-20 w-full max-w-md rounded-lg bg-surface-container animate-pulse"></div></div></div></div>
 <div id="notFoundState" class="hidden max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-2xl text-center">
 <h1 class="font-headline-lg text-headline-md text-on-surface font-bold">Institution not found</h1>
 <a href="institutions.html" class="inline-block mt-4 bg-primary text-on-primary px-5 py-2.5 rounded text-label-md font-label-md font-bold">Browse institutions</a>
@@ -333,7 +334,17 @@
     var abbr = abbreviation(inst);
     logoEl.innerHTML = inst.logo_url ? '<img src="'+inst.logo_url+'" alt="'+esc(name)+'" class="w-full h-full object-contain"/>' : '<span>'+esc(abbr)+'</span>';
     var coverBox = document.getElementById('instCoverBox');
-    if (inst.cover_image) { coverBox.style.backgroundImage = 'url(\''+inst.cover_image+'\')'; coverBox.style.backgroundSize = 'cover'; coverBox.style.backgroundPosition = 'center'; }
+    if (inst.cover_image) {
+      // Download the cover first and fade it in whole, instead of letting a
+      // large image paint in strips over the green panel.
+      var coverLayer = document.createElement('div');
+      coverLayer.className = 'absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-500';
+      coverBox.insertBefore(coverLayer, coverBox.firstChild);
+      logoEl.classList.add('relative', 'z-10');
+      var coverImg = new Image();
+      coverImg.onload = function(){ coverLayer.style.backgroundImage = 'url(\''+inst.cover_image+'\')'; requestAnimationFrame(function(){ coverLayer.classList.remove('opacity-0'); }); };
+      coverImg.src = inst.cover_image;
+    }
     document.getElementById('postCtaLabel').textContent = 'Post Inside ' + (inst.short_name || name) + ' Community';
     document.getElementById('promoHeading').textContent = 'Have items you no longer need at ' + (inst.short_name || name) + '?';
     document.getElementById('promoCtaLabel').textContent = 'Post Free Ad in ' + (inst.short_name || name) + ' Hub';

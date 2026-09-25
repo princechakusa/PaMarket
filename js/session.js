@@ -22,6 +22,29 @@
     global.location.replace(clean + global.location.search + global.location.hash);
   })();
 
+  // Nearly every internal link is written as "page.html", so each click
+  // loaded the .html page, then the redirect above loaded it a second time
+  // (the visible "double open" / flicker between pages). Point same-origin
+  // .html links at the clean URL up front so a click loads the page once.
+  // Covers links rendered later by page scripts via the capture listeners.
+  (function cleanInternalLinks() {
+    if (!global.document || !global.location) return;
+    function clean(a) {
+      if (!a || !a.getAttribute || !a.getAttribute('href') || a.hasAttribute('download')) return;
+      if (a.origin !== global.location.origin || !/\.html$/i.test(a.pathname)) return;
+      a.pathname = a.pathname === '/index.html' ? '/' : a.pathname.replace(/\.html$/i, '');
+    }
+    function onEvent(e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (a) clean(a);
+    }
+    // Rewritten only at the moment of use, so markup and selectors that
+    // match href="page.html" keep working.
+    ['click', 'auxclick', 'contextmenu'].forEach(function (type) {
+      document.addEventListener(type, onEvent, true);
+    });
+  })();
+
   // Belt-and-suspenders mobile fix: the header's utility cluster (currency
   // toggle, favourites/chat icons, post-ad, account chip) is a plain flex
   // row with no wrap and no hamburger fallback. On narrow phones its total
