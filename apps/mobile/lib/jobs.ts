@@ -176,7 +176,14 @@ export const APPLICATION_TERMINAL_STATUSES: ApplicationStatus[] = ["hired", "dec
 export type ApplicationEvent = {
   id: string;
   application_id: string;
-  event_type: "submitted" | "status_changed" | "interview_scheduled" | "note_added" | "withdrawn";
+  event_type:
+    | "submitted"
+    | "status_changed"
+    | "interview_scheduled"
+    | "interview_rescheduled"
+    | "interview_cancelled"
+    | "note_added"
+    | "withdrawn";
   actor_role: "applicant" | "employer" | "system" | null;
   detail: Record<string, unknown>;
   created_at: string;
@@ -196,8 +203,90 @@ export type JobApplication = {
   status: ApplicationStatus;
   employer_id: string;
   applied_at: string;
-  answers?: { question: string; answer: string }[];
+  answers?: { question: string; answer: string }[] | null;
+  interview_at?: string | null;
+  interview_mode?: InterviewMode | null;
+  interview_location?: string | null;
+  interview_link?: string | null;
+  interview_notes?: string | null;
+  interview_status?: "scheduled" | "rescheduled" | "cancelled" | null;
 };
+
+export type InterviewMode = "in_person" | "video" | "phone";
+
+export const INTERVIEW_MODE_LABEL: Record<InterviewMode, string> = {
+  in_person: "In person",
+  video: "Video call",
+  phone: "Phone call",
+};
+
+// Employer-set screening question on a job (listings.custom_questions).
+export type ScreeningQuestion = {
+  id?: string;
+  question: string;
+  type?: "text" | "yesno" | "select" | string;
+  options?: string[];
+  required?: boolean;
+};
+
+export type ScreeningAnswer = { questionId?: string; question: string; answer: string };
+
+export function formatInterviewTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const FRIENDLY_PIPELINE_ERRORS: Array<[RegExp, string]> = [
+  [/interview_time_must_be_in_the_future/, "Pick a date and time in the future."],
+  [/invalid_interview_link/, "The meeting link must start with https://"],
+  [/application_not_open_for_interview/, "This application can no longer be scheduled for an interview."],
+  [/no_active_interview_to_cancel/, "There is no active interview to cancel."],
+  [/invalid_status_transition|application_already_finalized/, "That step isn't available for this application anymore."],
+  [/not_authorized/, "You don't have permission to do that."],
+];
+
+function pipelineError(message: string): string {
+  const hit = FRIENDLY_PIPELINE_ERRORS.find(([re]) => re.test(message));
+  return hit ? hit[1] : "Something went wrong. Please try again.";
+}
+
+export async function scheduleInterview(
+  applicationId: string,
+  details: { at: Date; mode: InterviewMode; location?: string; link?: string; notes?: string }
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.rpc("schedule_application_interview", {
+    p_application_id: applicationId,
+    p_at: details.at.toISOString(),
+    p_mode: details.mode,
+    p_location: details.location || null,
+    p_link: details.link || null,
+    p_notes: details.notes || null,
+  });
+  if (error) return { ok: false, error: pipelineError(error.message) };
+  return { ok: true };
+}
+
+export async function cancelInterview(applicationId: string, reason?: string): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.rpc("cancel_application_interview", {
+    p_application_id: applicationId,
+    p_reason: reason || null,
+  });
+  if (error) return { ok: false, error: pipelineError(error.message) };
+  return { ok: true };
+}
+
+export async function declineRemainingApplicants(jobId: string): Promise<{ ok: boolean; count?: number; error?: string }> {
+  const { data, error } = await supabase.rpc("decline_remaining_applicants", { p_job_id: jobId });
+  if (error) return { ok: false, error: pipelineError(error.message) };
+  return { ok: true, count: typeof data === "number" ? data : 0 };
+}
 
 export async function withdrawApplication(applicationId: string): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase.rpc("withdraw_application", { p_application_id: applicationId });
@@ -273,7 +362,7 @@ export type JobPostingDetail = {
   created_at: string;
   expires_at: string | null;
   views: number | null;
-  custom_questions: { question: string; type?: string }[] | null;
+  custom_questions: ScreeningQuestion[] | null;
   job_type_id: string | null;
   job_type_label: string | null;
   industry_id: string | null;

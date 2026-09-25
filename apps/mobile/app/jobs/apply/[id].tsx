@@ -4,7 +4,8 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
-import { jobCompany } from "../../../lib/jobs";
+import { jobCompany, type ScreeningAnswer, type ScreeningQuestion } from "../../../lib/jobs";
+import { SelectField } from "../../../components/ui";
 import { toast } from "../../../components/ui/Toast";
 import { color, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
@@ -18,14 +19,8 @@ type JobListing = {
   seller_name: string | null;
   title: string;
   description: string | null;
+  custom_questions: ScreeningQuestion[] | null;
 };
-
-// Mirrors www/js/jobs.js H.pages.ApplyJob / H._submitJobApplication, scoped
-// down to what public.applications actually stores (id, job_id, job_title,
-// company, applicant_id/name/phone/email, message, status, employer_id,
-// applied_at — see supabase/schema/applications.sql). The web version's
-// screening-question "answers" column isn't in the real schema, so it's
-// left out here rather than guessed at.
 export default function ApplyJobScreen() {
   const styles = useThemedStyles(buildStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -49,13 +44,14 @@ export default function ApplyJobScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [answers, setAnswers] = useState<Record<number, string>>({});
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Apply for this Job", androidNative: true });
 
   const load = useCallback(async () => {
     if (!id || !session?.user) return;
     const [{ data: jobData }, profileRes, existingRes] = await Promise.all([
-      supabase.from("listings").select("id,seller_id,seller_name,title,description").eq("id", id).maybeSingle(),
+      supabase.from("listings").select("id,seller_id,seller_name,title,description,custom_questions").eq("id", id).maybeSingle(),
       supabase
         .from("profiles")
         .select("name,email,phone,cv_file_path,job_title,sector,city")
@@ -134,6 +130,15 @@ export default function ApplyJobScreen() {
       toast("Please enter your phone number");
       return;
     }
+    const questions = (job.custom_questions ?? []).filter((q) => q?.question);
+    const missing = questions.findIndex((q, i) => q.required && !(answers[i] ?? "").trim());
+    if (missing >= 0) {
+      toast(`Please answer: ${questions[missing].question}`, 3500, true);
+      return;
+    }
+    const answerRows: ScreeningAnswer[] = questions
+      .map((q, i) => ({ questionId: q.id, question: q.question, answer: (answers[i] ?? "").trim() }))
+      .filter((a) => a.answer);
     setIsSubmitting(true);
     const company = jobCompany(job.description, job.seller_name) || "Company";
     const { error } = await supabase.from("applications").insert({
@@ -146,6 +151,7 @@ export default function ApplyJobScreen() {
       applicant_email: email.trim(),
       message: message.trim(),
       status: "pending",
+      ...(answerRows.length ? { answers: answerRows } : {}),
     });
     if (error) {
       // 23505 (duplicate) also navigates back below — isSubmitting is
@@ -206,7 +212,7 @@ export default function ApplyJobScreen() {
         <View style={styles.centered}>
           <Text style={styles.blockedTitle}>Complete your Candidate Profile</Text>
           <Text style={styles.blockedBody}>
-            You need a Candidate Profile before applying for jobs. It only takes a minute, add your title, category
+            You need a Candidate Profile before applying for jobs. It only takes a minute: add your title, category
             and location so employers know who you are.
           </Text>
           <Pressable
@@ -255,6 +261,56 @@ export default function ApplyJobScreen() {
                 <Text style={styles.cvLink}>Add / Update CV</Text>
               </Pressable>
             </View>
+
+            {(job.custom_questions ?? []).filter((q) => q?.question).length ? (
+              <>
+                <Text style={styles.sectionLabel}>Screening questions</Text>
+                {(job.custom_questions ?? [])
+                  .filter((q) => q?.question)
+                  .map((q, i) => (
+                    <View key={q.id ?? i} style={{ marginBottom: 14 }}>
+                      {q.type === "select" && q.options?.length ? (
+                        <SelectField
+                          label={q.question + (q.required ? " *" : "")}
+                          value={answers[i] ?? ""}
+                          placeholder="Choose an answer"
+                          options={q.options}
+                          onSelect={(v) => setAnswers((a) => ({ ...a, [i]: v }))}
+                        />
+                      ) : (
+                        <>
+                          <Text style={styles.label}>
+                            {q.question}
+                            {q.required ? <Text style={{ color: color.danger }}> *</Text> : null}
+                          </Text>
+                          {q.type === "yesno" ? (
+                            <View style={styles.yesNoRow}>
+                              {["Yes", "No"].map((opt) => (
+                                <Pressable
+                                  key={opt}
+                                  onPress={() => setAnswers((a) => ({ ...a, [i]: opt }))}
+                                  style={[styles.yesNoBtn, answers[i] === opt && styles.yesNoBtnActive]}
+                                >
+                                  <Text style={[styles.yesNoText, answers[i] === opt && styles.yesNoTextActive]}>{opt}</Text>
+                                </Pressable>
+                              ))}
+                            </View>
+                          ) : (
+                            <TextInput
+                              style={[styles.input, { minHeight: 64, textAlignVertical: "top" }]}
+                              value={answers[i] ?? ""}
+                              onChangeText={(v) => setAnswers((a) => ({ ...a, [i]: v }))}
+                              placeholder="Your answer"
+                              placeholderTextColor={color.textMuted}
+                              multiline
+                            />
+                          )}
+                        </>
+                      )}
+                    </View>
+                  ))}
+              </>
+            ) : null}
 
             <Text style={styles.sectionLabel}>Why are you a good fit?</Text>
             <TextInput
@@ -357,6 +413,19 @@ function buildStyles(color: ColorPalette) {
     backgroundColor: color.surface,
   },
   textarea: { minHeight: 100, textAlignVertical: "top" },
+  yesNoRow: { flexDirection: "row", gap: 10 },
+  yesNoBtn: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: color.border,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: color.surface,
+  },
+  yesNoBtnActive: { borderColor: color.brand, backgroundColor: color.brandTint },
+  yesNoText: { fontSize: 14, fontWeight: "600", color: color.textSub },
+  yesNoTextActive: { color: color.brand },
   footer: {
     position: "absolute",
     left: 0,

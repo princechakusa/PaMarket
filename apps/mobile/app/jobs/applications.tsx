@@ -7,6 +7,8 @@ import { useAuth } from "../../lib/auth";
 import {
   APPLICATION_STATUS_LABEL,
   APPLICATION_TERMINAL_STATUSES,
+  formatInterviewTime,
+  INTERVIEW_MODE_LABEL,
   withdrawApplication,
   type ApplicationStatus,
   type JobApplication,
@@ -15,6 +17,34 @@ import { color, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 import { toast } from "../../components/ui/Toast";
+import { openExternalUrl } from "../../lib/open-url";
+
+// Candidate-facing wording (LinkedIn style): the employer's "Under Review"
+// is what the candidate sees as "Viewed".
+const CANDIDATE_LABEL: Partial<Record<ApplicationStatus, string>> = {
+  pending: "Applied",
+  reviewing: "Viewed",
+  declined: "Not selected",
+};
+
+const TRACK: Array<[ApplicationStatus, string]> = [
+  ["pending", "Applied"],
+  ["reviewing", "Viewed"],
+  ["shortlisted", "Shortlisted"],
+  ["interview", "Interview"],
+  ["offered", "Offer"],
+  ["hired", "Hired"],
+];
+
+const STATUS_NOTE: Partial<Record<ApplicationStatus, string>> = {
+  pending: "Your application was sent. You'll be notified when the employer views it.",
+  reviewing: "The employer viewed your application.",
+  shortlisted: "You're on the shortlist. The employer may invite you to an interview.",
+  offered: "You have an offer. The employer will contact you with the details.",
+  hired: "Congratulations, you got the job!",
+  declined: "The employer decided not to move forward. Keep applying, the right role is out there.",
+  withdrawn: "You withdrew this application.",
+};
 
 function buildStatusTones(color: ColorPalette): Record<ApplicationStatus, string> {
   return {
@@ -65,7 +95,7 @@ export default function MyApplicationsScreen() {
     if (!session?.user) return;
     const { data } = await supabase
       .from("applications")
-      .select("id,job_id,job_title,company,applicant_id,applicant_name,applicant_phone,applicant_email,message,status,employer_id,applied_at")
+      .select("id,job_id,job_title,company,applicant_id,applicant_name,applicant_phone,applicant_email,message,status,employer_id,applied_at,interview_at,interview_mode,interview_location,interview_link,interview_notes,interview_status")
       .eq("applicant_id", session.user.id)
       .order("applied_at", { ascending: false });
     setApps((data as JobApplication[]) ?? []);
@@ -96,7 +126,12 @@ export default function MyApplicationsScreen() {
           }
           renderItem={({ item }) => {
             const statusColor = statusTones[item.status] || color.textMuted;
-            const label = STATUS_LABELS[item.status] || item.status;
+            const label = CANDIDATE_LABEL[item.status] || STATUS_LABELS[item.status] || item.status;
+            const stepIndex = TRACK.findIndex(([s]) => s === item.status);
+            const showTrack = stepIndex >= 0;
+            const showInterview =
+              !!item.interview_at && (item.status === "interview" || item.status === "offered" || item.status === "hired");
+            const cancelled = item.interview_status === "cancelled";
             const canWithdraw = !APPLICATION_TERMINAL_STATUSES.includes(item.status);
             return (
               <Pressable
@@ -113,6 +148,39 @@ export default function MyApplicationsScreen() {
                 </View>
                 <Text style={styles.company}>{item.company}</Text>
                 <Text style={styles.appliedAt}>Applied {timeAgo(item.applied_at)}</Text>
+
+                {showTrack ? (
+                  <View style={styles.track}>
+                    {TRACK.map(([s, l], i) => (
+                      <View key={s} style={styles.trackStep}>
+                        <View style={[styles.trackBar, i <= stepIndex && { backgroundColor: statusColor }]} />
+                        <Text style={[styles.trackLabel, i === stepIndex && { color: statusColor, fontWeight: "700" }]} numberOfLines={1}>
+                          {l}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {showInterview && item.interview_at ? (
+                  <View style={[styles.interviewBox, cancelled && styles.interviewBoxCancelled]}>
+                    <Text style={styles.interviewTitle}>
+                      {cancelled ? "Interview cancelled" : item.interview_status === "rescheduled" ? "Interview rescheduled" : "Interview scheduled"}
+                    </Text>
+                    <Text style={[styles.interviewWhen, cancelled && styles.strike]}>{formatInterviewTime(item.interview_at)}</Text>
+                    {item.interview_mode ? <Text style={styles.interviewMeta}>{INTERVIEW_MODE_LABEL[item.interview_mode]}</Text> : null}
+                    {item.interview_location && !cancelled ? <Text style={styles.interviewMeta}>{item.interview_location}</Text> : null}
+                    {item.interview_link && !cancelled ? (
+                      <Pressable onPress={() => openExternalUrl(item.interview_link as string, "Could not open the meeting link.")} hitSlop={6}>
+                        <Text style={styles.interviewLink}>Join meeting</Text>
+                      </Pressable>
+                    ) : null}
+                    {item.interview_notes ? <Text style={styles.interviewNotes}>{item.interview_notes}</Text> : null}
+                    {cancelled ? <Text style={styles.interviewNotes}>The employer may send you a new time.</Text> : null}
+                  </View>
+                ) : STATUS_NOTE[item.status] ? (
+                  <Text style={styles.statusNote}>{STATUS_NOTE[item.status]}</Text>
+                ) : null}
                 {canWithdraw ? (
                   <Pressable
                     style={styles.withdrawBtn}
@@ -176,6 +244,27 @@ function buildStyles(color: ColorPalette) {
   company: { fontSize: 13, color: color.textSub, marginBottom: 4 },
   appliedAt: { fontSize: 12, color: color.textMuted },
   withdrawBtn: { alignSelf: "flex-start", marginTop: 10 },
+  track: { flexDirection: "row", gap: 4, marginTop: 12 },
+  trackStep: { flex: 1, gap: 5 },
+  trackBar: { height: 4, borderRadius: 2, backgroundColor: color.border },
+  trackLabel: { fontSize: 9.5, color: color.textMuted, textAlign: "center" },
+  statusNote: { fontSize: 12.5, lineHeight: 18, color: color.textSub, marginTop: 10 },
+  interviewBox: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: color.brand,
+    backgroundColor: color.brandTint,
+    padding: 12,
+    gap: 3,
+  },
+  interviewBoxCancelled: { borderColor: color.border, backgroundColor: color.bg },
+  interviewTitle: { fontSize: 11, fontWeight: "700", color: color.brand, textTransform: "uppercase", letterSpacing: 0.5 },
+  interviewWhen: { fontSize: 14.5, fontWeight: "700", color: color.text },
+  strike: { textDecorationLine: "line-through", color: color.textMuted },
+  interviewMeta: { fontSize: 12.5, color: color.textSub },
+  interviewLink: { fontSize: 13, fontWeight: "700", color: color.brand, marginTop: 4 },
+  interviewNotes: { fontSize: 12, lineHeight: 17, color: color.textSub, marginTop: 4 },
   withdrawBtnText: { fontSize: 12.5, fontWeight: "700", color: color.danger },
   });
 }

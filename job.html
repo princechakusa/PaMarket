@@ -63,7 +63,7 @@
 </div>
 
 <div id="applyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-<div class="bg-surface-container-lowest rounded-lg shadow-xl w-full max-w-md p-space-lg">
+<div class="bg-surface-container-lowest rounded-lg shadow-xl w-full max-w-md p-space-lg max-h-[92vh] overflow-y-auto">
 <div class="flex items-center justify-between mb-space-base">
 <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Apply for this role</h3>
 <button onclick="closeApplyModal()" class="text-on-surface-variant hover:text-on-surface" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
@@ -73,6 +73,7 @@
 <input id="applyName" type="text" placeholder="Your full name" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface" />
 <input id="applyPhone" type="tel" placeholder="Phone number" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface" />
 <input id="applyEmail" type="email" placeholder="Email address" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface" />
+<div id="applyQuestions" class="hidden flex flex-col gap-3"></div>
 <textarea id="applyMessage" rows="4" placeholder="Cover message (optional)" class="border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface resize-none"></textarea>
 </div>
 <button id="applySubmitBtn" onclick="submitApplication()" class="mt-space-base w-full bg-primary hover:bg-on-primary-fixed-variant text-on-primary px-6 py-3 rounded font-label-md text-label-md font-bold shadow-sm transition-all">Submit Application</button>
@@ -296,7 +297,49 @@
     }
     document.getElementById('applyModalError').classList.add('hidden');
     document.getElementById('applyModal').classList.remove('hidden');
+    loadApplyQuestions();
   };
+
+  // Employer screening questions (listings.custom_questions):
+  // [{ id, question, type: 'text'|'yesno'|'select', options, required }].
+  window._applyQuestions = [];
+  function qEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function loadApplyQuestions(){
+    var l = window._currentJob, box = document.getElementById('applyQuestions');
+    if (!l || !box) return;
+    var src = Array.isArray(l.custom_questions) ? Promise.resolve(l.custom_questions)
+      : (window.PM && window.PM.getJobDetail ? window.PM.getJobDetail(l.id).then(function(d){ return (d && d.custom_questions) || []; }).catch(function(){ return []; }) : Promise.resolve([]));
+    src.then(function(qs){
+      qs = (Array.isArray(qs) ? qs : []).filter(function(q){ return q && q.question; });
+      window._applyQuestions = qs;
+      if (!qs.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      var field = 'border border-outline-variant rounded px-3 py-2.5 font-body-md text-body-md bg-surface w-full';
+      box.innerHTML = '<div class="font-label-md text-label-md font-bold text-on-surface">Screening questions</div>' + qs.map(function(q, i){
+        var label = '<label class="text-body-sm font-body-sm font-semibold text-on-surface">' + qEsc(q.question) + (q.required ? ' <span class="text-error">*</span>' : '') + '</label>';
+        var input;
+        if (q.type === 'yesno') {
+          input = '<div class="flex gap-4">' + ['Yes','No'].map(function(o){ return '<label class="flex items-center gap-2 text-body-md font-body-md"><input type="radio" name="applyQ' + i + '" value="' + o + '"> ' + o + '</label>'; }).join('') + '</div>';
+        } else if (q.type === 'select' && Array.isArray(q.options) && q.options.length) {
+          input = '<select data-q="' + i + '" class="' + field + '"><option value="">Choose an answer</option>' + q.options.map(function(o){ return '<option>' + qEsc(o) + '</option>'; }).join('') + '</select>';
+        } else {
+          input = '<textarea data-q="' + i + '" rows="2" class="' + field + ' resize-none" placeholder="Your answer"></textarea>';
+        }
+        return '<div class="flex flex-col gap-1.5">' + label + input + '</div>';
+      }).join('');
+      box.classList.remove('hidden');
+    });
+  }
+  function collectApplyAnswers(){
+    var qs = window._applyQuestions || [], out = [], missing = null;
+    qs.forEach(function(q, i){
+      var v = '';
+      if (q.type === 'yesno') { var r = document.querySelector('input[name="applyQ' + i + '"]:checked'); v = r ? r.value : ''; }
+      else { var el = document.querySelector('#applyQuestions [data-q="' + i + '"]'); v = el ? String(el.value || '').trim() : ''; }
+      if (!v && q.required && missing === null) missing = q.question;
+      if (v) out.push({ questionId: q.id, question: q.question, answer: v });
+    });
+    return { answers: out, missing: missing };
+  }
   window.closeApplyModal = function(){
     document.getElementById('applyModal').classList.add('hidden');
   };
@@ -310,6 +353,12 @@
     var errEl = document.getElementById('applyModalError');
     if (!name || (!phone && !email)) {
       errEl.textContent = 'Please add your name and a phone number or email.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    var qa = collectApplyAnswers();
+    if (qa.missing) {
+      errEl.textContent = 'Please answer: ' + qa.missing;
       errEl.classList.remove('hidden');
       return;
     }
@@ -327,6 +376,7 @@
       email: email,
       message: message,
       employerId: l.seller_id,
+      answers: qa.answers,
     }).then(function(result){
       btn.disabled = false;
       btn.textContent = 'Submit Application';

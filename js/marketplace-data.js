@@ -769,6 +769,56 @@
       .catch(function (e) { return { ok: false, error: e.message }; });
   }
 
+  var PIPELINE_ERRORS = [
+    [/interview_time_must_be_in_the_future/, 'Pick a date and time in the future.'],
+    [/invalid_interview_link/, 'The meeting link must start with https://'],
+    [/application_not_open_for_interview/, 'This application can no longer be scheduled for an interview.'],
+    [/no_active_interview_to_cancel/, 'There is no active interview to cancel.'],
+    [/invalid_status_transition|application_already_finalized/, "That step isn't available for this application anymore."],
+    [/not_authorized/, "You don't have permission to do that."],
+  ];
+  function pipelineError(e) {
+    var msg = String((e && e.message) || e || '');
+    for (var i = 0; i < PIPELINE_ERRORS.length; i++) if (PIPELINE_ERRORS[i][0].test(msg)) return PIPELINE_ERRORS[i][1];
+    return 'Something went wrong. Please try again.';
+  }
+
+  function scheduleInterviewRpc(applicationId, d) {
+    return pgRpcAuth('schedule_application_interview', {
+      p_application_id: applicationId,
+      p_at: d.at,
+      p_mode: d.mode,
+      p_location: d.location || null,
+      p_link: d.link || null,
+      p_notes: d.notes || null,
+    }).then(function () { return { ok: true }; })
+      .catch(function (e) { return { ok: false, error: pipelineError(e) }; });
+  }
+
+  function cancelInterviewRpc(applicationId, reason) {
+    return pgRpcAuth('cancel_application_interview', { p_application_id: applicationId, p_reason: reason || null })
+      .then(function () { return { ok: true }; })
+      .catch(function (e) { return { ok: false, error: pipelineError(e) }; });
+  }
+
+  function declineRemainingRpc(jobId) {
+    return pgRpcAuth('decline_remaining_applicants', { p_job_id: jobId })
+      .then(function (n) { return { ok: true, count: typeof n === 'number' ? n : 0 }; })
+      .catch(function (e) { return { ok: false, error: pipelineError(e) }; });
+  }
+
+  var INTERVIEW_COLS = ',interview_at,interview_mode,interview_location,interview_link,interview_notes,interview_status';
+
+  // The signed-in candidate's own applications (RLS: applicant_id = auth.uid()).
+  function fetchMyApplications() {
+    var s = sharedSession();
+    if (!s || !s.access_token || !s.user) return Promise.resolve([]);
+    return fetch(SB_URL + '/rest/v1/applications?applicant_id=eq.' + esc(s.user.id) +
+      '&select=id,job_id,job_title,company,status,applied_at' + INTERVIEW_COLS + '&order=applied_at.desc&limit=500', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
+    }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
+  }
+
   function closeJobListingRpc(listingId, reason) {
     return pgRpcAuth('close_job_listing', { p_listing_id: listingId, p_reason: reason })
       .then(function () { return { ok: true }; })
@@ -940,7 +990,7 @@
     var s = sharedSession();
     if (!s || !s.access_token || !s.user) return Promise.resolve([]);
     return fetch(SB_URL + '/rest/v1/applications?employer_id=eq.' + esc(s.user.id) +
-      '&select=id,job_id,job_title,company,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at&order=applied_at.desc&limit=1000', {
+      '&select=id,job_id,job_title,company,applicant_id,applicant_name,applicant_phone,applicant_email,message,answers,status,applied_at' + INTERVIEW_COLS + '&order=applied_at.desc&limit=1000', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token },
     }).then(function (res) { return res.ok ? res.json() : []; }).catch(function () { return []; });
   }
@@ -1118,6 +1168,10 @@
   global.PM.withdrawApplication = withdrawApplicationRpc;
   global.PM.addApplicationNote = addApplicationNoteRpc;
   global.PM.closeJobListing = closeJobListingRpc;
+  global.PM.scheduleInterview = scheduleInterviewRpc;
+  global.PM.cancelInterview = cancelInterviewRpc;
+  global.PM.declineRemainingApplicants = declineRemainingRpc;
+  global.PM.fetchMyApplications = fetchMyApplications;
   global.PM.fetchMyListings = fetchMyListings;
   global.PM.fetchMyPayments = fetchMyPayments;
   global.PM.markListingSold = markListingSold;

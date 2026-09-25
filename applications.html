@@ -70,6 +70,36 @@ button{font-family:inherit;cursor:pointer}
 .ap-actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
 .ap-actions .btn{font-size:13px;padding:8px 14px}
 
+.ap-views{display:flex;gap:6px;margin-top:18px;border-bottom:1px solid var(--line)}
+.ap-view{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font-size:14px;font-weight:800;color:var(--sub)}
+.ap-view.on{color:var(--navy);border-bottom-color:var(--navy)}
+.ap-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.ap-toolbar select{border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13.5px;font-family:inherit;background:#fff;max-width:100%}
+.ap-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.ap-stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.ap-stat b{display:block;font-size:22px;font-weight:900;color:var(--navy)}
+.ap-stat span{font-size:11.5px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.ap-iv{margin-top:12px;border:1px solid var(--navy);background:var(--navy-tint);border-radius:12px;padding:12px 14px}
+.ap-iv.cancelled{border-color:var(--line);background:var(--paper)}
+.ap-iv .t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navy)}
+.ap-iv .w{font-size:15px;font-weight:800;margin-top:2px}
+.ap-iv.cancelled .w{text-decoration:line-through;color:var(--mute)}
+.ap-iv .m{font-size:13px;color:var(--sub)}
+.ap-iv a{font-size:13px;font-weight:800;color:var(--navy);text-decoration:underline}
+.ap-form{margin-top:12px;border:1.5px solid var(--navy);border-radius:12px;padding:14px;background:#fff;display:grid;gap:10px}
+.ap-form label{font-size:12px;font-weight:800;color:var(--ink);display:grid;gap:5px}
+.ap-form input,.ap-form select,.ap-form textarea{border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13.5px;font-family:inherit;background:#fff;width:100%}
+.ap-form .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ap-form .hint{font-size:12px;color:var(--mute)}
+.ap-track{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:12px}
+.ap-track div{font-size:10.5px;color:var(--mute);text-align:center}
+.ap-track div:before{content:'';display:block;height:4px;border-radius:2px;background:var(--line);margin-bottom:5px}
+.ap-track div.done:before{background:var(--green)}
+.ap-track div.cur{color:var(--green);font-weight:800}
+.ap-snote{font-size:13px;color:var(--sub);margin-top:10px}
+.btn-danger{background:#fff;border:1.5px solid #FCA5A5;color:var(--red);border-radius:10px;font-weight:700}
+@media(max-width:600px){.ap-stats{grid-template-columns:repeat(2,1fr)}.ap-form .row{grid-template-columns:1fr}.ap-track div{font-size:9px}}
+
 .ap-empty,.ap-gate{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:44px 26px;margin-top:22px}
 .ap-empty h2,.ap-gate h2{font-size:20px;font-weight:900;margin-bottom:8px}
 .ap-empty p,.ap-gate p{font-size:14px;color:var(--sub);max-width:420px;margin:0 auto 18px;line-height:1.6}
@@ -136,26 +166,33 @@ window.setCurrency = function(cur){
 <div class="ap-wrap">
   <div class="ap-head">
     <h1>Job Applications</h1>
-    <p>Candidates who applied to your job postings. Shortlist the best and reach out directly.</p>
+    <p>Review applicants, schedule interviews and track every application in one place.</p>
   </div>
 
   <div id="apGate" class="ap-gate hidden">
     <h2>Sign in to view applications</h2>
-    <p>Sign in with the account you used to post your jobs.</p>
+    <p>Sign in to review candidates for your jobs or track the jobs you applied for.</p>
     <a class="btn btn-navy" id="apSignIn" href="auth">Sign In</a>
+  </div>
+
+  <div id="apViews" class="ap-views hidden">
+    <button class="ap-view on" data-view="employer">Applicants</button>
+    <button class="ap-view" data-view="mine">My applications</button>
   </div>
 
   <div id="apLoading" style="text-align:center;color:var(--mute);padding:50px">Loading applications…</div>
 
   <div id="apContent" class="hidden">
+    <div class="ap-toolbar" id="apToolbar"></div>
+    <div class="ap-stats" id="apStats"></div>
     <div class="ap-jobtabs" id="apTabs"></div>
     <div id="apList"></div>
   </div>
 
   <div id="apEmpty" class="ap-empty hidden">
-    <h2>No applications yet</h2>
-    <p>When someone applies to one of your job postings, they’ll show up here. Post a vacancy to start receiving applications.</p>
-    <a class="btn btn-navy" href="post-job">Post a job</a>
+    <h2 id="apEmptyTitle">No applications yet</h2>
+    <p id="apEmptyText">When someone applies to one of your job postings, they'll show up here. Post a vacancy to start receiving applications.</p>
+    <a class="btn btn-navy" id="apEmptyBtn" href="post-job">Post a job</a>
   </div>
 </div>
 
@@ -222,52 +259,110 @@ window.setCurrency = function(cur){
     return;
   }
 
-  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function initials(n){return (String(n||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('')||'?').toUpperCase();}
-  var STATUS_LABELS={pending:'New',reviewing:'Under Review',shortlisted:'Shortlisted',interview:'Interview',offered:'Offer Extended',hired:'Hired',declined:'Declined',withdrawn:'Withdrawn'};
-  function statusLabel(s){return STATUS_LABELS[s]||s;}
-  // Mirrors the exact forward path validate_application_status_transition
-  // (migration 4) allows an employer — one legal "advance" per stage.
-  var ADVANCE={pending:'reviewing',reviewing:'shortlisted',shortlisted:'interview',interview:'offered',offered:'hired'};
-  var ADVANCE_LABEL={pending:'Move to review',reviewing:'Shortlist',shortlisted:'Schedule interview',interview:'Extend offer',offered:'Mark hired'};
+  function when(iso){try{return new Date(iso).toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
+  function safeLink(u){return /^https?:\/\/\S+$/i.test(String(u||''))?u:'';}
+
+  var STATUS_LABELS={pending:'New',reviewing:'Under Review',shortlisted:'Shortlisted',interview:'Interview',offered:'Offer Extended',hired:'Hired',declined:'Not Selected',withdrawn:'Withdrawn'};
+  var CAND_LABELS={pending:'Applied',reviewing:'Viewed',shortlisted:'Shortlisted',interview:'Interview',offered:'Offer',hired:'Hired',declined:'Not selected',withdrawn:'Withdrawn'};
+  var MODE_LABELS={in_person:'In person',video:'Video call',phone:'Phone call'};
+  var STAGES=[['all','All'],['reviewing','Under Review'],['shortlisted','Shortlisted'],['interview','Interview'],['offered','Offer'],['hired','Hired'],['declined','Not Selected']];
+  var TRACK=['pending','reviewing','shortlisted','interview','offered','hired'];
+  var ADVANCE={reviewing:'shortlisted',interview:'offered',offered:'hired'};
+  var ADVANCE_LABEL={reviewing:'Shortlist',interview:'Extend offer',offered:'Mark hired'};
   var TERMINAL=['hired','declined','withdrawn'];
+  var NOTE={pending:"Your application was sent. You'll be notified when the employer views it.",reviewing:'The employer viewed your application.',shortlisted:"You're on the shortlist. The employer may invite you to an interview.",offered:'You have an offer. The employer will contact you with the details.',hired:'Congratulations, you got the job!',declined:'The employer decided not to move forward. Keep applying, the right role is out there.',withdrawn:'You withdrew this application.'};
 
-  var ALL=[], activeJob='all';
+  var view=/mine/.test(location.hash)?'mine':'employer';
+  var ALL=[], MINE=[], activeJob='all', activeStage='all', scheduling=null;
 
-  function render(){
-    var jobs={};
-    ALL.forEach(function(a){ if(!jobs[a.job_id]) jobs[a.job_id]={title:a.job_title||'Job',count:0}; jobs[a.job_id].count++; });
-    var tabs='<button class="ap-tab'+(activeJob==='all'?' on':'')+'" data-job="all">All<span class="n">'+ALL.length+'</span></button>';
-    tabs+=Object.keys(jobs).map(function(id){
-      return '<button class="ap-tab'+(activeJob===id?' on':'')+'" data-job="'+esc(id)+'">'+esc(jobs[id].title)+'<span class="n">'+jobs[id].count+'</span></button>';
-    }).join('');
-    $('apTabs').innerHTML=tabs;
-    $('apTabs').querySelectorAll('.ap-tab').forEach(function(b){
-      b.addEventListener('click',function(){activeJob=b.getAttribute('data-job');render();});
-    });
+  function interviewHtml(a, candidate){
+    if(!a.interview_at||a.status==='declined'||a.status==='withdrawn')return '';
+    var c=a.interview_status==='cancelled';
+    var link=safeLink(a.interview_link);
+    return '<div class="ap-iv'+(c?' cancelled':'')+'"><div class="t">'+(c?'Interview cancelled':a.interview_status==='rescheduled'?'Interview rescheduled':'Interview scheduled')+'</div>'+
+      '<div class="w">'+esc(when(a.interview_at))+'</div>'+
+      (a.interview_mode?'<div class="m">'+esc(MODE_LABELS[a.interview_mode]||a.interview_mode)+'</div>':'')+
+      (a.interview_location&&!c?'<div class="m">'+esc(a.interview_location)+'</div>':'')+
+      (link&&!c?'<div class="m"><a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">'+(candidate?'Join meeting':esc(link))+'</a></div>':'')+
+      (a.interview_notes?'<div class="m" style="margin-top:4px">'+esc(a.interview_notes)+'</div>':'')+
+      (c&&candidate?'<div class="m" style="margin-top:4px">The employer may send you a new time.</div>':'')+
+      (!candidate&&a.status==='interview'?'<div class="ap-actions"><button class="btn btn-outline" data-sched>Reschedule</button>'+(c?'':'<button class="btn btn-danger" data-cancel-iv>Cancel interview</button>')+'</div>':'')+
+    '</div>';
+  }
 
-    var rows=ALL.filter(function(a){return activeJob==='all'||a.job_id===activeJob;});
-    $('apList').innerHTML=rows.map(function(a){
+  function formHtml(a){
+    var d=a.interview_at?new Date(a.interview_at):new Date(Date.now()+86400000);
+    if(!a.interview_at){d.setHours(10,0,0,0);}
+    var pad=function(n){return String(n).padStart(2,'0');};
+    var local=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+    var mode=a.interview_mode||'video';
+    return '<div class="ap-form" data-form>'+
+      '<strong>'+(a.interview_at?'Reschedule interview':'Schedule interview')+'</strong>'+
+      '<div class="row"><label>Date and time<input type="datetime-local" data-f="at" value="'+local+'"></label>'+
+      '<label>Interview type<select data-f="mode">'+Object.keys(MODE_LABELS).map(function(k){return '<option value="'+k+'"'+(k===mode?' selected':'')+'>'+MODE_LABELS[k]+'</option>';}).join('')+'</select></label></div>'+
+      '<label data-for="in_person">Address<input data-f="location" placeholder="e.g. 12 Samora Machel Ave, Harare" value="'+esc(a.interview_location||'')+'"></label>'+
+      '<label data-for="video">Meeting link (optional)<input data-f="link" placeholder="https://meet.google.com/..." value="'+esc(a.interview_link||'')+'"></label>'+
+      '<label>Instructions for the candidate (optional)<textarea data-f="notes" rows="2" placeholder="What to bring, who to ask for">'+esc(a.interview_status==='cancelled'?'':(a.interview_notes||''))+'</textarea></label>'+
+      '<div class="hint">Times use your computer\'s time zone. The candidate is notified straight away.</div>'+
+      '<div class="ap-actions" style="margin-top:0"><button class="btn btn-primary" data-send>'+(a.interview_at?'Send new time':'Send invitation')+'</button><button class="btn btn-outline" data-close>Close</button></div>'+
+    '</div>';
+  }
+
+  function renderViews(){
+    document.querySelectorAll('.ap-view').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-view')===view);});
+  }
+
+  function showEmpty(title,text,btnLabel,href){
+    $('apContent').classList.add('hidden');
+    $('apEmptyTitle').textContent=title; $('apEmptyText').textContent=text;
+    $('apEmptyBtn').textContent=btnLabel; $('apEmptyBtn').href=href;
+    $('apEmpty').classList.remove('hidden');
+  }
+
+  function renderEmployer(){
+    if(!ALL.length){ showEmpty('No applications yet',"When someone applies to one of your job postings, they'll show up here.",'Post a job','post-job'); return; }
+    $('apEmpty').classList.add('hidden'); $('apContent').classList.remove('hidden');
+    var jobs={}, order=[];
+    ALL.forEach(function(a){ if(!jobs[a.job_id]){jobs[a.job_id]={title:a.job_title||'Job',count:0};order.push(a.job_id);} jobs[a.job_id].count++; });
+    $('apToolbar').innerHTML='<select id="apJobSel" aria-label="Job"><option value="all">All jobs ('+ALL.length+')</option>'+order.map(function(id){return '<option value="'+esc(id)+'"'+(activeJob===id?' selected':'')+'>'+esc(jobs[id].title)+' ('+jobs[id].count+')</option>';}).join('')+'</select>'+
+      (activeJob!=='all'?'<button class="btn btn-outline" id="apCloseJob">Close job as filled</button>':'');
+    $('apJobSel').addEventListener('change',function(){activeJob=this.value;activeStage='all';render();});
+    if($('apCloseJob'))$('apCloseJob').addEventListener('click',function(){closeJob(activeJob,null);});
+
+    var inJob=ALL.filter(function(a){return activeJob==='all'||a.job_id===activeJob;});
+    var cnt={all:inJob.length}; inJob.forEach(function(a){cnt[a.status]=(cnt[a.status]||0)+1;});
+    $('apStats').innerHTML=[['Applicants',cnt.all],['Interview',cnt.interview||0],['Offers',cnt.offered||0],['Hired',cnt.hired||0]].map(function(x){return '<div class="ap-stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>';}).join('');
+    $('apTabs').innerHTML=STAGES.map(function(st){return '<button class="ap-tab'+(activeStage===st[0]?' on':'')+'" data-stage="'+st[0]+'">'+st[1]+'<span class="n">'+(cnt[st[0]]||0)+'</span></button>';}).join('');
+    $('apTabs').querySelectorAll('.ap-tab').forEach(function(b){b.addEventListener('click',function(){activeStage=b.getAttribute('data-stage');render();});});
+
+    var rows=inJob.filter(function(a){return activeStage==='all'||a.status===activeStage;});
+    $('apList').innerHTML=rows.length?rows.map(function(a){
       var st=a.status||'pending';
       var wa=a.applicant_phone?('https://wa.me/'+String(a.applicant_phone).replace(/[^0-9]/g,'')):'';
       var answers=Array.isArray(a.answers)?a.answers.filter(function(x){return x&&x.answer;}):[];
+      var canSchedule=['pending','reviewing','shortlisted'].indexOf(st)>-1&&!a.interview_at;
       return '<div class="ap-card" data-id="'+esc(a.id)+'">'+
         '<div class="ap-top"><div class="ap-av">'+esc(initials(a.applicant_name))+'</div>'+
           '<div><div class="ap-name">'+esc(a.applicant_name||'Applicant')+'</div>'+
-          '<div class="ap-for">Applied for '+esc(a.job_title||'your job')+' · '+esc(PM.timeAgo(a.applied_at))+'</div></div>'+
-          '<span class="ap-status '+esc(st)+'">'+statusLabel(st)+'</span></div>'+
+          '<div class="ap-for">'+esc(a.job_title||'your job')+' · Applied '+esc(PM.timeAgo(a.applied_at))+'</div></div>'+
+          '<span class="ap-status '+esc(st)+'">'+esc(STATUS_LABELS[st]||st)+'</span></div>'+
         '<div class="ap-contact">'+
-          (a.applicant_email?'<a href="mailto:'+esc(a.applicant_email)+'">✉ '+esc(a.applicant_email)+'</a>':'')+
-          (a.applicant_phone?'<a href="tel:'+esc(a.applicant_phone)+'">☎ '+esc(a.applicant_phone)+'</a>':'')+
+          (a.applicant_email?'<a href="mailto:'+esc(a.applicant_email)+'">Email '+esc(a.applicant_email)+'</a>':'')+
+          (a.applicant_phone?'<a href="tel:'+esc(a.applicant_phone)+'">Call '+esc(a.applicant_phone)+'</a>':'')+
           (wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener">WhatsApp</a>':'')+
         '</div>'+
         (a.message?'<div class="ap-msg">'+esc(a.message)+'</div>':'')+
-        (answers.length?'<div class="ap-qa">'+answers.map(function(qa){
+        (answers.length?'<div class="ap-qa"><div class="lbl" style="font-size:11.5px;font-weight:800;color:var(--mute);margin-bottom:8px;text-transform:uppercase">Screening answers</div>'+answers.map(function(qa){
           return '<div class="qa"><div class="q">'+esc(qa.question)+'</div><div class="a">'+esc(qa.answer)+'</div></div>';
         }).join('')+'</div>':'')+
+        interviewHtml(a,false)+
+        (scheduling===a.id?formHtml(a):'')+
         '<div class="ap-actions">'+
           (ADVANCE[st]?'<button class="btn btn-primary" data-act="'+ADVANCE[st]+'">'+esc(ADVANCE_LABEL[st])+'</button>':'')+
-          (TERMINAL.indexOf(st)===-1?'<button class="btn btn-outline" data-act="declined">Decline</button>':'')+
+          (canSchedule&&scheduling!==a.id?'<button class="btn '+(st==='shortlisted'?'btn-primary':'btn-outline')+'" data-sched>Schedule interview</button>':'')+
+          (TERMINAL.indexOf(st)===-1?'<button class="btn btn-danger" data-act="declined">Decline</button>':'')+
         '</div>'+
         '<div class="ap-note">'+
           '<div class="lbl">Private note (only you can see this)</div>'+
@@ -275,47 +370,142 @@ window.setCurrency = function(cur){
           '<button class="btn btn-outline" data-save-note style="margin-top:8px">Save note</button>'+
         '</div>'+
       '</div>';
-    }).join('');
+    }).join(''):'<div class="ap-empty"><p>No candidates at this stage yet.</p></div>';
+    bindEmployer();
+  }
 
+  function refreshModeFields(form){
+    var mode=form.querySelector('[data-f="mode"]').value;
+    form.querySelectorAll('[data-for]').forEach(function(el){el.classList.toggle('hidden',el.getAttribute('data-for')!==mode);});
+  }
+
+  function bindEmployer(){
     $('apList').querySelectorAll('.ap-card').forEach(function(card){
+      var id=card.getAttribute('data-id');
+      var a=ALL.find(function(x){return x.id===id;});
       card.querySelectorAll('[data-act]').forEach(function(btn){
         btn.addEventListener('click',function(){
-          var id=card.getAttribute('data-id'), act=btn.getAttribute('data-act');
+          var act=btn.getAttribute('data-act');
+          if(act==='declined'&&!confirm((a.applicant_name||'This candidate')+" will be told you are not moving forward. This can't be undone. Decline?"))return;
+          if(act==='hired'&&!confirm((a.applicant_name||'This candidate')+' will be notified that they got the job. Mark as hired?'))return;
           card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=true;});
           PM.updateApplicationStatus(id,act).then(function(r){
-            if(r&&r.ok){ var a=ALL.find(function(x){return x.id===id;}); if(a)a.status=act; render(); }
-            else { card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=false;}); alert('Could not update.'); }
-          }).catch(function(){ card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=false;}); alert('Could not update.'); });
+            if(!(r&&r.ok))throw new Error('failed');
+            a.status=act; render();
+            if(act==='hired')closeJob(a.job_id,a);
+          }).catch(function(){ card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=false;}); alert("Could not update. That step may not be available anymore."); });
         });
       });
+      card.querySelectorAll('[data-sched]').forEach(function(b){b.addEventListener('click',function(){scheduling=id;render();});});
+      var cancelBtn=card.querySelector('[data-cancel-iv]');
+      if(cancelBtn)cancelBtn.addEventListener('click',function(){
+        var reason=prompt('Cancel this interview? '+(a.applicant_name||'The candidate')+' will be notified.\n\nReason (optional):','');
+        if(reason===null)return;
+        cancelBtn.disabled=true;
+        PM.cancelInterview(id,reason).then(function(r){
+          if(!r.ok){cancelBtn.disabled=false;alert(r.error);return;}
+          a.interview_status='cancelled'; if(reason)a.interview_notes=reason; render();
+        });
+      });
+      var form=card.querySelector('[data-form]');
+      if(form){
+        refreshModeFields(form);
+        form.querySelector('[data-f="mode"]').addEventListener('change',function(){refreshModeFields(form);});
+        form.querySelector('[data-close]').addEventListener('click',function(){scheduling=null;render();});
+        form.querySelector('[data-send]').addEventListener('click',function(){
+          var f=function(k){return (form.querySelector('[data-f="'+k+'"]').value||'').trim();};
+          var at=new Date(f('at')), mode=f('mode');
+          if(!f('at')||isNaN(at.getTime())||at.getTime()<=Date.now()){alert('Pick a date and time in the future.');return;}
+          if(mode==='in_person'&&!f('location')){alert('Add the interview address.');return;}
+          if(mode==='video'&&f('link')&&!safeLink(f('link'))){alert('The meeting link must start with https://');return;}
+          var btn=this; btn.disabled=true; btn.textContent='Sending…';
+          var wasScheduled=!!a.interview_at;
+          PM.scheduleInterview(id,{at:at.toISOString(),mode:mode,location:mode==='in_person'?f('location'):'',link:mode==='video'?f('link'):'',notes:f('notes')}).then(function(r){
+            if(!r.ok){btn.disabled=false;btn.textContent=wasScheduled?'Send new time':'Send invitation';alert(r.error);return;}
+            a.status='interview'; a.interview_at=at.toISOString(); a.interview_mode=mode;
+            a.interview_location=mode==='in_person'?f('location'):null; a.interview_link=mode==='video'?(f('link')||null):null;
+            a.interview_notes=f('notes')||null; a.interview_status=wasScheduled?'rescheduled':'scheduled';
+            scheduling=null; render();
+          });
+        });
+      }
       var noteBtn=card.querySelector('[data-save-note]');
       if(noteBtn){
         noteBtn.addEventListener('click',function(){
-          var id=card.getAttribute('data-id');
           var textarea=card.querySelector('[data-note]');
           var note=(textarea.value||'').trim();
-          if(!note||!PM.addApplicationNote)return;
+          if(!note)return;
           noteBtn.disabled=true; noteBtn.textContent='Saving…';
           PM.addApplicationNote(id,note).then(function(r){
             noteBtn.disabled=false; noteBtn.textContent='Save note';
-            if(r&&r.ok){ textarea.value=''; noteBtn.textContent='Saved ✓'; setTimeout(function(){noteBtn.textContent='Save note';},1500); }
+            if(r&&r.ok){ textarea.value=''; noteBtn.textContent='Saved'; setTimeout(function(){noteBtn.textContent='Save note';},1500); }
             else alert((r&&r.error)||'Could not save note.');
-          }).catch(function(){ noteBtn.disabled=false; noteBtn.textContent='Save note'; alert('Could not save note.'); });
+          });
         });
       }
     });
   }
 
-  PM.fetchApplicationsForEmployer().then(function(rows){
-    ALL=rows||[];
-    $('apLoading').classList.add('hidden');
-    if(!ALL.length){ $('apEmpty').classList.remove('hidden'); return; }
-    $('apContent').classList.remove('hidden');
-    render();
-  }).catch(function(){
-    $('apLoading').classList.add('hidden');
-    $('apEmpty').classList.remove('hidden');
+  function closeJob(jobId, hired){
+    var open=ALL.filter(function(x){return x.job_id===jobId&&TERMINAL.indexOf(x.status)===-1&&(!hired||x.id!==hired.id);}).length;
+    var msg=(hired?(hired.applicant_name||'The candidate')+' is hired. ':'')+'Close this job as filled so it stops receiving applications?'+(open?' The other '+open+' candidate'+(open===1?'':'s')+' will be notified that the position is filled.':'');
+    if(!confirm(msg))return;
+    var step=open?PM.declineRemainingApplicants(jobId):Promise.resolve({ok:true});
+    step.then(function(r){
+      if(!r.ok)throw new Error(r.error);
+      return PM.closeJobListing(jobId,'filled');
+    }).then(function(r){
+      if(!r.ok)throw new Error(r.error||'Could not close the job');
+      ALL.forEach(function(x){if(x.job_id===jobId&&TERMINAL.indexOf(x.status)===-1)x.status='declined';});
+      render(); alert('Position filled. The job is closed.');
+    }).catch(function(e){alert(e.message||'Could not close the job');load();});
+  }
+
+  function renderMine(){
+    $('apToolbar').innerHTML=''; $('apStats').innerHTML=''; $('apTabs').innerHTML='';
+    if(!MINE.length){ showEmpty("You haven't applied yet",'Browse open vacancies and apply in a minute.','Browse jobs','jobs'); return; }
+    $('apEmpty').classList.add('hidden'); $('apContent').classList.remove('hidden');
+    $('apList').innerHTML=MINE.map(function(a){
+      var st=a.status||'pending', idx=TRACK.indexOf(st);
+      var showIv=a.interview_at&&['interview','offered','hired'].indexOf(st)>-1;
+      return '<div class="ap-card"><div class="ap-top"><div class="ap-av">'+esc(initials(a.company))+'</div>'+
+        '<div><div class="ap-name"><a href="job?id='+esc(a.job_id)+'">'+esc(a.job_title||'Job')+'</a></div><div class="ap-for">'+esc(a.company||'')+' · Applied '+esc(PM.timeAgo(a.applied_at))+'</div></div>'+
+        '<span class="ap-status '+esc(st)+'">'+esc(CAND_LABELS[st]||st)+'</span></div>'+
+        (idx>-1?'<div class="ap-track">'+TRACK.map(function(t,i){return '<div class="'+(i<=idx?'done':'')+(i===idx?' cur':'')+'">'+CAND_LABELS[t]+'</div>';}).join('')+'</div>':'')+
+        (showIv?interviewHtml(a,true):(NOTE[st]?'<div class="ap-snote">'+esc(NOTE[st])+'</div>':''))+
+      '</div>';
+    }).join('');
+  }
+
+  function render(){ renderViews(); if(view==='mine')renderMine(); else renderEmployer(); }
+
+  function markViewed(){
+    var unseen=ALL.filter(function(a){return a.status==='pending';});
+    return Promise.all(unseen.map(function(a){
+      return PM.updateApplicationStatus(a.id,'reviewing').then(function(r){if(r&&r.ok)a.status='reviewing';}).catch(function(){});
+    }));
+  }
+
+  function load(){
+    $('apLoading').classList.remove('hidden');
+    Promise.all([PM.fetchApplicationsForEmployer(),PM.fetchMyApplications()]).then(function(res){
+      ALL=res[0]||[]; MINE=res[1]||[];
+      if(view==='employer'&&!ALL.length&&MINE.length)view='mine';
+      return markViewed();
+    }).then(function(){
+      $('apLoading').classList.add('hidden');
+      $('apViews').classList.remove('hidden');
+      render();
+    }).catch(function(){
+      $('apLoading').classList.add('hidden');
+      showEmpty('Could not load applications','Please refresh the page and try again.','Refresh','applications');
+    });
+  }
+
+  document.querySelectorAll('.ap-view').forEach(function(b){
+    b.addEventListener('click',function(){view=b.getAttribute('data-view');history.replaceState(null,'',view==='mine'?'#mine':'#');scheduling=null;render();});
   });
+  load();
 })();
 </script>
 </body>

@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 
+const CANDIDATE_JOB_TYPES = new Set(["job_shortlisted", "job_declined", "job_viewed", "job_interview", "job_interview_cancelled", "job_offered", "job_hired"]);
+
 export type NotifMeta = {
   deepLink?: string | null;
   imageUrl?: string | null;
@@ -106,6 +108,11 @@ const TYPE_DOT_COLOR: Record<string, string> = {
   job_application: "#475569",
   job_shortlisted: "#16A34A",
   job_declined: "#475569",
+  job_viewed: "#1D4ED8",
+  job_interview: "#CA8A04",
+  job_interview_cancelled: "#DC2626",
+  job_offered: "#16A34A",
+  job_hired: "#16A34A",
   personalized_recommendation: "#1A3A8F",
   chat_scam_warning: "#DC2626",
   shop_new_arrivals: "#1A3A8F",
@@ -368,13 +375,13 @@ export function resolveNotifRoute(n: {
   }
 
   // 3. Jobs — applications/recruiter side
-  if (type === "lead" || type === "job_application" || type === "job_shortlisted" || type === "job_declined") {
+  if (type === "lead" || type === "job_application" || CANDIDATE_JOB_TYPES.has(type)) {
     const parsed = parseDeepLinkString(meta.deepLink);
     if (parsed) return parsed;
     if (type === "job_application" && meta.jobId) {
       return { pathname: "/jobs/applicants/[jobId]", params: { jobId: String(meta.jobId) } };
     }
-    if (type === "job_shortlisted" || type === "job_declined") {
+    if (CANDIDATE_JOB_TYPES.has(type)) {
       return { pathname: "/jobs/applications" };
     }
     if (meta.jobId) return { pathname: "/jobs/[id]", params: { id: String(meta.jobId) } };

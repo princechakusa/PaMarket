@@ -9,14 +9,20 @@ import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../../lib/theme";
 import { useThemedStyles } from "../../../lib/theme-provider";
-import { Avatar, Badge, Button, Card, EmptyState, toast, VerifiedBadge } from "../../../components/ui";
+import { Avatar, Badge, Button, Card, Chip, EmptyState, SelectField, toast, VerifiedBadge } from "../../../components/ui";
 import { useIOSNativeHeader } from "../../../lib/useIOSNativeHeader";
 import {
   addApplicationNote,
   APPLICATION_STATUS_LABEL,
   APPLICATION_TERMINAL_STATUSES,
+  cancelInterview,
   closeJobListing,
+  declineRemainingApplicants,
+  formatInterviewTime,
+  INTERVIEW_MODE_LABEL,
+  scheduleInterview,
   type ApplicationStatus,
+  type InterviewMode,
 } from "../../../lib/jobs";
 
 type JobLite = {
@@ -40,7 +46,67 @@ type JobApplicant = {
   employer_id: string;
   applied_at: string;
   answers?: unknown;
+  interview_at?: string | null;
+  interview_mode?: InterviewMode | null;
+  interview_location?: string | null;
+  interview_link?: string | null;
+  interview_notes?: string | null;
+  interview_status?: "scheduled" | "rescheduled" | "cancelled" | null;
 };
+
+type PipelineFilter = "all" | ApplicationStatus;
+
+const PIPELINE_TABS: Array<[PipelineFilter, string]> = [
+  ["all", "All"],
+  ["pending", "New"],
+  ["reviewing", "Under Review"],
+  ["shortlisted", "Shortlisted"],
+  ["interview", "Interview"],
+  ["offered", "Offer"],
+  ["hired", "Hired"],
+  ["declined", "Not Selected"],
+];
+
+// Interview slots: next 30 days, 07:00 to 19:30 in 30-minute steps. Plain
+// dropdowns keep this dependency-free (no native date picker module).
+function interviewDateOptions(): Array<{ label: string; date: Date }> {
+  const out: Array<{ label: string; date: Date }> = [];
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    const label =
+      (i === 0 ? "Today, " : i === 1 ? "Tomorrow, " : "") +
+      d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+    out.push({ label, date: d });
+  }
+  return out;
+}
+
+const INTERVIEW_TIMES: string[] = Array.from({ length: 26 }, (_, i) => {
+  const minutes = 7 * 60 + i * 30;
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+});
+
+const MODE_OPTIONS: Array<[InterviewMode, string]> = [
+  ["video", INTERVIEW_MODE_LABEL.video],
+  ["in_person", INTERVIEW_MODE_LABEL.in_person],
+  ["phone", INTERVIEW_MODE_LABEL.phone],
+];
+
+type InterviewDraft = { dateLabel: string; time: string; mode: InterviewMode; location: string; link: string; notes: string };
+
+function confirmAction(title: string, body: string, confirmLabel: string, onConfirm: () => void, destructive = false) {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined" && window.confirm(`${title}\n\n${body}`)) onConfirm();
+    return;
+  }
+  Alert.alert(title, body, [
+    { text: "Cancel", style: "cancel" },
+    { text: confirmLabel, style: destructive ? "destructive" : "default", onPress: onConfirm },
+  ]);
+}
 
 type ApplicantProfile = {
   id: string;
@@ -139,6 +205,11 @@ export default function JobApplicantsScreen() {
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [noteBusyId, setNoteBusyId] = useState<string | null>(null);
   const [closingJob, setClosingJob] = useState(false);
+  const [filter, setFilter] = useState<PipelineFilter>("all");
+  const [scheduleForId, setScheduleForId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<InterviewDraft | null>(null);
+  const [scheduling, setScheduling] = useState(false);
+  const dateOptions = useMemo(() => interviewDateOptions(), [scheduleForId]);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Applicants", androidNative: true });
 
@@ -165,13 +236,26 @@ export default function JobApplicantsScreen() {
 
     const { data: applicationRows } = await supabase
       .from("applications")
-      .select("id,job_id,job_title,company,applicant_id,applicant_name,applicant_phone,applicant_email,message,status,employer_id,applied_at,answers")
+      .select("id,job_id,job_title,company,applicant_id,applicant_name,applicant_phone,applicant_email,message,status,employer_id,applied_at,answers,interview_at,interview_mode,interview_location,interview_link,interview_notes,interview_status")
       .eq("job_id", jobId)
       .eq("employer_id", session.user.id)
       .order("applied_at", { ascending: false })
       .limit(500);
 
-    const nextApps = ((applicationRows as JobApplicant[]) ?? []).filter((row) => row.employer_id === session.user.id);
+    let nextApps = ((applicationRows as JobApplicant[]) ?? []).filter((row) => row.employer_id === session.user.id);
+    // Opening the list counts as viewing: new applications move to Under
+    // Review, and the candidate gets an "Application viewed" notification.
+    const unseen = nextApps.filter((row) => row.status === "pending").map((row) => row.id);
+    if (unseen.length) {
+      const { error: viewErr } = await supabase
+        .from("applications")
+        .update({ status: "reviewing" })
+        .in("id", unseen)
+        .eq("status", "pending");
+      if (!viewErr) {
+        nextApps = nextApps.map((row) => (unseen.includes(row.id) ? { ...row, status: "reviewing" as ApplicationStatus } : row));
+      }
+    }
     setApps(nextApps);
 
     const applicantIds = Array.from(new Set(nextApps.map((row) => row.applicant_id).filter(Boolean)));
@@ -197,15 +281,142 @@ export default function JobApplicantsScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
-  const counts = useMemo(
-    () => ({
-      total: apps.length,
-      pending: apps.filter((app) => app.status === "pending").length,
-      shortlisted: apps.filter((app) => app.status === "shortlisted").length,
-      declined: apps.filter((app) => app.status === "declined").length,
-    }),
-    [apps]
+  const counts = useMemo(() => {
+    const byStatus: Record<string, number> = { all: apps.length };
+    apps.forEach((app) => {
+      byStatus[app.status] = (byStatus[app.status] || 0) + 1;
+    });
+    return byStatus;
+  }, [apps]);
+
+  const visibleApps = useMemo(
+    () => (filter === "all" ? apps : apps.filter((app) => app.status === filter)),
+    [apps, filter]
   );
+
+  function openScheduler(app: JobApplicant) {
+    const existing = app.interview_at ? new Date(app.interview_at) : null;
+    const opts = interviewDateOptions();
+    const dateLabel =
+      (existing && opts.find((o) => o.date.toDateString() === existing.toDateString())?.label) || opts[1].label;
+    const time = existing
+      ? `${String(existing.getHours()).padStart(2, "0")}:${String(existing.getMinutes() >= 30 ? 30 : 0).padStart(2, "0")}`
+      : "10:00";
+    setDraft({
+      dateLabel,
+      time: INTERVIEW_TIMES.includes(time) ? time : "10:00",
+      mode: app.interview_mode ?? "video",
+      location: app.interview_location ?? "",
+      link: app.interview_link ?? "",
+      notes: app.interview_status === "cancelled" ? "" : app.interview_notes ?? "",
+    });
+    setScheduleForId(app.id);
+  }
+
+  async function submitInterview(app: JobApplicant) {
+    if (!draft || scheduling) return;
+    const day = dateOptions.find((o) => o.label === draft.dateLabel);
+    if (!day) {
+      toast("Choose an interview date", 3500, true);
+      return;
+    }
+    const [h, m] = draft.time.split(":").map((n) => parseInt(n, 10));
+    const at = new Date(day.date);
+    at.setHours(h, m, 0, 0);
+    if (at.getTime() <= Date.now()) {
+      toast("Pick a time later than now", 3500, true);
+      return;
+    }
+    if (draft.mode === "in_person" && !draft.location.trim()) {
+      toast("Add the interview address", 3500, true);
+      return;
+    }
+    if (draft.mode === "video" && draft.link.trim() && !/^https?:\/\/\S+$/i.test(draft.link.trim())) {
+      toast("The meeting link must start with https://", 3500, true);
+      return;
+    }
+    setScheduling(true);
+    const result = await scheduleInterview(app.id, {
+      at,
+      mode: draft.mode,
+      location: draft.mode === "in_person" ? draft.location.trim() : undefined,
+      link: draft.mode === "video" ? draft.link.trim() : undefined,
+      notes: draft.notes.trim(),
+    });
+    setScheduling(false);
+    if (!result.ok) {
+      toast(result.error || "Could not schedule the interview", 3500, true);
+      return;
+    }
+    toast(app.interview_at ? "Interview rescheduled. The candidate has been notified." : "Interview scheduled. The candidate has been notified.");
+    setScheduleForId(null);
+    setDraft(null);
+    load();
+  }
+
+  function askCancelInterview(app: JobApplicant) {
+    confirmAction(
+      "Cancel this interview?",
+      `${app.applicant_name || "The candidate"} will be notified. You can reschedule later.`,
+      "Cancel interview",
+      async () => {
+        const result = await cancelInterview(app.id);
+        if (!result.ok) {
+          toast(result.error || "Could not cancel the interview", 3500, true);
+          return;
+        }
+        toast("Interview cancelled. The candidate has been notified.");
+        load();
+      },
+      true
+    );
+  }
+
+  function askDecline(app: JobApplicant) {
+    confirmAction(
+      "Decline this candidate?",
+      `${app.applicant_name || "The candidate"} will be told you are not moving forward. This can't be undone.`,
+      "Decline",
+      () => updateStatus(app, "declined"),
+      true
+    );
+  }
+
+  async function afterHire(app: JobApplicant) {
+    const others = apps.filter(
+      (row) => row.id !== app.id && !APPLICATION_TERMINAL_STATUSES.includes(row.status)
+    ).length;
+    confirmAction(
+      "Close this job as filled?",
+      others
+        ? `${app.applicant_name || "The candidate"} is hired. Close the job and notify the other ${others} candidate${others === 1 ? "" : "s"} that the position is filled?`
+        : `${app.applicant_name || "The candidate"} is hired. Close the job so it stops receiving applications?`,
+      "Close job",
+      async () => {
+        if (!job) return;
+        setClosingJob(true);
+        if (others) {
+          const declined = await declineRemainingApplicants(job.id);
+          if (!declined.ok) {
+            setClosingJob(false);
+            toast(declined.error || "Could not update the other candidates", 3500, true);
+            return;
+          }
+        }
+        const closed = await closeJobListing(job.id, "filled");
+        if (!closed.ok) {
+          setClosingJob(false);
+          toast(closed.error || "Could not close the job", 3500, true);
+          load();
+          return;
+        }
+        // No setClosingJob(false) here: router.back() unmounts this screen,
+        // and a state update in the same tick crashes Fabric on Android.
+        toast("Position filled. The job is closed.");
+        router.back();
+      }
+    );
+  }
 
   async function updateStatus(app: JobApplicant, status: ApplicationStatus) {
     if (!session?.user || busyId) return;
@@ -223,7 +434,8 @@ export default function JobApplicantsScreen() {
       toast("Could not update application status", 3500, true);
       return;
     }
-    toast(`Status updated to ${APPLICATION_STATUS_LABEL[status]}`);
+    toast(`${app.applicant_name || "Candidate"} moved to ${APPLICATION_STATUS_LABEL[status]}`);
+    if (status === "hired") afterHire({ ...app, status });
   }
 
   async function submitNote(app: JobApplicant) {
@@ -254,11 +466,13 @@ export default function JobApplicantsScreen() {
     if (!job) return;
     setClosingJob(true);
     const result = await closeJobListing(job.id, reason);
-    setClosingJob(false);
     if (result.ok) {
+      // No setClosingJob(false): router.back() unmounts this screen, and a
+      // state update in the same tick crashes Fabric on Android.
       toast(reason === "filled" ? "Job marked as filled" : reason === "paused" ? "Job paused" : "Job removed");
       router.back();
     } else {
+      setClosingJob(false);
       toast(result.error || "Could not update the job", 3500, true);
     }
   }
@@ -338,8 +552,9 @@ export default function JobApplicantsScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={apps}
+        data={visibleApps}
         keyExtractor={(item) => item.id}
+        extraData={[scheduleForId, draft, scheduling, busyId, noteDrafts, messagingId, cvOpeningId]}
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + space.huge }]}
         ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
         ListHeaderComponent={
@@ -348,9 +563,10 @@ export default function JobApplicantsScreen() {
               <Text style={styles.jobLabel}>HIRING FOR</Text>
               <Text style={styles.jobTitle}>{job?.title || "Job"}</Text>
               <View style={styles.statsRow}>
-                <Stat label="Total" value={counts.total} styles={styles} />
-                <Stat label="Pending" value={counts.pending} styles={styles} />
-                <Stat label="Shortlisted" value={counts.shortlisted} styles={styles} />
+                <Stat label="Applicants" value={counts.all || 0} styles={styles} />
+                <Stat label="New" value={counts.pending || 0} styles={styles} />
+                <Stat label="Interview" value={counts.interview || 0} styles={styles} />
+                <Stat label="Hired" value={counts.hired || 0} styles={styles} />
               </View>
               <Button
                 label={closingJob ? "Closing…" : "Close hiring"}
@@ -361,7 +577,21 @@ export default function JobApplicantsScreen() {
                 style={{ marginTop: space.md }}
               />
             </Card>
-            {apps.length ? <Text style={styles.countText}>{apps.length} candidate{apps.length === 1 ? "" : "s"} applied</Text> : null}
+            {apps.length ? (
+              <View style={styles.tabsWrap}>
+                {PIPELINE_TABS.map(([key, label]) => (
+                  <Chip
+                    key={key}
+                    label={`${label} ${counts[key] || 0}`}
+                    active={filter === key}
+                    onPress={() => setFilter(key)}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {apps.length && !visibleApps.length ? (
+              <Text style={styles.countText}>No candidates at this stage yet.</Text>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
@@ -383,6 +613,9 @@ export default function JobApplicantsScreen() {
           const isBusy = busyId === item.id;
           const isTerminal = APPLICATION_TERMINAL_STATUSES.includes(item.status);
           const nextStatus = ADVANCE_STATUS[item.status];
+          const canSchedule = ["pending", "reviewing", "shortlisted", "interview"].includes(item.status);
+          const isScheduling = scheduleForId === item.id && !!draft;
+          const interviewCancelled = item.interview_status === "cancelled";
 
           return (
             <Card style={styles.appCard}>
@@ -415,6 +648,110 @@ export default function JobApplicantsScreen() {
                       <Text style={styles.answerText}>{answer.answer}</Text>
                     </View>
                   ))}
+                </View>
+              ) : null}
+
+              {item.interview_at && item.status !== "declined" && item.status !== "withdrawn" ? (
+                <View style={[styles.interviewBox, interviewCancelled && styles.interviewBoxCancelled]}>
+                  <View style={styles.interviewHead}>
+                    <Text style={styles.messageLabel}>
+                      {interviewCancelled ? "Interview cancelled" : item.interview_status === "rescheduled" ? "Interview (rescheduled)" : "Interview"}
+                    </Text>
+                  </View>
+                  <Text style={[styles.interviewWhen, interviewCancelled && styles.strike]}>{formatInterviewTime(item.interview_at)}</Text>
+                  {item.interview_mode ? (
+                    <Text style={styles.interviewMeta}>{INTERVIEW_MODE_LABEL[item.interview_mode]}</Text>
+                  ) : null}
+                  {item.interview_location ? <Text style={styles.interviewMeta}>{item.interview_location}</Text> : null}
+                  {item.interview_link ? (
+                    <Pressable onPress={() => openExternalUrl(item.interview_link as string, "Could not open the meeting link.")}>
+                      <Text style={styles.interviewLink} numberOfLines={1}>{item.interview_link}</Text>
+                    </Pressable>
+                  ) : null}
+                  {item.interview_notes ? <Text style={styles.interviewNotes}>{item.interview_notes}</Text> : null}
+                  {item.status === "interview" && !isScheduling ? (
+                    <View style={styles.actionGrid}>
+                      <Button label={interviewCancelled ? "Reschedule" : "Reschedule"} variant="secondary" size="sm" onPress={() => openScheduler(item)} />
+                      {!interviewCancelled ? (
+                        <Button label="Cancel interview" variant="danger" size="sm" onPress={() => askCancelInterview(item)} />
+                      ) : null}
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+
+              {isScheduling && draft ? (
+                <View style={styles.scheduleBox}>
+                  <Text style={styles.scheduleTitle}>{item.interview_at ? "Reschedule interview" : "Schedule interview"}</Text>
+                  <SelectField
+                    label="Date"
+                    value={draft.dateLabel}
+                    placeholder="Choose a date"
+                    options={dateOptions.map((o) => o.label)}
+                    onSelect={(v) => setDraft((d) => (d ? { ...d, dateLabel: v } : d))}
+                  />
+                  <SelectField
+                    label="Time"
+                    value={draft.time}
+                    placeholder="Choose a time"
+                    options={INTERVIEW_TIMES}
+                    onSelect={(v) => setDraft((d) => (d ? { ...d, time: v } : d))}
+                  />
+                  <SelectField
+                    label="Interview type"
+                    value={INTERVIEW_MODE_LABEL[draft.mode]}
+                    placeholder="Choose a type"
+                    options={MODE_OPTIONS.map(([, l]) => l)}
+                    onSelect={(v) => setDraft((d) => (d ? { ...d, mode: MODE_OPTIONS.find(([, l]) => l === v)?.[0] ?? d.mode } : d))}
+                  />
+                  {draft.mode === "in_person" ? (
+                    <TextInput
+                      style={styles.noteInput}
+                      placeholder="Address, e.g. 12 Samora Machel Ave, Harare"
+                      placeholderTextColor={themeColor.textMuted}
+                      value={draft.location}
+                      onChangeText={(t) => setDraft((d) => (d ? { ...d, location: t } : d))}
+                    />
+                  ) : null}
+                  {draft.mode === "video" ? (
+                    <TextInput
+                      style={styles.noteInput}
+                      placeholder="Meeting link (Google Meet, Zoom, Teams), optional"
+                      placeholderTextColor={themeColor.textMuted}
+                      value={draft.link}
+                      autoCapitalize="none"
+                      keyboardType="url"
+                      onChangeText={(t) => setDraft((d) => (d ? { ...d, link: t } : d))}
+                    />
+                  ) : null}
+                  <TextInput
+                    style={[styles.noteInput, { minHeight: 64 }]}
+                    placeholder="Instructions for the candidate (what to bring, who to ask for), optional"
+                    placeholderTextColor={themeColor.textMuted}
+                    value={draft.notes}
+                    multiline
+                    onChangeText={(t) => setDraft((d) => (d ? { ...d, notes: t } : d))}
+                  />
+                  <Text style={styles.scheduleHint}>Times use this device's time zone. The candidate is notified straight away.</Text>
+                  <View style={styles.actionGrid}>
+                    <Button
+                      label={scheduling ? "Sending…" : item.interview_at ? "Send new time" : "Send invitation"}
+                      variant="primary"
+                      size="sm"
+                      loading={scheduling}
+                      onPress={() => submitInterview(item)}
+                    />
+                    <Button
+                      label="Close"
+                      variant="secondary"
+                      size="sm"
+                      disabled={scheduling}
+                      onPress={() => {
+                        setScheduleForId(null);
+                        setDraft(null);
+                      }}
+                    />
+                  </View>
                 </View>
               ) : null}
 
@@ -455,13 +792,30 @@ export default function JobApplicantsScreen() {
                   loading={cvOpeningId === item.id}
                   onPress={() => viewApplicantCv(item)}
                 />
-                {nextStatus ? (
+                {nextStatus && nextStatus !== "interview" ? (
                   <Button
                     label={ADVANCE_LABEL[item.status] || "Advance"}
                     variant="primary"
                     size="sm"
                     loading={isBusy}
-                    onPress={() => updateStatus(item, nextStatus)}
+                    onPress={() =>
+                      nextStatus === "hired"
+                        ? confirmAction(
+                            "Hire this candidate?",
+                            `${item.applicant_name || "The candidate"} will be notified that they got the job.`,
+                            "Mark hired",
+                            () => updateStatus(item, "hired")
+                          )
+                        : updateStatus(item, nextStatus)
+                    }
+                  />
+                ) : null}
+                {canSchedule && !item.interview_at && !isScheduling ? (
+                  <Button
+                    label="Schedule interview"
+                    variant={item.status === "shortlisted" ? "primary" : "secondary"}
+                    size="sm"
+                    onPress={() => openScheduler(item)}
                   />
                 ) : null}
                 {!isTerminal ? (
@@ -470,7 +824,7 @@ export default function JobApplicantsScreen() {
                     variant="danger"
                     size="sm"
                     loading={isBusy}
-                    onPress={() => updateStatus(item, "declined")}
+                    onPress={() => askDecline(item)}
                   />
                 ) : null}
               </View>
@@ -585,6 +939,32 @@ function buildStyles(color: ColorPalette) {
     },
     contactText: { ...font.caption, color: color.brand, flexShrink: 1 },
     actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+    tabsWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginBottom: space.md },
+    interviewBox: {
+      backgroundColor: color.brandTint,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: color.brand,
+      padding: space.md,
+      gap: 4,
+    },
+    interviewBoxCancelled: { backgroundColor: color.surfaceAlt, borderColor: color.border },
+    interviewHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    interviewWhen: { ...font.bodyStrong, color: color.text },
+    strike: { textDecorationLine: "line-through", color: color.textMuted },
+    interviewMeta: { ...font.sub, color: color.textSub },
+    interviewLink: { ...font.sub, color: color.brand, fontWeight: "700" },
+    interviewNotes: { ...font.caption, color: color.textSub, marginTop: 4, marginBottom: 4 },
+    scheduleBox: {
+      backgroundColor: color.surfaceAlt,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: color.brand,
+      padding: space.md,
+      gap: space.sm,
+    },
+    scheduleTitle: { ...font.bodyStrong, color: color.text },
+    scheduleHint: { ...font.caption, color: color.textMuted },
     noteBox: {
       backgroundColor: color.surfaceAlt,
       borderRadius: radius.md,
