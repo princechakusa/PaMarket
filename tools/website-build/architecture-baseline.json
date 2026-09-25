@@ -3,8 +3,8 @@
   "policy": "Existing review-level debt may not grow; new review-level debt fails.",
   "debt": {
     "account-settings.html": {
-      "bytes": 86969,
-      "lines": 799,
+      "bytes": 87022,
+      "lines": 800,
       "inlineJs": 42955,
       "inlineCss": 12980
     },
@@ -45,14 +45,14 @@
       "inlineCss": 209
     },
     "businesses.html": {
-      "bytes": 34830,
-      "lines": 320,
+      "bytes": 34901,
+      "lines": 321,
       "inlineJs": 12556,
       "inlineCss": 209
     },
     "chats.html": {
-      "bytes": 38429,
-      "lines": 286,
+      "bytes": 38482,
+      "lines": 287,
       "inlineJs": 3459,
       "inlineCss": 16079
     },
@@ -75,7 +75,7 @@
       "inlineCss": 2538
     },
     "detail.html": {
-      "bytes": 48098,
+      "bytes": 48116,
       "lines": 513,
       "inlineJs": 24225,
       "inlineCss": 209
@@ -93,25 +93,25 @@
       "inlineCss": 209
     },
     "institution.html": {
-      "bytes": 46084,
+      "bytes": 46102,
       "lines": 461,
       "inlineJs": 20535,
       "inlineCss": 209
     },
     "institutions.html": {
-      "bytes": 30581,
-      "lines": 291,
+      "bytes": 30652,
+      "lines": 292,
       "inlineJs": 9737,
       "inlineCss": 209
     },
     "job.html": {
-      "bytes": 42107,
-      "lines": 510,
+      "bytes": 42178,
+      "lines": 511,
       "inlineJs": 18250,
       "inlineCss": 209
     },
     "jobs.html": {
-      "bytes": 50347,
+      "bytes": 50365,
       "lines": 575,
       "inlineJs": 21454,
       "inlineCss": 209
@@ -159,14 +159,14 @@
       "inlineCss": 0
     },
     "open-shop.html": {
-      "bytes": 67844,
-      "lines": 572,
+      "bytes": 67915,
+      "lines": 573,
       "inlineJs": 28309,
       "inlineCss": 8898
     },
     "post-ad.html": {
-      "bytes": 52779,
-      "lines": 798,
+      "bytes": 52832,
+      "lines": 799,
       "inlineJs": 19991,
       "inlineCss": 9907
     },
@@ -177,8 +177,8 @@
       "inlineCss": 1216
     },
     "post-job.html": {
-      "bytes": 51621,
-      "lines": 714,
+      "bytes": 51674,
+      "lines": 715,
       "inlineJs": 19824,
       "inlineCss": 6812
     },
