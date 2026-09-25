@@ -12,36 +12,28 @@ const BASE = process.argv[2] || 'https://pamarketzw.com';
 const CHECKS = [
   {
     url: '/',
-    name: 'homepage renders listing cards',
-    // #elCards (electronics) is the one homepage carousel that loads
-    // eagerly — every other category carousel is scroll-triggered
-    // (lazySection/IntersectionObserver) and won't fire without scrolling,
-    // so it's the only section a non-scrolling headless check can rely on.
-    // But requiring .lcard > 0 is too strict: index.html's own
-    // renderCards() treats a genuinely empty category as healthy ("No
-    // listings yet in this category" — happens from normal churn, e.g.
-    // electronics briefly had zero active listings and false-failed this
-    // exact check) versus a real fetch failure ("Couldn't load listings
-    // right now — Retry"). Pass on either cards or the graceful empty
-    // state; only fail on the error state or an unpopulated container
-    // (stuck loading — the actual JS-blocks-init failure this test
-    // exists to catch).
+    name: 'homepage renders live listing counts',
+    // catCount-electronics is a per-category count badge fed by a real
+    // data fetch on load (unlike the scroll-triggered category rails,
+    // this one always renders without scrolling). Its markup ships with a
+    // static placeholder value, so the check must confirm the fetch
+    // actually replaced it with a live number, not just that the element
+    // exists.
     test: (page) => page.evaluate(() => {
-      const el = document.getElementById('elCards');
+      const el = document.getElementById('catCount-electronics');
       if (!el) return false;
-      if (el.querySelectorAll('.lcard').length > 0) return true;
-      return /no listings yet/i.test(el.textContent || '');
+      return /^[\d.,]+k?$/i.test((el.textContent || '').trim());
     }),
   },
   {
     url: '/browse',
     name: 'browse renders listing cards',
-    test: (page) => page.evaluate(() => document.querySelectorAll('#resultsGrid .gcard').length > 0),
+    test: (page) => page.evaluate(() => document.querySelectorAll('#listingsGrid > article').length > 0),
   },
   {
     url: '/browse?shops=1',
     name: 'shops browse renders shop cards',
-    test: (page) => page.evaluate(() => document.querySelectorAll('#resultsGrid .shopcard').length > 0),
+    test: (page) => page.evaluate(() => document.querySelectorAll('#listingsGrid > article').length > 0),
   },
 ];
 
@@ -54,9 +46,12 @@ const CHECKS = [
     page.on('pageerror', (e) => errors.push(e.message));
     let pass = false;
     try {
-      await page.goto(BASE + check.url, { waitUntil: 'networkidle', timeout: 45000 });
-      // Give client-side data fetches a moment past network idle.
-      await page.waitForTimeout(3000);
+      // 'networkidle' never fires on pages that hold a persistent
+      // connection (e.g. a realtime subscription on /browse) — it isn't a
+      // signal of brokenness, just an open socket. 'load' plus a fixed
+      // settle window is a wait strategy that works across every page.
+      await page.goto(BASE + check.url, { waitUntil: 'load', timeout: 45000 });
+      await page.waitForTimeout(4000);
       pass = await check.test(page);
     } catch (e) {
       errors.push('nav: ' + e.message);

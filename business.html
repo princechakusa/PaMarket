@@ -35,7 +35,7 @@
   // reactively via MutationObserver as the DOM parses, so there's no
   // single synchronous "ready" signal to wait on instead).
   requestAnimationFrame(function(){ requestAnimationFrame(reveal); });
-  setTimeout(reveal, 500); // hard fallback so the page is never stuck invisible
+  setTimeout(reveal, 150); // hard fallback so the page is never stuck invisible
 })();
 </script>
 <body class="bg-surface-container font-body-md text-on-surface antialiased min-h-screen"><!-- HEADER:START -->
