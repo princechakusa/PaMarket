@@ -137,6 +137,12 @@
       '</div></article>';
   }
   function loadCampus(append){
+    // A cached older services/institutions.js lacks this; hide the feed
+    // rather than let the error stop the rest of the page from loading.
+    if (typeof window.PMInstitutions.fetchCampusListings !== 'function') {
+      document.getElementById('campusListings').classList.add('hidden');
+      return;
+    }
     var grid = document.getElementById('campusGrid');
     var empty = document.getElementById('campusEmpty');
     var more = document.getElementById('campusMore');
