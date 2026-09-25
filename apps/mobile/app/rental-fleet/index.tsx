@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line, Rect, Path, Circle } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
@@ -276,10 +276,24 @@ export default function RentalFleetDashboard() {
     );
   }, [session]);
 
-  useEffect(() => {
-    setIsLoading(true);
-    load().finally(() => setIsLoading(false));
-  }, [load]);
+  // Was a plain mount-only useEffect, so returning to this screen after
+  // taking action elsewhere (a provider getting approved in admin, a
+  // vehicle added, a booking accepted) kept showing whatever was fetched on
+  // first mount until the user manually pulled to refresh — e.g. the
+  // "Pending Approval" banner stayed up after the company was actually
+  // approved. useFocusEffect refetches on every real focus instead; the ref
+  // keeps the full-screen spinner to the genuine first load, matching the
+  // existing pattern in (tabs)/profile.tsx.
+  const hasLoadedOnceRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasLoadedOnceRef.current) setIsLoading(true);
+      load().finally(() => {
+        hasLoadedOnceRef.current = true;
+        setIsLoading(false);
+      });
+    }, [load])
+  );
 
   // Redirect to company setup once state has actually settled (never
   // during render -- was previously called inline in the JSX below, which
