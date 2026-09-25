@@ -62,11 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(nextSession);
       return;
     }
-    const { data } = await supabase
-      .from("profiles")
-      .select("two_factor_enabled")
-      .eq("id", nextSession.user.id)
-      .maybeSingle();
+    // The initial getSession() load has its own 6s timeout below because a
+    // hung network call must never leave the app stuck behind the splash
+    // screen forever. This query needs the same guarantee: it runs after
+    // every real sign-in too (via onAuthStateChange), and unlike the splash
+    // path nothing here was previously bounding it — a slow/hung profiles
+    // read left the sign-in button spinning forever with no error, even
+    // though Supabase had already issued a valid session.
+    //
+    // A timeout must fail SAFE, not open: we don't yet know whether this
+    // user has 2FA enabled, so it must not be treated the same as a
+    // confirmed "no 2FA" result (that would let a slow/blocked network call
+    // skip the second factor entirely). Leaving session unset just means
+    // the sign-in appears to fail and the user can retry — never signed in
+    // without the check actually completing.
+    const TIMED_OUT = Symbol("two-factor-check-timed-out");
+    const result = await Promise.race([
+      supabase.from("profiles").select("two_factor_enabled").eq("id", nextSession.user.id).maybeSingle(),
+      new Promise<typeof TIMED_OUT>((resolve) => setTimeout(() => resolve(TIMED_OUT), 6000)),
+    ]);
+    if (result === TIMED_OUT) {
+      console.warn("[auth] two-factor check timed out; leaving user signed out so they can retry");
+      setPendingTwoFactor(false);
+      setPendingSecret(null);
+      setSession(null);
+      return;
+    }
+    const { data } = result;
     // The secret itself is never selected directly — cross-user reads of
     // profiles.two_factor_secret are blocked at the column-grant level
     // (C2E-13); this RPC is owner-scoped via auth.uid() and only ever
