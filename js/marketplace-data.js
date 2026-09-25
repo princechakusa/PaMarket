@@ -701,7 +701,8 @@
       p_remote_type: opts.remoteType || null,
       p_salary_min: opts.salaryMin || null,
       p_salary_max: opts.salaryMax || null,
-      p_salary_negotiable_only: opts.salaryNegotiableOnly || null,
+      // Must be a real boolean: SQL `not null` is null, which filters out every job.
+      p_salary_negotiable_only: !!opts.salaryNegotiableOnly,
       p_skills: opts.skills || null,
     };
     return call(extendedBody).catch(function () { return []; });

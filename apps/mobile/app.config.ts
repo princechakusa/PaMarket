@@ -291,5 +291,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     enabled: true,
     checkAutomatically: "ON_LOAD",
     fallbackToCacheTimeout: 0,
+    // Android release AABs are built locally with Gradle, not EAS, so
+    // eas.json's channel is never stamped into them; without this header
+    // they would never receive a production update. EAS builds overwrite it
+    // with their profile's channel.
+    requestHeaders: {
+      "expo-channel-name": "production",
+    },
   },
 });

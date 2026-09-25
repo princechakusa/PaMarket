@@ -112,7 +112,7 @@ window.doHeaderSearch = function(){
     var year = startYear && !isNaN(startYear)
       ? (currentYear > startYear ? startYear + '–' + currentYear : String(startYear))
       : String(currentYear);
-    el.textContent = '© ' + year + ' ' + holder + '. Serving all 10 provinces across Zimbabwe. All rights reserved.';
+    el.textContent = '© ' + year + ' ' + holder.replace(/\.+$/, '') + '. Serving all 10 provinces across Zimbabwe. All rights reserved.';
   }
 
   // Fallback: even with no DB reachable, the year itself must never go

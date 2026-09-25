@@ -468,7 +468,7 @@ window.setCurrency = function(cur){
     var year = startYear && !isNaN(startYear)
       ? (currentYear > startYear ? startYear + '\u2013' + currentYear : String(startYear))
       : String(currentYear);
-    el.textContent = '\u00A9 ' + year + ' ' + holder + '. Serving all 10 provinces across Zimbabwe. All rights reserved.';
+    el.textContent = '\u00A9 ' + year + ' ' + holder.replace(/\.+$/, '') + '. Serving all 10 provinces across Zimbabwe. All rights reserved.';
   }
   var fallbackStart = parseInt(el.getAttribute('data-copyright-start-year'), 10);
   var fallbackHolder = el.getAttribute('data-copyright-holder') || 'PaMarket Zimbabwe (Pvt) Ltd.';

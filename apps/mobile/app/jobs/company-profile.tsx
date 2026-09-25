@@ -68,11 +68,13 @@ export default function CompanyProfileScreen() {
       },
       { onConflict: "user_id" }
     );
-    setIsSaving(false);
     if (error) {
+      setIsSaving(false);
       toast("Could not save company profile", 3500, true);
       return;
     }
+    // No isSaving reset: a state update in the same tick as router.back()
+    // races Fabric's unmount and crashes natively on Android.
     toast("Company profile saved");
     router.back();
   }
