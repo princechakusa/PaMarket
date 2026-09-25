@@ -127,6 +127,7 @@ const CARD = 'bg-surface-container-lowest rounded p-5 shadow-sm';
 const H2 = 'font-headline-sm text-headline-sm text-on-surface font-bold mb-3 flex items-center gap-2';
 const LABEL = 'text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant';
 const BTN_PRIMARY = 'bg-primary text-on-primary py-3 px-4 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2';
+const BTN_WHATSAPP = 'bg-[#25D366] text-white py-3 px-4 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2';
 const BTN_SECONDARY = 'bg-surface-container-low text-on-surface py-3 px-4 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2';
 
 function icon(name, size) { return '<span class="material-symbols-outlined text-[' + (size || 18) + 'px]">' + name + '</span>'; }
@@ -308,7 +309,8 @@ function renderListing(l, chrome) {
   const contactCard = '<section class="' + CARD + '"><span class="' + LABEL + '">' + (isJob ? 'Salary' : 'Asking price') + '</span>' +
     '<div class="font-price-primary text-headline-md font-extrabold text-primary mt-1 mb-4">' + esc(priceStr) + '</div>' +
     '<div class="flex flex-col gap-2">' +
-    '<a href="' + esc(waHref) + '" target="_blank" rel="noopener" class="' + BTN_PRIMARY + '">' + icon('chat') + 'Chat on WhatsApp</a>' +
+    (l.seller_id ? '<a id="messageSellerBtn" href="chats?to=' + esc(l.seller_id) + '&amp;listing=' + esc(l.id) + '" class="' + BTN_PRIMARY + '">' + icon('forum') + 'Message Seller</a>' : '') +
+    '<a href="' + esc(waHref) + '" target="_blank" rel="noopener" class="' + BTN_WHATSAPP + '">' + icon('chat') + 'Chat on WhatsApp</a>' +
     (phone ? '<a href="tel:' + esc(phone) + '" class="' + BTN_SECONDARY + '">' + icon('call') + 'Call seller</a>' : '') +
     '</div><div class="flex items-center justify-between mt-3 pt-3 border-t border-outline-variant text-label-sm font-label-sm">' +
     '<button type="button" id="shareBtn" class="flex items-center gap-1 text-on-surface-variant hover:text-primary">' + icon('share', 16) + 'Share</button>' +
@@ -339,7 +341,7 @@ function renderListing(l, chrome) {
     crumb: crumbHtml([{ label: 'Home', href: 'index.html' }, { label: 'Browse', href: 'browse' }, { label: catLabel, href: 'browse?cat=' + esc(l.category) }, { label: l.title }]),
     main: main, viewer: g.viewer, hydrateListingId: l.id, chrome: chrome,
     extrasMeta: { id: l.id, title: l.title, price: l.price, currency: l.currency, photo: photos[0] || null, city: l.city, province: l.province, url: url },
-    afterScripts: g.script
+    afterScripts: g.script + (l.seller_id ? '(function(){try{var s=window.PMSession&&PMSession.getSession&&PMSession.getSession();if(s&&s.user&&String(s.user.id)===' + jsonld(String(l.seller_id)) + '){var b=document.getElementById("messageSellerBtn");if(b)b.style.display="none";}}catch(e){}})();' : '')
   });
 }
 

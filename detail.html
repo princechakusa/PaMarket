@@ -131,7 +131,8 @@
 <span class="text-label-sm font-label-sm uppercase tracking-wide text-on-surface-variant">Total Asking Price</span>
 <div id="priceBlockSidebar" class="mt-1 mb-4"></div>
 <div class="flex flex-col gap-2">
-<a id="whatsappBtn" href="#" target="_blank" rel="noopener" class="bg-primary text-on-primary py-3 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px]">chat</span><span id="whatsappBtnLabel">Chat on WhatsApp</span></a>
+<a id="messageSellerBtn" href="chats" class="hidden bg-primary text-on-primary py-3 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px]">forum</span>Message Seller</a>
+<a id="whatsappBtn" href="#" target="_blank" rel="noopener" class="bg-[#25D366] text-white py-3 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px]">chat</span><span id="whatsappBtnLabel">Chat on WhatsApp</span></a>
 <a id="callBtn" href="#" class="bg-surface-container-low text-on-surface py-3 rounded text-label-md font-label-md font-bold flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px]">call</span><span id="callBtnLabel">Call Seller</span></a>
 </div>
 <div class="flex items-center justify-between mt-3 pt-3 border-t border-outline-variant text-label-sm font-label-sm">
@@ -426,6 +427,15 @@
       }, 50);
     }
 
+    var msgBtn = document.getElementById('messageSellerBtn');
+    var viewer = window.PMSession && window.PMSession.getSession ? window.PMSession.getSession() : null;
+    var isOwner = viewer && viewer.user && String(viewer.user.id) === String(l.seller_id);
+    if (l.seller_id && !isOwner) {
+      msgBtn.href = 'chats?to=' + encodeURIComponent(l.seller_id) + '&listing=' + encodeURIComponent(l.id);
+      msgBtn.classList.remove('hidden');
+    } else {
+      msgBtn.classList.add('hidden');
+    }
     var phoneDigits = (l.seller_phone||'').replace(/[^0-9+]/g, '');
     var waText = encodeURIComponent('Hi, I\'m interested in your PaMarket listing: ' + l.title);
     document.getElementById('whatsappBtn').href = phoneDigits ? 'https://wa.me/' + phoneDigits.replace('+','') + '?text=' + waText : 'https://wa.me/?text=' + waText;
