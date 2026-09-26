@@ -56,7 +56,17 @@ export type RentalListingRow = {
   id: string; company_id: string | null; model: string | null; year: number | null;
   daily_rate: number | null; status: string | null; admin_status: string | null;
   view_count: number | null; created_at: string | null;
+  company_deleted?: boolean;
 };
+
+// A vehicle whose rental company was deleted never shows publicly (the
+// public search requires rental_companies.deleted_at is null), so approving
+// it only produces an "approved but invisible" listing.
+async function deletedCompanyIds(client: NonNullable<ReturnType<typeof getSupabaseClient>>, companyIds: string[]): Promise<Set<string>> {
+  if (!companyIds.length) return new Set();
+  const { data } = await client.from('rental_companies').select('id, deleted_at').in('id', companyIds);
+  return new Set(((data ?? []) as Array<{ id: string; deleted_at: string | null }>).filter((c) => c.deleted_at).map((c) => c.id));
+}
 
 export async function listRentalListings(filters: { adminStatus?: string; status?: string }, page: number, pageSize = RENTALS_PAGE_SIZE): Promise<QueryResult<Page<RentalListingRow>>> {
   const client = getSupabaseClient();
@@ -70,12 +80,22 @@ export async function listRentalListings(filters: { adminStatus?: string; status
   const from = Math.max(0, page - 1) * pageSize;
   const { data, error, count } = await query.range(from, from + pageSize - 1);
   if (error) return { data: null, error: normalizeError(error) };
-  return { data: { rows: data ?? [], total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
+  const rows = (data ?? []) as RentalListingRow[];
+  const deleted = await deletedCompanyIds(client, Array.from(new Set(rows.map((r) => r.company_id).filter((v): v is string => !!v))));
+  const withCompany = rows.map((r) => ({ ...r, company_deleted: !!r.company_id && deleted.has(r.company_id) }));
+  return { data: { rows: withCompany, total: count ?? 0, page: Math.max(1, page), pageSize }, error: null };
 }
 
 export async function decideRentalListing(id: string, adminStatus: 'approved' | 'rejected', note?: string): Promise<QueryResult<{ id: string }>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
+  if (adminStatus === 'approved') {
+    const { data: listing } = await client.from('rental_vehicle_listings').select('company_id').eq('id', id).maybeSingle();
+    const companyId = (listing as { company_id: string | null } | null)?.company_id;
+    if (companyId && (await deletedCompanyIds(client, [companyId])).has(companyId)) {
+      return { data: null, error: { code: 'company_deleted', message: "This vehicle's rental company was deleted, so it can't be approved. Restore the company first.", retryable: false } };
+    }
+  }
   const { data, error } = await client
     .from('rental_vehicle_listings')
     .update({ admin_status: adminStatus, admin_note: note ?? null })

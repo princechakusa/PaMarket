@@ -85,8 +85,8 @@ function RentalsApprovals({ mode, onMessage }: { mode: string; onMessage: (m: st
   }
   return <section className="ops-panel"><header className="panel-title"><h2>Pending Listing Approvals</h2><span>Page {page} of {pageCount}</span></header>
     <div className="directory-table-scroll"><table aria-label="Pending rental listings"><thead><tr><th>Model</th><th>Year</th><th>Daily rate</th><th>Submitted</th><th>Actions</th></tr></thead>
-      <tbody>{rows.map((r) => <tr key={r.id}><td>{r.model ?? '—'}</td><td>{r.year ?? '—'}</td><td>{r.daily_rate !== null ? `$${r.daily_rate}` : '—'}</td><td>{fmtDate(r.created_at)}</td>
-        <td><div className="jobs-actions"><button onClick={() => void decide(r.id, 'approved')}>Approve</button><button onClick={() => void decide(r.id, 'rejected')}>Reject</button></div></td>
+      <tbody>{rows.map((r) => <tr key={r.id}><td>{r.model ?? '—'}{r.company_deleted && <strong style={{ color: '#b91c1c', marginLeft: 6 }}>Company deleted</strong>}</td><td>{r.year ?? '—'}</td><td>{r.daily_rate !== null ? `$${r.daily_rate}` : '—'}</td><td>{fmtDate(r.created_at)}</td>
+        <td><div className="jobs-actions">{!r.company_deleted && <button onClick={() => void decide(r.id, 'approved')}>Approve</button>}<button onClick={() => void decide(r.id, 'rejected')}>Reject</button></div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No pending approvals.</p>}{phase === 'error' && <p role="alert">Could not load approvals.</p>}</div>
     <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
@@ -146,8 +146,8 @@ function RentalsListings({ mode, onMessage }: { mode: string; onMessage: (m: str
   }
   return <section className="ops-panel"><header className="panel-title"><h2>All Rental Listings</h2><span>Page {page} of {pageCount}</span></header>
     <div className="directory-table-scroll"><table aria-label="All rental listings"><thead><tr><th>Model</th><th>Year</th><th>Rate</th><th>Status</th><th>Admin status</th><th>Views</th><th>Actions</th></tr></thead>
-      <tbody>{rows.map((r) => <tr key={r.id}><td>{r.model ?? '—'}</td><td>{r.year ?? '—'}</td><td>{r.daily_rate !== null ? `$${r.daily_rate}` : '—'}</td><td>{r.status ?? '—'}</td><td>{r.admin_status ?? '—'}</td><td>{r.view_count ?? 0}</td>
-        <td><div className="jobs-actions">{r.admin_status !== 'approved' && <button onClick={() => void decide(r.id, 'approved')}>Approve</button>}{r.admin_status !== 'rejected' && <button onClick={() => void decide(r.id, 'rejected')}>Reject</button>}</div></td>
+      <tbody>{rows.map((r) => <tr key={r.id}><td>{r.model ?? '—'}{r.company_deleted && <strong style={{ color: '#b91c1c', marginLeft: 6 }}>Company deleted</strong>}</td><td>{r.year ?? '—'}</td><td>{r.daily_rate !== null ? `$${r.daily_rate}` : '—'}</td><td>{r.status ?? '—'}</td><td>{r.admin_status ?? '—'}</td><td>{r.view_count ?? 0}</td>
+        <td><div className="jobs-actions">{r.admin_status !== 'approved' && !r.company_deleted && <button onClick={() => void decide(r.id, 'approved')}>Approve</button>}{r.admin_status !== 'rejected' && <button onClick={() => void decide(r.id, 'rejected')}>Reject</button>}</div></td>
       </tr>)}</tbody></table>{phase === 'ready' && rows.length === 0 && <p>No listings.</p>}{phase === 'error' && <p role="alert">Could not load listings.</p>}</div>
     <div><button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button><button disabled={page >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button></div>
   </section>;
