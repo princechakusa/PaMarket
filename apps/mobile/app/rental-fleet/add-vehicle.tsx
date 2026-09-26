@@ -125,7 +125,7 @@ export default function RentalAddVehicleScreen() {
         supabase.from("rental_categories").select("id").eq("slug", categorySlug).maybeSingle(),
         supabase.from("rental_brands").select("id").eq("slug", brandSlug).maybeSingle(),
         supabase.from("rental_locations").select("id").eq("city", citySlug).maybeSingle(),
-        supabase.from("rental_companies").select("id").eq("business_id", bizId).maybeSingle(),
+        supabase.from("rental_companies").select("id").eq("business_id", bizId).is("deleted_at", null).maybeSingle(),
       ]);
       if (!compRes.data) {
         // Not resetting isSubmitting here — router.replace below unmounts

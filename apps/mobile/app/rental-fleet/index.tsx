@@ -162,7 +162,11 @@ export default function RentalFleetDashboard() {
 
   const load = useCallback(async () => {
     if (!session?.user) return;
-    const { data: bizRows } = await supabase.from("businesses").select("*").eq("owner_user_id", session.user.id);
+    const { data: bizRows } = await supabase
+      .from("businesses")
+      .select("*")
+      .eq("owner_user_id", session.user.id)
+      .is("deleted_at", null);
     const biz = (bizRows as Business[] | null) ?? [];
     setBusinesses(biz);
     if (!biz.length) {
@@ -185,6 +189,7 @@ export default function RentalFleetDashboard() {
       .from("rental_companies")
       .select("id,status,avg_rating,review_count,fleet_count,business_id")
       .in("business_id", ownedIds)
+      .is("deleted_at", null)
       .limit(1);
     const rc = (rcRows as any[] | null)?.[0] ?? null;
     if (!rc) {
