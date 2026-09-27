@@ -12,10 +12,11 @@ import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { isFeatured, type Listing } from "../../lib/listings";
-import { planEntitlements } from "../../lib/plan-entitlements";
+import { effectiveEntitlements } from "../../lib/plan-entitlements";
 import { SLOT_PACK_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { useStoreProducts } from "../../lib/use-store-products";
+import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -55,6 +56,8 @@ export default function BusinessFeaturedScreen() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slotPickerOpen, setSlotPickerOpen] = useState(false);
+  const appSettings = useAppSettings();
+  const premiumOn = premiumListingsEnabled(appSettings);
   const [busyListingId, setBusyListingId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const [purchasingSlotPack, setPurchasingSlotPack] = useState<string | null>(
@@ -80,7 +83,7 @@ export default function BusinessFeaturedScreen() {
       return;
     }
     setIsOwner(true);
-    const baseline = planEntitlements((biz as any).plan_id).featuredSlots;
+    const baseline = effectiveEntitlements((biz as any).plan_id).featuredSlots;
     const [{ data: rows }, { data: packs }] = await Promise.all([
       supabase
         .from("listings")
@@ -102,7 +105,9 @@ export default function BusinessFeaturedScreen() {
       ) ?? 0;
     setSlots(baseline + extra);
     setListings((rows as any[]) ?? []);
-  }, [id, session]);
+    // appSettings.freeOnly changes effectiveEntitlements' result.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, session, appSettings.freeOnly]);
 
   async function buySlotPack(productId: string) {
     if (!id) return;
@@ -282,18 +287,22 @@ export default function BusinessFeaturedScreen() {
         </Text>
         <Text style={styles.heroSub}>
           {noSlots
-            ? "Your plan includes no featured slots. Buy a slot pack below, or upgrade to Pro or Premium."
+            ? premiumOn
+              ? "Your plan includes no featured slots. Buy a slot pack below, or upgrade to Pro or Premium."
+              : "Your plan includes no featured slots."
             : "Each slot keeps one listing featured for 30 days. When it expires the slot comes back and you can use it on another listing."}
         </Text>
-        <Pressable
-          style={styles.buySlotsButton}
-          onPress={() => setSlotPickerOpen((v) => !v)}
-        >
-          <Text style={styles.buySlotsButtonText}>
-            {slotPickerOpen ? "Hide purchase options" : "Buy featured slots"}
-          </Text>
-        </Pressable>
-        {slotPickerOpen ? (
+        {premiumOn ? (
+          <Pressable
+            style={styles.buySlotsButton}
+            onPress={() => setSlotPickerOpen((v) => !v)}
+          >
+            <Text style={styles.buySlotsButtonText}>
+              {slotPickerOpen ? "Hide purchase options" : "Buy featured slots"}
+            </Text>
+          </Pressable>
+        ) : null}
+        {premiumOn && slotPickerOpen ? (
           <View style={styles.slotOptions}>
             {Object.entries(SLOT_PACK_PRODUCTS).map(([productId, p]) => (
               <StoreProductOption
@@ -325,7 +334,9 @@ export default function BusinessFeaturedScreen() {
       <View style={styles.howBox}>
         <Text style={styles.howTitle}>HOW IT WORKS</Text>
         {[
-          "Buy featured slots, or get them with a Pro or Premium plan.",
+          premiumOn
+            ? "Buy featured slots, or get them with a Pro or Premium plan."
+            : "Featured slots come with your plan.",
           `Pick a listing below and feature it for ${FEATURE_DAYS} days.`,
           "It shows in the Featured row on the home screen with a Featured badge.",
           "When it expires the slot returns, ready for another listing.",

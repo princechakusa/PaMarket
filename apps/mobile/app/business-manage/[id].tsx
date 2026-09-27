@@ -7,6 +7,7 @@ import { toast } from "../../components/ui/Toast";
 import { useTaxonomy } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
+import { paidFeaturesEnabled, premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -17,6 +18,9 @@ import { useThemedStyles } from "../../lib/theme-provider";
 export default function BusinessManageScreen() {
   const { id, submitted } = useLocalSearchParams<{ id: string; submitted?: string }>();
   const router = useRouter();
+  const appSettings = useAppSettings();
+  const premiumOn = premiumListingsEnabled(appSettings);
+  const paidOn = paidFeaturesEnabled(appSettings);
   const { session } = useAuth();
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
@@ -238,9 +242,11 @@ export default function BusinessManageScreen() {
           <Pressable style={styles.quickActionGold} onPress={() => router.push({ pathname: "/business-listings/add/[id]", params: { id: business.id } })}>
             <Text style={styles.quickActionGoldText}>+ Add Listing</Text>
           </Pressable>
-          <Pressable style={styles.quickActionLight} onPress={() => router.push(`/business-featured/${business.id}`)}>
-            <Text style={styles.quickActionLightText}>Boost</Text>
-          </Pressable>
+          {premiumOn ? (
+            <Pressable style={styles.quickActionLight} onPress={() => router.push(`/business-featured/${business.id}`)}>
+              <Text style={styles.quickActionLightText}>Boost</Text>
+            </Pressable>
+          ) : null}
           <Pressable style={styles.quickActionLight} onPress={() => router.push(`/business-analytics/${business.id}`)}>
             <Text style={styles.quickActionLightText}>Analytics</Text>
           </Pressable>
@@ -260,7 +266,9 @@ export default function BusinessManageScreen() {
 
         <MenuGroup title="Business" styles={styles}>
           <MenuRow label="Get Verified" value={verified ? "Verified" : "Start"} onPress={() => router.push(`/business-verify/${business.id}`)} styles={styles} />
-          <MenuRow label="Subscription & Plan" value="Free" onPress={() => router.push(`/business-subscription/${business.id}`)} styles={styles} />
+          {paidOn ? (
+            <MenuRow label="Subscription & Plan" value="Free" onPress={() => router.push(`/business-subscription/${business.id}`)} styles={styles} />
+          ) : null}
           <MenuRow label="Billing & Invoices" value="Invoices" onPress={() => router.push(`/business-billing/${business.id}`)} styles={styles} />
         </MenuGroup>
 

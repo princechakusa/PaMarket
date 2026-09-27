@@ -23,6 +23,11 @@ import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { useLegalDocUpgrade } from "../../lib/content";
 import { isValidEmail, isValidPhone, isStrongEnoughPassword } from "../../lib/validation";
 import { friendlyError } from "../../lib/safety";
+import { getAppSettings, useAppSettings } from "../../lib/app-settings";
+
+// Admin → General Settings → Pause new signups. The database also rejects
+// new accounts while paused (block_signup_when_paused trigger).
+const SIGNUP_PAUSED_MESSAGE = "New sign-ups are paused for a short while. Existing members can still sign in. Please try again later.";
 import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
@@ -33,6 +38,7 @@ export default function SignUpScreen() {
   const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const appSettings = useAppSettings();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,6 +63,10 @@ export default function SignUpScreen() {
 
   async function handleSignUp() {
     if (isSubmitting) return;
+    if ((await getAppSettings(true)).signupPaused) {
+      setError(SIGNUP_PAUSED_MESSAGE);
+      return;
+    }
     if (fullName.trim().length < 2) {
       setError("Enter your full name.");
       return;
@@ -169,6 +179,12 @@ export default function SignUpScreen() {
           <Text style={styles.title}>Create your account</Text>
           <Text style={styles.subtitle}>Join PaMarket to start buying and selling safely</Text>
         </View>
+
+        {appSettings.signupPaused ? (
+          <View style={styles.pausedBanner} accessibilityRole="alert">
+            <Text style={styles.pausedBannerText}>{SIGNUP_PAUSED_MESSAGE}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.form}>
           <View style={styles.labelRow}>
@@ -369,6 +385,20 @@ function buildStyles(color: ColorPalette) {
       ...font.body,
       color: color.textSub,
       marginTop: space.xxs,
+      textAlign: "center",
+    },
+    pausedBanner: {
+      width: "100%",
+      backgroundColor: color.warningTint,
+      borderColor: color.warning,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: space.md,
+      marginBottom: space.md,
+    },
+    pausedBannerText: {
+      ...font.body,
+      color: color.text,
       textAlign: "center",
     },
     form: {

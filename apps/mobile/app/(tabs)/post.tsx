@@ -36,7 +36,7 @@ import { AttrFields, type AttrValues } from "../../components/post/AttrFields";
 import { PhotoGrid } from "../../components/post/PhotoGrid";
 import { MapLocationPicker } from "../../components/post/MapLocationPicker";
 import { LocationMap } from "../../components/listing/LocationMap";
-import { Button, Card, Chip, GlassBackButton, ProvinceCityFields, UseCurrentLocationButton, VerifiedBadge } from "../../components/ui";
+import { Button, Card, Chip, GlassBackButton, ProvinceCityFields, UseCurrentLocationButton, VerifiedBadge, toast } from "../../components/ui";
 import { institutionAbbreviation } from "../../lib/institutions";
 import { DARK_COLORS, LIGHT_COLORS, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles, useThemePreference } from "../../lib/theme-provider";
@@ -409,7 +409,7 @@ export default function PostScreen() {
         ...(institutionContext ? { [INSTITUTION_VISIBILITY_ATTR_KEY]: state.institutionVisibility } : {}),
       };
 
-      const { error: insertError } = await supabase.from("listings").insert({
+      const { data: inserted, error: insertError } = await supabase.from("listings").insert({
         seller_id: session.user.id,
         seller_name: profile?.name ?? "",
         seller_phone: profile?.phone ?? "",
@@ -434,11 +434,16 @@ export default function PostScreen() {
         // already proves it was independently re-verified active (see the
         // effect above), never trusted from the raw route param.
         institution_id: institutionContext?.id ?? null,
-      });
+      }).select("status").maybeSingle();
 
       if (insertError) throw insertError;
 
-      setSubmitStatus("Ad posted successfully.");
+      // The server may hold a new ad for review (Admin → General Settings →
+      // Require listing approval, or a moderation flag) — say so honestly
+      // instead of claiming it's live.
+      const heldForReview = inserted?.status != null && inserted.status !== "active";
+      if (heldForReview) toast("Ad submitted. It will go live once our team has reviewed it.", 5000);
+      setSubmitStatus(heldForReview ? "Ad submitted for review." : "Ad posted successfully.");
       notifyPositiveAction();
       // Reset the form now (this tab screen stays mounted in the background
       // when you navigate away via the bottom tabs, so a stale filled-in

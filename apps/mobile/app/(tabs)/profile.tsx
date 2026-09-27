@@ -22,6 +22,7 @@ import { fetchSellerRatingSummary } from "../../lib/sellers";
 import { fetchValidSavedCount } from "../../lib/saves";
 import { clearPushToken } from "../../lib/push";
 import { clearIAPUserContext } from "../../lib/iap";
+import { paidFeaturesEnabled, useAppSettings } from "../../lib/app-settings";
 import { businessInitials, type Business } from "../../lib/businesses";
 import { Avatar, Badge, Card, SectionHeader, VerifiedBadge } from "../../components/ui";
 import type { EdgeInsets } from "react-native-safe-area-context";
@@ -266,6 +267,7 @@ export default function AccountScreen() {
   const { session } = useAuth();
   const userId = session?.user?.id;
   const router = useRouter();
+  const paidOn = paidFeaturesEnabled(useAppSettings());
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
   const { resolvedScheme } = useThemePreference();
@@ -529,8 +531,10 @@ export default function AccountScreen() {
                 <>
                   <MenuRow label="Post a Job" onPress={() => router.push("/jobs/post")} color={color} styles={styles} />
                   <MenuRow label="Hire Talent" onPress={() => router.push("/jobs/hire-talent")} color={color} styles={styles} />
-                  <MenuRow label="My Contact Requests" onPress={() => router.push("/jobs/contact-requests")} color={color} styles={styles} />
-                  <MenuRow label="Recruiter Plan" last onPress={() => router.push("/jobs/recruiter-subscription")} color={color} styles={styles} />
+                  <MenuRow label="My Contact Requests" last={!paidOn} onPress={() => router.push("/jobs/contact-requests")} color={color} styles={styles} />
+                  {paidOn ? (
+                    <MenuRow label="Recruiter Plan" last onPress={() => router.push("/jobs/recruiter-subscription")} color={color} styles={styles} />
+                  ) : null}
                 </>
               ) : (
                 <MenuRow label="Post a Job (Get Verified)" last onPress={() => router.push("/company-verify")} color={color} styles={styles} />

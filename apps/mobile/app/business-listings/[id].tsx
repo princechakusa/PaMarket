@@ -6,7 +6,7 @@ import { useAuth } from "../../lib/auth";
 import type { Business } from "../../lib/businesses";
 import { formatPrice, type Listing } from "../../lib/listings";
 import { isListingOrderable, isShopAcceptingOrders } from "../../lib/cart";
-import { planEntitlements } from "../../lib/plan-entitlements";
+import { effectiveEntitlements } from "../../lib/plan-entitlements";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { SmartImage } from "../../components/ui/SmartImage";
@@ -74,7 +74,7 @@ export default function BusinessListingsScreen() {
     if (bizRes.data) {
       const biz = bizRes.data as Business;
       setBusiness(biz);
-      setLimit(planEntitlements((biz as any).plan_id).listingLimit);
+      setLimit(effectiveEntitlements((biz as any).plan_id).listingLimit);
     }
     setListings((listingsRes.data as Listing[]) ?? []);
   }, [id]);

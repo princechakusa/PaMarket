@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../../../lib/auth";
 import { supabase } from "../../../lib/supabase";
 import { formatPrice, type Listing } from "../../../lib/listings";
-import { planEntitlements } from "../../../lib/plan-entitlements";
+import { effectiveEntitlements } from "../../../lib/plan-entitlements";
 import { toast } from "../../../components/ui/Toast";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import type { ColorPalette } from "../../../lib/theme";
@@ -56,7 +56,7 @@ export default function BusinessImportListingsScreen() {
     }
     setIsApplying(true);
     const { data: bizData } = await supabase.from("businesses").select("*").eq("id", id).maybeSingle();
-    const limit = planEntitlements((bizData as any)?.plan_id).listingLimit;
+    const limit = effectiveEntitlements((bizData as any)?.plan_id).listingLimit;
     const { count: currentCount } = await supabase
       .from("listings")
       .select("id", { count: "exact", head: true })

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getAppSettings } from "./app-settings";
 
 export type PaidAd = {
   id: string;
@@ -20,6 +21,8 @@ export type PaidAd = {
 };
 
 export async function fetchActiveAds(): Promise<PaidAd[]> {
+  // Admin → General Settings → Show sponsored ads.
+  if (!(await getAppSettings()).showSponsoredAds) return [];
   const { data, error } = await supabase.from("paid_ads").select("*").eq("active", true).limit(20);
   if (error || !data) return [];
   const now = Date.now();

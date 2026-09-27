@@ -18,6 +18,7 @@ import { fleetVehicleLabel } from "../../lib/rentals";
 import { RENTAL_FEATURED_SLOT_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { useStoreProducts } from "../../lib/use-store-products";
+import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { toast } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -87,6 +88,7 @@ export default function RentalManageFleetScreen() {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [featurePickerFor, setFeaturePickerFor] = useState<string | null>(null);
+  const premiumOn = premiumListingsEnabled(useAppSettings());
   const [purchasingFeature, setPurchasingFeature] = useState<string | null>(
     null
   );
@@ -396,7 +398,7 @@ export default function RentalManageFleetScreen() {
                     <View style={styles.featuredBadge}>
                       <Text style={styles.featuredBadgeText}>Featured</Text>
                     </View>
-                  ) : (
+                  ) : premiumOn ? (
                     <Pressable
                       style={styles.featureButton}
                       onPress={() =>
@@ -412,10 +414,10 @@ export default function RentalManageFleetScreen() {
                         {featurePickerFor === v.id ? "Hide" : "Feature"}
                       </Text>
                     </Pressable>
-                  )}
+                  ) : null}
                 </Pressable>
 
-                {featurePickerFor === v.id ? (
+                {premiumOn && featurePickerFor === v.id ? (
                   <View style={styles.featureOptions}>
                     {Object.entries(RENTAL_FEATURED_SLOT_PRODUCTS).map(
                       ([productId, p]) => (

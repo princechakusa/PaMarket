@@ -79,7 +79,7 @@ export async function listSentryIssues(accessToken: string): Promise<QueryResult
 
 export type OperationalSettings = {
   signupPaused: boolean; freeOnly: boolean; fxRate: number | null; fxRateUpdatedAt: string | null;
-  supportWhatsapp: string; showSponsoredAds: boolean; allowImageUploads: boolean; autoApproveVerified: boolean;
+  showSponsoredAds: boolean; allowImageUploads: boolean; autoApproveVerified: boolean;
   enablePremiumListings: boolean; requireListingApproval: boolean; requirePhoneVerification: boolean;
 };
 export async function getOperationalSettings(): Promise<QueryResult<OperationalSettings>> {
@@ -92,9 +92,8 @@ export async function getOperationalSettings(): Promise<QueryResult<OperationalS
     data: {
       signupPaused: Boolean(raw.signupPaused), freeOnly: Boolean(raw.freeOnly),
       fxRate: typeof raw.fxRate === 'number' ? raw.fxRate : null, fxRateUpdatedAt: typeof raw.fxRateUpdatedAt === 'string' ? raw.fxRateUpdatedAt : null,
-      supportWhatsapp: typeof raw.supportWhatsapp === 'string' ? raw.supportWhatsapp : '',
-      showSponsoredAds: Boolean(raw.showSponsoredAds), allowImageUploads: Boolean(raw.allowImageUploads),
-      autoApproveVerified: Boolean(raw.autoApproveVerified), enablePremiumListings: Boolean(raw.enablePremiumListings),
+      showSponsoredAds: raw.showSponsoredAds !== false, allowImageUploads: raw.allowImageUploads !== false,
+      autoApproveVerified: Boolean(raw.autoApproveVerified), enablePremiumListings: raw.enablePremiumListings !== false,
       requireListingApproval: Boolean(raw.requireListingApproval), requirePhoneVerification: Boolean(raw.requirePhoneVerification),
     },
     error: null,

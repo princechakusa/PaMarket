@@ -48,6 +48,22 @@
     }).catch(function () { return null; });
   }
 
+  // Admin → General Settings operational switches (everything in the
+  // settings row except `content`). Resolves {} on failure, so each switch
+  // falls back to its normal-behaviour default.
+  function fetchOpsSettings() {
+    var path = '/rest/v1/app_settings?id=eq.1&select=settings';
+    return withTimeout(fetch(SB_URL + path, {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY },
+    })).then(function (res) {
+      if (!res.ok) throw new Error('app_settings request failed');
+      return res.json();
+    }).then(function (rows) {
+      var s = rows[0] && rows[0].settings;
+      return s && typeof s === 'object' ? s : {};
+    }).catch(function () { return {}; });
+  }
+
   // Renders a content_pages `body.sections` array into the same markup
   // shape the static legal pages already use (h3 heading + p paragraph),
   // so swapping it in changes nothing but the text.
@@ -77,6 +93,7 @@
   global.PMContent = {
     fetchContentPage: fetchContentPage,
     fetchSiteSettings: fetchSiteSettings,
+    fetchOpsSettings: fetchOpsSettings,
     renderSections: renderSections,
     escapeHtml: escapeHtml,
     safeHref: safeHref,

@@ -191,7 +191,7 @@
 <div class="border-t border-outline-variant"><div class="max-w-7xl mx-auto px-margin md:px-margin-desktop py-space-md flex flex-wrap items-center justify-between gap-3 text-label-sm font-label-sm text-on-surface-variant"><span id="footerCopyright" data-copyright-holder="PaMarket Zimbabwe (Pvt) Ltd." data-copyright-start-year="2026">&copy; 2026 PaMarket Zimbabwe (Pvt) Ltd. Serving all 10 provinces across Zimbabwe. All rights reserved.</span><span>Multi-Currency Clearing Engine (USD / ZiG)</span></div></div>
 </footer>
 <script src="js/site-content.js" defer></script>
-<script defer>
+<script>
 // Admin-managed company/copyright info (app_settings.settings.content.company
 // -- see supabase/migrations/20260925150000_company_legal_settings.sql and
 // the Company & Legal tab in the admin app). Mirrors the identical script in
@@ -199,7 +199,7 @@
 // FOOTER:START/END include (tools/build-includes.js only reaches marked
 // pages). Safe to include js/site-content.js again even where a page
 // already loads it elsewhere -- it only assigns window.PMContent.
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('footerCopyright');
   if (!el) return;
   var currentYear = new Date().getFullYear();
@@ -222,7 +222,7 @@
       );
     }).catch(function () {});
   }
-})();
+});
 </script>
 
 <script src="js/supabase-config.js"></script>

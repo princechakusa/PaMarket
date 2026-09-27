@@ -834,6 +834,11 @@ async function doSignUp(){
   if(!consent){showError('signUpError','Please confirm you are 18 or older and agree to our Terms and Privacy Policy.');return}
   const captchaToken=getTurnstileToken('up');
   if(!captchaToken){showError('signUpError','Please complete the verification check.');return}
+  // Admin → General Settings → Pause new signups (also enforced by the database).
+  if(window.PMContent&&PMContent.fetchOpsSettings){
+    const ops=await PMContent.fetchOpsSettings();
+    if(ops.signupPaused===true){showError('signUpError','New sign-ups are paused for a short while. Existing members can still sign in. Please try again later.');return}
+  }
 
   setBusy(true);
   const btn=document.getElementById('signUpBtn');

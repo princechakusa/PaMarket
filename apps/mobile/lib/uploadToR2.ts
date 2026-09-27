@@ -45,6 +45,11 @@ export async function uploadToR2(blob: Blob, key: string, contentType: string): 
     } catch {
       // ignore
     }
+    // Admin kill-switch (General Settings → Allow image uploads) — shown
+    // to the user as-is instead of a raw status code.
+    if (res.status === 503 && errText.includes("temporarily paused")) {
+      throw new Error("Photo uploads are temporarily paused. Please try again later.");
+    }
     throw new Error(`R2 upload-url error: ${errText || res.status}`);
   }
 

@@ -192,8 +192,29 @@
   // ends_at >= now). PostgREST cannot express the null-or-compare in one param,
   // so the date-window filtering is finished client-side after the active fetch.
   // opts: { placement, limit }
+  // Admin → General Settings operational switches (app_settings row 1).
+  // Cached for the page's lifetime; resolves {} on failure so every switch
+  // falls back to its default (normal behaviour).
+  var opsSettingsPromise = null;
+  function fetchOpsSettings() {
+    if (!opsSettingsPromise) {
+      opsSettingsPromise = pgFetch('app_settings?id=eq.1&select=settings').then(function (rows) {
+        var s = rows && rows[0] && rows[0].settings;
+        return s && typeof s === 'object' ? s : {};
+      }).catch(function () { return {}; });
+    }
+    return opsSettingsPromise;
+  }
+
   function fetchActiveAds(opts) {
     opts = opts || {};
+    return fetchOpsSettings().then(function (ops) {
+      if (ops.showSponsoredAds === false) return [];
+      return fetchActiveAdsUnchecked(opts);
+    });
+  }
+
+  function fetchActiveAdsUnchecked(opts) {
     var qp = ['active=eq.true'];
     if (opts.placement) qp.push('target_section=eq.' + esc(opts.placement));
     qp.push('select=id,headline,image_url,link_url,target_section,starts_at,ends_at');
@@ -1123,6 +1144,7 @@
   global.PM.fetchSellerReviews = fetchSellerReviews;
   global.PM.fetchJobs = fetchJobs;
   global.PM.fetchActiveAds = fetchActiveAds;
+  global.PM.fetchOpsSettings = fetchOpsSettings;
   global.PM.fetchActiveSiteAnnouncement = fetchActiveSiteAnnouncement;
   global.PM.fetchPublishedBlogVideos = fetchPublishedBlogVideos;
   global.PM.trackAdEvent = trackAdEvent;

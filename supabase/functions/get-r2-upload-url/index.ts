@@ -91,6 +91,7 @@ function publicErrorMessage(message: string): { message: string; status: number 
   if (message.startsWith('Too many upload requests') || message.startsWith('Daily upload limit reached')) {
     return { message, status: 429 }
   }
+  if (message === 'Image uploads are temporarily paused') return { message, status: 503 }
   if (
     message === 'key required' ||
     message === 'contentType required for upload' ||
@@ -294,6 +295,17 @@ Deno.serve(async (req) => {
       const contentTypeAllowed = ALLOWED_CONTENT_TYPES.has(contentType) || (isAmos && AMOS_ADDITIONAL_CONTENT_TYPES.has(contentType))
       if (!contentTypeAllowed) {
         throw new Error('Content type not permitted')
+      }
+
+      // Admin kill-switch (Admin → General Settings → Allow image uploads).
+      // Verification documents stay allowed so the trust flow never
+      // dead-ends; admin-only namespaces (ads/amos/institutions) are
+      // unaffected. A missing/unreadable setting means uploads stay open.
+      if (contentType.startsWith('image/') && !isAd && !isAmos && !isInstitution && !key.startsWith(`verification/${user.id}/`)) {
+        const { data: settingsRow } = await sb.from('app_settings').select('settings').eq('id', 1).maybeSingle()
+        if ((settingsRow?.settings as Record<string, unknown> | undefined)?.allowImageUploads === false) {
+          throw new Error('Image uploads are temporarily paused')
+        }
       }
 
       // CVs (application/pdf) may only go under cv/ prefix

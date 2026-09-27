@@ -15,7 +15,7 @@ import { toast } from "../../components/ui/Toast";
 import type { Business } from "../../lib/businesses";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { planEntitlements } from "../../lib/plan-entitlements";
+import { effectiveEntitlements } from "../../lib/plan-entitlements";
 
 // Uses the same plan source as the subscription paywall and other Seller
 // Center entitlement checks.
@@ -75,7 +75,7 @@ export default function BusinessStaffScreen() {
   }, [load]);
 
   const isOwner = session?.user?.id === business?.owner_user_id;
-  const currentPlan = planEntitlements(business?.plan_id);
+  const currentPlan = effectiveEntitlements(business?.plan_id);
   const limit = currentPlan.staffLimit;
   const full = staff.length >= limit;
 

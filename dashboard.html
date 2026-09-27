@@ -240,7 +240,7 @@ window.doHeaderSearch = function(){
      this file, so it runs after parsing and before the copyright script
      below (deferred scripts run in document order). -->
 <script src="js/site-content.js" defer></script>
-<script defer>
+<script>
 // Admin-managed company/copyright info (app_settings.settings.content.company
 // -- see supabase/migrations/20260925150000_company_legal_settings.sql and
 // the Company & Legal tab in the admin app) upgrades the static copyright
@@ -252,7 +252,7 @@ window.doHeaderSearch = function(){
 // Deferred (not inline-blocking) so it always runs after js/site-content.js
 // above, regardless of where in <head>/<body> either script tag physically
 // ends up once stamped into a page.
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('footerCopyright');
   if (!el) return;
   var currentYear = new Date().getFullYear();
@@ -281,7 +281,7 @@ window.doHeaderSearch = function(){
       );
     }).catch(function () {});
   }
-})();
+});
 </script>
 <!-- FOOTER:END -->
 
@@ -310,6 +310,9 @@ window.doHeaderSearch = function(){
   function isFeatured(l){return l.featured_until&&new Date(l.featured_until)>new Date();}
 
   var LISTINGS=[];
+  // Admin → General Settings: boosts hidden in free mode or when premium
+  // listings are switched off. Defaults to shown until the settings load.
+  var PREMIUM_ON=true;
 
   function renderTiles(){
     var totalViews=LISTINGS.reduce(function(a,l){return a+(Number(l.views)||0);},0);
@@ -333,7 +336,7 @@ window.doHeaderSearch = function(){
       var feat=isFeatured(l);
       var statusPill='<span class="pill '+esc(l.status)+'">'+esc(l.status)+'</span>'+(feat?' <span class="pill feat">Featured</span>':'');
       var acts='<div class="db-act">'+
-        (l.status==='active'?'<button class="b-boost" data-boost="'+esc(l.id)+'" data-cat="'+esc(l.category||'')+'">'+(feat?'Extend':'Boost')+'</button>':'')+
+        (l.status==='active'&&PREMIUM_ON?'<button class="b-boost" data-boost="'+esc(l.id)+'" data-cat="'+esc(l.category||'')+'">'+(feat?'Extend':'Boost')+'</button>':'')+
         '<a href="detail?id='+esc(l.id)+'" target="_blank" rel="noopener">View</a>'+
         '<a href="post-ad?edit='+esc(l.id)+'">Edit</a>'+
         (l.status==='active'?'<button data-status="paused" data-id="'+esc(l.id)+'">Pause</button>':((l.status==='paused'||l.status==='sold')?'<button data-status="active" data-id="'+esc(l.id)+'">Reactivate</button>':''))+
@@ -422,12 +425,15 @@ window.doHeaderSearch = function(){
   var SPENT=0, PAYMENTS=[];
   Promise.all([
     PM.fetchMyListings(),
+    PM.fetchOpsSettings?PM.fetchOpsSettings():Promise.resolve({}),
     PM.fetchMyPayments(),
     PM.fetchApplicationsForEmployer()
   ]).then(function(r){
     LISTINGS=r[0]||[];
-    PAYMENTS=r[1]||[];
-    var apps=r[2]||[];
+    var ops=r[1]||{};
+    PREMIUM_ON=ops.freeOnly!==true&&ops.enablePremiumListings!==false;
+    PAYMENTS=r[2]||[];
+    var apps=r[3]||[];
     SPENT=PAYMENTS.filter(function(p){return p.status==='consumed';}).reduce(function(a,p){return a+(Number(p.amount_usd)||0);},0);
 
     $('dbLoading').classList.add('hidden');

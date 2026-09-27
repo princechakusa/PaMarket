@@ -15,9 +15,9 @@
       "inlineCss": 7135
     },
     "auth.html": {
-      "bytes": 56080,
-      "lines": 1042,
-      "inlineJs": 33584,
+      "bytes": 56448,
+      "lines": 1047,
+      "inlineJs": 33952,
       "inlineCss": 14781
     },
     "blog-post.html": {
@@ -64,8 +64,8 @@
     },
     "dashboard.html": {
       "bytes": 37128,
-      "lines": 447,
-      "inlineJs": 13057,
+      "lines": 453,
+      "inlineJs": 13223,
       "inlineCss": 7668
     },
     "delete-account.html": {
@@ -135,8 +135,8 @@
       "inlineCss": 0
     },
     "js/marketplace-data.js": {
-      "bytes": 62077,
-      "lines": 1195,
+      "bytes": 62940,
+      "lines": 1217,
       "inlineJs": 0,
       "inlineCss": 0
     },

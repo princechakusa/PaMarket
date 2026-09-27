@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import type { Listing } from "../../lib/listings";
 import { fetchBusinessLeads, type BusinessLead } from "../../lib/business-leads";
-import { planEntitlements } from "../../lib/plan-entitlements";
+import { effectiveEntitlements } from "../../lib/plan-entitlements";
 import { EmptyState } from "../../components/ui/EmptyState";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -44,7 +44,7 @@ export default function BusinessAnalyticsScreen() {
       return;
     }
     setIsOwner(true);
-    setTier(planEntitlements((biz as any).plan_id).analytics);
+    setTier(effectiveEntitlements((biz as any).plan_id).analytics);
     const [listingsRes, leadRows] = await Promise.all([
       supabase.from("listings").select("id,title,views,clicks,price,currency").eq("business_id", id).order("views", { ascending: false }).limit(500),
       fetchBusinessLeads(id),

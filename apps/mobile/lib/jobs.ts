@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCachedAppSettings } from "./app-settings";
 
 // Consolidated Jobs Reconstruction taxonomy (Phase 3, Stage 4) — merges
 // this list's previous 10 values with post-job.html's previous, different
@@ -611,6 +612,9 @@ export const RECRUITER_PLAN_ENTITLEMENTS: Record<string, RecruiterPlanEntitlemen
 };
 
 export function recruiterPlanEntitlements(planId: string | null | undefined): RecruiterPlanEntitlements {
+  // "Free for everyone" mode (Admin → General Settings → Free listings only):
+  // unlimited job posts, mirrored server-side by recruiter_plan_job_limit.
+  if (getCachedAppSettings().freeOnly) return { name: "Free (all features)", activeJobPosts: -1, price: 0, rank: 1 };
   return RECRUITER_PLAN_ENTITLEMENTS[planId || "free"] || RECRUITER_PLAN_ENTITLEMENTS.free;
 }
 

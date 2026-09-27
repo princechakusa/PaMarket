@@ -23,6 +23,7 @@ import { ThemeProvider, useThemePreference, useThemedStyles } from "../lib/theme
 import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
 import { initTelemetry } from "../lib/telemetry";
+import { getAppSettings } from "../lib/app-settings";
 import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications, saveRotatedPushToken } from "../lib/push";
 import { navigateToNotifRoute, resolveNotifRoute } from "../lib/notifications";
@@ -37,6 +38,10 @@ import TwoFactorVerifyScreen from "./two-factor-verify";
 // component mounts, or the OS may already have auto-hidden (or failed to
 // hide) the splash before our own hideAsync() call below ever runs.
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Warm the admin operational switches (lib/app-settings.ts) so synchronous
+// readers like effectiveEntitlements() see the real values on first render.
+getAppSettings().catch(() => {});
 
 // Module import happens at process start, so this is the closest thing to a
 // real launch timestamp available from JS.

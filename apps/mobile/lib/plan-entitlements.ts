@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCachedAppSettings } from "./app-settings";
 
 // Mirrors www/js/business-subscription.js H.PLAN_ENTITLEMENTS — the single
 // source of truth for plan limits. Paid upgrades (Google Play Billing) are
@@ -22,6 +23,16 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlements> = {
 
 export function planEntitlements(planId: string | null | undefined): PlanEntitlements {
   return PLAN_ENTITLEMENTS[planId || "free"] || PLAN_ENTITLEMENTS.free;
+}
+
+// What a business can actually use right now. In "free for everyone" mode
+// (Admin → General Settings → Free listings only) every business gets the
+// top tier's limits — mirrored server-side by biz_plan_* in
+// 20260928120000_admin_operational_toggles.sql. Use planEntitlements() only
+// where the plan's own name/price is being displayed.
+export function effectiveEntitlements(planId: string | null | undefined): PlanEntitlements {
+  if (getCachedAppSettings().freeOnly) return { ...PLAN_ENTITLEMENTS.premium, name: "Free (all features)" };
+  return planEntitlements(planId);
 }
 
 export type BusinessSubscription = {
@@ -55,7 +66,7 @@ export async function activeSubscription(businessId: string): Promise<BusinessSu
 
 export async function businessEntitlements(businessId: string, fallbackPlanId?: string | null): Promise<PlanEntitlements> {
   const active = await activeSubscription(businessId);
-  if (active) return planEntitlements(active.plan_id);
+  if (active) return effectiveEntitlements(active.plan_id);
 
   // businesses.plan_id is a cached display value written by
   // activate_play_subscription; it is not authoritative and nothing clears it
@@ -64,5 +75,5 @@ export async function businessEntitlements(businessId: string, fallbackPlanId?: 
   // must never outrank an expired (or absent) subscription row. Only trust it
   // when it is already a free tier.
   const cached = (fallbackPlanId || "free").toLowerCase();
-  return planEntitlements(cached === "free" ? cached : "free");
+  return effectiveEntitlements(cached === "free" ? cached : "free");
 }

@@ -91,7 +91,7 @@ window.doHeaderSearch = function(){
      this file, so it runs after parsing and before the copyright script
      below (deferred scripts run in document order). -->
 <script src="js/site-content.js" defer></script>
-<script defer>
+<script>
 // Admin-managed company/copyright info (app_settings.settings.content.company
 // -- see supabase/migrations/20260925150000_company_legal_settings.sql and
 // the Company & Legal tab in the admin app) upgrades the static copyright
@@ -103,7 +103,7 @@ window.doHeaderSearch = function(){
 // Deferred (not inline-blocking) so it always runs after js/site-content.js
 // above, regardless of where in <head>/<body> either script tag physically
 // ends up once stamped into a page.
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('footerCopyright');
   if (!el) return;
   var currentYear = new Date().getFullYear();
@@ -132,7 +132,7 @@ window.doHeaderSearch = function(){
       );
     }).catch(function () {});
   }
-})();
+});
 </script>
 <!-- FOOTER:END -->
 <script src="js/supabase-config.js"></script><script src="js/session.js"></script><script src="js/marketplace-data.js"></script><script src="js/nav-dropdowns.js"></script><script src="js/utils/urls.js"></script>

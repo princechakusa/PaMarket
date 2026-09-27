@@ -26,6 +26,7 @@ import { formatPrice, isFeatured, publicListingExpiryFilter, type Listing } from
 import { listingUrl } from "../../lib/site-urls";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
+import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { useStoreProducts } from "../../lib/use-store-products";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { recordLead, type LeadType } from "../../lib/business-leads";
@@ -307,6 +308,7 @@ export default function ListingDetailScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const premiumOn = premiumListingsEnabled(useAppSettings());
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const [orderableShop, setOrderableShop] = useState<{ id: string; name: string } | null>(null);
   const [institution, setInstitution] = useState<Pick<Institution, "id" | "type" | "official_name" | "short_name" | "logo_url"> | null>(null);
@@ -1216,7 +1218,7 @@ export default function ListingDetailScreen() {
                     there is no recurring charge.
                   </Text>
                 </View>
-              ) : (
+              ) : premiumOn ? (
                 <>
                   <Pressable
                     style={styles.boostBanner}
@@ -1262,7 +1264,7 @@ export default function ListingDetailScreen() {
                     </View>
                   ) : null}
                 </>
-              )}
+              ) : null}
             </View>
           ) : null}
         </View>

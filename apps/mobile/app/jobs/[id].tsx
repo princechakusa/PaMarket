@@ -44,6 +44,7 @@ import { LocationMap } from "../../components/listing/LocationMap";
 import { isFeatured } from "../../lib/listings";
 import { JOB_BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
+import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { useStoreProducts } from "../../lib/use-store-products";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { isListingSaved, toggleSave } from "../../lib/saves";
@@ -219,6 +220,7 @@ export default function JobDetailScreen() {
   const [isSaved, setIsSaved] = useState(false);
   const [savingBusy, setSavingBusy] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const premiumOn = premiumListingsEnabled(useAppSettings());
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const {
@@ -626,7 +628,7 @@ export default function JobDetailScreen() {
                 {new Date(job.featured_until as string).toLocaleDateString()}
               </Text>
             </View>
-          ) : (
+          ) : premiumOn ? (
             <>
               <Pressable
                 style={styles.boostBanner}
@@ -668,7 +670,7 @@ export default function JobDetailScreen() {
                 </View>
               ) : null}
             </>
-          )
+          ) : null
         ) : null}
       </ScrollView>
 
