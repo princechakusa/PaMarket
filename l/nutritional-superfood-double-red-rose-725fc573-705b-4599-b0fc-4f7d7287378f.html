@@ -57,7 +57,7 @@
      this file, so it runs after parsing and before the copyright script
      below (deferred scripts run in document order). -->
 <script src="js/site-content.js" defer></script>
-<script defer>
+<script>
 // Admin-managed company/copyright info (app_settings.settings.content.company
 // -- see supabase/migrations/20260925150000_company_legal_settings.sql and
 // the Company & Legal tab in the admin app) upgrades the static copyright
@@ -69,7 +69,7 @@
 // Deferred (not inline-blocking) so it always runs after js/site-content.js
 // above, regardless of where in <head>/<body> either script tag physically
 // ends up once stamped into a page.
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
   var el = document.getElementById('footerCopyright');
   if (!el) return;
   var currentYear = new Date().getFullYear();
@@ -98,7 +98,7 @@
       );
     }).catch(function () {});
   }
-})();
+});
 </script>
 <div id="photoViewer" role="dialog" aria-modal="true" aria-label="Full-screen photo viewer" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 p-4"><button type="button" id="photoViewerClose" aria-label="Close photo viewer" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/15 text-white text-[26px] flex items-center justify-center">&times;</button><button type="button" id="photoViewerPrev" aria-label="Previous photo" class="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 text-white text-[26px] flex items-center justify-center">&#8249;</button><img id="photoViewerImg" alt="" class="max-w-full max-h-[85vh] object-contain"><button type="button" id="photoViewerNext" aria-label="Next photo" class="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 text-white text-[26px] flex items-center justify-center">&#8250;</button><div id="photoViewerCount" class="absolute bottom-5 left-1/2 -translate-x-1/2 text-white text-body-sm"></div></div><script>window.__LISTING_ID="725fc573-705b-4599-b0fc-4f7d7287378f";</script>
 <script>(function(){
