@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Circle, Line } from "react-native-svg";
+import Svg, { Circle, Line, Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
@@ -18,12 +18,31 @@ import { useTaxonomy } from "../../lib/taxonomy";
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   EmptyState,
   ErrorState,
   Skeleton,
   VerifiedBadge,
 } from "../../components/ui";
+import { BuildingIcon } from "../../components/ui/SectionIcons";
+
+function ChatBubbleIcon() {
+  return (
+    <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2}>
+      <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function InboxIcon() {
+  return (
+    <Svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke={color.textOnBrand} strokeWidth={2}>
+      <Path d="M22 12h-6l-2 3h-4l-2-3H2" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
 
 function SearchIcon() {
   return (
@@ -64,6 +83,15 @@ export default function HireTalentScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [hasError, setHasError] = useState(false);
+  // browse_recruitment_candidates raises 42501 (insufficient_privilege) for
+  // any employer who isn't yet company_verified — a normal, expected state
+  // for a brand-new recruiter, not a network failure. Surfacing that as
+  // "Couldn't load candidates / check your connection" sent people looking
+  // for a connectivity problem that didn't exist, instead of towards
+  // company-verify.tsx where the real fix (get verified) lives — same gate
+  // jobs/post.tsx already shows for the identical underlying reason.
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
   const [query, setQuery] = useState("");
   const [sectorFilter, setSectorFilter] = useState<string>("all");
   const [expFilter, setExpFilter] = useState<string>("all");
@@ -88,15 +116,15 @@ export default function HireTalentScreen() {
     androidNative: true,
     title: "Find candidates",
     headerRight: () => (
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-        <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={10}>
-          <Text style={styles.headerLink}>Messages</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
+        <Pressable onPress={() => router.push("/jobs/messages")} hitSlop={8}>
+          <ChatBubbleIcon />
         </Pressable>
-        <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={10}>
-          <Text style={styles.headerLink}>Requests</Text>
+        <Pressable onPress={() => router.push("/jobs/contact-requests")} hitSlop={8}>
+          <InboxIcon />
         </Pressable>
-        <Pressable onPress={() => router.push("/jobs/company-profile")} hitSlop={10}>
-          <Text style={styles.headerLink}>Company</Text>
+        <Pressable onPress={() => router.push("/jobs/company-profile")} hitSlop={8}>
+          <BuildingIcon c={color.textOnBrand} size={19} />
         </Pressable>
       </View>
     ),
@@ -135,17 +163,30 @@ export default function HireTalentScreen() {
 
   const load = useCallback(async () => {
     setHasError(false);
+    setNeedsVerification(false);
     pageRef.current = 0;
     const { data, error } = await buildQuery(0, PAGE_SIZE - 1);
     if (error) {
-      setHasError(true);
+      if (error.code === "42501") {
+        setNeedsVerification(true);
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("company_verification_pending")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          setVerificationPending(!!profile?.company_verification_pending);
+        }
+      } else {
+        setHasError(true);
+      }
       return;
     }
     const page = (data as unknown as CandidateProfileRow[]) ?? [];
     setCandidates(page);
     setHasMore(page.length === PAGE_SIZE);
     loadUnlocked(page);
-  }, [buildQuery, loadUnlocked]);
+  }, [buildQuery, loadUnlocked, session]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -196,6 +237,39 @@ export default function HireTalentScreen() {
     setIsLoading(true);
     load().finally(() => setIsLoading(false));
   };
+
+  if (!isLoading && needsVerification) {
+    return (
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.gateContent}>
+          <Card style={styles.gateCard}>
+            <Text style={styles.gateTitle}>Employer verification required</Text>
+            <Text style={styles.gateBody}>
+              We verify every employer before they can browse candidates — it
+              protects job seekers' contact details from being handed to
+              anyone who signs up.
+            </Text>
+            {verificationPending ? (
+              <View style={styles.pendingBanner}>
+                <Badge label="UNDER REVIEW" tone="gold" />
+                <Text style={styles.pendingBannerSub}>
+                  Your documents are with our team. This page unlocks
+                  automatically once you're approved.
+                </Text>
+              </View>
+            ) : (
+              <Button
+                label="Start verification"
+                size="lg"
+                onPress={() => router.push("/company-verify")}
+                style={{ marginTop: space.lg }}
+              />
+            )}
+          </Card>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -481,6 +555,18 @@ function CandidateCard({
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: color.bg },
+  gateContent: { padding: space.lg, paddingTop: space.xxl },
+  gateCard: { alignItems: "stretch" },
+  gateTitle: { ...font.h2, color: color.text },
+  gateBody: { ...font.body, color: color.textSub, marginTop: space.sm, lineHeight: 22 },
+  pendingBanner: {
+    marginTop: space.xl,
+    backgroundColor: color.goldTint,
+    borderRadius: radius.md,
+    padding: space.lg,
+    gap: space.sm,
+  },
+  pendingBannerSub: { ...font.sub, color: color.textSub, lineHeight: 19 },
   header: {
     backgroundColor: color.brand,
     paddingHorizontal: space.lg,

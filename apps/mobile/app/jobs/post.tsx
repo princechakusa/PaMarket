@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -9,11 +11,13 @@ import {
   TextInput,
   View,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
+import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { INSTITUTION_VISIBILITY_LABEL, type InstitutionVisibility } from "../../lib/institutions";
 import { useTaxonomy } from "../../lib/taxonomy";
 import {
@@ -111,6 +115,7 @@ const EXPERIENCE_LEVELS = [
 // columns, they live inside listings.description as plain-text lines.
 function buildDescription(opts: {
   company: string;
+  companyLogo: string;
   jobType: string;
   category: string;
   salary: string;
@@ -123,6 +128,7 @@ function buildDescription(opts: {
   phone: string;
 }) {
   let d = `COMPANY: ${opts.company}\nJOB TYPE: ${opts.jobType}\nINDUSTRY: ${opts.category}\nSALARY: ${opts.salary}`;
+  if (opts.companyLogo) d += `\nCOMPANY_LOGO: ${opts.companyLogo}`;
   if (opts.experience) d += `\nEXPERIENCE: ${opts.experience}`;
   if (opts.skills.length) d += `\nSKILLS: ${opts.skills.join(", ")}`;
   d += `\n\nDESCRIPTION:\n${opts.description}`;
@@ -200,8 +206,11 @@ export default function PostJobScreen() {
   }, [params.institutionId]);
 
   const [company, setCompany] = useState("");
+  const [companyLogo, setCompanyLogo] = useState("");
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [industryMenuOpen, setIndustryMenuOpen] = useState(false);
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   // Stage 5: bundled provinces/cities shown immediately, silently upgraded
@@ -318,6 +327,28 @@ export default function PostJobScreen() {
     setSkills(skills.filter((s) => s !== skill));
   }
 
+  async function pickCompanyLogo() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted || !session?.user) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.82,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (result.canceled || !result.assets?.length) return;
+    setIsUploadingLogo(true);
+    try {
+      const key = `jobs/${session.user.id}/logo_${Date.now()}.jpg`;
+      const url = await uploadImageUriToR2(result.assets[0].uri, key);
+      setCompanyLogo(url);
+    } catch {
+      toast("Could not upload logo. Please try again.", 4000, true);
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
+
   const ent = recruiterPlanEntitlements(planId);
   const overLimit =
     ent.activeJobPosts >= 0 && activeJobPosts >= ent.activeJobPosts;
@@ -333,6 +364,7 @@ export default function PostJobScreen() {
     () =>
       buildDescription({
         company: company.trim(),
+        companyLogo: companyLogo,
         jobType,
         category,
         salary: salary.trim()
@@ -348,6 +380,7 @@ export default function PostJobScreen() {
       }).length,
     [
       company,
+      companyLogo,
       jobType,
       category,
       salary,
@@ -412,6 +445,7 @@ export default function PostJobScreen() {
     const salaryLabel = salaryRaw ? `${currency} ${finalSalary}` : finalSalary;
     const fullDescription = buildDescription({
       company: company.trim(),
+      companyLogo: companyLogo,
       jobType,
       category,
       salary: salaryLabel,
@@ -743,6 +777,22 @@ export default function PostJobScreen() {
         {/* Card 1 — Job Details */}
         <Padded styles={styles}>
           <CollapsibleCard title="Job Details" icon={<BriefcaseIcon c={tones.brand} />}>
+            <View style={styles.logoRow}>
+              <Pressable style={styles.logoWrap} onPress={pickCompanyLogo} disabled={isUploadingLogo}>
+                {isUploadingLogo ? (
+                  <ActivityIndicator color={color.brand} />
+                ) : companyLogo ? (
+                  <Image source={{ uri: companyLogo }} style={styles.logoImage} />
+                ) : (
+                  <BriefcaseIcon c={tones.brand} size={24} />
+                )}
+              </Pressable>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.logoTitle}>Company logo</Text>
+                <Text style={styles.logoHint}>Optional, shown to candidates on the job listing.</Text>
+              </View>
+            </View>
+
             <FieldRow>
               <FieldCol>
                 <FieldLabel text="Job title" required />
@@ -768,11 +818,12 @@ export default function PostJobScreen() {
 
             <View>
               <FieldLabel text="Industry" required />
-              <View style={styles.chipsWrap}>
-                {JOB_CATEGORIES.map((c) => (
-                  <Chip key={c} label={c} active={category === c} onPress={() => setCategory(c)} />
-                ))}
-              </View>
+              <Pressable style={styles.dropdownButton} onPress={() => setIndustryMenuOpen(true)}>
+                <Text style={styles.dropdownButtonText} numberOfLines={1}>
+                  {category || "Select an industry"}
+                </Text>
+                <Text style={styles.dropdownButtonChevron}>▾</Text>
+              </Pressable>
             </View>
 
             <View>
@@ -796,6 +847,29 @@ export default function PostJobScreen() {
             />
           </CollapsibleCard>
         </Padded>
+
+        <Modal visible={industryMenuOpen} transparent animationType="fade" onRequestClose={() => setIndustryMenuOpen(false)}>
+          <Pressable style={styles.dropdownOverlay} onPress={() => setIndustryMenuOpen(false)}>
+            <View style={styles.dropdownSheet}>
+              <ScrollView style={{ maxHeight: 420 }}>
+                <Text style={styles.dropdownTitle}>Industry</Text>
+                {JOB_CATEGORIES.map((c) => (
+                  <Pressable
+                    key={c}
+                    style={styles.dropdownOption}
+                    onPress={() => {
+                      setCategory(c);
+                      setIndustryMenuOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.dropdownOptionText, category === c && styles.dropdownOptionTextActive]}>{c}</Text>
+                    {category === c ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Modal>
 
         {/* Card 2 — Job Description */}
         <Padded styles={styles}>
@@ -1237,6 +1311,37 @@ function buildStyles(color: ColorPalette) {
       marginTop: space.md,
       lineHeight: 18,
     },
+
+    logoRow: { flexDirection: "row", alignItems: "center", gap: space.md, marginBottom: space.lg },
+    logoWrap: {
+      width: 56, height: 56, borderRadius: radius.md, backgroundColor: color.brandTint,
+      alignItems: "center", justifyContent: "center", overflow: "hidden",
+      borderWidth: 1, borderColor: color.border,
+    },
+    logoImage: { width: "100%", height: "100%" },
+    logoTitle: { ...font.bodyStrong, color: color.text },
+    logoHint: { ...font.caption, color: color.textMuted, marginTop: 2 },
+
+    dropdownButton: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.border,
+      borderRadius: radius.md, paddingHorizontal: 13, paddingVertical: 12,
+    },
+    dropdownButtonText: { ...font.body, color: color.text, flexShrink: 1 },
+    dropdownButtonChevron: { ...font.body, color: color.textMuted },
+    dropdownOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+    dropdownSheet: {
+      backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg,
+      paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.xxl,
+    },
+    dropdownTitle: { ...font.title, color: color.text, marginBottom: space.sm },
+    dropdownOption: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: color.border,
+    },
+    dropdownOptionText: { ...font.body, color: color.text },
+    dropdownOptionTextActive: { color: color.brand, fontWeight: "700" },
+    dropdownCheck: { color: color.brand, fontWeight: "800" },
 
     chipsWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
     skillAddRow: { flexDirection: "row", alignItems: "center", gap: space.sm },

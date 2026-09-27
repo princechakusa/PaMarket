@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/auth";
+import { uploadImageUriToR2 } from "../../../lib/uploadToR2";
 import {
   JOB_CATEGORIES,
   JOB_TYPES,
@@ -49,6 +51,7 @@ function parseSections(d: string) {
 
 function buildDescription(opts: {
   company: string;
+  companyLogo: string;
   jobType: string;
   category: string;
   salary: string;
@@ -58,9 +61,9 @@ function buildDescription(opts: {
   email: string;
   phone: string;
 }) {
-  let d =
-    `COMPANY: ${opts.company}\nJOB TYPE: ${opts.jobType}\nINDUSTRY: ${opts.category}\nSALARY: ${opts.salary}` +
-    `\n\nDESCRIPTION:\n${opts.description}`;
+  let d = `COMPANY: ${opts.company}\nJOB TYPE: ${opts.jobType}\nINDUSTRY: ${opts.category}\nSALARY: ${opts.salary}`;
+  if (opts.companyLogo) d += `\nCOMPANY_LOGO: ${opts.companyLogo}`;
+  d += `\n\nDESCRIPTION:\n${opts.description}`;
   if (opts.responsibilities) d += `\n\nRESPONSIBILITIES:\n${opts.responsibilities}`;
   if (opts.requirements) d += `\n\nREQUIREMENTS:\n${opts.requirements}`;
   if (opts.email || opts.phone) {
@@ -83,10 +86,13 @@ export default function EditJobScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
 
   useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Edit Job", androidNative: true });
 
   const [company, setCompany] = useState("");
+  const [companyLogo, setCompanyLogo] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [province, setProvince] = useState("");
@@ -116,6 +122,7 @@ export default function EditJobScreen() {
     }
     const desc = data.description || "";
     setCompany(parseJobField(desc, "COMPANY") || data.seller_name || "");
+    setCompanyLogo(parseJobField(desc, "COMPANY_LOGO"));
     setTitle(data.title || "");
     setCategory(parseJobField(desc, "INDUSTRY") || "");
     setProvince(data.province || "");
@@ -135,6 +142,32 @@ export default function EditJobScreen() {
     load().finally(() => setIsLoading(false));
   }, [load]);
 
+  async function pickCompanyLogo() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted || !session?.user) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.82,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (result.canceled || !result.assets?.length) return;
+    setIsUploadingLogo(true);
+    try {
+      const key = `jobs/${session.user.id}/logo_${Date.now()}.jpg`;
+      const url = await uploadImageUriToR2(result.assets[0].uri, key);
+      setCompanyLogo(url);
+    } catch {
+      toast("Could not upload logo. Please try again.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
+
+  function removeCompanyLogo() {
+    setCompanyLogo("");
+  }
+
   async function save() {
     if (!id || !session?.user || isSaving) return;
     if (!company.trim()) return toast("Company name is required");
@@ -149,6 +182,7 @@ export default function EditJobScreen() {
     const finalSalary = salaryRaw || "Negotiable";
     const fullDescription = buildDescription({
       company: company.trim(),
+      companyLogo,
       jobType,
       category,
       salary: finalSalary,
@@ -220,18 +254,61 @@ export default function EditJobScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100 }} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoRow}>
+          <Pressable style={styles.logoWrap} onPress={pickCompanyLogo} disabled={isUploadingLogo}>
+            {isUploadingLogo ? (
+              <ActivityIndicator color={color.brand} />
+            ) : companyLogo ? (
+              <Image source={{ uri: companyLogo }} style={styles.logoImage} />
+            ) : (
+              <Text style={styles.logoPlaceholder}>Add logo</Text>
+            )}
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.logoTitle}>Company logo</Text>
+            <Text style={styles.logoHint}>Optional, shown to candidates on the job listing.</Text>
+            {companyLogo ? (
+              <Pressable onPress={removeCompanyLogo} hitSlop={8}>
+                <Text style={styles.logoRemove}>Remove logo</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+
         <Field label="Company Name *" value={company} onChangeText={setCompany} placeholder="Your company or organisation name" styles={styles} />
         <Field label="Job Title *" value={title} onChangeText={setTitle} placeholder="e.g. Accountant, Driver, Sales Representative" styles={styles} />
 
         <Text style={styles.label}>Job Category *</Text>
-        <View style={styles.chipsWrap}>
-          {JOB_CATEGORIES.map((c) => (
-            <Pressable key={c} style={[styles.chip, category === c && styles.chipActive]} onPress={() => setCategory(c)}>
-              <Text style={[styles.chipText, category === c && styles.chipTextActive]}>{c}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <Pressable style={styles.dropdownButton} onPress={() => setCategoryMenuOpen(true)}>
+          <Text style={styles.dropdownButtonText} numberOfLines={1}>
+            {category || "Select an industry"}
+          </Text>
+          <Text style={styles.dropdownButtonChevron}>▾</Text>
+        </Pressable>
+
+        <Modal visible={categoryMenuOpen} transparent animationType="fade" onRequestClose={() => setCategoryMenuOpen(false)}>
+          <Pressable style={styles.dropdownOverlay} onPress={() => setCategoryMenuOpen(false)}>
+            <View style={styles.dropdownSheet}>
+              <ScrollView style={{ maxHeight: 420 }}>
+                <Text style={styles.dropdownTitle}>Job Category</Text>
+                {JOB_CATEGORIES.map((c) => (
+                  <Pressable
+                    key={c}
+                    style={styles.dropdownOption}
+                    onPress={() => {
+                      setCategory(c);
+                      setCategoryMenuOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.dropdownOptionText, category === c && styles.dropdownOptionTextActive]}>{c}</Text>
+                    {category === c ? <Text style={styles.dropdownCheck}>✓</Text> : null}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Modal>
 
         <View style={{ marginBottom: 14 }}>
           <ProvinceCityFields
@@ -341,6 +418,37 @@ function buildStyles(color: ColorPalette) {
     paddingBottom: 12,
   },
   headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
+  logoWrap: {
+    width: 56, height: 56, borderRadius: 12, backgroundColor: color.brandTint,
+    alignItems: "center", justifyContent: "center", overflow: "hidden",
+    borderWidth: 1, borderColor: color.border,
+  },
+  logoImage: { width: "100%", height: "100%" },
+  logoPlaceholder: { fontSize: 10, fontWeight: "700", color: color.brand, textAlign: "center" },
+  logoTitle: { fontSize: 14, fontWeight: "700", color: color.text },
+  logoHint: { fontSize: 11.5, color: color.textMuted, marginTop: 2 },
+  logoRemove: { fontSize: 12, fontWeight: "700", color: color.danger, marginTop: 4 },
+  dropdownButton: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: color.surface, borderWidth: 1.5, borderColor: color.border,
+    borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, marginBottom: 14,
+  },
+  dropdownButtonText: { fontSize: 14, color: color.text, flexShrink: 1 },
+  dropdownButtonChevron: { fontSize: 14, color: color.textMuted },
+  dropdownOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+  dropdownSheet: {
+    backgroundColor: color.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40,
+  },
+  dropdownTitle: { fontSize: 16, fontWeight: "700", color: color.text, marginBottom: 8 },
+  dropdownOption: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: color.border,
+  },
+  dropdownOptionText: { fontSize: 14, color: color.text },
+  dropdownOptionTextActive: { color: color.brand, fontWeight: "700" },
+  dropdownCheck: { color: color.brand, fontWeight: "800" },
   label: { fontSize: 12, fontWeight: "700", color: color.text, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 },
   input: {
     backgroundColor: color.surface,

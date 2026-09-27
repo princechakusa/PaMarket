@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { otherMember, messagePreview, type ConversationRow, type MessageRow } from "../../lib/messages";
 import type { Profile } from "../../lib/profiles";
 import { color, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { Avatar, EmptyState, GlassBackButton } from "../../components/ui";
+import { Avatar, EmptyState } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
 
 type RecruitmentContextRow = {
@@ -52,11 +51,15 @@ export default function RecruitmentMessagesScreen() {
   const styles = useThemedStyles(buildStyles);
   const router = useRouter();
   const { session } = useAuth();
-  const insets = useSafeAreaInsets();
   const [threads, setThreads] = useState<RecruitmentThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useIOSNativeHeader({ backgroundColor: color.brand, tintColor: color.textOnBrand, title: "Recruitment Messages" });
+  useIOSNativeHeader({
+    backgroundColor: color.brand,
+    tintColor: color.textOnBrand,
+    androidNative: true,
+    title: "Messages",
+  });
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -166,14 +169,6 @@ export default function RecruitmentMessagesScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS !== "ios" ? (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <GlassBackButton onPress={() => router.back()} tone="light" flat />
-          <Text style={styles.headerTitle}>Recruitment Messages</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      ) : null}
-
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={color.brand} />
@@ -245,15 +240,6 @@ function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: color.bg },
     centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 60 },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: color.brand,
-      paddingHorizontal: 16,
-      paddingBottom: 12,
-    },
-    headerTitle: { fontSize: 17, fontWeight: "700", color: color.textOnBrand },
     listContent: { padding: space.md, paddingBottom: 40, flexGrow: 1 },
     card: {
       flexDirection: "row",

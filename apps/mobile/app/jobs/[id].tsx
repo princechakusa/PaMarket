@@ -30,6 +30,7 @@ import {
   hasStructuredJobSections,
   getJobDetail,
   jobCompany,
+  jobCompanyLogo,
   jobSalary,
   jobType,
   parseJobBlock,
@@ -312,6 +313,7 @@ export default function JobDetailScreen() {
   }
 
   const company = jobCompany(job.description, job.seller_name);
+  const companyLogo = jobCompanyLogo(job.description);
   const isOwner = session?.user?.id === job.seller_id;
   const location = [job.city, job.province]
     .filter(Boolean)
@@ -449,9 +451,9 @@ export default function JobDetailScreen() {
         <Card style={styles.headCard}>
           <View style={styles.headRow}>
             <View style={styles.logoWrap}>
-              {job.photos?.[0] ? (
+              {job.photos?.[0] || companyLogo ? (
                 <Image
-                  source={{ uri: job.photos[0] }}
+                  source={{ uri: job.photos?.[0] || companyLogo }}
                   style={styles.logo}
                   contentFit="cover"
                   cachePolicy="memory-disk"

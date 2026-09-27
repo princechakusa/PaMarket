@@ -7,7 +7,7 @@ import Svg, { Circle, Line } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
-import { jobCompany, jobSalary, jobType, JOB_TYPES, fetchRecommendedJobs, type RecommendedJob } from "../../lib/jobs";
+import { jobCompany, jobCompanyLogo, jobSalary, jobType, JOB_TYPES, fetchRecommendedJobs, type RecommendedJob } from "../../lib/jobs";
 import { useAuth } from "../../lib/auth";
 
 const REMOTE_FILTER_OPTIONS: { value: string; label: string }[] = [
@@ -239,6 +239,7 @@ export default function JobsListScreen() {
   // looks identical to the same job found any other way.
   function renderJobCard(item: JobListing, cardStyle?: object) {
     const company = jobCompany(item.description, item.seller_name);
+    const companyLogo = jobCompanyLogo(item.description);
     const type = item.job_type_label ?? jobType(item.description);
     const salary = item.salary_negotiable
       ? "Negotiable"
@@ -252,8 +253,8 @@ export default function JobsListScreen() {
         onPress={() => router.push({ pathname: "/jobs/[id]", params: { id: item.id } })}
       >
         <View style={styles.logoWrap}>
-          {item.photos?.[0] ? (
-            <Image source={{ uri: item.photos[0] }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
+          {item.photos?.[0] || companyLogo ? (
+            <Image source={{ uri: item.photos?.[0] || companyLogo }} style={styles.logo} contentFit="cover" cachePolicy="memory-disk" />
           ) : (
             <Text style={styles.logoInitial}>{businessInitials(company)}</Text>
           )}

@@ -335,6 +335,7 @@ function RootNavigator() {
       <Stack.Screen name="jobs/post" options={{ headerShown: true, title: "Post a Job" }} />
       <Stack.Screen name="jobs/edit/[id]" options={{ headerShown: true, title: "Edit Job" }} />
       <Stack.Screen name="jobs/hire-talent" options={{ headerShown: true, title: "Hire Talent" }} />
+      <Stack.Screen name="jobs/messages" options={{ headerShown: true, title: "Messages" }} />
       <Stack.Screen name="jobs/candidate/[id]" options={{ headerShown: true, title: "Candidate" }} />
       <Stack.Screen name="jobs/contact-requests" options={{ headerShown: true, title: "Contact Requests" }} />
       <Stack.Screen name="jobs/recruiter-subscription" options={{ headerShown: true, title: "Subscription" }} />

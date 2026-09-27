@@ -66,6 +66,13 @@ export function jobCompany(description: string | null | undefined, fallbackSelle
   return parseJobField(description, "COMPANY") || fallbackSellerName || "";
 }
 
+// Company logo is stored the same way every other job-specific field is
+// (a `KEY: value` line inside listings.description) rather than a new
+// column, matching COMPANY/SALARY/etc. above.
+export function jobCompanyLogo(description: string | null | undefined): string {
+  return parseJobField(description, "COMPANY_LOGO");
+}
+
 export function jobSalary(description: string | null | undefined): string {
   return parseJobField(description, "SALARY") || "Negotiable";
 }
@@ -631,6 +638,7 @@ const JOB_BLOCK_KEYS = [
 // Inline `KEY: value` headers, used to know where a block ends.
 const JOB_INLINE_KEYS = [
   "COMPANY",
+  "COMPANY_LOGO",
   "JOB TYPE",
   "INDUSTRY",
   "SALARY",
