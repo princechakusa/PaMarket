@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { GlassBackButton } from "../../components/ui";
 import { supabase } from "../../lib/supabase";
 import { isValidEmail } from "../../lib/validation";
+import { friendlyError } from "../../lib/safety";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
@@ -39,7 +40,7 @@ export default function ForgotPasswordScreen() {
     });
     setIsSubmitting(false);
     if (resetError) {
-      setError(resetError.message);
+      setError(friendlyError(resetError).message);
       return;
     }
     setSent(true);

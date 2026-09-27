@@ -41,6 +41,20 @@ export function friendlyError(err: unknown): FriendlyError {
   else if (err) raw = String(err);
 
   const lower = raw.toLowerCase();
+  // Network/timeout failures (AuthRetryableFetchError, a raw {"status":504,...}
+  // fetch response body, DNS resolution failures when offline, etc.) were
+  // being shown to the user completely verbatim -- e.g. a Gateway Timeout on
+  // sign-in rendered as a literal JSON blob containing the Supabase project
+  // URL. Catch these before the generic fallback below and give a message a
+  // real person can act on.
+  if (/gateway timeout|network request failed|failed to fetch|fetch failed|unknownhostexception|econnaborted|etimedout|timed out|networkerror|no internet|unable to resolve host|auth.*retryable.*fetch/i.test(raw)) {
+    return {
+      code: "network_error",
+      message: "Network issue — please check your connection and try again.",
+      blocked: false,
+      label: null,
+    };
+  }
   for (const code of Object.keys(ERROR_MAP)) {
     if (lower.includes(code)) {
       const match = raw.match(/\(([^)]+)\)\s*$/);

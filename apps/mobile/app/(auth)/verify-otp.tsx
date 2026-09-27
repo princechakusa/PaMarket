@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
+import { friendlyError } from "../../lib/safety";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -59,7 +60,7 @@ export default function VerifyOtpScreen() {
     });
     if (verifyError) {
       setIsSubmitting(false);
-      setError(verifyError.message);
+      setError(friendlyError(verifyError).message);
       return;
     }
     // Not resetting isSubmitting here — this screen is about to be
@@ -75,7 +76,7 @@ export default function VerifyOtpScreen() {
     const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
     setIsResending(false);
     if (resendError) {
-      setError(resendError.message);
+      setError(friendlyError(resendError).message);
       return;
     }
     setResendAvailableAt(Date.now() + RESEND_COOLDOWN_MS);

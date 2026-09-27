@@ -17,6 +17,7 @@ import { supabase } from "../../lib/supabase";
 import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/auth-lockout";
 import { logClientError } from "../../lib/error-log";
+import { friendlyError } from "../../lib/safety";
 import { BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
 import { GlassBackButton, MailIcon, LockIcon } from "../../components/ui";
@@ -130,7 +131,12 @@ export default function SignInScreen() {
           }.`
         );
       } else {
-        setError(signInError.message);
+        // friendlyError() catches network/timeout failures (a 504 Gateway
+        // Timeout, DNS resolution failure while offline, etc.) that were
+        // otherwise shown to the user completely verbatim -- including the
+        // raw Supabase project URL inside a JSON blob. Anything else (e.g.
+        // "Invalid login credentials") passes through unchanged.
+        setError(friendlyError(signInError).message);
         // Never logs the email/password themselves — only Supabase's own
         // error object/message (e.g. "Invalid login credentials").
         logClientError({ error: signInError, screen: "(auth)/sign-in", component: "password", severity: "warning" });

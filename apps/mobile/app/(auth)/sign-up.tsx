@@ -22,6 +22,7 @@ import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { useLegalDocUpgrade } from "../../lib/content";
 import { isValidEmail, isValidPhone, isStrongEnoughPassword } from "../../lib/validation";
+import { friendlyError } from "../../lib/safety";
 import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useKeyboardAvoidingReset } from "../../lib/useKeyboardAvoidingReset";
@@ -96,7 +97,7 @@ export default function SignUpScreen() {
 
     if (signUpError) {
       setIsSubmitting(false);
-      setError(signUpError.message);
+      setError(friendlyError(signUpError).message);
       return;
     }
 
