@@ -47,6 +47,7 @@ import {
   type Institution,
 } from "../../lib/institutions";
 import { LocationMap } from "../../components/listing/LocationMap";
+import { resolveListingCoords } from "../../lib/location-fallback";
 import { attrSchema } from "../../lib/attributes";
 import { isListingSaved, toggleSave } from "../../lib/saves";
 import { notifyListingViewed } from "../../lib/store-review";
@@ -815,6 +816,12 @@ export default function ListingDetailScreen() {
   }
 
   const photos = listing.photos ?? [];
+  // Sellers almost never capture a precise pin, so gating this section on
+  // exact latitude/longitude hid the Location card for nearly every
+  // listing. detail.html (the website) never has this problem: it falls
+  // back to a city-center, then province-center, coordinate so every
+  // listing shows *some* map. Mirror that here instead of hiding the card.
+  const geo = resolveListingCoords(listing);
 
   return (
     <View style={styles.container}>
@@ -1062,25 +1069,28 @@ export default function ListingDetailScreen() {
             </View>
           ) : null}
 
-          {/* Approximate location -- only when the seller actually captured
-              GPS coordinates at post time (optional, most listings don't
-              have this). Real, interactive OpenStreetMap tiles via WebView,
-              same deterministic jitter + 400m radius circle convention the
-              website's own listing page (detail.html) already uses, so a
-              given listing looks the same on both platforms. */}
-          {listing.latitude != null && listing.longitude != null ? (
+          {/* Shown for every listing, not only ones with a captured GPS pin
+              -- resolveListingCoords falls back to a city-center, then
+              province-center, coordinate (same TOWN_COORDS/PROVINCE_COORDS
+              tables as the website's detail.html), since most sellers never
+              set an exact location. Real, interactive OpenStreetMap tiles
+              via WebView, same deterministic jitter + radius circle
+              convention detail.html already uses, so a given listing looks
+              the same on both platforms. */}
+          {geo ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Approximate Location</Text>
+              <Text style={styles.sectionTitle}>{geo.exact ? "Approximate Location" : "Location"}</Text>
               <LocationMap
-                latitude={listing.latitude}
-                longitude={listing.longitude}
+                latitude={geo.latitude}
+                longitude={geo.longitude}
                 listingId={listing.id}
                 locationLabel={[listing.suburb, listing.city].filter(Boolean).join(", ") || listing.province || null}
               />
               <View style={styles.locationTip}>
                 <Text style={styles.locationTipText}>
-                  This is an approximate area, not the seller's exact address. Agree on an exact handover spot with
-                  the seller in chat, and meet in a safe, public place.
+                  {geo.exact
+                    ? "This is an approximate area, not the seller's exact address. Agree on an exact handover spot with the seller in chat, and meet in a safe, public place."
+                    : "Approximate area, exact address is shared privately once you contact the seller."}
                 </Text>
               </View>
             </View>

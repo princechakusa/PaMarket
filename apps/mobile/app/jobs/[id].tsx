@@ -39,6 +39,8 @@ import {
   parseJobList,
   stripJobMetadataLines,
 } from "../../lib/jobs";
+import { resolveListingCoords } from "../../lib/location-fallback";
+import { LocationMap } from "../../components/listing/LocationMap";
 import { isFeatured } from "../../lib/listings";
 import { JOB_BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
@@ -319,6 +321,7 @@ export default function JobDetailScreen() {
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
     .join(", ");
+  const geo = resolveListingCoords(job);
   const type = structuredDetail?.job_type_label ?? jobType(job.description);
   const expLabel = structuredDetail?.experience_level ?? parseJobField(job.description, "EXPERIENCE");
   const industry = structuredDetail?.industry_label ?? parseJobField(job.description, "INDUSTRY");
@@ -531,6 +534,18 @@ export default function JobDetailScreen() {
                 </View>
               </View>
             ))}
+          </Card>
+        ) : null}
+
+        {geo ? (
+          <Card style={styles.detailsCard}>
+            <Text style={styles.sectionTitle}>Location</Text>
+            <LocationMap
+              latitude={geo.latitude}
+              longitude={geo.longitude}
+              listingId={job.id}
+              locationLabel={location || null}
+            />
           </Card>
         ) : null}
 

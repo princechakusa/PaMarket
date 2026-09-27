@@ -14,6 +14,8 @@ import { padGridFiller } from "../../lib/listing-grid";
 import { ListingCard } from "../../components/ListingCard";
 import { Chip, EmptyState, ErrorState, ListingGridSkeleton, VerifiedBadge } from "../../components/ui";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { resolveListingCoords } from "../../lib/location-fallback";
+import { LocationMap } from "../../components/listing/LocationMap";
 
 // Detail screen -- mirrors app/business/[id].tsx's overall shape (header +
 // category chips + listing grid) but reuses the real ListingCard (per the
@@ -205,6 +207,11 @@ export default function InstitutionDetailScreen() {
     return parts.join(", ");
   }, [institution]);
 
+  const institutionGeo = useMemo(() => {
+    if (!institution) return null;
+    return resolveListingCoords({ city: resolveName(institution.cities) ?? null, province: resolveName(institution.provinces) ?? null });
+  }, [institution]);
+
   if (isLoadingInstitution) {
     return (
       <View style={styles.container}>
@@ -290,6 +297,20 @@ export default function InstitutionDetailScreen() {
                 </View>
               </View>
             </View>
+
+            {institutionGeo ? (
+              <View style={styles.orgsSection}>
+                <Text style={styles.orgsSectionTitle}>Location</Text>
+                <View style={{ paddingHorizontal: space.lg }}>
+                  <LocationMap
+                    latitude={institutionGeo.latitude}
+                    longitude={institutionGeo.longitude}
+                    listingId={institution.id}
+                    locationLabel={[institution.suburb, meta].filter(Boolean).join(", ") || null}
+                  />
+                </View>
+              </View>
+            ) : null}
 
             {organizations.length > 0 ? (
               <View style={styles.orgsSection}>

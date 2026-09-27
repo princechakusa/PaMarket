@@ -40,6 +40,8 @@ import { businessInitials } from "../../lib/businesses";
 import { hitSlop, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { resolveListingCoords } from "../../lib/location-fallback";
+import { LocationMap } from "../../components/listing/LocationMap";
 
 function PhoneIcon({ stroke }: { stroke: string }) {
   return (
@@ -130,6 +132,7 @@ export default function RentalVehicleDetailScreen() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [features, setFeatures] = useState<string[]>([]);
   const [brandSlug, setBrandSlug] = useState<string | null>(null);
+  const [rentalLocation, setRentalLocation] = useState<{ city: string | null; province: string | null } | null>(null);
   const [company, setCompany] = useState<RentalCompany | null>(null);
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -228,7 +231,7 @@ export default function RentalVehicleDetailScreen() {
       () => {}
     );
 
-    const [mediaRes, specsRes, featuresRes, brandRes] = await Promise.all([
+    const [mediaRes, specsRes, featuresRes, brandRes, locationRes] = await Promise.all([
       supabase.from("rental_vehicle_media").select("url,sort_order,is_cover").eq("listing_id", id).order("sort_order"),
       supabase
         .from("rental_vehicle_specs")
@@ -239,12 +242,16 @@ export default function RentalVehicleDetailScreen() {
       (v as RentalVehicleDetail).brand_id
         ? supabase.from("rental_brands").select("slug").eq("id", (v as RentalVehicleDetail).brand_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      (v as RentalVehicleDetail).location_id
+        ? supabase.from("rental_locations").select("city,province").eq("id", (v as RentalVehicleDetail).location_id).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
     setPhotos(((mediaRes.data as { url: string }[]) ?? []).map((m) => m.url));
     setSpecs((specsRes.data as RentalSpecs) ?? null);
     setFeatures(((featuresRes.data as { feature: string }[]) ?? []).map((f) => f.feature));
     setBrandSlug((brandRes.data as { slug: string } | null)?.slug ?? null);
+    setRentalLocation((locationRes.data as { city: string | null; province: string | null } | null) ?? null);
 
     await reloadAvailability();
 
@@ -521,6 +528,8 @@ export default function RentalVehicleDetailScreen() {
     );
   }
 
+  const rentalGeo = resolveListingCoords(rentalLocation ?? {});
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 90 }}>
@@ -763,6 +772,18 @@ export default function RentalVehicleDetailScreen() {
               {vehicle.driver_rate != null ? <InfoRow label="Driver Rate" value={`$${vehicle.driver_rate}/day`} styles={styles} /> : null}
             </View>
           </View>
+
+          {rentalGeo ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Location</Text>
+              <LocationMap
+                latitude={rentalGeo.latitude}
+                longitude={rentalGeo.longitude}
+                listingId={vehicle.id}
+                locationLabel={[rentalLocation?.city, rentalLocation?.province].filter(Boolean).join(", ") || null}
+              />
+            </View>
+          ) : null}
 
           {business ? (
             <View style={styles.section}>

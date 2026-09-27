@@ -30,6 +30,8 @@ import { Card, GlassBackButton, VerifiedBadge } from "../../components/ui";
 import { CartBadgeButton } from "../../components/cart/CartBadgeButton";
 import { QuickAddSheet } from "../../components/cart/QuickAddSheet";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
+import { resolveListingCoords } from "../../lib/location-fallback";
+import { LocationMap } from "../../components/listing/LocationMap";
 
 const LISTING_COLUMNS =
   "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,is_orderable,created_at,updated_at";
@@ -72,7 +74,7 @@ export default function BusinessShopScreen() {
     const businessRes = await supabase
       .from("businesses")
       .select(
-        "id,owner_user_id,name,logo,cover,photos,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,featured_listing_ids,updated_at"
+        "id,owner_user_id,name,logo,cover,photos,description,biz_type,category,phone,whatsapp,email,province,city,suburb,latitude,longitude,status,verification_level,featured_listing_ids,updated_at"
       )
       .eq("id", id)
       .maybeSingle();
@@ -230,6 +232,7 @@ export default function BusinessShopScreen() {
   // tools/prerender.js on the website. See project memory on this bug.
   const shopPhotos = (business.photos ?? []).filter((p): p is string => Boolean(p));
   const coverImageUri = business.cover || shopPhotos[0] || null;
+  const businessGeo = resolveListingCoords(business);
 
   return (
     <View style={styles.container}>
@@ -345,6 +348,18 @@ export default function BusinessShopScreen() {
             ) : null}
           </View>
         </Card>
+
+        {businessGeo ? (
+          <Card style={styles.locationCard} elevated>
+            <Text style={styles.locationTitle}>Location</Text>
+            <LocationMap
+              latitude={businessGeo.latitude}
+              longitude={businessGeo.longitude}
+              listingId={business.id}
+              locationLabel={[business.suburb, business.city].filter(Boolean).join(", ") || business.province || null}
+            />
+          </Card>
+        ) : null}
 
         <Card style={styles.reviewsCard} elevated>
           <View style={styles.reviewsHeaderRow}>
@@ -663,6 +678,16 @@ function buildStyles(color: ColorPalette) {
     },
     contactPillFollowingText: {
       color: color.brand,
+    },
+    locationCard: {
+      marginHorizontal: 12,
+      marginTop: space.md,
+    },
+    locationTitle: {
+      fontSize: 16,
+      fontWeight: "800",
+      color: color.text,
+      marginBottom: space.sm,
     },
     reviewsCard: {
       marginHorizontal: 12,
