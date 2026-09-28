@@ -25,6 +25,7 @@ import { CATEGORIES } from "../../lib/constants";
 
 const SEARCH_CACHE_KEY = "search-browse";
 import { ListingRow } from "../../components/ListingRow";
+import { ListingsMap } from "../../components/search/ListingsMap";
 import { FilterPanel, countActiveFilters } from "../../components/search/FilterPanel";
 import { AdCarousel } from "../../components/home/AdCarousel";
 import { Chip, EmptyState, ErrorState, ListSkeleton } from "../../components/ui";
@@ -32,7 +33,7 @@ import { font, radius, shadow, space, type ColorPalette } from "../../lib/theme"
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes,condition";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,latitude,longitude,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,attributes,condition";
 
 const PAGE_SIZE = 30;
 
@@ -370,6 +371,7 @@ export default function SearchScreen() {
 
   const showSaveSearch = !!(filters.query.trim() || filters.categories.length);
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   return (
     <View style={styles.container}>
@@ -378,8 +380,18 @@ export default function SearchScreen() {
           <Text style={styles.headerTitle}>
             Browse <Text style={styles.headerTitleAccent}>All</Text>
           </Text>
-          <View style={styles.countPill}>
-            <Text style={styles.countPillText}>{results.length} ads</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Pressable
+              style={styles.countPill}
+              onPress={() => setViewMode((m) => (m === "list" ? "map" : "list"))}
+              accessibilityRole="button"
+              accessibilityLabel={viewMode === "list" ? "Show results on a map" : "Show results as a list"}
+            >
+              <Text style={styles.countPillText}>{viewMode === "list" ? "Map" : "List"}</Text>
+            </Pressable>
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>{results.length} ads</Text>
+            </View>
           </View>
         </View>
         <View style={styles.searchBar}>
@@ -448,6 +460,10 @@ export default function SearchScreen() {
         </View>
       ) : error && !listings.length ? (
         <ErrorState subtitle={error} onRetry={loadFirstPage} />
+      ) : viewMode === "map" ? (
+        <View style={{ flex: 1, paddingBottom: 58 + insets.bottom }}>
+          <ListingsMap listings={results} onOpen={(listingId) => router.push({ pathname: "/listing/[id]", params: { id: listingId } })} />
+        </View>
       ) : (
         <FlatList
           data={results}

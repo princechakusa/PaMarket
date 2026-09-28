@@ -30,6 +30,7 @@ import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { PhoneVerifiedChip } from "../../components/PhoneVerifiedChip";
 import { ResponseTimeChip } from "../../components/ResponseTimeChip";
 import { SafeMeetingSpots } from "../../components/listing/SafeMeetingSpots";
+import { PriceGuide } from "../../components/PriceGuide";
 import { ListingShareSheet } from "../../components/listing/ListingShareSheet";
 import { useT } from "../../lib/i18n";
 import { useStoreProducts } from "../../lib/use-store-products";
@@ -1185,6 +1186,9 @@ export default function ListingDetailScreen() {
               <Text style={styles.safetyTipTitle}>{tr("listing.tradeSafely")}</Text>
               <Text style={styles.safetyTipText}>{tr("listing.tradeSafelyBody")}</Text>
             </View>
+          ) : null}
+          {!isOwner && listing.category !== "jobs" ? (
+            <PriceGuide category={listing.category} title={listing.title} city={listing.city} mode="buyer" />
           ) : null}
           {!isOwner && listing.category !== "jobs" ? <SafeMeetingSpots city={listing.city} /> : null}
 

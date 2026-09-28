@@ -24,6 +24,7 @@ import { friendlyError } from "../../lib/safety";
 import { notifyPositiveAction } from "../../lib/store-review";
 import { useTaxonomy } from "../../lib/taxonomy";
 import { useT } from "../../lib/i18n";
+import { PriceGuide } from "../../components/PriceGuide";
 import { reverseGeocode, roundApproxCoord } from "../../lib/useCurrentLocation";
 import { formatPrice } from "../../lib/listings";
 import {
@@ -767,6 +768,7 @@ export default function PostScreen() {
             {institutionContext ? (
               <Text style={styles.priceFootnote}>Cash, Innbucks or EcoCash accepted on handover.</Text>
             ) : null}
+            <PriceGuide category={state.category} title={state.title} city={state.city} mode="seller" />
 
             <ProvinceCityFields
               provinces={provinces}

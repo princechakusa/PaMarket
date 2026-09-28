@@ -37,6 +37,7 @@ import {
   type JobTaxonomyOption,
 } from "../../lib/jobs";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
+import { exportCvPdf } from "../../lib/cv-pdf";
 import { useTaxonomy } from "../../lib/taxonomy";
 import {
   ALLOWED_CV_MIME_TYPES,
@@ -826,6 +827,28 @@ export default function CvProfileScreen() {
             loading={isSaving}
             onPress={save}
             style={{ marginTop: space.xl }}
+          />
+          <Button
+            label="Download CV as PDF"
+            variant="secondary"
+            size="lg"
+            onPress={() =>
+              void exportCvPdf({
+                fullName,
+                jobTitle,
+                city,
+                province,
+                email: session?.user?.email ?? null,
+                phone: session?.user?.phone ? `+${session.user.phone.replace(/^\+/, "")}` : null,
+                bio,
+                skills,
+                experience,
+                education,
+                certifications,
+                languages,
+              })
+            }
+            style={{ marginTop: space.md }}
           />
         </ScrollView>
       )}
