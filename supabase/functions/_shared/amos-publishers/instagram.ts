@@ -1,4 +1,5 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { resolveZwPlaceId } from './zw-place.ts'
 import type { ContentPublisher, DraftForPublish, PublishResult } from './types.ts'
 
 // Module 5 — real Meta Graph API integration, sharing Facebook's stored
@@ -79,8 +80,14 @@ export class InstagramPublisher implements ContentPublisher {
       const caption = draft.hashtags?.length ? `${draft.body}\n\n${draft.hashtags.join(' ')}` : draft.body
 
       const isVideo = draft.mediaType === 'video'
+      // Business rule: every video post must carry a Zimbabwe/Harare
+      // location tag (user instruction, 2026-09-28) — resolved live via
+      // Graph place-search, never hardcoded. Instagram media containers
+      // accept `location_id` the same way the manual composer's location
+      // picker works.
+      const place = isVideo ? await resolveZwPlaceId(pageAccessToken) : null
       const containerBody = isVideo
-        ? { media_type: 'REELS', video_url: draft.imageUrl, caption, access_token: pageAccessToken }
+        ? { media_type: 'REELS', video_url: draft.imageUrl, caption, access_token: pageAccessToken, ...(place ? { location_id: place } : {}) }
         : { image_url: draft.imageUrl, caption, access_token: pageAccessToken }
 
       const containerRes = await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${igUserId}/media`, {

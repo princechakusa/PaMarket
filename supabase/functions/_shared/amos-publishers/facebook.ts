@@ -1,5 +1,6 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import type { ContentPublisher, DraftForPublish, PublishResult } from './types.ts'
+import { resolveZwPlaceId } from './zw-place.ts'
 
 // Module 4 — real Meta Graph API integration. Reads the Page access token
 // from Supabase Vault via amos_integrations.credentials_ref (never a raw
@@ -71,8 +72,13 @@ export class FacebookPublisher implements ContentPublisher {
       const isVideo = draft.mediaType === 'video' && !!draft.imageUrl
       const usePhoto = !isVideo && !!draft.imageUrl
       const endpoint = isVideo ? 'videos' : usePhoto ? 'photos' : 'feed'
+      // Business rule: every video post must carry a Zimbabwe/Harare
+      // location tag (user instruction, 2026-09-28) — resolved live via
+      // Graph place-search, never hardcoded. Photo/text posts are
+      // unaffected; this only applies to /videos.
+      const place = isVideo ? await resolveZwPlaceId(pageAccessToken) : null
       const payload = isVideo
-        ? { file_url: draft.imageUrl, description: draft.body, access_token: pageAccessToken }
+        ? { file_url: draft.imageUrl, description: draft.body, access_token: pageAccessToken, ...(place ? { place } : {}) }
         : usePhoto
         ? { url: draft.imageUrl, caption: draft.body, access_token: pageAccessToken }
         : { message: draft.body, access_token: pageAccessToken }

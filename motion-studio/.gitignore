@@ -7,3 +7,9 @@ frames/
 shots/
 *.mp4
 *.wav
+*.mp3
+.social-profile/
+render.log
+render9.log
+vo/raw/
+voice-previews/
