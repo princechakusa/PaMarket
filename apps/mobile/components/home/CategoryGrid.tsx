@@ -1,22 +1,9 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CATEGORIES, type Category } from "../../lib/constants";
+import { categoryIconSource } from "../../lib/category-icons";
 import { font, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
-const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
-  property: require("../../assets/cats/cat_property.webp"),
-  vehicles: require("../../assets/cats/cat_vehicles.webp"),
-  rooms: require("../../assets/cats/cat_rooms.webp"),
-  electronics: require("../../assets/cats/cat_electronics.webp"),
-  jobs: require("../../assets/cats/cat_jobs.webp"),
-  furniture: require("../../assets/cats/cat_furniture.webp"),
-  fashion: require("../../assets/cats/cat_fashion.webp"),
-  services: require("../../assets/cats/cat_services.webp"),
-  agriculture: require("../../assets/cats/cat_agriculture.webp"),
-  pets: require("../../assets/cats/cat_pets.webp"),
-  kids: require("../../assets/cats/cat_kids.webp"),
-  other: require("../../assets/cats/cat_other.webp"),
-};
 
 // All 12 categories, 4 per row — a "Browse Categories" heading over a 4x3
 // grid of the real category cover images.
@@ -44,7 +31,7 @@ export function CategoryGrid({
   categories?: Category[];
 }) {
   const styles = useThemedStyles(buildStyles);
-  const list = (categories ?? CATEGORIES).filter((c) => CAT_ICONS[c.id]);
+  const list = categories ?? CATEGORIES;
   return (
     <View style={styles.section}>
       <View style={styles.head}>
@@ -57,7 +44,7 @@ export function CategoryGrid({
         {list.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelectCategory(c.id)}>
             <View style={styles.iconChip}>
-              <Image source={CAT_ICONS[c.id]} style={styles.icon} />
+              <Image source={categoryIconSource(c.id, c.icon)} style={styles.icon} />
             </View>
             <Text style={styles.label} numberOfLines={2}>
               {c.name}

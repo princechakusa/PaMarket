@@ -12,6 +12,7 @@ import { REPORT_REASONS } from "../../lib/safety";
 import { formatPrice, isFeatured, isNew, listingLocation, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { Avatar, EmptyState, GlassBackButton, ListSkeleton, VerifiedBadge, toast } from "../../components/ui";
 import { PhoneVerifiedChip } from "../../components/PhoneVerifiedChip";
+import { ResponseTimeChip } from "../../components/ResponseTimeChip";
 import { StarRow } from "../../components/StarRow";
 import { color, font, radius, shadow, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -421,6 +422,7 @@ export default function UserProfileScreen() {
 
             <View style={{ alignItems: "center" }}>
               <PhoneVerifiedChip userId={id} />
+              <ResponseTimeChip userId={id} />
             </View>
             {memberSince(profile.created_at) ? <Text style={styles.meta}>Member since {memberSince(profile.created_at)}</Text> : null}
             {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}

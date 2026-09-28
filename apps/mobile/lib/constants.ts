@@ -1,6 +1,7 @@
 export type Category = {
   id: string;
   name: string;
+  icon?: string | null;
 };
 
 // Matches www/js/app.js H.CATEGORIES (order and ids are load-bearing —

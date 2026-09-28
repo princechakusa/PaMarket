@@ -31,7 +31,7 @@ const CACHE_PREFIX = "taxonomy-";
 // string literals.
 export const REMOTE_PROVINCE_VALUE = "Remote";
 
-type CategoryRow = { legacy_key: string; name: string; color: string | null; sort_order: number };
+type CategoryRow = { legacy_key: string; name: string; color: string | null; sort_order: number; icon: string | null };
 type ProvinceRow = { name: string; sort_order: number };
 type CityRow = { name: string; sort_order: number; provinces: { name: string } | { name: string }[] | null };
 
@@ -43,14 +43,14 @@ export async function fetchCategories(): Promise<Category[] | null> {
   try {
     const { data, error } = await supabase
       .from("categories")
-      .select("legacy_key,name,color,sort_order")
+      .select("legacy_key,name,color,sort_order,icon")
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .returns<CategoryRow[]>();
     if (error || !data || !data.length) {
       return loadCache<Category[]>(cacheKey);
     }
-    const mapped: Category[] = data.map((r) => ({ id: r.legacy_key, name: r.name }));
+    const mapped: Category[] = data.map((r) => ({ id: r.legacy_key, name: r.name, icon: r.icon }));
     saveCache(cacheKey, mapped).catch(() => {});
     return mapped;
   } catch {

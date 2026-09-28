@@ -1,3 +1,4 @@
+import * as FileSystem from "expo-file-system/legacy";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { Image } from "react-native";
 import { supabase } from "./supabase";
@@ -122,4 +123,15 @@ export async function uploadImageUriToR2(uri: string, key: string): Promise<stri
   const response = await fetch(saved.uri);
   const blob = await response.blob();
   return uploadToR2(blob, key, "image/jpeg");
+}
+
+// md5 of the original picked file (before re-encoding), used only to spot
+// the same photo posted from different accounts. null when unavailable.
+export async function photoFingerprint(uri: string): Promise<string | null> {
+  try {
+    const info = await FileSystem.getInfoAsync(uri, { md5: true });
+    return info.exists && "md5" in info && typeof info.md5 === "string" ? info.md5 : null;
+  } catch {
+    return null;
+  }
 }

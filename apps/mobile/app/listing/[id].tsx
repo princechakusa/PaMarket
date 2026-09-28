@@ -28,6 +28,8 @@ import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { PhoneVerifiedChip } from "../../components/PhoneVerifiedChip";
+import { ResponseTimeChip } from "../../components/ResponseTimeChip";
+import { SafeMeetingSpots } from "../../components/listing/SafeMeetingSpots";
 import { ListingShareSheet } from "../../components/listing/ListingShareSheet";
 import { useT } from "../../lib/i18n";
 import { useStoreProducts } from "../../lib/use-store-products";
@@ -1144,6 +1146,7 @@ export default function ListingDetailScreen() {
                   {seller?.verified ? <VerifiedBadge compact /> : null}
                 </View>
                 <PhoneVerifiedChip userId={listing.seller_id} />
+                <ResponseTimeChip userId={listing.seller_id} />
                 {memberSince(sellerCreatedAt) ? (
                   <Text style={styles.sellerMeta}>
                     Member since {memberSince(sellerCreatedAt)}
@@ -1179,6 +1182,7 @@ export default function ListingDetailScreen() {
               <Text style={styles.safetyTipText}>{tr("listing.tradeSafelyBody")}</Text>
             </View>
           ) : null}
+          {!isOwner && listing.category !== "jobs" ? <SafeMeetingSpots city={listing.city} /> : null}
 
           {/* Owner performance */}
           {isOwner ? (

@@ -1,26 +1,9 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CATEGORIES, type Category } from "../../lib/constants";
+import { categoryIconSource } from "../../lib/category-icons";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
-const CAT_ICONS: Record<string, ReturnType<typeof require>> = {
-  property: require("../../assets/cats/cat_property.webp"),
-  vehicles: require("../../assets/cats/cat_vehicles.webp"),
-  rooms: require("../../assets/cats/cat_rooms.webp"),
-  electronics: require("../../assets/cats/cat_electronics.webp"),
-  jobs: require("../../assets/cats/cat_jobs.webp"),
-  furniture: require("../../assets/cats/cat_furniture.webp"),
-  fashion: require("../../assets/cats/cat_fashion.webp"),
-  services: require("../../assets/cats/cat_services.webp"),
-  agriculture: require("../../assets/cats/cat_agriculture.webp"),
-  pets: require("../../assets/cats/cat_pets.webp"),
-  kids: require("../../assets/cats/cat_kids.webp"),
-  other: require("../../assets/cats/cat_other.webp"),
-};
-// Stage 5: any category id without a bundled icon (e.g. one an admin adds
-// after this build shipped) falls back to the existing generic "Other"
-// icon rather than rendering blank/broken.
-const FALLBACK_ICON = CAT_ICONS.other;
 
 export function CategoryPicker({
   onSelect,
@@ -41,7 +24,7 @@ export function CategoryPicker({
         {list.map((c) => (
           <Pressable key={c.id} style={styles.item} onPress={() => onSelect(c.id)}>
             <View style={styles.iconChip}>
-              <Image source={CAT_ICONS[c.id] ?? FALLBACK_ICON} style={styles.icon} />
+              <Image source={categoryIconSource(c.id, c.icon)} style={styles.icon} />
             </View>
             <Text style={styles.itemLabel} numberOfLines={2}>
               {c.name}

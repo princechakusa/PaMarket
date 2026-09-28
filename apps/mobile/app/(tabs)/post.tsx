@@ -19,7 +19,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../lib/auth";
 import { supabase } from "../../lib/supabase";
-import { uploadImageUriToR2 } from "../../lib/uploadToR2";
+import { photoFingerprint, uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { friendlyError } from "../../lib/safety";
 import { notifyPositiveAction } from "../../lib/store-review";
 import { useTaxonomy } from "../../lib/taxonomy";
@@ -386,8 +386,14 @@ export default function PostScreen() {
 
     try {
       const photoUrls: string[] = [];
+      const photoHashes: string[] = [];
       for (let index = 0; index < state.photos.length; index += 1) {
         const uri = state.photos[index];
+        // Fingerprint of the original file: the server holds a new ad for
+        // review when another account already posted the very same photo
+        // (listing_duplicate_photo_check). Best effort — never blocks posting.
+        const hash = await photoFingerprint(uri);
+        if (hash) photoHashes.push(hash);
         setSubmitStatus(`Uploading photo ${index + 1} of ${state.photos.length}...`);
         const key = `listings/${session.user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
         const url = await uploadImageUriToR2(uri, key);
@@ -409,6 +415,7 @@ export default function PostScreen() {
       const attributes = {
         ...(state.condition ? { ...state.attrs, condition: state.condition } : state.attrs),
         ...(institutionContext ? { [INSTITUTION_VISIBILITY_ATTR_KEY]: state.institutionVisibility } : {}),
+        ...(photoHashes.length ? { _photo_hashes: photoHashes } : {}),
       };
 
       const { data: inserted, error: insertError } = await supabase.from("listings").insert({

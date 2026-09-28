@@ -36,6 +36,7 @@ import {
 import type { Profile } from "../../lib/profiles";
 import { formatPrice } from "../../lib/listings";
 import { chatSafetyHint, scamRisk, SCAM_CONFIRM_MESSAGE, REPORT_REASONS } from "../../lib/safety";
+import { detectScamSignal, SCAM_SIGNAL_COPY, type ScamSignal } from "../../lib/scam-signals";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { initPresence, isUserOnline, joinChatChannel } from "../../lib/chat-realtime";
 import { font, radius, space, type ColorPalette } from "../../lib/theme";
@@ -297,6 +298,20 @@ export default function ChatScreen() {
     () => (hiddenIds.size ? messages.filter((m) => !hiddenIds.has(m.id)) : messages),
     [messages, hiddenIds]
   );
+
+  // Receiver-side scam warning: the newest risky message from the other
+  // person decides the banner (outgoing messages are checked separately by
+  // scamRisk() before sending).
+  const [scamBannerDismissed, setScamBannerDismissed] = useState<ScamSignal | null>(null);
+  const scamSignal = useMemo(() => {
+    for (let i = visibleMessages.length - 1; i >= 0; i--) {
+      const m = visibleMessages[i];
+      if (m.sender_id === myId || m.deleted) continue;
+      const signal = detectScamSignal(displayText(m.text));
+      if (signal) return signal;
+    }
+    return null;
+  }, [visibleMessages, myId]);
 
   // Block status is per (me, otherId), not per-conversation — a business
   // chat has no personal "other user" to block, only the two-person case.
@@ -1044,6 +1059,18 @@ export default function ChatScreen() {
         </Pressable>
       ) : null}
 
+      {scamSignal && scamBannerDismissed !== scamSignal ? (
+        <View style={styles.scamBanner} accessibilityRole="alert">
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scamBannerTitle}>{SCAM_SIGNAL_COPY[scamSignal].title}</Text>
+            <Text style={styles.scamBannerBody}>{SCAM_SIGNAL_COPY[scamSignal].body}</Text>
+          </View>
+          <Pressable onPress={() => setScamBannerDismissed(scamSignal)} hitSlop={10} accessibilityLabel="Dismiss warning">
+            <Text style={styles.scamBannerDismiss}>OK</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       {isLoading ? (
         <View style={{ padding: space.lg, flex: 1 }}>
           <ListSkeleton count={6} />
@@ -1275,6 +1302,21 @@ export default function ChatScreen() {
 
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
+    scamBanner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: space.md,
+      backgroundColor: color.warningTint,
+      borderColor: color.warning,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      marginHorizontal: space.md,
+      marginTop: space.sm,
+      padding: space.md,
+    },
+    scamBannerTitle: { ...font.bodyStrong, color: color.text },
+    scamBannerBody: { ...font.sub, color: color.textSub, marginTop: 2 },
+    scamBannerDismiss: { ...font.bodyStrong, color: color.brand },
   container: {
     flex: 1,
     backgroundColor: color.bg,

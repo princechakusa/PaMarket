@@ -42,6 +42,38 @@ export async function updateCategory(id: string, patch: { name?: string; descrip
 
 /** Archive/deactivate only -- there is no delete path, by design, since
  * listings reference categories by key. */
+// ── Safe meeting spots (safe_meeting_spots) ─────────────────────────────
+// Busy public places shown to buyers on listings in the same city.
+export type SafeSpotRow = { id: string; city: string; name: string; area: string | null; note: string | null; is_active: boolean; sort_order: number };
+export type SafeSpotDraft = { id?: string; city: string; name: string; area: string; note: string; is_active: boolean; sort_order: number };
+
+export async function listSafeSpots(): Promise<QueryResult<SafeSpotRow[]>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { data, error } = await client.from('safe_meeting_spots').select('id, city, name, area, note, is_active, sort_order').order('city').order('sort_order');
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: (data ?? []) as SafeSpotRow[], error: null };
+}
+
+export async function saveSafeSpot(spot: SafeSpotDraft): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const payload = { city: spot.city.trim(), name: spot.name.trim(), area: spot.area.trim() || null, note: spot.note.trim() || null, is_active: spot.is_active, sort_order: spot.sort_order, updated_at: new Date().toISOString() };
+  const { error } = spot.id
+    ? await client.from('safe_meeting_spots').update(payload).eq('id', spot.id)
+    : await client.from('safe_meeting_spots').insert(payload);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}
+
+export async function deleteSafeSpot(id: string): Promise<QueryResult<true>> {
+  const client = getSupabaseClient();
+  if (!client) return unavailable();
+  const { error } = await client.from('safe_meeting_spots').delete().eq('id', id);
+  if (error) return { data: null, error: normalizeError(error) };
+  return { data: true, error: null };
+}
+
 export async function setCategoryActive(id: string, isActive: boolean, updatedBy: string): Promise<QueryResult<true>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
