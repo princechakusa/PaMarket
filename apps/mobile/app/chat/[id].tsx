@@ -207,7 +207,7 @@ export default function ChatScreen() {
       Platform.OS === "ios"
         ? Keyboard.addListener("keyboardWillHide", () => {
             setKeyboardVisible(false);
-                })
+          })
         : null;
     // The KeyboardAvoidingView correctly shrinks the visible chat area when
     // the keyboard opens, but the FlatList's own scroll offset doesn't move
@@ -223,7 +223,7 @@ export default function ChatScreen() {
     const appStateSub = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
         setKeyboardVisible(false);
-          Keyboard.dismiss();
+        Keyboard.dismiss();
       } else {
         setKeyboardAvoidingKey((key) => key + 1);
       }
@@ -1031,8 +1031,13 @@ export default function ChatScreen() {
       // its own offset below the native header. Replaces the old
       // hand-measured iOS lift and Android's "height" mode, which stopped
       // working reliably once Android went edge-to-edge.
+      // "padding" shrinks the chat area frame-by-frame with the keyboard.
+      // Not "translate-with-padding": that slides the whole screen up during
+      // the animation and only resizes at the end, so with a few messages
+      // (this list is top-anchored, not inverted) they flew up out of view
+      // and then dropped back — the flicker on tapping the message box.
       style={styles.container}
-      behavior="translate-with-padding"
+      behavior="padding"
       automaticOffset
     >
       {listing ? (
