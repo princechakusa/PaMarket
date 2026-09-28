@@ -41,3 +41,7 @@ yarn-error.*
 /ios
 /android
 .ios-ci-credentials/
+
+# Playwright e2e output
+e2e-report/
+e2e-results/
