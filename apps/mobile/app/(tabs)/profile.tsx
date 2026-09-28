@@ -166,6 +166,35 @@ function BizCard({
   );
 }
 
+function AskHelpCard({
+  router,
+  color,
+  styles,
+}: {
+  router: ReturnType<typeof useRouter>;
+  color: ColorPalette;
+  styles: ReturnType<typeof buildStyles>;
+}) {
+  return (
+    <View style={[styles.sidePad, styles.sectionSpace]}>
+      <Pressable onPress={() => router.push("/report-problem")}>
+        <Card style={styles.bizRow}>
+          <View style={styles.bizIcon}>
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={color.brand} strokeWidth={2}>
+              <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+            </Svg>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bizTitle}>Ask PaMarket Help</Text>
+            <Text style={styles.bizSub}>Instant answers about buying, selling, jobs and rentals</Text>
+          </View>
+          <ChevronRight color={color} />
+        </Card>
+      </Pressable>
+    </View>
+  );
+}
+
 // Mirrors the legacy web app's guestAccountPage() (www/js/app.js): guests
 // see a real Account tab, not a hard wall — a sign-in prompt card up top,
 // then a menu where only account-specific rows are gated.
@@ -473,6 +502,8 @@ export default function AccountScreen() {
           <Text style={styles.statLabel}>Messages</Text>
         </Pressable>
       </View>
+
+      <AskHelpCard router={router} color={color} styles={styles} />
 
       {/* Selling / Buying — a visual grouping of the existing menu, not a
           second identity: PaMarket only has one rating today (the seller

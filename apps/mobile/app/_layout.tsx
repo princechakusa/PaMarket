@@ -331,7 +331,7 @@ function RootNavigator() {
       <Stack.Screen name="legal-hub" options={{ headerShown: true, title: "Legal Hub" }} />
       <Stack.Screen name="vehicles" options={{ headerShown: true, title: "Vehicles" }} />
       <Stack.Screen name="legal-doc/[key]" options={{ headerShown: true, title: "" }} />
-      <Stack.Screen name="report-problem" options={{ headerShown: true, title: "Report a Problem" }} />
+      <Stack.Screen name="report-problem" options={{ headerShown: true, title: "PaMarket Help" }} />
       <Stack.Screen name="jobs/index" options={{ headerShown: true, title: "Jobs" }} />
       <Stack.Screen name="jobs/browse" options={{ headerShown: true, title: "Jobs" }} />
       <Stack.Screen name="jobs/[id]" options={{ headerShown: true, title: "Job" }} />

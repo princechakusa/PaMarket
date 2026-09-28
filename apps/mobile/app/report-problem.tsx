@@ -126,7 +126,7 @@ export default function ReportProblemScreen() {
           <Text style={styles.avatarText}>P</Text>
         </View>
         <View>
-          <Text style={styles.headerTitle}>PaMarket Support</Text>
+          <Text style={styles.headerTitle}>PaMarket Help</Text>
           <View style={styles.onlineRow}>
             <View style={styles.onlineDot} />
             <Text style={styles.onlineText}>Online · Answers instantly</Text>

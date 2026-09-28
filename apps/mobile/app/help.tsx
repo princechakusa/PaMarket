@@ -182,6 +182,21 @@ export default function HelpScreen() {
       </View>
 
       <View style={styles.humanCard}>
+        <Text style={styles.humanTitle}>Ask PaMarket Help</Text>
+        <Text style={styles.humanSubtitle}>
+          Get instant answers about buying, selling, jobs, rentals or your account, in English, chiShona or isiNdebele.
+        </Text>
+        <View style={styles.humanActions}>
+          <Pressable
+            style={[styles.humanButton, styles.humanButtonPrimary]}
+            onPress={() => router.push("/report-problem")}
+          >
+            <Text style={styles.humanButtonPrimaryText}>Ask a question</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.humanCard}>
         <Text style={styles.humanTitle}>Need a human?</Text>
         <Text style={styles.humanSubtitle}>Talk to support or send a detailed bug report.</Text>
         <View style={styles.humanActions}>
