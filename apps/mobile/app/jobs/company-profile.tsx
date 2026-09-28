@@ -7,7 +7,7 @@ import { useAuth } from "../../lib/auth";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 import { useIOSNativeHeader } from "../../lib/useIOSNativeHeader";
-import { Button, Card, Chip } from "../../components/ui";
+import { Button, Card, SelectField } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 import { fetchJobTaxonomy, type JobTaxonomyOption } from "../../lib/jobs";
 
@@ -102,11 +102,14 @@ export default function CompanyProfileScreen() {
           placeholderTextColor={color.textMuted}
           multiline
         />
-        <Text style={[styles.label, styles.spaced]}>Industry</Text>
-        <View style={styles.chipsWrap}>
-          {industries.map((ind) => (
-            <Chip key={ind.id} label={ind.label} active={companyIndustryId === ind.id} onPress={() => setCompanyIndustryId(companyIndustryId === ind.id ? null : ind.id)} />
-          ))}
+        <View style={styles.spaced}>
+          <SelectField
+            label="Industry"
+            value={industries.find((ind) => ind.id === companyIndustryId)?.label ?? ""}
+            placeholder="Select an industry"
+            options={industries.map((ind) => ind.label)}
+            onSelect={(labelText) => setCompanyIndustryId(industries.find((ind) => ind.label === labelText)?.id ?? null)}
+          />
         </View>
         <Text style={[styles.label, styles.spaced]}>Location</Text>
         <TextInput style={styles.input} value={companyLocation} onChangeText={setCompanyLocation} placeholder="City, Country" placeholderTextColor={color.textMuted} />

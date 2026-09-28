@@ -48,7 +48,7 @@ import {
   openCvUrl,
   randomCvFileName,
 } from "../../lib/cv";
-import { Avatar, Button, Card, Chip, ProvinceCityFields, SectionHeader } from "../../components/ui";
+import { Avatar, Button, Card, Chip, ProvinceCityFields, SectionHeader, SelectField } from "../../components/ui";
 import { toast } from "../../components/ui/Toast";
 
 // Mirrors www/js/jobs.js CandidateProfile ("Get Hired" CV builder). The flat
@@ -704,12 +704,13 @@ export default function CvProfileScreen() {
           {/* ── Preferences ─────────────────────────────────── */}
           <SectionRow title="Job preferences"  styles={styles} />
           <Card>
-            <Text style={styles.label}>Category / sector</Text>
-            <View style={styles.chipsWrap}>
-              {JOB_CATEGORIES.map((c) => (
-                <Chip key={c} label={c} active={sector === c} onPress={() => setSector(c)} />
-              ))}
-            </View>
+            <SelectField
+              label="Category / sector"
+              value={sector}
+              placeholder="Select an industry"
+              options={[...JOB_CATEGORIES]}
+              onSelect={setSector}
+            />
             <Text style={[styles.label, styles.spacedLabel]}>Experience level</Text>
             <View style={styles.chipsWrap}>
               {EXP_LEVELS.map(([key, lbl]) => (

@@ -87,6 +87,10 @@ export function useIOSNativeHeader(options: NativeHeaderOptions) {
         ? {}
         : { headerStyle: { backgroundColor: optionsRef.current.backgroundColor } }),
       headerTintColor: optionsRef.current.tintColor,
+      // The root Stack's default headerTitleStyle uses the theme text colour
+      // (dark), which was unreadable on these brand-blue headers
+      // ("Company Profile" dark blue on blue). Match the title to the tint.
+      headerTitleStyle: { color: optionsRef.current.tintColor },
       headerTitle: optionsRef.current.headerTitle
         ? () => optionsRef.current.headerTitle!()
         : optionsRef.current.title ?? "",
