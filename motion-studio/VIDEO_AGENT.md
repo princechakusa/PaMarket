@@ -49,13 +49,35 @@ anything. Keep:
 
 ## Picking a topic
 
-List `queue/*/topic.txt` in this folder (create `queue/` if absent) —
-each past run recorded its topic there. Pick something **not** already
-used, drawn from real shipped features (see above). Good next topics:
-job hiring / CV as PDF, car rentals, safe meet-up + trust features (if
-not already the focus), price guides + map view, the AI help assistant,
-institutions/campus listings. Write one clear sentence of what the video
-is about before starting.
+The founder wants these tied to what's actually happening in Zimbabwe
+that week, not a topic picked in a vacuum — check real news before you
+default to a generic rotation.
+
+1. **Check what Zimbabweans are actually talking about right now.**
+   Use whatever search/fetch tools you have to look at a couple of real,
+   public Zimbabwean sources — e.g. Google News for Zimbabwe
+   (`https://news.google.com/rss?hl=en-ZW&gl=ZW&ceid=ZW:en`), Pindula
+   News (pindula.co.zw), NewsDay Zimbabwe, Techzim. You're looking for
+   something a 30-second ad could genuinely connect to — a fuel or
+   ZiG/USD pricing story, a jobs/retrenchment story, back-to-school or
+   salary-day timing, a public holiday, a load-shedding story, and so
+   on. Read a handful of real headlines; don't fabricate a trend you
+   didn't actually see.
+2. **Only connect it to a real PaMarket feature.** A trend is a reason
+   to lead with a particular *angle* on a real feature (e.g. a
+   fuel-price story → lead with car rentals or price guides; a jobs
+   story → lead with the hiring pipeline) — never invent a capability
+   the app doesn't have just because it fits a headline.
+3. **If nothing genuinely connects**, that's fine and normal — say so in
+   `notes.md` and fall back to the rotation: list `queue/*/topic.txt` in
+   this folder (create `queue/` if absent), pick a real shipped feature
+   not already used. Good options: job hiring / CV as PDF, car rentals,
+   safe meet-up + trust features (if not already the focus), price
+   guides + map view, the AI help assistant, institutions/campus
+   listings.
+4. Write one clear sentence of what the video is about, and (if you used
+   a real news angle) one line in `notes.md` naming the story and source
+   you based it on, before starting.
 
 ## The voiceover
 
