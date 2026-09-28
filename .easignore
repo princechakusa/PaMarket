@@ -46,9 +46,12 @@ expo-env.d.ts
 keystore.properties
 
 # Local tooling / scratch
-# motion-studio/ = marketing video renders, voiceover and installed skills
-# (~600 MB); dist-site/ = website build output. Neither is part of the app.
+# motion-studio/ (~600 MB video work), .video-tools/ (~420 MB),
+# .pw-browsers/ (~690 MB Playwright browser downloads), dist-site/ (website
+# build output): none of it is part of the app.
 motion-studio/
+.video-tools/
+.pw-browsers/
 dist-site/
 .agents/
 .playwright-mcp/
