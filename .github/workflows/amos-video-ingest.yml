@@ -1,0 +1,65 @@
+name: AMOS video ingest
+
+# Fires whenever the "PaMarket Video Studio" cloud routine
+# (motion-studio/VIDEO_AGENT.md) pushes a finished video queue folder to
+# amos-video-queue. Reads the new motion-studio/queue/<date>-<topic>/
+# folder from the push and hands it to the amos-video-ingest edge
+# function, which creates a pending-review draft in the AMOS Approval
+# Queue — it does not publish anything by itself.
+on:
+  push:
+    branches: [amos-video-queue]
+    paths:
+      - 'motion-studio/queue/**'
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Find the new queue folder
+        id: folder
+        run: |
+          folder=$(git diff --name-only HEAD~1 HEAD -- motion-studio/queue | head -1 | sed -E 's#^(motion-studio/queue/[^/]+)/.*#\1#')
+          if [ -z "$folder" ]; then echo "No queue folder found in this push — nothing to ingest."; exit 0; fi
+          echo "folder=$folder" >> "$GITHUB_OUTPUT"
+
+      - name: Read caption, topic, notes and submit
+        if: steps.folder.outputs.folder != ''
+        env:
+          FOLDER: ${{ steps.folder.outputs.folder }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          INGEST_URL: https://gxgytumhknmnwspxjzxw.supabase.co/functions/v1/amos-video-ingest
+          INGEST_SECRET: ${{ secrets.AMOS_VIDEO_INGEST_SECRET }}
+        run: |
+          set -e
+          topic=$(cat "$FOLDER/topic.txt" 2>/dev/null || basename "$FOLDER")
+          caption=$(cat "$FOLDER/caption.md" 2>/dev/null || echo "")
+          notes=$(cat "$FOLDER/notes.md" 2>/dev/null || echo "")
+          raw_base="https://raw.githubusercontent.com/$REPO/$SHA/$FOLDER"
+          v16=$(ls "$FOLDER"/*.mp4 2>/dev/null | grep -v -- '-9x16' | head -1 | xargs -r basename)
+          v9=$(ls "$FOLDER"/*-9x16.mp4 2>/dev/null | head -1 | xargs -r basename)
+
+          payload=$(node -e '
+            const [topic, caption, notes, raw, v16, v9] = process.argv.slice(1);
+            console.log(JSON.stringify({
+              topic, caption, notes: notes || undefined,
+              videoUrl16x9: v16 ? `${raw}/${v16}` : undefined,
+              videoUrl9x16: v9 ? `${raw}/${v9}` : undefined,
+            }));
+          ' "$topic" "$caption" "$notes" "$raw_base" "$v16" "$v9")
+
+          echo "Ingesting: $topic"
+          http_code=$(curl -sS -o response.json -w '%{http_code}' -X POST "$INGEST_URL" \
+            -H "content-type: application/json" \
+            -H "x-video-ingest-secret: $INGEST_SECRET" \
+            -d "$payload")
+          cat response.json
+          if [ "$http_code" -ge 300 ]; then
+            echo "Ingest failed with HTTP $http_code"
+            exit 1
+          fi
