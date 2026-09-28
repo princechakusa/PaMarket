@@ -7,8 +7,8 @@
 // If its native part is missing — an Expo Go version without it, or the web
 // build — this falls back to React Native's own KeyboardAvoidingView so the
 // app still runs and inputs still move up, just without frame-synced motion.
-import { useContext, type ReactNode } from "react";
-import { KeyboardAvoidingView as RNKeyboardAvoidingView, Platform, ScrollView, TurboModuleRegistry, type ScrollViewProps } from "react-native";
+import { useContext, useRef, useState, type ReactNode } from "react";
+import { KeyboardAvoidingView as RNKeyboardAvoidingView, Platform, ScrollView, TurboModuleRegistry, View, type LayoutChangeEvent, type ScrollViewProps } from "react-native";
 import {
   KeyboardAvoidingView as ControllerKeyboardAvoidingView,
   KeyboardAwareScrollView as ControllerKeyboardAwareScrollView,
@@ -27,7 +27,34 @@ export function KeyboardProvider({ children }: { children: ReactNode }) {
 
 export function KeyboardAvoidingView(props: KeyboardAvoidingViewProps) {
   const headerHeight = useContext(HeaderHeightContext) ?? 0;
-  if (HAS_KEYBOARD_CONTROLLER) return <ControllerKeyboardAvoidingView {...props} />;
+  const ref = useRef<View>(null);
+  const [windowY, setWindowY] = useState(0);
+  if (HAS_KEYBOARD_CONTROLLER) {
+    // Android: the library's automaticOffset falls back to y=0 when its
+    // native position lookup fails (seen on a real Honor/Android 15 phone,
+    // both in Expo Go and the store build), so it ignored the header above
+    // the view and the composer stayed behind the keyboard by exactly that
+    // much. Measure the view's top in window coordinates ourselves and pass
+    // it as the offset instead. iOS measures correctly — left as is.
+    if (Platform.OS === "android" && props.automaticOffset) {
+      const { automaticOffset: _auto, keyboardVerticalOffset = 0, onLayout, ...rest } = props;
+      const handleLayout = (e: LayoutChangeEvent) => {
+        onLayout?.(e);
+        ref.current?.measureInWindow((_x, y) => {
+          if (Number.isFinite(y)) setWindowY(Math.max(0, y));
+        });
+      };
+      return (
+        <ControllerKeyboardAvoidingView
+          {...rest}
+          ref={ref}
+          onLayout={handleLayout}
+          keyboardVerticalOffset={keyboardVerticalOffset + windowY}
+        />
+      );
+    }
+    return <ControllerKeyboardAvoidingView {...props} />;
+  }
   // Fallback: RN's KAV doesn't know automaticOffset / translate-with-padding,
   // so the native header height is added to the offset by hand.
   const { automaticOffset, behavior, contentContainerStyle, keyboardVerticalOffset = 0, ...rest } = props;

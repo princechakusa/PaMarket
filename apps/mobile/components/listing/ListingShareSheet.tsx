@@ -5,12 +5,13 @@
 import { useRef, useState } from "react";
 import { Image, Modal, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import Svg, { Path } from "react-native-svg";
 import { BrandWordmark } from "../BrandLogo";
 import { Button, toast } from "../ui";
 import { formatPrice, listingLocation, type Listing } from "../../lib/listings";
 import { listingUrl } from "../../lib/site-urls";
 import { shareViewAsImage } from "../../lib/share-image";
-import { font, radius, space, type ColorPalette } from "../../lib/theme";
+import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 type ShareableListing = Pick<Listing, "id" | "title" | "price" | "currency" | "suburb" | "city" | "province" | "photos">;
@@ -63,6 +64,19 @@ export function ListingShareSheet({
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close share options" />
       <View style={styles.sheet}>
         <View style={styles.handle} />
+        {/* On shorter phones the sheet covers the whole screen, leaving no
+            backdrop to tap — so it always gets its own close button. */}
+        <Pressable
+          style={styles.close}
+          onPress={onClose}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Close share options"
+        >
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color.textSub} strokeWidth={2.4} strokeLinecap="round">
+            <Path d="M6 6l12 12M18 6L6 18" />
+          </Svg>
+        </Pressable>
         <Text style={styles.title}>{isOwner ? "Promote your ad for free" : "Share this listing"}</Text>
         <Text style={styles.sub}>
           {isOwner
@@ -162,6 +176,18 @@ function buildStyles(color: ColorPalette) {
       borderTopRightRadius: radius.xl,
       padding: space.xl,
       paddingBottom: space.xxxl,
+    },
+    close: {
+      position: "absolute",
+      top: space.md,
+      right: space.md,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: color.bg,
+      zIndex: 2,
     },
     handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: color.borderStrong, marginBottom: space.md },
     title: { ...font.h3, color: color.text, textAlign: "center" },
