@@ -29,6 +29,12 @@ export function listingUrl(listing: { id: string; title?: string | null }): stri
   return `${SITE_ORIGIN}/${listingPath(listing)}`;
 }
 
+// Public shop page, same /b/<slug>-<id> route the website pre-renders
+// (js/listing-schema.js businessPath).
+export function businessUrl(business: { id: string; name?: string | null }): string {
+  return `${SITE_ORIGIN}/b/${slugify(business.name)}-${business.id}`;
+}
+
 // Private, authenticated order page (order.html, served extensionless like
 // every other top-level page on this site — see tools/build-includes.js's
 // header/footer convention). Unlike listing pages, this is never

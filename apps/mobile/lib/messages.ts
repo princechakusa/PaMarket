@@ -197,6 +197,20 @@ function isOfferEnvelope(value: unknown): value is OfferEnvelope {
   return !!value && typeof value === "object" && "_offer" in value;
 }
 
+export type OfferPayload = OfferEnvelope["_offer"] & { by?: string; listingId?: string };
+
+// Same {"_offer": {...}} envelope the website sends (js/chats.js), so offers
+// made on either client show up as offer cards on both.
+export function parseOffer(text: string | null | undefined): OfferPayload | null {
+  if (!text || text.charAt(0) !== "{" || text.indexOf('"_offer"') === -1) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return isOfferEnvelope(parsed) ? (parsed._offer as OfferPayload) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Matches the web client's offer summary wording (www/js/messages.js previewBody).
 function offerSummary(offer: OfferEnvelope["_offer"]): string {
   if (offer.k === "accept") return "Offer accepted";

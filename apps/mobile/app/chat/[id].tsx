@@ -32,9 +32,11 @@ import {
   replyQuote,
   type ConversationRow,
   type MessageRow,
+  parseOffer,
+  type OfferPayload,
 } from "../../lib/messages";
 import type { Profile } from "../../lib/profiles";
-import { formatPrice } from "../../lib/listings";
+import { formatMoney, formatPrice } from "../../lib/listings";
 import { chatSafetyHint, scamRisk, SCAM_CONFIRM_MESSAGE, REPORT_REASONS } from "../../lib/safety";
 import { detectScamSignal, SCAM_SIGNAL_COPY, type ScamSignal } from "../../lib/scam-signals";
 import { uploadImageUriToR2 } from "../../lib/uploadToR2";
@@ -56,6 +58,7 @@ type ForwardCandidate = {
 
 type ListingContext = {
   id: string;
+  seller_id: string | null;
   title: string | null;
   price: number | null;
   currency: string | null;
@@ -146,11 +149,12 @@ export default function ChatScreen() {
   // so opening a chat never flashes "PaMarket User" first. Purely cosmetic:
   // the authoritative otherProfile/conversationBusiness fetch below still
   // always runs and overwrites this once it resolves.
-  const { id, name: nameHint, avatar: avatarHint, rentalListingId } = useLocalSearchParams<{
+  const { id, name: nameHint, avatar: avatarHint, rentalListingId, openOffer } = useLocalSearchParams<{
     id: string;
     name?: string;
     avatar?: string;
     rentalListingId?: string;
+    openOffer?: string;
   }>();
   const router = useRouter();
   const { session } = useAuth();
@@ -303,6 +307,55 @@ export default function ChatScreen() {
   // person decides the banner (outgoing messages are checked separately by
   // scamRisk() before sending).
   const [scamBannerDismissed, setScamBannerDismissed] = useState<ScamSignal | null>(null);
+
+  // ── Offers ("Make an offer" / counter / accept / decline) ──────────────
+  const [offerDraft, setOfferDraft] = useState<{ mode: "offer" | "counter"; amount: string } | null>(null);
+  const offerAutoOpened = useRef(false);
+  const isBuyerOfListing = !!listing && !!myId && !!listing.seller_id && listing.seller_id !== myId;
+  // Only the newest still-open offer/counter shows action buttons.
+  const openOfferId = useMemo(() => {
+    for (let i = visibleMessages.length - 1; i >= 0; i--) {
+      const o = parseOffer(visibleMessages[i].text);
+      if (!o) continue;
+      if (o.k === "accept" || o.k === "decline") return null;
+      return visibleMessages[i].id;
+    }
+    return null;
+  }, [visibleMessages]);
+
+  useEffect(() => {
+    if (openOffer === "1" && isBuyerOfListing && !offerAutoOpened.current) {
+      offerAutoOpened.current = true;
+      setOfferDraft({ mode: "offer", amount: listing?.price ? String(listing.price) : "" });
+    }
+  }, [openOffer, isBuyerOfListing, listing]);
+
+  async function submitOffer() {
+    if (!offerDraft) return;
+    const value = Number(offerDraft.amount.replace(/[^0-9.]/g, ""));
+    if (!(value > 0)) {
+      toast("Enter a valid amount");
+      return;
+    }
+    const cur = (listing?.currency ?? "USD").toUpperCase() === "ZIG" ? "ZiG" : "USD";
+    const payload = {
+      k: offerDraft.mode,
+      price: Math.round(value * 100) / 100,
+      by: myId,
+      cur,
+      ...(listing ? { listingId: listing.id, listingTitle: String(listing.title ?? "").slice(0, 50) } : {}),
+    };
+    setOfferDraft(null);
+    await sendMessage(JSON.stringify({ _offer: payload }), undefined, true);
+  }
+
+  async function respondToOffer(offer: OfferPayload, action: "accept" | "decline" | "counter") {
+    if (action === "counter") {
+      setOfferDraft({ mode: "counter", amount: offer.price ? String(offer.price) : "" });
+      return;
+    }
+    await sendMessage(JSON.stringify({ _offer: { k: action, price: offer.price, by: myId, cur: offer.cur ?? "USD" } }), undefined, true);
+  }
   const scamSignal = useMemo(() => {
     for (let i = visibleMessages.length - 1; i >= 0; i--) {
       const m = visibleMessages[i];
@@ -452,7 +505,7 @@ export default function ChatScreen() {
         ? supabase.from("businesses").select("id,name,logo,owner_user_id").eq("id", businessId).maybeSingle()
         : Promise.resolve({ data: null }),
       listingId
-        ? supabase.from("listings").select("id,title,price,currency,photos").eq("id", listingId).maybeSingle()
+        ? supabase.from("listings").select("id,seller_id,title,price,currency,photos").eq("id", listingId).maybeSingle()
         : Promise.resolve({ data: null }),
       supabase
         .from("messages")
@@ -603,13 +656,13 @@ export default function ChatScreen() {
     return () => chat.leave();
   }, [id, myId]);
 
-  async function sendMessage(text: string, imageUrl?: string) {
+  async function sendMessage(text: string, imageUrl?: string, raw = false) {
     if (!myId || !id) return;
     const { data: profile } = await supabase.from("profiles").select("name").eq("id", myId).maybeSingle();
 
     // Wrap in the same _reply envelope used by www/js/messages.js so both
     // clients render/parse quoted replies identically.
-    const storedText = replyTarget
+    const storedText = replyTarget && !raw
       ? JSON.stringify({
           _reply: { i: replyTarget.id, n: replyTarget.sender_name ?? "", t: displayText(replyTarget.text) },
           t: text,
@@ -632,7 +685,7 @@ export default function ChatScreen() {
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimistic]);
-    setInputText("");
+    if (!raw) setInputText("");
     setReplyTarget(null);
 
     const { data: inserted, error: insertError } = await supabase
@@ -1051,6 +1104,15 @@ export default function ChatScreen() {
               {formatPrice({ price: listing.price, currency: listing.currency })}
             </Text>
           </View>
+          {isBuyerOfListing && listing.price ? (
+            <Pressable
+              style={styles.makeOfferBtn}
+              onPress={() => setOfferDraft({ mode: "offer", amount: String(listing.price ?? "") })}
+              hitSlop={6}
+            >
+              <Text style={styles.makeOfferText}>Make offer</Text>
+            </Pressable>
+          ) : null}
           <View style={styles.listingChevron}>
             <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={themeColor.textMuted} strokeWidth={2}>
               <Polyline points="9 18 15 12 9 6" />
@@ -1106,6 +1168,7 @@ export default function ChatScreen() {
           renderItem={({ item, index }) => {
             const isMine = item.sender_id === myId;
             const quote = replyQuote(item.text);
+            const offer = parseOffer(item.text);
             const bodyText = displayText(item.text);
             const prev = visibleMessages[index - 1];
             const next = visibleMessages[index + 1];
@@ -1152,6 +1215,35 @@ export default function ChatScreen() {
                     <Text style={[styles.bubbleTextDeleted, isMine && styles.bubbleTextDeletedMine]}>
                       This message was deleted
                     </Text>
+                  ) : offer ? (
+                    <View style={styles.offerCard}>
+                      <Text style={[styles.offerLabel, isMine && styles.bubbleTextMine]}>
+                        {offer.k === "offer" ? "OFFER" : offer.k === "counter" ? "COUNTER-OFFER" : offer.k === "accept" ? "OFFER ACCEPTED" : "OFFER DECLINED"}
+                      </Text>
+                      {offer.price ? (
+                        <Text style={[styles.offerAmount, isMine && styles.bubbleTextMine]}>
+                          {formatMoney(offer.price, offer.cur ?? "USD")}
+                        </Text>
+                      ) : null}
+                      {offer.listingTitle ? (
+                        <Text style={[styles.offerFor, isMine && styles.bubbleTextMine]} numberOfLines={1}>
+                          for {offer.listingTitle}
+                        </Text>
+                      ) : null}
+                      {!isMine && item.id === openOfferId ? (
+                        <View style={styles.offerActions}>
+                          <Pressable style={[styles.offerBtn, styles.offerBtnPrimary]} onPress={() => void respondToOffer(offer, "accept")}>
+                            <Text style={styles.offerBtnPrimaryText}>Accept</Text>
+                          </Pressable>
+                          <Pressable style={styles.offerBtn} onPress={() => void respondToOffer(offer, "counter")}>
+                            <Text style={styles.offerBtnText}>Counter</Text>
+                          </Pressable>
+                          <Pressable style={styles.offerBtn} onPress={() => void respondToOffer(offer, "decline")}>
+                            <Text style={styles.offerBtnText}>Decline</Text>
+                          </Pressable>
+                        </View>
+                      ) : null}
+                    </View>
                   ) : bodyText ? (
                     <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{bodyText}</Text>
                   ) : null}
@@ -1277,6 +1369,37 @@ export default function ChatScreen() {
         </Pressable>
       </Modal>
 
+      <Modal visible={!!offerDraft} animationType="fade" transparent onRequestClose={() => setOfferDraft(null)}>
+        <Pressable style={styles.offerBackdrop} onPress={() => setOfferDraft(null)}>
+          <Pressable style={styles.offerSheet} onPress={() => {}}>
+            <Text style={styles.offerSheetTitle}>{offerDraft?.mode === "counter" ? "Your counter-offer" : "Make an offer"}</Text>
+            {listing?.title ? <Text style={styles.offerSheetSub} numberOfLines={1}>{listing.title}</Text> : null}
+            {listing?.price ? (
+              <Text style={styles.offerSheetSub}>Asking price: {formatPrice({ price: listing.price, currency: listing.currency })}</Text>
+            ) : null}
+            <TextInput
+              style={styles.offerInput}
+              value={offerDraft?.amount ?? ""}
+              onChangeText={(t) => setOfferDraft((d) => (d ? { ...d, amount: t.replace(/[^0-9.]/g, "") } : d))}
+              keyboardType="decimal-pad"
+              placeholder="Amount"
+              placeholderTextColor={themeColor.textMuted}
+              autoFocus
+              accessibilityLabel="Offer amount"
+            />
+            <Text style={styles.offerSheetHint}>An offer isn't a payment. Only pay after you have seen the item.</Text>
+            <View style={styles.offerActions}>
+              <Pressable style={styles.offerBtn} onPress={() => setOfferDraft(null)}>
+                <Text style={styles.offerBtnText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={[styles.offerBtn, styles.offerBtnPrimary]} onPress={() => void submitOffer()}>
+                <Text style={styles.offerBtnPrimaryText}>Send offer</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <Modal visible={!!viewerImage} animationType="fade" transparent onRequestClose={() => setViewerImage(null)}>
         <View style={styles.imageViewerScrim}>
           <GlassBackButton
@@ -1302,6 +1425,23 @@ export default function ChatScreen() {
 
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
+    makeOfferBtn: { backgroundColor: color.gold, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: 6, marginRight: space.xs },
+    makeOfferText: { ...font.caption, color: "#0B1B4A", fontWeight: "800" },
+    offerCard: { minWidth: 180, paddingVertical: 2 },
+    offerLabel: { ...font.micro, color: color.textSub, letterSpacing: 0.8 },
+    offerAmount: { fontSize: 22, fontWeight: "900", color: color.text, marginTop: 2 },
+    offerFor: { ...font.caption, color: color.textSub, marginTop: 1 },
+    offerActions: { flexDirection: "row", gap: space.sm, marginTop: space.sm },
+    offerBtn: { flex: 1, borderRadius: radius.md, borderWidth: 1, borderColor: color.borderStrong, paddingVertical: 8, alignItems: "center", backgroundColor: color.surface },
+    offerBtnText: { ...font.caption, color: color.text, fontWeight: "800" },
+    offerBtnPrimary: { backgroundColor: color.brand, borderColor: color.brand },
+    offerBtnPrimaryText: { ...font.caption, color: color.textOnBrand, fontWeight: "800" },
+    offerBackdrop: { flex: 1, backgroundColor: "rgba(15,23,42,0.55)", justifyContent: "center", padding: space.xl },
+    offerSheet: { backgroundColor: color.surface, borderRadius: radius.xl, padding: space.xl },
+    offerSheetTitle: { ...font.h3, color: color.text },
+    offerSheetSub: { ...font.sub, color: color.textSub, marginTop: 2 },
+    offerInput: { marginTop: space.lg, height: 56, borderWidth: 1, borderColor: color.borderStrong, borderRadius: radius.md, paddingHorizontal: space.lg, fontSize: 22, fontWeight: "800", color: color.text },
+    offerSheetHint: { ...font.caption, color: color.textMuted, marginTop: space.sm },
     scamBanner: {
       flexDirection: "row",
       alignItems: "flex-start",

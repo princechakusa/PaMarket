@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -8,6 +8,8 @@ import { useTaxonomy } from "../../lib/taxonomy";
 import type { Business } from "../../lib/businesses";
 import { businessInitials } from "../../lib/businesses";
 import { paidFeaturesEnabled, premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
+import { businessEntitlements } from "../../lib/plan-entitlements";
+import { businessUrl } from "../../lib/site-urls";
 import type { ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
@@ -28,6 +30,12 @@ export default function BusinessManageScreen() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [activeListings, setActiveListings] = useState(0);
   const [totalViews, setTotalViews] = useState(0);
+  // Real counts for the header tiles and menu rows (these used to be the
+  // hardcoded strings "0", "0 saved" and "Free").
+  const [newLeads, setNewLeads] = useState(0);
+  const [boostedNow, setBoostedNow] = useState(0);
+  const [quickReplyCount, setQuickReplyCount] = useState(0);
+  const [planName, setPlanName] = useState("Free");
   const [isLoading, setIsLoading] = useState(true);
   const { categories } = useTaxonomy();
 
@@ -36,19 +44,26 @@ export default function BusinessManageScreen() {
     const { data } = await supabase
       .from("businesses")
       .select(
-        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,rejection_note,updated_at"
+        "id,owner_user_id,name,logo,cover,description,biz_type,category,phone,whatsapp,email,province,city,suburb,status,verification_level,rejection_note,updated_at,plan_id"
       )
       .eq("id", id)
       .maybeSingle();
     if (data) setBusiness(data as Business);
 
-    const { data: listings } = await supabase
-      .from("listings")
-      .select("id,status,views")
-      .eq("business_id", id);
-    const rows = listings ?? [];
-    setActiveListings(rows.filter((l: any) => l.status === "active").length);
-    setTotalViews(rows.reduce((n: number, l: any) => n + (l.views || 0), 0));
+    const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    const [{ data: listings }, leadsRes, repliesRes, entitlements] = await Promise.all([
+      supabase.from("listings").select("id,status,views,featured_until").eq("business_id", id),
+      supabase.from("business_leads").select("id", { count: "exact", head: true }).eq("business_id", id).gte("created_at", since),
+      supabase.from("business_quick_replies").select("id", { count: "exact", head: true }).eq("business_id", id),
+      businessEntitlements(id, (data as { plan_id?: string | null } | null)?.plan_id ?? null),
+    ]);
+    const rows = (listings ?? []) as { status: string; views: number | null; featured_until: string | null }[];
+    setActiveListings(rows.filter((l) => l.status === "active").length);
+    setTotalViews(rows.reduce((n, l) => n + (l.views || 0), 0));
+    setBoostedNow(rows.filter((l) => l.featured_until && new Date(l.featured_until).getTime() > Date.now()).length);
+    setNewLeads(leadsRes.count ?? 0);
+    setQuickReplyCount(repliesRes.count ?? 0);
+    setPlanName(entitlements.name);
   }, [id]);
 
   useEffect(() => {
@@ -232,8 +247,8 @@ export default function BusinessManageScreen() {
         <View style={styles.statsGrid}>
           <StatBox value={String(activeListings)} label="Listings" styles={styles} />
           <StatBox value={String(totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1).replace(/\.0$/, "")}k` : totalViews)} label="Views" styles={styles} />
-          <StatBox value="0" label="New leads" styles={styles} />
-          <StatBox value="0" label="Boosts" styles={styles} />
+          <StatBox value={String(newLeads)} label="Leads (30 days)" styles={styles} />
+          <StatBox value={String(boostedNow)} label="Featured now" styles={styles} />
         </View>
       </View>
 
@@ -256,7 +271,7 @@ export default function BusinessManageScreen() {
           <MenuRow label="Listings" value={`${activeListings} active`} onPress={() => router.push({ pathname: "/business-listings/[id]", params: { id: business.id } })} styles={styles} />
           <MenuRow label="Orders" value="View" onPress={() => router.push({ pathname: "/business-orders/[id]", params: { id: business.id } })} styles={styles} />
           <MenuRow label="Featured listings" value="Slots" onPress={() => router.push(`/business-featured/${business.id}`)} styles={styles} />
-          <MenuRow label="Quick Replies" value="0 saved" onPress={() => router.push(`/business-messaging/${business.id}`)} styles={styles} />
+          <MenuRow label="Quick Replies" value={`${quickReplyCount} saved`} onPress={() => router.push(`/business-messaging/${business.id}`)} styles={styles} />
         </MenuGroup>
 
         <MenuGroup title="Customers" styles={styles}>
@@ -267,7 +282,7 @@ export default function BusinessManageScreen() {
         <MenuGroup title="Business" styles={styles}>
           <MenuRow label="Get Verified" value={verified ? "Verified" : "Start"} onPress={() => router.push(`/business-verify/${business.id}`)} styles={styles} />
           {paidOn ? (
-            <MenuRow label="Subscription & Plan" value="Free" onPress={() => router.push(`/business-subscription/${business.id}`)} styles={styles} />
+            <MenuRow label="Subscription & Plan" value={planName} onPress={() => router.push(`/business-subscription/${business.id}`)} styles={styles} />
           ) : null}
           <MenuRow label="Billing & Invoices" value="Invoices" onPress={() => router.push(`/business-billing/${business.id}`)} styles={styles} />
         </MenuGroup>
@@ -276,6 +291,15 @@ export default function BusinessManageScreen() {
           <MenuRow label="Edit Business Profile" onPress={() => router.push(`/business-edit/${business.id}`)} styles={styles} />
           <MenuRow label="Manage Staff" onPress={() => router.push(`/business-staff/${business.id}`)} styles={styles} />
           <MenuRow label="View Public Page" onPress={() => router.push(`/business/${business.id}`)} styles={styles} />
+          <MenuRow
+            label="Share Shop Link"
+            value="WhatsApp, bio"
+            onPress={() => {
+              const link = businessUrl(business);
+              Share.share({ message: `Shop with ${business.name} on PaMarket: ${link}`, url: link }).catch(() => {});
+            }}
+            styles={styles}
+          />
         </MenuGroup>
 
         <Pressable style={styles.deleteButton} onPress={confirmDelete}>

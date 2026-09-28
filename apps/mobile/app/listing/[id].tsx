@@ -629,7 +629,8 @@ export default function ListingDetailScreen() {
     }
   }
 
-  async function messageSeller() {
+  async function messageSeller(openOffer = false) {
+    const offerParam = openOffer ? { openOffer: "1" } : {};
     if (!session?.user || !listing) {
       router.push("/(auth)/sign-in");
       return;
@@ -664,6 +665,7 @@ export default function ListingDetailScreen() {
           id: bizConvId,
           name: seller?.name || listing.seller_name || "",
           avatar: seller?.avatar ?? "",
+          ...offerParam,
         },
       });
       return;
@@ -744,6 +746,7 @@ export default function ListingDetailScreen() {
           id: existing.id,
           name: seller?.name || listing.seller_name || "",
           avatar: seller?.avatar ?? "",
+          ...offerParam,
         },
       });
       return;
@@ -763,6 +766,7 @@ export default function ListingDetailScreen() {
         id: convId,
         name: seller?.name || listing.seller_name || "",
         avatar: seller?.avatar ?? "",
+          ...offerParam,
       },
     });
   }
@@ -1346,7 +1350,12 @@ export default function ListingDetailScreen() {
                 <WhatsAppIcon />
               </Pressable>
             ) : null}
-            <Pressable style={styles.actionChat} onPress={messageSeller}>
+            {listing.price && listing.category !== "jobs" ? (
+              <Pressable style={styles.actionOffer} onPress={() => void messageSeller(true)}>
+                <Text style={styles.actionOfferText}>Offer</Text>
+              </Pressable>
+            ) : null}
+            <Pressable style={styles.actionChat} onPress={() => void messageSeller()}>
               <MessageIcon />
               <Text style={styles.actionChatText}>{tr("listing.chatWithSeller")}</Text>
             </Pressable>
@@ -1457,6 +1466,16 @@ export default function ListingDetailScreen() {
 
 function buildStyles(color: ColorPalette) {
   return StyleSheet.create({
+    actionOffer: {
+      height: 48,
+      paddingHorizontal: space.lg,
+      borderRadius: radius.lg,
+      borderWidth: 1.5,
+      borderColor: color.brand,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    actionOfferText: { ...font.bodyStrong, color: color.brand },
     container: { flex: 1, backgroundColor: color.bg },
     centered: { justifyContent: "center" },
 

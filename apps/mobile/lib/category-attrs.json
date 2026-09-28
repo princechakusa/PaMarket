@@ -176,6 +176,26 @@
       "suffix": "m²"
     },
     {
+      "key": "standSize",
+      "label": "Stand Size",
+      "type": "number",
+      "unit": "m²",
+      "suffix": "m²"
+    },
+    {
+      "key": "tenure",
+      "label": "Ownership / Title",
+      "type": "select",
+      "options": [
+        "Title Deeds",
+        "Cession",
+        "Council Lease",
+        "Agreement of Sale",
+        "Leasehold",
+        "Other"
+      ]
+    },
+    {
       "key": "furnishing",
       "label": "Furnishing",
       "type": "select",
@@ -313,6 +333,16 @@
         "Yes",
         "No"
       ]
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
+      ]
     }
   ],
   "furniture": [
@@ -354,6 +384,16 @@
       "label": "Material",
       "type": "text",
       "placeholder": "e.g. Wood, Leather"
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
+      ]
     }
   ],
   "fashion": [
@@ -425,6 +465,16 @@
       "label": "Brand",
       "type": "text",
       "placeholder": "optional"
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
+      ]
     }
   ],
   "agriculture": [
@@ -457,6 +507,16 @@
       "label": "Quantity",
       "type": "text",
       "placeholder": "e.g. 50 bales, 10 herd"
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
+      ]
     }
   ],
   "pets": [
@@ -505,6 +565,16 @@
         "Trained",
         "Papers / Pedigree"
       ]
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
+      ]
     }
   ],
   "kids": [
@@ -542,6 +612,16 @@
         "3-5 years",
         "6-9 years",
         "10+ years"
+      ]
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
       ]
     }
   ],
@@ -590,6 +670,16 @@
       "options": [
         "Brand New",
         "Used"
+      ]
+    },
+    {
+      "key": "delivery",
+      "label": "Delivery",
+      "type": "select",
+      "options": [
+        "Collection only",
+        "Delivery in my city",
+        "Delivery nationwide"
       ]
     }
   ]
