@@ -312,7 +312,7 @@ export function rankMatches(text: string, entries: KbEntry[] = KB): ScoredEntry[
       }
       const t = tagWords[0];
       if (words.includes(t)) score += 2;
-      else if (t.length >= 5 && words.some((w) => w.length >= 4 && withinOneEdit(w, t))) score += 1;
+      else if (t.length >= 4 && words.some((w) => w.length >= 3 && withinOneEdit(w, t))) score += 1;
     }
     if (score > 0) scored.push({ entry, score });
   }

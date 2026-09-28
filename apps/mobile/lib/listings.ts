@@ -66,6 +66,31 @@ function escapeRegExp(token: string) {
   return token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Typo tolerance: "toyta" still finds "toyota", "iphon" finds "iphone".
+// Allowed edits scale with word length so short words stay exact.
+function editDistanceAtMost(a: string, b: string, max: number): boolean {
+  if (Math.abs(a.length - b.length) > max) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let rowMin = i;
+    for (let j = 1; j <= b.length; j++) {
+      const v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      cur.push(v);
+      if (v < rowMin) rowMin = v;
+    }
+    if (rowMin > max) return false;
+    prev = cur;
+  }
+  return prev[b.length] <= max;
+}
+
+function fuzzyWordMatch(token: string, words: string[]): boolean {
+  if (token.length < 4) return false;
+  const max = token.length >= 7 ? 2 : 1;
+  return words.some((w) => w.length >= 3 && (w.startsWith(token) || editDistanceAtMost(token, w, max)));
+}
+
 // Mirrors www/js/app.js H.filterListings: city filter, price range, then a
 // token-AND relevance search across title/description/location/category,
 // falling back to the selected sort mode when there's no active query.
@@ -102,10 +127,16 @@ export function filterListings(list: Listing[], filters: ListingFilters): Listin
         .toLowerCase();
 
       let allTokensMatch = true;
+      let words: string[] | null = null;
       for (const token of tokens) {
         if (!haystack.includes(token)) {
-          allTokensMatch = false;
-          break;
+          words ??= haystack.split(/[^a-z0-9]+/).filter(Boolean);
+          if (!fuzzyWordMatch(token, words)) {
+            allTokensMatch = false;
+            break;
+          }
+          score += 2; // near-miss: counts, but below any exact hit
+          continue;
         }
         score += title.includes(token) ? 10 : 3;
         if (new RegExp(`\\b${escapeRegExp(token)}\\b`).test(title)) score += 5;

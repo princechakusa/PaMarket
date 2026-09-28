@@ -1,4 +1,4 @@
-import { normalizeZwPhone } from "./phone";
+import { normalizeZwPhone } from "./phone-format";
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export const PHONE_RE = /^(\+263|0)[0-9]{9}$/;

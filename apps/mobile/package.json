@@ -55,7 +55,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "postinstall": "node scripts/patch-worklets-cmake.cjs"
+    "postinstall": "node scripts/patch-worklets-cmake.cjs",
+    "test": "node --import ./tests/register.mjs --test tests/*.test.ts"
   },
   "private": true
 }

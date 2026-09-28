@@ -1,0 +1,30 @@
+name: Mobile unit tests
+
+# Pure-logic tests for apps/mobile (phone numbers, prices/ZiG, search,
+# scam signals, help bot). They use Node's built-in test runner and need no
+# npm install, so this job takes seconds.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'apps/mobile/lib/**'
+      - 'apps/mobile/tests/**'
+      - '.github/workflows/mobile-unit-tests.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'apps/mobile/lib/**'
+      - 'apps/mobile/tests/**'
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run unit tests
+        working-directory: apps/mobile
+        run: node --import ./tests/register.mjs --test tests/*.test.ts
