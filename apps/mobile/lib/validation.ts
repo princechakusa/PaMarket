@@ -1,3 +1,5 @@
+import { normalizeZwPhone } from "./phone";
+
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export const PHONE_RE = /^(\+263|0)[0-9]{9}$/;
 
@@ -6,7 +8,9 @@ export function isValidEmail(email: string) {
 }
 
 export function isValidPhone(phone: string) {
-  return PHONE_RE.test(phone.replace(/\s+/g, ""));
+  // Also accept a mobile number typed without its leading 0 ("77 123 4567"),
+  // which is what people type next to a +263 prefix.
+  return PHONE_RE.test(phone.replace(/\s+/g, "")) || normalizeZwPhone(phone) !== null;
 }
 
 export function isStrongEnoughPassword(password: string) {

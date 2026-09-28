@@ -618,6 +618,7 @@ function showSignUp(anim){
       <label class="fl" for="newPhone">Phone Number <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
       <input class="fi" id="newPhone" type="tel" placeholder="+263 77 123 4567" autocomplete="tel" onkeydown="if(event.key==='Enter')focusId('newPass')">
     </div>
+    <div class="fg"><label class="fl" for="newInvite">Invite Code <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label><input class="fi" id="newInvite" type="text" maxlength="12" autocapitalize="characters" placeholder="e.g. TAN7K2M" value="${esc(window.PMReferral?PMReferral.get():'')}"></div>
     <div class="fg">
       <label class="fl" for="newPass">Password</label>
       <div class="fi-wrap">
@@ -821,6 +822,7 @@ async function doSignUp(){
   const name=(document.getElementById('newName')?.value||'').trim();
   const email=(document.getElementById('newEmail')?.value||'').trim();
   const phone=(document.getElementById('newPhone')?.value||'').trim();
+  const invite=(document.getElementById('newInvite')?.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const pass=document.getElementById('newPass')?.value||'';
   const pass2=document.getElementById('newPass2')?.value||'';
   const consent=document.getElementById('ageConsent')?.checked;
@@ -848,7 +850,7 @@ async function doSignUp(){
   try{
     const res=await sbPost('/auth/v1/signup',{
       email,password:pass,
-      data:{full_name:name},
+      data:{full_name:name,...(invite?{referral_code:invite}:{})},
       options:{data:{full_name:name}},
       gotrue_meta_security:{captcha_token:captchaToken}
     });
@@ -1044,6 +1046,7 @@ async function doResetPassword(){
 })();
 </script>
 <script src="js/auth-phone.js" defer></script>
+<script src="js/referral-capture.js" defer></script>
 <script src="js/cookie-consent.js" defer></script>
 </body>
 </html>

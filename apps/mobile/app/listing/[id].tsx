@@ -28,6 +28,7 @@ import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { PhoneVerifiedChip } from "../../components/PhoneVerifiedChip";
+import { ListingShareSheet } from "../../components/listing/ListingShareSheet";
 import { useStoreProducts } from "../../lib/use-store-products";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { recordLead, type LeadType } from "../../lib/business-leads";
@@ -309,6 +310,7 @@ export default function ListingDetailScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const premiumOn = premiumListingsEnabled(useAppSettings());
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const [orderableShop, setOrderableShop] = useState<{ id: string; name: string } | null>(null);
@@ -536,14 +538,9 @@ export default function ListingDetailScreen() {
     }
   }
 
-  async function shareListing() {
+  function shareListing() {
     if (!listing) return;
-    const link = listingUrl(listing);
-    await Share.share({
-      message: `${listing.title} — ${formatPrice(listing)}\n${link}`,
-      url: link,
-      title: listing.title,
-    });
+    setShareOpen(true);
   }
 
   async function buyBoost(productId: string) {
@@ -1198,6 +1195,14 @@ export default function ListingDetailScreen() {
                 </View>
               </Card>
 
+              <Pressable style={styles.statusPromo} onPress={shareListing} accessibilityRole="button">
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.statusPromoTitle}>Promote free on WhatsApp Status</Text>
+                  <Text style={styles.statusPromoSub}>Share a ready-made picture of this ad with everyone in your contacts.</Text>
+                </View>
+                <ShareIcon />
+              </Pressable>
+
               {isFeatured(listing) ? (
                 <View>
                   <View style={styles.boostActiveRow}>
@@ -1339,6 +1344,8 @@ export default function ListingDetailScreen() {
           </View>
         )}
       </View>
+
+      <ListingShareSheet listing={listing} visible={shareOpen} onClose={() => setShareOpen(false)} isOwner={isOwner} />
 
       {/* ── Report action sheet ── */}
       <Modal
@@ -1762,6 +1769,17 @@ function buildStyles(color: ColorPalette) {
       lineHeight: 16,
     },
 
+    statusPromo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+      backgroundColor: "#128C7E",
+      borderRadius: radius.lg,
+      padding: space.lg,
+      marginTop: space.md,
+    },
+    statusPromoTitle: { ...font.bodyStrong, color: "#FFFFFF" },
+    statusPromoSub: { ...font.caption, color: "rgba(255,255,255,0.85)", marginTop: 2 },
     boostBanner: {
       flexDirection: "row",
       alignItems: "center",

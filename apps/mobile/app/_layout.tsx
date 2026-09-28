@@ -379,6 +379,7 @@ function RootNavigator() {
       <Stack.Screen name="business-subscription/[id]" options={{ headerShown: true, title: "Subscription" }} />
       <Stack.Screen name="verify" options={{ headerShown: true, title: "Verify Identity" }} />
       <Stack.Screen name="verify-phone" options={{ headerShown: true, title: "Verify Phone Number" }} />
+      <Stack.Screen name="invite" options={{ headerShown: true, title: "Invite Friends" }} />
       <Stack.Screen name="company-verify" options={{ headerShown: true, title: "Company Verification" }} />
     </Stack>
   );

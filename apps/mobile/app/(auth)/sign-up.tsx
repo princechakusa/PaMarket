@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
@@ -21,7 +21,8 @@ import { AppleIcon, GoogleIcon, SocialButton, SocialDivider } from "../../compon
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
 import { useLegalDocUpgrade } from "../../lib/content";
-import { isValidEmail, isValidPhone, isStrongEnoughPassword } from "../../lib/validation";
+import { isValidEmail, isStrongEnoughPassword } from "../../lib/validation";
+import { normalizeZwPhone } from "../../lib/phone";
 import { friendlyError } from "../../lib/safety";
 import { getAppSettings, useAppSettings } from "../../lib/app-settings";
 
@@ -39,9 +40,11 @@ export default function SignUpScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const appSettings = useAppSettings();
+  const params = useLocalSearchParams<{ ref?: string }>();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [inviteCode, setInviteCode] = useState(typeof params.ref === "string" ? params.ref.toUpperCase() : "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [consent, setConsent] = useState(false);
@@ -75,8 +78,11 @@ export default function SignUpScreen() {
       setError("Enter a valid email address.");
       return;
     }
-    if (phone.trim() && !isValidPhone(phone)) {
-      setError("Enter a valid Zimbabwean phone number.");
+    // The field shows a fixed +263 prefix, so people type "77 123 4567";
+    // normalizeZwPhone accepts that as well as 077…/+263… forms.
+    const phoneE164 = phone.trim() ? normalizeZwPhone(phone) : null;
+    if (phone.trim() && !phoneE164) {
+      setError("Enter a valid Zimbabwean mobile number, e.g. 77 123 4567.");
       return;
     }
     if (!isStrongEnoughPassword(password)) {
@@ -100,7 +106,9 @@ export default function SignUpScreen() {
       options: {
         data: {
           full_name: fullName.trim(),
-          phone: phone.trim() || null,
+          phone: phoneE164,
+          // Linked to the inviter server-side (profiles_link_signup_referral).
+          ...(inviteCode.trim() ? { referral_code: inviteCode.trim().toUpperCase() } : {}),
         },
       },
     });
@@ -244,6 +252,23 @@ export default function SignUpScreen() {
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
+            />
+          </View>
+
+          <View style={[styles.labelRow, styles.fieldSpacing]}>
+            <Text style={styles.fieldLabel}>Invite Code</Text>
+            <Text style={styles.hintText}>Optional · from a friend</Text>
+          </View>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. TAN7K2M"
+              placeholderTextColor={tones.textMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={12}
+              value={inviteCode}
+              onChangeText={(t) => setInviteCode(t.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
             />
           </View>
 

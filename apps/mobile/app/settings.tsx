@@ -1,5 +1,6 @@
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import Constants from "expo-constants";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
@@ -120,7 +121,7 @@ export default function SettingsScreen() {
       <SectionLabel styles={styles}>Legal</SectionLabel>
       <View style={styles.group}>
         <Row label="Legal Hub" onPress={() => router.push("/legal-hub")} styles={styles} chevronColor={tones.chevron} />
-        <Row label="About PaMarket" value="v1.29.0" onPress={() => router.push("/about")} styles={styles} chevronColor={tones.chevron} />
+        <Row label="About PaMarket" value={`v${Constants.expoConfig?.version ?? ""}`} onPress={() => router.push("/about")} styles={styles} chevronColor={tones.chevron} />
       </View>
 
       <Pressable style={styles.signOutButton} onPress={signOut}>

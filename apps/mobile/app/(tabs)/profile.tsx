@@ -551,6 +551,7 @@ export default function AccountScreen() {
             <Card padded={false} style={styles.menuGroup}>
               <MenuRow label="Saved & Favourites" badge={savedCount || undefined} onPress={() => router.push("/favourites")} color={color} styles={styles} />
               <MenuRow label="Saved Searches" onPress={() => router.push("/saved-searches")} color={color} styles={styles} />
+              <MenuRow label="Invite Friends, Get Free Boosts" onPress={() => router.push("/invite")} color={color} styles={styles} />
               <MenuRow label="My Rentals" last onPress={() => router.push("/rentals/my-bookings")} color={color} styles={styles} />
             </Card>
           </View>
