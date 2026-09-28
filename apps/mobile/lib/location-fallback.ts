@@ -1,4 +1,5 @@
-// Mirrors detail.html's resolveCoords/TOWN_COORDS/PROVINCE_COORDS exactly —
+// Mirrors detail.html's resolveCoords/TOWN_COORDS/PROVINCE_COORDS (plus a few
+// towns rental_locations needs) —
 // a listing with no captured lat/lng still shows a location on the website
 // (city center, then province center), so the mobile app must fall back the
 // same way instead of hiding the whole Location card. Keep these tables in
@@ -17,6 +18,11 @@ const TOWN_COORDS: Record<string, [number, number]> = {
   "mutare cbd": [-18.9707, 32.6709],
   mutare: [-18.9707, 32.6709],
   "bulawayo cbd": [-20.15, 28.5833],
+  // rental_locations uses plain "Bulawayo" / "Victoria Falls" under a
+  // non-standard "Matabeleland" province, so neither lookup matched them.
+  bulawayo: [-20.15, 28.5833],
+  "victoria falls": [-17.9243, 25.8572],
+  kwekwe: [-18.9281, 29.8149],
   bellevue: [-20.1667, 28.6167],
   marondera: [-18.1853, 31.5514],
   ruwa: [-17.8908, 31.2436],

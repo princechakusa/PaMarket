@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { createClient } from "@supabase/supabase-js";
 
@@ -131,7 +131,10 @@ export const AUTH_STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split(".")[
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: SecureStoreAdapter,
+    // expo-secure-store has no web implementation — every read/write above
+    // silently no-ops in a browser, so a page reload signed the user out.
+    // On web, leave storage unset and supabase-js uses localStorage.
+    storage: Platform.OS === "web" ? undefined : SecureStoreAdapter,
     storageKey: AUTH_STORAGE_KEY,
     autoRefreshToken: true,
     persistSession: true,
