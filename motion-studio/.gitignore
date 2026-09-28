@@ -3,5 +3,7 @@ node_modules/
 .claude/
 out/
 renders/
+frames/
+shots/
 *.mp4
 *.wav
