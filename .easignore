@@ -46,6 +46,14 @@ expo-env.d.ts
 keystore.properties
 
 # Local tooling / scratch
+# motion-studio/ = marketing video renders, voiceover and installed skills
+# (~600 MB); dist-site/ = website build output. Neither is part of the app.
+motion-studio/
+dist-site/
+.agents/
+.playwright-mcp/
+e2e-results/
+e2e-report/
 .claude/
 .vscode/
 supabase/.temp/
