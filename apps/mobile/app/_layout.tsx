@@ -24,6 +24,7 @@ import { ToastHost } from "../components/ui/Toast";
 import { AnnouncementModal } from "../components/AnnouncementModal";
 import { initTelemetry } from "../lib/telemetry";
 import { getAppSettings } from "../lib/app-settings";
+import { loadLanguage } from "../lib/i18n";
 import { initIAP, teardownIAP } from "../lib/iap";
 import { registerForPushNotifications, saveRotatedPushToken } from "../lib/push";
 import { navigateToNotifRoute, resolveNotifRoute } from "../lib/notifications";
@@ -42,6 +43,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 // Warm the admin operational switches (lib/app-settings.ts) so synchronous
 // readers like effectiveEntitlements() see the real values on first render.
 getAppSettings().catch(() => {});
+loadLanguage().catch(() => {});
 
 // Module import happens at process start, so this is the closest thing to a
 // real launch timestamp available from JS.

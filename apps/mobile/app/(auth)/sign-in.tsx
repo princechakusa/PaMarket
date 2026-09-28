@@ -19,9 +19,11 @@ import { checkAuthLock, recordAuthFailure, recordAuthSuccess } from "../../lib/a
 import { logClientError } from "../../lib/error-log";
 import { friendlyError } from "../../lib/safety";
 import { BrandWordmark } from "../../components/BrandLogo";
+import { ZimbabweFlag } from "../../components/ZimbabweFlag";
 import { PasswordField } from "../../components/PasswordField";
 import { CallIcon, GlassBackButton, MailIcon, LockIcon } from "../../components/ui";
 import { useAppSettings } from "../../lib/app-settings";
+import { useT } from "../../lib/i18n";
 import { AppleIcon, GoogleIcon, SocialButton, SocialDivider } from "../../components/SocialAuthButtons";
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
@@ -39,6 +41,7 @@ export default function SignInScreen() {
   const { message, redirectHome } = useLocalSearchParams<{ message?: string; redirectHome?: string }>();
   const { session, isLoading: sessionLoading } = useAuth();
   const appSettings = useAppSettings();
+  const tr = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -180,7 +183,7 @@ export default function SignInScreen() {
     <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
         <GlassBackButton onPress={handleBack} tone="dark" flat />
-        <Text style={styles.headerTitle}>Sign In</Text>
+        <Text style={styles.headerTitle}>{tr("auth.signIn")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -193,7 +196,9 @@ export default function SignInScreen() {
           <BrandWordmark size={26} />
           <View style={styles.tagline}>
             <Text style={styles.taglineText}>Zimbabwe&apos;s Marketplace</Text>
-            <Text style={styles.taglineFlag}> 🇿🇼</Text>
+            <View style={{ marginLeft: 6 }}>
+              <ZimbabweFlag width={18} />
+            </View>
           </View>
         </View>
 
@@ -207,12 +212,12 @@ export default function SignInScreen() {
         ) : null}
 
         <View style={styles.titleBlock}>
-          <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Sign in to buy, sell, and manage your account</Text>
+          <Text style={styles.title}>{tr("auth.welcomeBack")}</Text>
+          <Text style={styles.subtitle}>{tr("auth.signInSubtitle")}</Text>
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.fieldLabel}>Email Address</Text>
+          <Text style={styles.fieldLabel}>{tr("auth.email")}</Text>
           <View style={styles.inputRow}>
             <View style={styles.leadingIcon}>
               <MailIcon c={tones.textMuted} size={18} />
@@ -230,9 +235,9 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.passwordLabelRow}>
-            <Text style={styles.fieldLabel}>Password</Text>
+            <Text style={styles.fieldLabel}>{tr("auth.password")}</Text>
             <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
+              <Text style={styles.forgotText}>{tr("auth.forgotPassword")}</Text>
             </Pressable>
           </View>
           <PasswordField
@@ -249,11 +254,11 @@ export default function SignInScreen() {
             {isSubmitting ? (
               <ActivityIndicator color={tones.textOnBrand} />
             ) : (
-              <Text style={styles.buttonText}>Sign In  →</Text>
+              <Text style={styles.buttonText}>{tr("auth.signIn")}  →</Text>
             )}
           </Pressable>
 
-          <SocialDivider label="or continue with" />
+          <SocialDivider label={tr("auth.orContinueWith")} />
 
           <View style={styles.socialStack}>
             {Platform.OS === "ios" ? (
@@ -273,7 +278,7 @@ export default function SignInScreen() {
             />
             {appSettings.phoneAuthEnabled ? (
               <SocialButton
-                label="Continue with phone / WhatsApp"
+                label={tr("auth.continuePhone")}
                 icon={<CallIcon c={tones.brand} size={20} />}
                 onPress={() => router.push("/(auth)/phone")}
                 isLoading={false}
@@ -282,9 +287,9 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
+            <Text style={styles.footerText}>{tr("auth.noAccount")}</Text>
             <Link href="/(auth)/sign-up">
-              <Text style={styles.footerLink}>Sign Up</Text>
+              <Text style={styles.footerLink}>{tr("auth.signUp")}</Text>
             </Link>
           </View>
 

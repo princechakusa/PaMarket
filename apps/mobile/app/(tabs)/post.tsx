@@ -23,6 +23,7 @@ import { uploadImageUriToR2 } from "../../lib/uploadToR2";
 import { friendlyError } from "../../lib/safety";
 import { notifyPositiveAction } from "../../lib/store-review";
 import { useTaxonomy } from "../../lib/taxonomy";
+import { useT } from "../../lib/i18n";
 import { reverseGeocode, roundApproxCoord } from "../../lib/useCurrentLocation";
 import { formatPrice } from "../../lib/listings";
 import {
@@ -99,6 +100,7 @@ export default function PostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(buildStyles);
+  const tr = useT();
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
   const params = useLocalSearchParams<{
@@ -125,7 +127,7 @@ export default function PostScreen() {
   // yet), this is a tab root with nothing to go "back" to, so router.back()
   // there was a silent no-op; showing no button here matches how every
   // other tab root already behaves.
-  const headerTitleText = institutionContext && state.step === 2 ? "Set Price & Location" : "Post a Free Ad";
+  const headerTitleText = institutionContext && state.step === 2 ? "Set Price & Location" : tr("post.title");
   useIOSNativeHeader({
     backgroundColor: color.brand,
     tintColor: color.textOnBrand,
@@ -442,8 +444,8 @@ export default function PostScreen() {
       // Require listing approval, or a moderation flag) — say so honestly
       // instead of claiming it's live.
       const heldForReview = inserted?.status != null && inserted.status !== "active";
-      if (heldForReview) toast("Ad submitted. It will go live once our team has reviewed it.", 5000);
-      setSubmitStatus(heldForReview ? "Ad submitted for review." : "Ad posted successfully.");
+      if (heldForReview) toast(tr("post.heldForReview"), 5000);
+      setSubmitStatus(heldForReview ? tr("post.heldForReview") : tr("post.submitted"));
       notifyPositiveAction();
       // Reset the form now (this tab screen stays mounted in the background
       // when you navigate away via the bottom tabs, so a stale filled-in
@@ -625,7 +627,7 @@ export default function PostScreen() {
               </Pressable>
             </View>
 
-            <Text style={styles.fieldLabel}>Title</Text>
+            <Text style={styles.fieldLabel}>{tr("post.adTitle")}</Text>
             <TextInput
               style={styles.input}
               value={state.title}
@@ -635,7 +637,7 @@ export default function PostScreen() {
               maxLength={80}
             />
 
-            <Text style={styles.fieldLabel}>Description</Text>
+            <Text style={styles.fieldLabel}>{tr("post.description")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={state.description}
@@ -722,7 +724,7 @@ export default function PostScreen() {
             ) : null}
 
             <View style={styles.priceHeaderRow}>
-              <Text style={[styles.fieldLabel, { marginTop: 0, marginBottom: 0 }]}>Price</Text>
+              <Text style={[styles.fieldLabel, { marginTop: 0, marginBottom: 0 }]}>{tr("post.price")}</Text>
               {institutionContext ? <Text style={styles.priceHint}>Campus-Friendly</Text> : null}
             </View>
             <View style={[styles.currencyToggle, { marginTop: space.sm, alignSelf: "stretch" }]}>
@@ -920,14 +922,14 @@ export default function PostScreen() {
           <View style={styles.footerActions}>
             {state.step < 4 ? (
               <Button
-                label={state.step === 3 ? "Preview →" : "Continue →"}
+                label={state.step === 3 ? "Preview →" : `${tr("post.next")} →`}
                 onPress={goNext}
                 fullWidth={state.step === 1}
                 style={state.step > 1 ? styles.footerPrimary : undefined}
               />
             ) : (
               <Button
-                label="Post Ad →"
+                label={`${tr("post.submit")} →`}
                 variant="gold"
                 onPress={submit}
                 loading={isSubmitting}

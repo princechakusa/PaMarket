@@ -1,4 +1,5 @@
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useT } from "../lib/i18n";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs/types";
@@ -59,15 +60,16 @@ const ICONS: Record<string, (props: { color: string }) => React.ReactElement> = 
   profile: ProfileIcon,
 };
 
-const LABELS: Record<string, string> = {
-  index: "Home",
-  search: "Search",
-  messages: "Messages",
-  profile: "Account",
-};
+const LABEL_KEYS = {
+  index: "nav.home",
+  search: "nav.search",
+  messages: "nav.messages",
+  profile: "nav.account",
+} as const;
 
 export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
   const styles = useThemedStyles(buildStyles);
+  const tr = useT();
   const tones = useThemedStyles(buildTones);
   const { resolvedScheme } = useThemePreference();
   const { session } = useAuth();
@@ -89,7 +91,8 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
   function renderTab(route: Route) {
     const isFocused = state.index === state.routes.findIndex((r: Route) => r.key === route.key);
     const Icon = ICONS[route.name];
-    const label = LABELS[route.name] ?? route.name;
+    const labelKey = LABEL_KEYS[route.name as keyof typeof LABEL_KEYS];
+    const label = labelKey ? tr(labelKey) : route.name;
     const color = isFocused ? tones.active : tones.inactive;
 
     return (
@@ -135,7 +138,7 @@ export function BottomNav({ state, navigation, insets }: BottomTabBarProps) {
           </Svg>
         </Pressable>
         <Text style={styles.fabLabel} numberOfLines={1}>
-          Post
+          {tr("nav.post")}
         </Text>
       </View>
 

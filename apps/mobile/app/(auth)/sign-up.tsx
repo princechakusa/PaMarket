@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { signInWithApple, signInWithOAuthProvider } from "../../lib/oauth";
 import { BrandWordmark } from "../../components/BrandLogo";
+import { ZimbabweFlag } from "../../components/ZimbabweFlag";
 import { PasswordField } from "../../components/PasswordField";
 import { GlassBackButton, MailIcon, LockIcon, PersonIcon, CallIcon } from "../../components/ui";
 import { AppleIcon, GoogleIcon, SocialButton, SocialDivider } from "../../components/SocialAuthButtons";
@@ -25,6 +26,7 @@ import { isValidEmail, isStrongEnoughPassword } from "../../lib/validation";
 import { normalizeZwPhone } from "../../lib/phone";
 import { friendlyError } from "../../lib/safety";
 import { getAppSettings, useAppSettings } from "../../lib/app-settings";
+import { useT } from "../../lib/i18n";
 
 // Admin → General Settings → Pause new signups. The database also rejects
 // new accounts while paused (block_signup_when_paused trigger).
@@ -40,6 +42,7 @@ export default function SignUpScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const appSettings = useAppSettings();
+  const tr = useT();
   const params = useLocalSearchParams<{ ref?: string }>();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -166,7 +169,7 @@ export default function SignUpScreen() {
     <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
         <GlassBackButton onPress={handleBack} tone="dark" flat />
-        <Text style={styles.headerTitle}>Sign Up</Text>
+        <Text style={styles.headerTitle}>{tr("auth.signUp")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -179,13 +182,15 @@ export default function SignUpScreen() {
           <BrandWordmark size={26} />
           <View style={styles.tagline}>
             <Text style={styles.taglineText}>Zimbabwe&apos;s Marketplace</Text>
-            <Text style={styles.taglineFlag}> 🇿🇼</Text>
+            <View style={{ marginLeft: 6 }}>
+              <ZimbabweFlag width={18} />
+            </View>
           </View>
         </View>
 
         <View style={styles.titleBlock}>
-          <Text style={styles.title}>Create your account</Text>
-          <Text style={styles.subtitle}>Join PaMarket to start buying and selling safely</Text>
+          <Text style={styles.title}>{tr("auth.createAccount")}</Text>
+          <Text style={styles.subtitle}>{tr("auth.createAccountSubtitle")}</Text>
         </View>
 
         {appSettings.signupPaused ? (
@@ -214,7 +219,7 @@ export default function SignUpScreen() {
           </View>
 
           <View style={[styles.labelRow, styles.fieldSpacing]}>
-            <Text style={styles.fieldLabel}>Email Address</Text>
+            <Text style={styles.fieldLabel}>{tr("auth.email")}</Text>
             <Text style={styles.hintText}>For verification</Text>
           </View>
           <View style={styles.inputRow}>
@@ -273,7 +278,7 @@ export default function SignUpScreen() {
           </View>
 
           <View style={[styles.labelRow, styles.fieldSpacing]}>
-            <Text style={styles.fieldLabel}>Password</Text>
+            <Text style={styles.fieldLabel}>{tr("auth.password")}</Text>
             <Text style={styles.hintText}>Min. 8 characters</Text>
           </View>
           <PasswordField
@@ -324,11 +329,11 @@ export default function SignUpScreen() {
             {isSubmitting ? (
               <ActivityIndicator color={tones.textOnBrand} />
             ) : (
-              <Text style={styles.buttonText}>Create Account  →</Text>
+              <Text style={styles.buttonText}>{tr("auth.signUp")}  →</Text>
             )}
           </Pressable>
 
-          <SocialDivider label="or continue with" />
+          <SocialDivider label={tr("auth.orContinueWith")} />
 
           <View style={styles.socialStack}>
             {Platform.OS === "ios" ? (
@@ -337,7 +342,7 @@ export default function SignUpScreen() {
             <SocialButton label="Continue with Google" icon={<GoogleIcon />} onPress={handleGoogle} isLoading={isGoogleLoading} />
             {appSettings.phoneAuthEnabled ? (
               <SocialButton
-                label="Continue with phone / WhatsApp"
+                label={tr("auth.continuePhone")}
                 icon={<CallIcon c={tones.brand} size={20} />}
                 onPress={() => router.push("/(auth)/phone")}
               />
@@ -345,9 +350,9 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text style={styles.footerText}>{tr("auth.haveAccount")}</Text>
             <Link href="/(auth)/sign-in">
-              <Text style={styles.footerLink}>Sign In</Text>
+              <Text style={styles.footerLink}>{tr("auth.signIn")}</Text>
             </Link>
           </View>
         </View>

@@ -169,7 +169,7 @@ export function lastSeenLabel(iso: string | null | undefined): string {
 export function messagePreview(message: MessageRow | undefined): string {
   if (!message) return "";
   if (message.deleted) return "This message was deleted";
-  if (message.image) return "📷 Photo";
+  if (message.image) return "Photo";
   return displayText(message.text);
 }
 
@@ -203,7 +203,7 @@ function offerSummary(offer: OfferEnvelope["_offer"]): string {
   if (offer.k === "decline") return "Offer declined";
   const amount = Number(offer.price || 0).toLocaleString();
   const label = offer.k === "counter" ? "Counter-offer" : "Offer";
-  return `💰 ${label}: $${amount}`;
+  return `${label}: $${amount}`;
 }
 
 // Messages can be JSON-encoded envelopes (reply quotes, offer cards — see

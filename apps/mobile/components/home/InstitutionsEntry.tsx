@@ -82,7 +82,6 @@ export function InstitutionsEntry({ onPress }: { onPress: () => void }) {
   return (
     <View style={styles.card}>
       <View style={styles.badge}>
-        <Text style={styles.badgeEmoji}>🎓</Text>
         <Text style={styles.badgeText}>CAMPUS HUB</Text>
       </View>
 
@@ -92,7 +91,7 @@ export function InstitutionsEntry({ onPress }: { onPress: () => void }) {
         </Text>
       </Animated.View>
       <Text style={styles.subtitle} numberOfLines={1}>
-        📖 Textbooks &amp; student study essentials
+        Textbooks &amp; student study essentials
       </Text>
 
       <View style={styles.actionsRow}>

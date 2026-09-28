@@ -1,5 +1,6 @@
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import Svg, { Line, Rect } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { clearAllPushTokens } from "../lib/push";
 import { clearIAPUserContext } from "../lib/iap";
@@ -14,6 +15,7 @@ import { useThemedStyles } from "../lib/theme-provider";
 // "sign out everywhere" action via Supabase's global sign-out scope.
 export default function ActiveSessionsScreen() {
   const styles = useThemedStyles(buildStyles);
+  const tones = useThemedStyles((c: ColorPalette) => ({ brand: c.brand }));
   const router = useRouter();
   const deviceLabel = Platform.OS === "ios" ? "iPhone / iPad" : "Android Device";
 
@@ -35,7 +37,10 @@ export default function ActiveSessionsScreen() {
         <Text style={styles.boxTitle}>Logged-in Devices</Text>
         <View style={styles.row}>
           <View style={styles.iconWrap}>
-            <Text style={styles.iconText}>📱</Text>
+            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={tones.brand} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <Rect x={6} y={2} width={12} height={20} rx={2.5} />
+              <Line x1={11} y1={18} x2={13} y2={18} />
+            </Svg>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.deviceName}>{deviceLabel}</Text>

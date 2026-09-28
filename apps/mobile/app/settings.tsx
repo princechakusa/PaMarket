@@ -5,6 +5,7 @@ import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { useAppSettings } from "../lib/app-settings";
+import { LANGUAGES, useLanguage, useT } from "../lib/i18n";
 import { clearPushToken } from "../lib/push";
 import { clearIAPUserContext } from "../lib/iap";
 import type { ColorPalette } from "../lib/theme";
@@ -54,6 +55,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const appSettings = useAppSettings();
+  const lang = useLanguage();
+  const tr = useT();
 
   function signOut() {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -103,8 +106,8 @@ export default function SettingsScreen() {
         />
         <Row label="Active Sessions" onPress={() => router.push("/active-sessions")} styles={styles} chevronColor={tones.chevron} />
         <Row
-          label="Language"
-          value="English"
+          label={tr("settings.language")}
+          value={LANGUAGES.find((l) => l.code === lang)?.name ?? "English"}
           onPress={() => router.push("/language-settings")}
           styles={styles}
           chevronColor={tones.chevron}

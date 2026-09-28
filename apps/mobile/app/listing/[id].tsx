@@ -29,6 +29,7 @@ import { purchaseProduct } from "../../lib/iap";
 import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
 import { PhoneVerifiedChip } from "../../components/PhoneVerifiedChip";
 import { ListingShareSheet } from "../../components/listing/ListingShareSheet";
+import { useT } from "../../lib/i18n";
 import { useStoreProducts } from "../../lib/use-store-products";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { recordLead, type LeadType } from "../../lib/business-leads";
@@ -312,6 +313,7 @@ export default function ListingDetailScreen() {
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const appSettings = useAppSettings();
+  const tr = useT();
   const premiumOn = premiumListingsEnabled(appSettings);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const [orderableShop, setOrderableShop] = useState<{ id: string; name: string } | null>(null);
@@ -942,7 +944,7 @@ export default function ListingDetailScreen() {
           <Text style={styles.price}>{formatPrice(listing)}</Text>
           {approxOtherCurrency(listing, appSettings.fxRate) ? (
             <Text style={styles.priceApprox}>
-              {approxOtherCurrency(listing, appSettings.fxRate)} at today&apos;s rate
+              {approxOtherCurrency(listing, appSettings.fxRate)} {tr("listing.atTodaysRate")}
             </Text>
           ) : null}
           <Text style={styles.title}>{listing.title}</Text>
@@ -1173,11 +1175,8 @@ export default function ListingDetailScreen() {
           {/* Safety tip (buyers) */}
           {!isOwner ? (
             <View style={styles.safetyTip}>
-              <Text style={styles.safetyTipTitle}>Trade safely</Text>
-              <Text style={styles.safetyTipText}>
-                Meet in a public place, inspect before paying, and remember:
-                PaMarket never handles payments.
-              </Text>
+              <Text style={styles.safetyTipTitle}>{tr("listing.tradeSafely")}</Text>
+              <Text style={styles.safetyTipText}>{tr("listing.tradeSafelyBody")}</Text>
             </View>
           ) : null}
 
@@ -1203,8 +1202,8 @@ export default function ListingDetailScreen() {
 
               <Pressable style={styles.statusPromo} onPress={shareListing} accessibilityRole="button">
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.statusPromoTitle}>Promote free on WhatsApp Status</Text>
-                  <Text style={styles.statusPromoSub}>Share a ready-made picture of this ad with everyone in your contacts.</Text>
+                  <Text style={styles.statusPromoTitle}>{tr("listing.promoteStatus")}</Text>
+                  <Text style={styles.statusPromoSub}>{tr("listing.promoteStatusSub")}</Text>
                 </View>
                 <ShareIcon />
               </Pressable>
@@ -1286,7 +1285,7 @@ export default function ListingDetailScreen() {
         {similar.length ? (
           <View style={styles.similarSection}>
             <SectionHeader
-              title="Similar listings"
+              title={tr("listing.similar")}
               subtitle={`More in ${categoryName}`}
             />
             <FlatList
@@ -1324,7 +1323,7 @@ export default function ListingDetailScreen() {
         ) : null}
         {isOwner ? (
           <Button
-            label="Edit listing"
+            label={tr("listing.editListing")}
             variant="primary"
             onPress={() => router.push("/my-listings")}
           />
@@ -1345,7 +1344,7 @@ export default function ListingDetailScreen() {
             ) : null}
             <Pressable style={styles.actionChat} onPress={messageSeller}>
               <MessageIcon />
-              <Text style={styles.actionChatText}>Chat with seller</Text>
+              <Text style={styles.actionChatText}>{tr("listing.chatWithSeller")}</Text>
             </Pressable>
           </View>
         )}
