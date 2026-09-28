@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import type { Listing } from "../lib/listings";
-import { formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
+import { approxOtherCurrency, formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
+import { useAppSettings } from "../lib/app-settings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { SmartImage } from "./ui/SmartImage";
@@ -23,6 +24,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
 
 export function ListingRow({ listing, onPress, saved, onToggleSave }: ListingRowProps) {
   const styles = useThemedStyles(buildStyles);
+  const approx = approxOtherCurrency(listing, useAppSettings().fxRate);
   const photo = listing.photos?.[0];
   const featured = isFeatured(listing);
   const fresh = !featured && isNew(listing);
@@ -47,6 +49,7 @@ export function ListingRow({ listing, onPress, saved, onToggleSave }: ListingRow
           {listing.title}
         </Text>
         <Text style={styles.price}>{formatPrice(listing)}</Text>
+        {approx ? <Text style={styles.approx}>{approx}</Text> : null}
         <View style={styles.metaRow}>
           <Text style={styles.location} numberOfLines={1}>
             {listingLocation(listing)}
@@ -88,6 +91,7 @@ function buildStyles(color: ColorPalette) {
     body: { flex: 1, paddingVertical: space.md, paddingHorizontal: space.lg, justifyContent: "center", gap: 3 },
     title: { ...font.body, color: color.text, fontWeight: "600" },
     price: { ...font.price, color: color.brand },
+    approx: { ...font.caption, color: color.textMuted, marginTop: 1 },
     metaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
     location: { ...font.caption, color: color.textMuted },
     views: { ...font.caption, color: color.textMuted },

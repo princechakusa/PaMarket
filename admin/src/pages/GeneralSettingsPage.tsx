@@ -38,6 +38,8 @@ export function GeneralSettingsPage() {
     setSaving(true);
     const patch: Partial<OperationalSettings> = {};
     (Object.keys(draft) as (keyof OperationalSettings)[]).forEach((key) => { if (draft[key] !== current[key]) (patch as Record<string, unknown>)[key] = draft[key]; });
+    // A hand-typed rate is stamped so the app/website can show its age.
+    if (patch.fxRate !== undefined) { patch.fxRateUpdatedAt = new Date().toISOString(); patch.fxRateSource = 'admin'; }
     const result = await updateOperationalSettings(patch);
     setSaving(false);
     if (result.error) { setMessage(`Save failed: ${result.error.message}`); return; }
@@ -64,8 +66,10 @@ export function GeneralSettingsPage() {
         <label className="policy-switch"><span>Require listing approval<small>New listings wait in Listings > Pending until a moderator approves them.</small></span><input type="checkbox" role="switch" checked={draft.requireListingApproval} onChange={(e) => update('requireListingApproval', e.target.checked)} /></label>
         <label className="policy-switch"><span>Require phone verification<small>Users must verify a phone number before posting. Only enforced while phone sign-in is on.</small></span><input type="checkbox" role="switch" checked={draft.requirePhoneVerification} onChange={(e) => update('requirePhoneVerification', e.target.checked)} /></label>
         <label className="policy-switch"><span>Phone / WhatsApp sign-in<small>Turn on only after enabling the Phone provider (Twilio SMS/WhatsApp) in Supabase Auth. Shows phone sign-in and phone verification in the app.</small></span><input type="checkbox" role="switch" checked={draft.phoneAuthEnabled} onChange={(e) => update('phoneAuthEnabled', e.target.checked)} /></label>
+        <label className="policy-field">USD → ZiG exchange rate<select value={draft.fxRateMode} onChange={(e) => update('fxRateMode', e.target.value === 'manual' ? 'manual' : 'auto')}><option value="auto">Automatic (market feed, refreshed every 6 hours)</option><option value="manual">Manual (I set the rate)</option></select></label>
+        {draft.fxRateMode === 'manual' && <label className="policy-field">Manual rate (ZiG per 1 USD)<input type="number" min="0.01" step="0.01" value={draft.fxRate ?? ''} onChange={(e) => { const n = Number(e.target.value); update('fxRate', e.target.value === '' || !(n > 0) ? null : n); }} /></label>}
       </div>
-      <footer><span>{draft.fxRate != null ? `FX reference: ${draft.fxRate} (updated ${draft.fxRateUpdatedAt ?? '—'})` : 'No FX rate on record.'}</span>
+      <footer><span>{draft.fxRate != null ? `Current rate: 1 USD = ${draft.fxRate} ZiG (${draft.fxRateSource === 'admin' ? 'set by admin' : 'market feed'}, updated ${draft.fxRateUpdatedAt ? new Date(draft.fxRateUpdatedAt).toLocaleString() : '—'}). Shown as "≈ ZiG" prices in the app and website.` : 'No FX rate on record yet.'}</span>
         <button disabled={!dirty || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save changes'}</button>
         <button disabled={!dirty || saving} onClick={() => setDraft(current)}>Discard</button>
       </footer>

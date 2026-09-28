@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     verification_nudges_sent: 0,
     messages_noreply_reminded: 0,
     business_subscriptions_expired: 0,
+    fx_rate_updated: false,
     errors: [] as string[],
   }
 
@@ -188,6 +189,27 @@ Deno.serve(async (req) => {
     const expiredSubs = await db.rpc('expire_overdue_business_subscriptions')
     if (expiredSubs.error) summary.errors.push('Business subscription expiry: ' + expiredSubs.error.message)
     else summary.business_subscriptions_expired = Number(expiredSubs.data?.expired || 0)
+
+    // USD→ZiG market rate for the "≈ ZiG" prices in the app and website.
+    // Refreshed at most every 6 hours; set_fx_rate() does nothing while
+    // admin has switched Admin → General Settings to a manual rate.
+    try {
+      const { data: settingsRow } = await db.from('app_settings').select('settings').eq('id', 1).maybeSingle()
+      const settings = (settingsRow?.settings ?? {}) as Record<string, unknown>
+      const updatedAt = typeof settings.fxRateUpdatedAt === 'string' ? Date.parse(settings.fxRateUpdatedAt) : 0
+      const due = (settings.fxRateMode ?? 'auto') === 'auto' && (!updatedAt || Date.now() - updatedAt > 6 * 3600_000)
+      if (due) {
+        const feed = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(8000) })
+        const body = await feed.json().catch(() => ({}))
+        const rate = Number(body?.rates?.ZWG ?? body?.rates?.ZWL)
+        if (!feed.ok || !(rate > 0)) throw new Error('feed returned no ZWG rate')
+        const set = await db.rpc('set_fx_rate', { p_rate: rate, p_source: 'open.er-api.com' })
+        if (set.error) throw new Error(set.error.message)
+        summary.fx_rate_updated = set.data === true
+      }
+    } catch (error) {
+      summary.errors.push('FX rate: ' + (error instanceof Error ? error.message : String(error)))
+    }
 
     const ok = summary.errors.length === 0
     await db.from('job_runs').insert({

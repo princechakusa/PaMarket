@@ -2,7 +2,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { SmartImage } from "./ui/SmartImage";
 import type { Listing } from "../lib/listings";
-import { formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
+import { approxOtherCurrency, formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
+import { useAppSettings } from "../lib/app-settings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
@@ -39,6 +40,7 @@ function PinIcon() {
 
 export function ListingCard({ listing, onPress, width, saved, onToggleSave, verified, compact }: ListingCardProps) {
   const styles = useThemedStyles(buildStyles);
+  const approx = approxOtherCurrency(listing, useAppSettings().fxRate);
   const photo = listing.photos?.[0];
   const featured = isFeatured(listing);
   const fresh = !featured && isNew(listing);
@@ -72,6 +74,11 @@ export function ListingCard({ listing, onPress, width, saved, onToggleSave, veri
         <Text style={[styles.price, compact && styles.priceCompact]} numberOfLines={1}>
           {formatPrice(listing)}
         </Text>
+        {!compact && approx ? (
+          <Text style={styles.approx} numberOfLines={1}>
+            {approx}
+          </Text>
+        ) : null}
         <Text style={[styles.title, compact && styles.titleCompact]} numberOfLines={compact ? 1 : 2}>
           {listing.title}
         </Text>
@@ -147,6 +154,7 @@ function buildStyles(color: ColorPalette) {
     body: { padding: space.md, gap: 3 },
     bodyCompact: { padding: 7, gap: 2 },
     price: { ...font.price, color: color.brand },
+    approx: { ...font.caption, color: color.textMuted, marginTop: 1 },
     // Gold instead of brand blue — specific to the compact "Latest in X"
     // home rails only; the default (non-compact) price color elsewhere is
     // untouched.

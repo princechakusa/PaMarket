@@ -17,10 +17,10 @@ import { formatPrice, type Listing } from "../lib/listings";
 import { friendlyError, listingStatus } from "../lib/safety";
 import type { ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
-import { ErrorState } from "../components/ui";
+import { ErrorState, toast } from "../components/ui";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,views,business_id,created_at,updated_at";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at";
 
 function timeAgo(dateString: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -34,6 +34,20 @@ function timeAgo(dateString: string): string {
   return `${Math.floor(days / 30)}mo ago`;
 }
 
+function daysLeft(expiresAt: string | null | undefined): number | null {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (Number.isNaN(ms)) return null;
+  return Math.max(0, Math.ceil(ms / 86_400_000));
+}
+
+function expiryLabel(days: number): string {
+  if (days === 0) return "Expires today";
+  if (days === 1) return "Expires tomorrow";
+  if (days <= 30) return `Expires in ${days} days`;
+  return `Live for ${Math.round(days / 30)} more months`;
+}
+
 export default function MyListingsScreen() {
   const styles = useThemedStyles(buildStyles);
   const tones = useThemedStyles(buildTones);
@@ -42,6 +56,7 @@ export default function MyListingsScreen() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [renewingId, setRenewingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -80,6 +95,19 @@ export default function MyListingsScreen() {
         },
       },
     ]);
+  }
+
+  // Server-side renew_listing: a fresh 4-month window from today.
+  async function renew(listing: Listing) {
+    setRenewingId(listing.id);
+    const { error } = await supabase.rpc("renew_listing", { listing_id: listing.id });
+    setRenewingId(null);
+    if (error) {
+      Alert.alert("Couldn't renew listing", friendlyError(error).message);
+      return;
+    }
+    toast("Renewed. Your ad stays live for another 4 months.");
+    void load();
   }
 
   async function setStatus(listingId: string, status: "active" | "paused" | "sold") {
@@ -157,6 +185,11 @@ export default function MyListingsScreen() {
                   {item.views ?? 0} views · {timeAgo(item.created_at)}
                 </Text>
               </View>
+              {item.status === "active" && daysLeft(item.expires_at) != null ? (
+                <Text style={[styles.metaText, (daysLeft(item.expires_at) ?? 99) <= 7 && styles.expiringText]}>
+                  {expiryLabel(daysLeft(item.expires_at)!)}
+                </Text>
+              ) : null}
             </View>
           </Pressable>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actions}>
@@ -180,6 +213,11 @@ export default function MyListingsScreen() {
             >
               <Text style={styles.actionText}>Edit</Text>
             </Pressable>
+            {item.status === "active" && (daysLeft(item.expires_at) ?? 99) <= 14 ? (
+              <Pressable style={[styles.actionButton, styles.actionButtonPrimary]} onPress={() => void renew(item)} disabled={renewingId === item.id}>
+                <Text style={[styles.actionText, styles.actionTextPrimary]}>{renewingId === item.id ? "Renewing…" : "Renew"}</Text>
+              </Pressable>
+            ) : null}
             {item.status === "active" ? (
               <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "paused")}>
                 <Text style={styles.actionText}>Pause</Text>
@@ -195,7 +233,7 @@ export default function MyListingsScreen() {
                 <Text style={styles.actionText}>Mark sold</Text>
               </Pressable>
             ) : null}
-            {item.status === "sold" || item.status === "deleted" ? (
+            {item.status === "sold" || item.status === "deleted" || item.status === "expired" ? (
               <Pressable style={styles.actionButton} onPress={() => setStatus(item.id, "active")}>
                 <Text style={styles.actionText}>Relist</Text>
               </Pressable>
@@ -327,6 +365,16 @@ function buildStyles(color: ColorPalette) {
     },
     actionTextDanger: {
       color: color.danger,
+    },
+    actionButtonPrimary: {
+      backgroundColor: color.brand,
+    },
+    actionTextPrimary: {
+      color: color.textOnBrand,
+    },
+    expiringText: {
+      color: color.warning,
+      fontWeight: "700",
     },
   });
 }

@@ -138,6 +138,14 @@ const STATUS: Record<string, ListingStatusInfo> = {
     message: "This ad was flagged and is being checked. It may be hidden from buyers until it is cleared.",
     publiclyVisible: false,
   },
+  expired: {
+    label: "Expired",
+    color: "#475569",
+    bg: "#F1F5F9",
+    border: "#E2E8F0",
+    message: "This ad reached the end of its 4 months and is hidden from buyers. Tap Relist to put it back up for free.",
+    publiclyVisible: false,
+  },
   paused: {
     label: "Paused",
     color: "#475569",

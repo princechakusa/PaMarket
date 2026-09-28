@@ -79,6 +79,7 @@ export async function listSentryIssues(accessToken: string): Promise<QueryResult
 
 export type OperationalSettings = {
   signupPaused: boolean; freeOnly: boolean; fxRate: number | null; fxRateUpdatedAt: string | null;
+  fxRateMode: 'auto' | 'manual'; fxRateSource: string | null;
   showSponsoredAds: boolean; allowImageUploads: boolean; autoApproveVerified: boolean;
   enablePremiumListings: boolean; requireListingApproval: boolean; requirePhoneVerification: boolean; phoneAuthEnabled: boolean;
 };
@@ -92,6 +93,7 @@ export async function getOperationalSettings(): Promise<QueryResult<OperationalS
     data: {
       signupPaused: Boolean(raw.signupPaused), freeOnly: Boolean(raw.freeOnly),
       fxRate: typeof raw.fxRate === 'number' ? raw.fxRate : null, fxRateUpdatedAt: typeof raw.fxRateUpdatedAt === 'string' ? raw.fxRateUpdatedAt : null,
+      fxRateMode: raw.fxRateMode === 'manual' ? 'manual' : 'auto', fxRateSource: typeof raw.fxRateSource === 'string' ? raw.fxRateSource : null,
       showSponsoredAds: raw.showSponsoredAds !== false, allowImageUploads: raw.allowImageUploads !== false,
       autoApproveVerified: Boolean(raw.autoApproveVerified), enablePremiumListings: raw.enablePremiumListings !== false,
       requireListingApproval: Boolean(raw.requireListingApproval), requirePhoneVerification: Boolean(raw.requirePhoneVerification),

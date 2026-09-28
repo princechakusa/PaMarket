@@ -140,9 +140,36 @@ export function isNew(listing: Listing): boolean {
   return createdTime > 0 && Date.now() - createdTime < 3 * 24 * 60 * 60 * 1000;
 }
 
+// Listings store currency as "USD" or "ZiG"; show "$1,200" / "ZiG 1,200"
+// (previously rendered the raw code, e.g. "USD1,200").
+export function formatMoney(amount: number, currency: string | null | undefined): string {
+  const rounded = Math.round(amount * 100) / 100;
+  const text = rounded.toLocaleString("en-US", { maximumFractionDigits: rounded >= 100 ? 0 : 2 });
+  const cur = (currency ?? "USD").toUpperCase();
+  if (cur === "USD" || cur === "$" || cur === "US$") return `$${text}`;
+  if (cur === "ZIG" || cur === "ZWG") return `ZiG ${text}`;
+  return `${currency} ${text}`;
+}
+
 export function formatPrice(listing: Pick<Listing, "price" | "currency">): string {
   if (listing.price == null) return "Free";
-  return `${listing.currency ?? "$"}${Number(listing.price).toLocaleString()}`;
+  return formatMoney(Number(listing.price), listing.currency);
+}
+
+// "≈ ZiG 32,000" under a USD price (or "≈ $45" under a ZiG price), using the
+// admin-managed rate (app_settings.fxRate, refreshed automatically by the
+// automation runner). Null when there's no price or no rate yet.
+export function approxOtherCurrency(
+  listing: Pick<Listing, "price" | "currency">,
+  fxRate: number | null | undefined
+): string | null {
+  if (listing.price == null || !fxRate || fxRate <= 0) return null;
+  const price = Number(listing.price);
+  if (!(price > 0)) return null;
+  const cur = (listing.currency ?? "USD").toUpperCase();
+  if (cur === "USD" || cur === "$") return `≈ ${formatMoney(Math.round(price * fxRate), "ZiG")}`;
+  if (cur === "ZIG" || cur === "ZWG") return `≈ ${formatMoney(price / fxRate, "USD")}`;
+  return null;
 }
 
 export function listingLocation(listing: Pick<Listing, "suburb" | "city" | "province">): string {

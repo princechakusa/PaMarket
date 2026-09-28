@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
         (l.status==='active'&&PREMIUM_ON?'<button class="b-boost" data-boost="'+esc(l.id)+'" data-cat="'+esc(l.category||'')+'">'+(feat?'Extend':'Boost')+'</button>':'')+
         '<a href="detail?id='+esc(l.id)+'" target="_blank" rel="noopener">View</a>'+
         '<a href="post-ad?edit='+esc(l.id)+'">Edit</a>'+
-        (l.status==='active'?'<button data-status="paused" data-id="'+esc(l.id)+'">Pause</button>':((l.status==='paused'||l.status==='sold')?'<button data-status="active" data-id="'+esc(l.id)+'">Reactivate</button>':''))+
+        (l.status==='active'?'<button data-status="paused" data-id="'+esc(l.id)+'">Pause</button>':((l.status==='paused'||l.status==='sold'||l.status==='expired')?'<button data-status="active" data-id="'+esc(l.id)+'">Reactivate</button>':''))+
         (l.status==='active'?'<button data-sold="'+esc(l.id)+'">Mark sold</button>':'')+
         '<button data-delete="'+esc(l.id)+'" style="color:var(--red)">Delete</button>'+
         '</div>';

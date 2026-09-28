@@ -19,7 +19,7 @@
   'use strict';
 
   var ENDPOINT = 'https://open.er-api.com/v6/latest/USD';
-  var CACHE_KEY = 'pm_fx_zig_rate_v1';
+  var CACHE_KEY = 'pm_fx_zig_rate_v2';
   var CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
   var FALLBACK_RATE = 27.42; // illustrative only, used solely if the live feed is unreachable
 
@@ -40,7 +40,33 @@
     } catch (e) { /* private mode / quota -- fine, just skip caching */ }
   }
 
+  // Primary source: the same admin-managed rate the mobile app uses
+  // (app_settings.fxRate, refreshed from the market feed by the automation
+  // runner, or set by hand in Admin → General Settings). Falls back to the
+  // feed directly if the settings row can't be read.
+  function fetchSettingsRate() {
+    var client = global.PMSupabaseClient && global.PMSupabaseClient.get && global.PMSupabaseClient.get();
+    var url = client ? client.url : global.SUPABASE_URL;
+    var key = client ? client.publishableKey : global.SUPABASE_ANON_KEY;
+    if (!url || !key) return Promise.reject(new Error('no supabase config'));
+    return global.fetch(url + '/rest/v1/app_settings?id=eq.1&select=settings', {
+      headers: { apikey: key, Authorization: 'Bearer ' + key },
+    }).then(function (res) {
+      if (!res.ok) throw new Error('app_settings HTTP ' + res.status);
+      return res.json();
+    }).then(function (rows) {
+      var s = rows && rows[0] && rows[0].settings;
+      var rate = s && Number(s.fxRate);
+      if (!(rate > 0)) throw new Error('no fxRate in settings');
+      return { rate: rate, isLive: true, updatedAt: s.fxRateUpdatedAt || null };
+    });
+  }
+
   function fetchLiveRate() {
+    return fetchSettingsRate().catch(fetchFeedRate);
+  }
+
+  function fetchFeedRate() {
     return global.fetch(ENDPOINT).then(function (res) {
       if (!res.ok) throw new Error('FX feed HTTP ' + res.status);
       return res.json();

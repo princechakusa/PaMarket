@@ -22,7 +22,7 @@ import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
-import { formatPrice, isFeatured, publicListingExpiryFilter, type Listing } from "../../lib/listings";
+import { approxOtherCurrency, formatPrice, isFeatured, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { listingUrl } from "../../lib/site-urls";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
@@ -311,7 +311,8 @@ export default function ListingDetailScreen() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [boostPickerOpen, setBoostPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const premiumOn = premiumListingsEnabled(useAppSettings());
+  const appSettings = useAppSettings();
+  const premiumOn = premiumListingsEnabled(appSettings);
   const [purchasingBoost, setPurchasingBoost] = useState<string | null>(null);
   const [orderableShop, setOrderableShop] = useState<{ id: string; name: string } | null>(null);
   const [institution, setInstitution] = useState<Pick<Institution, "id" | "type" | "official_name" | "short_name" | "logo_url"> | null>(null);
@@ -939,6 +940,11 @@ export default function ListingDetailScreen() {
           </View>
 
           <Text style={styles.price}>{formatPrice(listing)}</Text>
+          {approxOtherCurrency(listing, appSettings.fxRate) ? (
+            <Text style={styles.priceApprox}>
+              {approxOtherCurrency(listing, appSettings.fxRate)} at today&apos;s rate
+            </Text>
+          ) : null}
           <Text style={styles.title}>{listing.title}</Text>
 
           {/* Meta row: location · posted · views */}
@@ -1549,6 +1555,7 @@ function buildStyles(color: ColorPalette) {
     featuredChipText: { ...font.micro, color: "#fff" },
 
     price: { ...font.h1, color: color.brand },
+    priceApprox: { ...font.sub, color: color.textSub, marginTop: 2 },
     title: { ...font.h3, color: color.text, marginTop: space.xs },
 
     metaRow: {
