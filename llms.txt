@@ -1,0 +1,54 @@
+# PaMarket
+
+> PaMarket is Zimbabwe's free online marketplace and classifieds app. Anyone in Zimbabwe can buy and sell, rent vehicles and property, find jobs, hire staff, and discover verified local businesses, with no listing fees and no commission on sales. It covers all ten provinces, on Android, iPhone and the web.
+
+PaMarket (pamarketzw.com) is built for Zimbabwe. Prices are shown in US dollars with an estimate in ZiG at the current rate. Buyers and sellers contact each other directly through in-app chat, calls or WhatsApp; PaMarket does not hold or process payments between them.
+
+## What you can do on PaMarket
+
+- Buy and sell vehicles, property, rooms, electronics, furniture, fashion, agriculture, pets, baby and kids items, and services.
+- Post ads for free. Ads stay live for 4 months, can be renewed for free, and expired ads can be relisted for free.
+- Make, counter and accept offers inside the chat.
+- See a price guide ("Similar ads are priced $X–$Y") based on real asking prices of similar ads from the last 6 months.
+- Search on a map; every listing shows its approximate location on a map.
+- Find jobs, apply, track each application (Applied, Viewed, Shortlisted, Interview, Offer, Hired) and download a CV as a PDF.
+- Employers can post jobs after verification and manage applicants, including interview invitations.
+- Rent vehicles from rental companies across Zimbabwe, with daily and weekly rates and date availability.
+- Open a verified business storefront, and browse businesses and campus (institution) listings.
+- Invite friends to earn free 7-day ad boosts.
+
+## PaMarket Help (AI assistant)
+
+The PaMarket app includes PaMarket Help, a free AI support assistant for signed-in users. It answers questions about buying, selling, jobs, rentals and accounts in English, chiShona and isiNdebele, using only PaMarket's own help content, and hands over to the human support team when it is not sure. In the app: Account → Ask PaMarket Help, or Help & Support → Ask a question.
+
+## Safety
+
+- Chat warns users when someone asks for a deposit or EcoCash before viewing, an OTP or PIN, courier or customs fees, or to move off PaMarket.
+- Listing pages suggest safe public meeting spots in the seller's city.
+- Seller profiles can show a "Usually replies within…" badge and a blue verified badge.
+- Ads that reuse another account's photos are held for review.
+
+## Key pages
+
+- [Home](https://pamarketzw.com/): Browse categories and featured shops
+- [Browse listings](https://pamarketzw.com/browse): Search all ads by category, location and price
+- [Jobs](https://pamarketzw.com/jobs): Job listings across Zimbabwe
+- [Vehicle rentals](https://pamarketzw.com/rentals): Rental cars from local companies
+- [Businesses](https://pamarketzw.com/businesses): Verified local shops and storefronts
+- [Institutions](https://pamarketzw.com/institutions): Universities, schools and campus listings
+- [Help Center](https://pamarketzw.com/help): Answers to common questions
+- [Safety tips](https://pamarketzw.com/safety): How to buy and sell safely
+- [Download the app](https://pamarketzw.com/download): Android and iPhone apps
+- [About PaMarket](https://pamarketzw.com/about)
+
+## Policies
+
+- [Terms of Service](https://pamarketzw.com/terms)
+- [Privacy Policy](https://pamarketzw.com/privacy)
+- [Community Guidelines](https://pamarketzw.com/community-guidelines)
+- [Refund Policy](https://pamarketzw.com/refund-policy)
+
+## Contact
+
+- Email: support@pamarketzw.com
+- Web: https://pamarketzw.com/contact

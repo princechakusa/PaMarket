@@ -17,6 +17,7 @@ android/app/src/main/assets/capacitor.plugins.json
 .mcp.json
 *.txt
 !robots.txt
+!llms.txt
 backup.sql
 package-lock - Copy.json
 package - Copy.json
