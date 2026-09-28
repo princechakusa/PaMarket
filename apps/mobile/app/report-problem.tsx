@@ -407,15 +407,15 @@ export default function ReportProblemScreen() {
                   <Text style={styles.contactHeading}>CONTACT OUR TEAM DIRECTLY</Text>
                   <Pressable style={[styles.contactCard, styles.contactCardGreen]} onPress={() => openExternalUrl(WA, "WhatsApp isn't installed on this device.")}>
                     <Text style={styles.contactCardTitleGreen}>WhatsApp</Text>
-                    <Text style={styles.contactCardSubtitle}>+971 589 772 645 · Fastest reply</Text>
+                    <Text style={styles.contactCardSubtitle}>+{contact.whatsapp} · Fastest reply</Text>
                   </Pressable>
                   <Pressable style={[styles.contactCard, styles.contactCardBlue]} onPress={() => openExternalUrl(ML, "No mail app is set up on this device.")}>
                     <Text style={styles.contactCardTitleBlue}>Email</Text>
-                    <Text style={styles.contactCardSubtitle}>support@pamarketzw.com</Text>
+                    <Text style={styles.contactCardSubtitle}>{contact.email}</Text>
                   </Pressable>
                   <Pressable style={[styles.contactCard, styles.contactCardGreen]} onPress={() => openExternalUrl(PH, "This device can't make calls.")}>
                     <Text style={styles.contactCardTitleGreen}>Call / WhatsApp</Text>
-                    <Text style={styles.contactCardSubtitle}>+971 589 772 645</Text>
+                    <Text style={styles.contactCardSubtitle}>+{contact.whatsapp}</Text>
                   </Pressable>
                 </View>
               </View>

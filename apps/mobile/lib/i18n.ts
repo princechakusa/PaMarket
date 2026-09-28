@@ -11,6 +11,7 @@
 // every user touches. Shona/Ndebele copy should be reviewed by native
 // speakers before being promoted in marketing.
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { loadCache, saveCache } from "./offlineCache";
 import { supabase } from "./supabase";
 
@@ -195,8 +196,31 @@ export function getLanguage(): Lang {
   return current;
 }
 
+// expo-file-system (offlineCache) has no web implementation, so the web build
+// keeps the choice in localStorage instead.
+function readWebLanguage(): Lang | null {
+  try {
+    return Platform.OS === "web" && typeof localStorage !== "undefined" ? (localStorage.getItem(CACHE_KEY) as Lang | null) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeWebLanguage(lang: Lang) {
+  try {
+    if (Platform.OS === "web" && typeof localStorage !== "undefined") localStorage.setItem(CACHE_KEY, lang);
+  } catch {
+    // private mode etc. — the in-memory choice still applies
+  }
+}
+
+// Web: read synchronously at import so the first render is already in the
+// chosen language.
+const initialWeb = readWebLanguage();
+if (initialWeb && initialWeb in DICTS) current = initialWeb;
+
 export async function loadLanguage(): Promise<Lang> {
-  const saved = await loadCache<Lang>(CACHE_KEY).catch(() => null);
+  const saved = Platform.OS === "web" ? readWebLanguage() : await loadCache<Lang>(CACHE_KEY).catch(() => null);
   if (saved && saved in DICTS && saved !== current) {
     current = saved;
     listeners.forEach((fn) => fn(current));
@@ -207,7 +231,8 @@ export async function loadLanguage(): Promise<Lang> {
 export async function setLanguage(lang: Lang, userId?: string | null): Promise<void> {
   current = lang;
   listeners.forEach((fn) => fn(lang));
-  await saveCache(CACHE_KEY, lang).catch(() => {});
+  writeWebLanguage(lang);
+  if (Platform.OS !== "web") await saveCache(CACHE_KEY, lang).catch(() => {});
   // Mirrors the choice to the profile so notifications/emails can follow it
   // later; failure is harmless (the device setting already applied).
   if (userId) {

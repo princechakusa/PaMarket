@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { color, font, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
@@ -59,13 +59,19 @@ export function LocationMap({ latitude, longitude, listingId, locationLabel }: L
 
   return (
     <View style={styles.wrap}>
-      <WebView
-        source={{ html }}
-        style={styles.webview}
-        originWhitelist={["*"]}
-        scrollEnabled={false}
-        androidLayerType="hardware"
-      />
+      {Platform.OS === "web" ? (
+        // react-native-webview has no web implementation; the same HTML
+        // renders in an iframe there.
+        <iframe title="Listing location" srcDoc={html} style={{ border: 0, width: "100%", height: "100%" }} />
+      ) : (
+        <WebView
+          source={{ html }}
+          style={styles.webview}
+          originWhitelist={["*"]}
+          scrollEnabled={false}
+          androidLayerType="hardware"
+        />
+      )}
       {locationLabel ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{locationLabel}</Text>
