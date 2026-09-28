@@ -86,8 +86,10 @@ where u.id = p.id
   and p.phone_verified is distinct from true;
 
 -- ── 2. Public badge ─────────────────────────────────────────────────────────
--- Same projection as 20260822122615 with phone_verified appended (CREATE OR
--- REPLACE VIEW can only add columns at the end).
+-- Production's current (deliberately narrowed) projection, with only
+-- phone_verified appended. CREATE OR REPLACE VIEW can only add columns at the
+-- end; widening back to role/privacy/language/status would also re-expose
+-- columns to anon that a later hardening pass removed.
 create or replace view public.profiles_public
 with (security_barrier = true)
 as
@@ -96,15 +98,10 @@ select
   name,
   avatar,
   verified,
-  role,
-  created_at,
-  updated_at,
   bio,
   city,
+  created_at,
   last_seen,
-  privacy,
-  language,
-  status,
   null::text as phone,
   phone_verified
 from public.profiles;
