@@ -21,6 +21,16 @@ const ERROR_MAP: Record<string, { message: string; blocked?: boolean }> = {
   rate_limited: {
     message: "You've reached today's posting limit. Please try again later — this keeps PaMarket free of spam.",
   },
+  // Admin → General Settings → Require phone verification (enforced by the
+  // listings_require_phone trigger). Callers route to /verify-phone.
+  phone_verification_required: {
+    message: "Please verify your phone number before posting. It only takes a minute and helps keep PaMarket safe.",
+    blocked: false,
+  },
+  signup_paused: {
+    message: "New sign-ups are paused for a short while. Existing members can still sign in. Please try again later.",
+    blocked: false,
+  },
   company_verification_required: {
     message: "Employer verification is required before you can post a job. Complete verification to continue.",
   },

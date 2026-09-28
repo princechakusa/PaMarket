@@ -80,7 +80,7 @@ export async function listSentryIssues(accessToken: string): Promise<QueryResult
 export type OperationalSettings = {
   signupPaused: boolean; freeOnly: boolean; fxRate: number | null; fxRateUpdatedAt: string | null;
   showSponsoredAds: boolean; allowImageUploads: boolean; autoApproveVerified: boolean;
-  enablePremiumListings: boolean; requireListingApproval: boolean; requirePhoneVerification: boolean;
+  enablePremiumListings: boolean; requireListingApproval: boolean; requirePhoneVerification: boolean; phoneAuthEnabled: boolean;
 };
 export async function getOperationalSettings(): Promise<QueryResult<OperationalSettings>> {
   const client = getSupabaseClient();
@@ -95,6 +95,7 @@ export async function getOperationalSettings(): Promise<QueryResult<OperationalS
       showSponsoredAds: raw.showSponsoredAds !== false, allowImageUploads: raw.allowImageUploads !== false,
       autoApproveVerified: Boolean(raw.autoApproveVerified), enablePremiumListings: raw.enablePremiumListings !== false,
       requireListingApproval: Boolean(raw.requireListingApproval), requirePhoneVerification: Boolean(raw.requirePhoneVerification),
+      phoneAuthEnabled: Boolean(raw.phoneAuthEnabled),
     },
     error: null,
   };

@@ -27,6 +27,7 @@ import { listingUrl } from "../../lib/site-urls";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
 import { purchaseProduct } from "../../lib/iap";
 import { premiumListingsEnabled, useAppSettings } from "../../lib/app-settings";
+import { PhoneVerifiedChip } from "../../components/PhoneVerifiedChip";
 import { useStoreProducts } from "../../lib/use-store-products";
 import { StoreProductOption } from "../../components/StoreProductOption";
 import { recordLead, type LeadType } from "../../lib/business-leads";
@@ -1137,6 +1138,7 @@ export default function ListingDetailScreen() {
                   </Text>
                   {seller?.verified ? <VerifiedBadge compact /> : null}
                 </View>
+                <PhoneVerifiedChip userId={listing.seller_id} />
                 {memberSince(sellerCreatedAt) ? (
                   <Text style={styles.sellerMeta}>
                     Member since {memberSince(sellerCreatedAt)}

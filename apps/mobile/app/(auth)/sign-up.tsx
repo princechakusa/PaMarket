@@ -310,6 +310,13 @@ export default function SignUpScreen() {
               <SocialButton label="Continue with Apple" icon={<AppleIcon />} onPress={handleApple} isLoading={isAppleLoading} dark />
             ) : null}
             <SocialButton label="Continue with Google" icon={<GoogleIcon />} onPress={handleGoogle} isLoading={isGoogleLoading} />
+            {appSettings.phoneAuthEnabled ? (
+              <SocialButton
+                label="Continue with phone / WhatsApp"
+                icon={<CallIcon c={tones.brand} size={20} />}
+                onPress={() => router.push("/(auth)/phone")}
+              />
+            ) : null}
           </View>
 
           <View style={styles.footer}>
@@ -327,7 +334,7 @@ export default function SignUpScreen() {
 }
 
 function buildTones(color: ColorPalette) {
-  return { textOnBrand: color.textOnBrand, textMuted: color.textMuted };
+  return { textOnBrand: color.textOnBrand, textMuted: color.textMuted, brand: color.brand };
 }
 
 function buildStyles(color: ColorPalette) {

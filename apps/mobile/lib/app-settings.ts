@@ -20,6 +20,9 @@ export type AppSettings = {
   requireListingApproval: boolean;
   autoApproveVerified: boolean;
   requirePhoneVerification: boolean;
+  // Phone / WhatsApp OTP sign-in. Off until an SMS/WhatsApp provider is
+  // configured in Supabase Auth, so the option never appears half-working.
+  phoneAuthEnabled: boolean;
   fxRate: number | null;
   fxRateUpdatedAt: string | null;
 };
@@ -33,6 +36,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   requireListingApproval: false,
   autoApproveVerified: false,
   requirePhoneVerification: false,
+  phoneAuthEnabled: false,
   fxRate: null,
   fxRateUpdatedAt: null,
 };
@@ -61,6 +65,7 @@ export function parseAppSettings(raw: Record<string, unknown> | null | undefined
     requireListingApproval: bool(r, "requireListingApproval", DEFAULT_APP_SETTINGS.requireListingApproval),
     autoApproveVerified: bool(r, "autoApproveVerified", DEFAULT_APP_SETTINGS.autoApproveVerified),
     requirePhoneVerification: bool(r, "requirePhoneVerification", DEFAULT_APP_SETTINGS.requirePhoneVerification),
+    phoneAuthEnabled: bool(r, "phoneAuthEnabled", DEFAULT_APP_SETTINGS.phoneAuthEnabled),
     fxRate: fx,
     fxRateUpdatedAt: typeof r.fxRateUpdatedAt === "string" ? r.fxRateUpdatedAt : null,
   };

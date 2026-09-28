@@ -474,8 +474,14 @@ export default function PostScreen() {
       InteractionManager.runAfterInteractions(() => setIsSubmitting(false));
       return;
     } catch (e) {
-      setError(friendlyError(e).message);
+      const friendly = friendlyError(e);
+      setError(friendly.message);
       setSubmitStatus(null);
+      // Admin → General Settings → Require phone verification: take the
+      // seller straight to the fix; the filled-in form stays put.
+      if (friendly.code === "phone_verification_required") {
+        router.push({ pathname: "/verify-phone", params: { returnTo: "post" } });
+      }
     }
     setIsSubmitting(false);
   }

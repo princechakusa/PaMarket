@@ -20,7 +20,8 @@ import { logClientError } from "../../lib/error-log";
 import { friendlyError } from "../../lib/safety";
 import { BrandWordmark } from "../../components/BrandLogo";
 import { PasswordField } from "../../components/PasswordField";
-import { GlassBackButton, MailIcon, LockIcon } from "../../components/ui";
+import { CallIcon, GlassBackButton, MailIcon, LockIcon } from "../../components/ui";
+import { useAppSettings } from "../../lib/app-settings";
 import { AppleIcon, GoogleIcon, SocialButton, SocialDivider } from "../../components/SocialAuthButtons";
 import { LegalDocSheet } from "../../components/LegalDocSheet";
 import { TERMS, PRIVACY, type LegalDoc } from "../../lib/legal";
@@ -37,6 +38,7 @@ export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const { message, redirectHome } = useLocalSearchParams<{ message?: string; redirectHome?: string }>();
   const { session, isLoading: sessionLoading } = useAuth();
+  const appSettings = useAppSettings();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -269,6 +271,14 @@ export default function SignInScreen() {
               onPress={handleGoogleSignIn}
               isLoading={isGoogleLoading}
             />
+            {appSettings.phoneAuthEnabled ? (
+              <SocialButton
+                label="Continue with phone / WhatsApp"
+                icon={<CallIcon c={tones.brand} size={20} />}
+                onPress={() => router.push("/(auth)/phone")}
+                isLoading={false}
+              />
+            ) : null}
           </View>
 
           <View style={styles.footer}>

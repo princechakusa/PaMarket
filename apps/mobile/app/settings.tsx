@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import Svg, { Polyline } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
+import { useAppSettings } from "../lib/app-settings";
 import { clearPushToken } from "../lib/push";
 import { clearIAPUserContext } from "../lib/iap";
 import type { ColorPalette } from "../lib/theme";
@@ -51,6 +52,7 @@ export default function SettingsScreen() {
   const tones = useThemedStyles(buildTones);
   const router = useRouter();
   const { session } = useAuth();
+  const appSettings = useAppSettings();
 
   function signOut() {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -88,6 +90,9 @@ export default function SettingsScreen() {
       <SectionLabel styles={styles}>Account &amp; Privacy</SectionLabel>
       <View style={styles.group}>
         <Row label="Privacy Settings" onPress={() => router.push("/privacy-settings")} styles={styles} chevronColor={tones.chevron} />
+        {appSettings.phoneAuthEnabled ? (
+          <Row label="Verify Phone Number" onPress={() => router.push("/verify-phone")} styles={styles} chevronColor={tones.chevron} />
+        ) : null}
         <Row label="Change Password" onPress={() => router.push("/change-password")} styles={styles} chevronColor={tones.chevron} />
         <Row
           label="Two-Factor Authentication"
