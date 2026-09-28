@@ -1,0 +1,7 @@
+node_modules/
+.agents/
+.claude/
+out/
+renders/
+*.mp4
+*.wav
