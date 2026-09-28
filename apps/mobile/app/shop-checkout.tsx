@@ -4,7 +4,8 @@
 // shows. This screen only sends listing ids, quantities, the customer's
 // own contact/fulfillment details, and one idempotency key.
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView } from "../lib/keyboard";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
@@ -122,7 +123,8 @@ export default function ShopCheckoutScreen() {
   if (!lines.length || hasUnavailable) return null;
 
   return (
-    <KeyboardAvoidingView key={keyboardAvoidingKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={keyboardAvoidingKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.field}>
           <FieldLabel text="Your name" required />

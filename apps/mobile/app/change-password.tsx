@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../lib/keyboard";
 import { useRouter } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { toast } from "../components/ui/Toast";
@@ -75,7 +76,7 @@ export default function ChangePasswordScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <View style={styles.infoBanner}>
         <Text style={styles.infoBannerText}>
           Password must be at least 8 characters and include uppercase, lowercase, a number, and a symbol.
@@ -109,7 +110,7 @@ export default function ChangePasswordScreen() {
       <Pressable style={styles.cancelButton} onPress={() => router.back()}>
         <Text style={styles.cancelButtonText}>Cancel</Text>
       </Pressable>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

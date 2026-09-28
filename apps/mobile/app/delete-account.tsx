@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../lib/keyboard";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
@@ -134,7 +134,8 @@ export default function DeleteAccountScreen() {
     <KeyboardAvoidingView
       key={kavResetKey}
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior="padding"
+      automaticOffset
     >
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}

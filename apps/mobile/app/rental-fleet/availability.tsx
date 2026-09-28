@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import { useLocalSearchParams } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../../components/ui/Toast";
@@ -108,7 +109,7 @@ export default function RentalAvailabilityScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       {canWrite ? (
         <>
           <Text style={styles.sectionLabel}>Block Dates</Text>
@@ -173,7 +174,7 @@ export default function RentalAvailabilityScreen() {
       ) : (
         <EmptyState title="No blocked dates" subtitle="Vehicle is available." />
       )}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

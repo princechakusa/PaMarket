@@ -4,6 +4,7 @@
 // any of your own active listings from this screen.
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../lib/keyboard";
 import { useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { useAuth } from "../lib/auth";
@@ -170,7 +171,7 @@ export default function InviteScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={styles.scroll}>
       <View style={styles.hero}>
         <Text style={styles.heroTitle}>Invite friends, get free boosts</Text>
         <Text style={styles.heroSub}>
@@ -243,7 +244,7 @@ export default function InviteScreen() {
       <Text style={styles.footnote}>
         Up to 10 rewards every 30 days. Rewards are only earned when an invited friend posts a real ad.
       </Text>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

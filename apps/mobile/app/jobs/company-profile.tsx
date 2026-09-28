@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -88,7 +89,7 @@ export default function CompanyProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: space.lg, paddingBottom: 48 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: space.lg, paddingBottom: 48 }}>
       <Card>
         <Text style={styles.label}>Company name</Text>
         <TextInput style={styles.input} value={companyName} onChangeText={setCompanyName} placeholder="Your company" placeholderTextColor={color.textMuted} />
@@ -113,7 +114,7 @@ export default function CompanyProfileScreen() {
         <TextInput style={styles.input} value={companyWebsite} onChangeText={setCompanyWebsite} placeholder="https://…" placeholderTextColor={color.textMuted} autoCapitalize="none" />
       </Card>
       <Button label={isSaving ? "Saving…" : "Save company profile"} variant="gold" size="lg" loading={isSaving} onPress={save} style={{ marginTop: space.lg }} />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

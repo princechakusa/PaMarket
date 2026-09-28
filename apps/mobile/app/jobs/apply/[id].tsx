@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../../lib/keyboard";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
@@ -231,7 +232,7 @@ export default function ApplyJobScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
         <View style={styles.jobCard}>
           <Text style={styles.jobTitle} numberOfLines={1}>
             {job.title}
@@ -324,7 +325,7 @@ export default function ApplyJobScreen() {
             />
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {!alreadyApplied && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>

@@ -4,6 +4,7 @@ import { SmartImage } from "./ui/SmartImage";
 import type { Listing } from "../lib/listings";
 import { approxOtherCurrency, formatPrice, listingThumb, isFeatured, isNew, listingLocation } from "../lib/listings";
 import { useAppSettings } from "../lib/app-settings";
+import { primeListing } from "../lib/listing-cache";
 import { color, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 
@@ -42,6 +43,8 @@ export function ListingCard({ listing, onPress, width, saved, onToggleSave, veri
   const styles = useThemedStyles(buildStyles);
   const approx = approxOtherCurrency(listing, useAppSettings().fxRate);
   const photo = listingThumb(listing);
+  // Lets the listing page open instantly from this card (lib/listing-cache).
+  primeListing(listing);
   const featured = isFeatured(listing);
   const fresh = !featured && isNew(listing);
 

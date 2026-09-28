@@ -2,13 +2,7 @@ import { Platform } from "react-native";
 import * as Crypto from "expo-crypto";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
-import {
-  getMessaging,
-  getToken,
-  hasPermission,
-  registerDeviceForRemoteMessages,
-  AuthorizationStatus,
-} from "@react-native-firebase/messaging";
+import { loadFirebaseMessaging } from "./native-optional";
 import { supabase } from "./supabase";
 
 // PaMarket's backend push pipeline (supabase/functions/send-push,
@@ -67,6 +61,10 @@ async function getFirebaseMessagingToken(): Promise<string | null> {
   // is deprecated and logs a console warning on every call; these free
   // functions taking the Messaging instance explicitly are the replacement,
   // functionally identical for everything used here.
+  // Not available in Expo Go (see lib/native-optional.ts) — no push there.
+  const fb = loadFirebaseMessaging();
+  if (!fb) return null;
+  const { getMessaging, getToken, hasPermission, registerDeviceForRemoteMessages, AuthorizationStatus } = fb;
   const instance = getMessaging();
   if (Platform.OS === "ios") {
     // expo-notifications owns the user-facing prompt. RN Firebase only

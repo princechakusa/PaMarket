@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "../lib/keyboard";
 import { useFocusEffect, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
@@ -422,7 +423,7 @@ export default function BusinessOnboardingScreen() {
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
         {step === "details" ? (
           <>
             <Text style={styles.intro}>Tell buyers who you are. You can refine everything later.</Text>
@@ -542,7 +543,7 @@ export default function BusinessOnboardingScreen() {
             </View>
           </>
         ) : null}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

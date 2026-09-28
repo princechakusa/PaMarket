@@ -18,7 +18,7 @@ import {
   type Product,
   type ProductSubscription,
   type Purchase,
-} from "expo-iap";
+} from "./expo-iap-safe";
 import { supabase } from "./supabase";
 import {
   activeConsumableSkus,

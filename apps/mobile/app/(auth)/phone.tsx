@@ -2,7 +2,8 @@
 // when Admin → General Settings → Phone / WhatsApp sign-in is on (it needs an
 // SMS/WhatsApp provider configured in Supabase Auth first).
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassBackButton } from "../../components/ui";
@@ -39,7 +40,8 @@ export default function PhoneSignInScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding"
+      automaticOffset>
       <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
         <GlassBackButton onPress={handleBack} tone="dark" flat />
         <Text style={styles.headerTitle}>Continue with phone</Text>

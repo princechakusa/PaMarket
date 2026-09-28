@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "../lib/keyboard";
 import QRCode from "react-native-qrcode-svg";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
@@ -116,7 +117,7 @@ export default function TwoFactorSetupScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       {enabled ? (
         <>
           <View style={[styles.box, styles.activeBox]}>
@@ -195,7 +196,7 @@ export default function TwoFactorSetupScreen() {
           </View>
         </>
       )}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

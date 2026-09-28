@@ -22,6 +22,7 @@ import Svg, { Circle, Path, Polyline } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
 import { CATEGORIES } from "../../lib/constants";
+import { getCachedListing, primeListing } from "../../lib/listing-cache";
 import { approxOtherCurrency, formatPrice, isFeatured, publicListingExpiryFilter, type Listing } from "../../lib/listings";
 import { listingUrl } from "../../lib/site-urls";
 import { BOOST_PRODUCTS } from "../../lib/billing-products";
@@ -301,12 +302,14 @@ export default function ListingDetailScreen() {
   const { resolvedScheme } = useThemePreference();
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
 
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<Listing | null>(() => getCachedListing(id));
   const [seller, setSeller] = useState<PublicProfile | null>(null);
   const [sellerCreatedAt, setSellerCreatedAt] = useState<string | null>(null);
   const [ratingSummary, setRatingSummary] = useState({ count: 0, average: 0 });
   const [similar, setSimilar] = useState<Listing[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Opening from a feed card starts from its cached copy (no skeleton);
+  // the full record still refreshes in the background.
+  const [isLoading, setIsLoading] = useState(() => !getCachedListing(id));
   const [error, setError] = useState<string | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
@@ -372,6 +375,11 @@ export default function ListingDetailScreen() {
     }
     const found = listingData as Listing;
     setListing(found);
+    primeListing(found);
+    // Show the ad now; seller, ratings, similar ads, shop and institution
+    // fill in as they arrive instead of holding the skeleton for all of
+    // them (up to four round trips on a slow mobile network).
+    setIsLoading(false);
     notifyListingViewed();
 
     const sellerId = found.seller_id;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -176,7 +177,7 @@ export default function RentalCompanyProfileScreen() {
   const isActive = status === "active";
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.coverWrap}>
         {coverUrl ? <Image source={{ uri: coverUrl }} style={styles.coverImage} /> : <View style={styles.coverPlaceholder} />}
         <Pressable style={styles.coverBtn} onPress={() => uploadImage("cover")} disabled={isUploadingCover}>
@@ -272,7 +273,7 @@ export default function RentalCompanyProfileScreen() {
           {isSaving ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Save Changes</Text>}
         </Pressable>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

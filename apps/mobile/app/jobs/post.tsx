@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -579,7 +580,7 @@ export default function PostJobScreen() {
   if (!verified) {
     return (
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.gateContent}>
+        <KeyboardAwareScrollView contentContainerStyle={styles.gateContent}>
           <Card style={styles.gateCard}>
             <View style={styles.gateIcon}>
               <ShieldIcon />
@@ -622,7 +623,7 @@ export default function PostJobScreen() {
               />
             )}
           </Card>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
     );
   }

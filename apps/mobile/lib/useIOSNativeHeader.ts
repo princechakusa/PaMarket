@@ -77,6 +77,11 @@ export function useIOSNativeHeader(options: NativeHeaderOptions) {
   useLayoutEffect(() => {
     if (Platform.OS !== "ios" && !optionsRef.current.androidNative) return;
     navigation.setOptions({
+      // Always switch the header on. Relying on each route's own entry in
+      // app/_layout.tsx left screens that were never registered there
+      // (jobs/alerts, jobs/company-profile, rental bookings…) with NO
+      // header at all, so their content started under the status bar.
+      headerShown: true,
       headerTransparent: !!optionsRef.current.transparent,
       ...(optionsRef.current.transparent
         ? {}

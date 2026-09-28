@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../lib/auth";
@@ -180,7 +180,8 @@ export default function SignInScreen() {
   const showBanner = !!message && !bannerDismissed;
 
   return (
-    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
         <GlassBackButton onPress={handleBack} tone="dark" flat />
         <Text style={styles.headerTitle}>{tr("auth.signIn")}</Text>

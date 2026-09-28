@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { openExternalUrl } from "../../lib/open-url";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -55,7 +56,7 @@ export default function RentalCompanySetupScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       <View style={styles.introBox}>
         <Text style={styles.introText}>
           Connect your business to the PaMarket rental marketplace. Customers can browse your fleet and contact you
@@ -110,7 +111,7 @@ export default function RentalCompanySetupScreen() {
       <Pressable style={[styles.primaryBtn, isSubmitting && styles.disabled]} onPress={submit} disabled={isSubmitting}>
         {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Submit for Approval</Text>}
       </Pressable>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

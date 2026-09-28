@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
@@ -8,6 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../../../lib/auth";
@@ -231,7 +231,8 @@ export default function EditListingScreen() {
   const categoryName = categories.find((c) => c.id === state.category)?.name ?? "Other";
 
   return (
-    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Card style={styles.card}>
           <View style={styles.categoryBar}>

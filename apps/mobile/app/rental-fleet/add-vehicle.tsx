@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -221,7 +222,7 @@ export default function RentalAddVehicleScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Photos</Text>
         <Text style={styles.helperText}>Add clear real photos now. The first photo becomes the cover image.</Text>
@@ -394,7 +395,7 @@ export default function RentalAddVehicleScreen() {
       <Pressable style={[styles.primaryBtn, isSubmitting && styles.disabled]} onPress={submit} disabled={isSubmitting}>
         {isSubmitting ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Create Vehicle</Text>}
       </Pressable>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

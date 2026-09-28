@@ -27,7 +27,7 @@ import { purchaseProduct, restoreAllPurchases } from "../../lib/iap";
 import { RECRUITER_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
 import { useStoreProducts } from "../../lib/use-store-products";
 import { PRIVACY_URL, TERMS_URL } from "../../lib/legal";
-import { deepLinkToSubscriptions } from "expo-iap";
+import { deepLinkToSubscriptions } from "../../lib/expo-iap-safe";
 
 const PLAN_ORDER = ["free", "recruiter"];
 const RECRUITER_PRODUCT_IDS = Object.keys(RECRUITER_SUBSCRIPTION_PRODUCTS);

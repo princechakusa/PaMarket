@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -254,7 +255,7 @@ export default function EditJobScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100 }} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100 }} keyboardShouldPersistTaps="handled">
         <View style={styles.logoRow}>
           <Pressable style={styles.logoWrap} onPress={pickCompanyLogo} disabled={isUploadingLogo}>
             {isUploadingLogo ? (
@@ -373,7 +374,7 @@ export default function EditJobScreen() {
         <Pressable style={[styles.submitButton, isSaving && { opacity: 0.6 }]} onPress={save} disabled={isSaving}>
           <Text style={styles.submitButtonText}>{isSaving ? "Saving…" : "Save Changes"}</Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from "../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
@@ -129,7 +130,7 @@ export default function CompanyVerifyScreen() {
 
   if (pending) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+      <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
         <View style={styles.pendingHero}>
           <Text style={styles.pendingTitle}>Under Review</Text>
           <Text style={styles.pendingSub}>Your documents were submitted. Our team reviews within 2 business days.</Text>
@@ -137,7 +138,7 @@ export default function CompanyVerifyScreen() {
         <Pressable style={styles.cancelButton} onPress={cancelPending}>
           <Text style={styles.cancelButtonText}>Cancel Request</Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     );
   }
 

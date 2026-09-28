@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../lib/auth";
@@ -211,7 +212,7 @@ export default function RentalEditVehicleScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
       <Text style={styles.sectionLabel}>Photos</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
         {photos.map((p) => (
@@ -292,7 +293,7 @@ export default function RentalEditVehicleScreen() {
           {isSaving ? <ActivityIndicator color={tones.textOnBrand} /> : <Text style={styles.primaryBtnText}>Save Changes</Text>}
         </Pressable>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

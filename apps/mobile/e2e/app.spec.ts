@@ -127,6 +127,16 @@ test("invite screen asks guests to sign in", async ({ page }) => {
   await expect(page.getByText("Sign in to invite friends")).toBeVisible();
 });
 
+test("screens that used to start under the status bar now have a header", async ({ page }) => {
+  for (const [path, title] of [
+    ["/jobs/alerts", "Job Alerts"],
+    ["/jobs/company-profile", "Company Profile"],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  }
+});
+
 test("settings shows the real app version", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toBeVisible();

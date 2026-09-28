@@ -3,15 +3,11 @@ import { AppState, Platform } from "react-native";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
-import {
-  getInitialNotification,
-  getMessaging,
-  onNotificationOpenedApp,
-  onTokenRefresh,
-} from "@react-native-firebase/messaging";
+import { loadFirebaseMessaging } from "../lib/native-optional";
 import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { KeyboardProvider } from "../lib/keyboard";
 import { AuthProvider, useAuth } from "../lib/auth";
 import { CartProvider } from "../lib/cart-context";
 import { installGlobalErrorHandlers, logClientError } from "../lib/error-log";
@@ -131,11 +127,13 @@ function usePushNotifications() {
   useEffect(() => {
     // React Native Firebase has no web app in the Expo web runtime. Calling
     // getMessaging() there throws before the requested route can render.
-    if (Platform.OS === "web") return;
+    // Also absent in Expo Go (lib/native-optional.ts returns null there).
+    const fb = loadFirebaseMessaging();
+    if (!fb) return;
     // Modular API (RN Firebase v22+) — messaging().onTokenRefresh(...) is
     // the deprecated namespaced form; onTokenRefresh(instance, listener) is
     // its direct, functionally identical replacement.
-    const unsubscribe = onTokenRefresh(getMessaging(), (token: string) => {
+    const unsubscribe = fb.onTokenRefresh(fb.getMessaging(), (token: string) => {
       saveRotatedPushToken(token).catch(() => {});
     });
     return unsubscribe;
@@ -206,18 +204,19 @@ function usePushNotifications() {
     // registered at once is exactly why the dedupe guard above exists — if
     // a given tap ever reaches both, it must still only navigate once.
     let unsubscribeOnOpen: (() => void) | undefined;
-    if (Platform.OS === "ios") {
+    const fb = Platform.OS === "ios" ? loadFirebaseMessaging() : null;
+    if (fb) {
       // Modular API (RN Firebase v22+) replacements for
       // messaging().getInitialNotification() / .onNotificationOpenedApp() —
       // same behavior, no deprecation warning.
-      const messagingInstance = getMessaging();
-      getInitialNotification(messagingInstance)
+      const messagingInstance = fb.getMessaging();
+      fb.getInitialNotification(messagingInstance)
         .then((remoteMessage) => {
           const data = remoteMessage?.data;
           if (data) setTimeout(() => handleNotificationTap(data, "firebase-cold-start"), 0);
         })
         .catch(() => {});
-      unsubscribeOnOpen = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
+      unsubscribeOnOpen = fb.onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
         if (remoteMessage?.data) handleNotificationTap(remoteMessage.data, "firebase-opened-app");
       });
     }
@@ -346,6 +345,11 @@ function RootNavigator() {
       <Stack.Screen name="jobs/candidate/[id]" options={{ headerShown: true, title: "Candidate" }} />
       <Stack.Screen name="jobs/contact-requests" options={{ headerShown: true, title: "Contact Requests" }} />
       <Stack.Screen name="jobs/recruiter-subscription" options={{ headerShown: true, title: "Subscription" }} />
+      <Stack.Screen name="jobs/alerts" options={{ headerShown: true, title: "Job Alerts" }} />
+      <Stack.Screen name="jobs/company-profile" options={{ headerShown: true, title: "Company Profile" }} />
+      <Stack.Screen name="rentals/booking/[id]" options={{ headerShown: true, title: "Book Vehicle" }} />
+      <Stack.Screen name="rentals/my-bookings" options={{ headerShown: true, title: "My Rentals" }} />
+      <Stack.Screen name="rental-fleet/bookings" options={{ headerShown: true, title: "Bookings" }} />
       <Stack.Screen name="rentals/index" options={{ headerShown: true, title: "Rentals" }} />
       <Stack.Screen name="rentals/[id]" options={{ headerShown: true, title: "Rental" }} />
       <Stack.Screen name="rental-fleet/index" options={{ headerShown: true, title: "Fleet Dashboard" }} />
@@ -411,6 +415,8 @@ function RootLayout() {
 
   return (
     <ErrorBoundary>
+      {/* Native keyboard tracking for every KeyboardAvoidingView in the app */}
+      <KeyboardProvider>
       <ThemeProvider>
         <AuthProvider>
           <CartProvider>
@@ -421,6 +427,7 @@ function RootLayout() {
           </CartProvider>
         </AuthProvider>
       </ThemeProvider>
+      </KeyboardProvider>
     </ErrorBoundary>
   );
 }

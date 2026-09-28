@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { GlassBackButton } from "../../components/ui";
@@ -62,7 +62,8 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <View style={styles.formBlock}>
         <Text style={styles.title}>Reset password</Text>
         <Text style={styles.subtitle}>Enter your email and we&apos;ll send a reset link</Text>

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
@@ -116,7 +116,8 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>

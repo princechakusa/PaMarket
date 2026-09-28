@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -12,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -213,7 +213,8 @@ export default function BusinessEditScreen() {
   }
 
   return (
-    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.coverWrap}>
           <Pressable style={styles.cover} onPress={() => pickImage("cover")}>

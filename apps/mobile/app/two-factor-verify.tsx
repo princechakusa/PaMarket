@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../lib/keyboard";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useAuth } from "../lib/auth";
 import type { ColorPalette } from "../lib/theme";
@@ -39,7 +39,8 @@ export default function TwoFactorVerifyScreen() {
   }
 
   return (
-    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView key={kavResetKey} style={styles.container} behavior="padding"
+      automaticOffset>
       <View style={styles.iconWrap}>
         <Svg width={28} height={28} viewBox="0 0 32 32" fill="none">
           <Rect x={6} y={13} width={20} height={16} rx={3} stroke={tones.brand} strokeWidth={1.8} />

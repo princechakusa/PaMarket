@@ -5,7 +5,6 @@ import {
   AppState,
   FlatList,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -187,78 +187,27 @@ export default function ChatScreen() {
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const [isSendingImages, setIsSendingImages] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [keyboardAvoidingKey, setKeyboardAvoidingKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
-  // The composer row itself is what must clear the keyboard, so it's what
-  // gets measured (see the keyboard listener below).
   const composerRef = useRef<View>(null);
-  // Mirrors keyboardHeight so the keyboard listener (registered once, so it
-  // closes over the initial state) can read the CURRENT padding.
-  const keyboardHeightRef = useRef(0);
-  keyboardHeightRef.current = keyboardHeight;
-  // The composer's bottom edge in screen coordinates while NOTHING is
-  // lifting it. Recorded only when the lift is 0 (see the composer's
-  // onLayout), so it's always a clean reference point that can't drift.
-  const composerRestingBottomRef = useRef<number | null>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    // iOS lifts the composer by the ACTUAL measured overlap between this
-    // container and the keyboard, rather than trusting either
-    // KeyboardAvoidingView's frame math or the raw keyboard height.
-    //
-    // KAV was the original bug: it measures its frame via onLayout
-    // (coordinates relative to its PARENT) but compares that against the
-    // keyboard's SCREEN position, so once this screen gained the native
-    // iOS header it under-padded by the header height and hid the composer
-    // completely. (That same bug is why jobs/post.tsx carries a hardcoded
-    // keyboardVerticalOffset={90} magic number.)
-    //
-    // Padding by the raw endCoordinates.height then over-shot, leaving a
-    // large gap between composer and keyboard — that assumes the container
-    // ends exactly at the bottom of the screen, which isn't true here.
-    // The lift is the gap between where the composer RESTS (its bottom edge
-    // in screen coordinates with nothing lifting it — captured in the
-    // composer's onLayout, see composerRestingBottomRef) and the keyboard's
-    // real top edge (endCoordinates.screenY, same coordinate space). That's
-    // exactly how much of the composer the keyboard would cover, and it's
-    // correct regardless of header height, safe areas, or where the
-    // container sits.
-    //
-    // Deliberately measured against a resting reference rather than
-    // measuring live and adding the current lift back: locking the phone
-    // with the keyboard open and unlocking fires several keyboard events in
-    // quick succession, and any event landing after the lift state updated
-    // but before the layout actually moved would double-count the lift and
-    // leave a permanent gap above the keyboard.
-    const showSub = Keyboard.addListener(showEvent, (e) => {
+    // Only tracks visibility (the composer drops its safe-area bottom padding
+    // while the keyboard is up); the movement itself is handled natively by
+    // react-native-keyboard-controller's KeyboardAvoidingView below.
+    const showSub = Keyboard.addListener(showEvent, () => {
       setKeyboardVisible(true);
-      if (Platform.OS !== "ios") return;
-      const keyboardTop = e?.endCoordinates?.screenY;
-      if (typeof keyboardTop !== "number") return;
-      const restingBottom = composerRestingBottomRef.current;
-      if (restingBottom != null) {
-        setKeyboardHeight(Math.max(0, restingBottom - keyboardTop));
-        return;
-      }
-      // No resting measurement yet (keyboard opened before the composer
-      // ever laid out unlifted) — fall back to a live measurement.
-      composerRef.current?.measureInWindow((_x, y, _w, h) => {
-        setKeyboardHeight(Math.max(0, y + h + keyboardHeightRef.current - keyboardTop));
-      });
     });
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
       setKeyboardVisible(false);
-      setKeyboardHeight(0);
     });
     const willHideSub =
       Platform.OS === "ios"
         ? Keyboard.addListener("keyboardWillHide", () => {
             setKeyboardVisible(false);
-            setKeyboardHeight(0);
-          })
+                })
         : null;
     // The KeyboardAvoidingView correctly shrinks the visible chat area when
     // the keyboard opens, but the FlatList's own scroll offset doesn't move
@@ -274,8 +223,7 @@ export default function ChatScreen() {
     const appStateSub = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
         setKeyboardVisible(false);
-        setKeyboardHeight(0);
-        Keyboard.dismiss();
+          Keyboard.dismiss();
       } else {
         setKeyboardAvoidingKey((key) => key + 1);
       }
@@ -1078,13 +1026,14 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       key={keyboardAvoidingKey}
-      // iOS: behavior is deliberately undefined (KAV renders as a plain
-      // View) because its own padding math is what was broken here — the
-      // measured keyboard overlap is applied directly instead. Android
-      // keeps behavior="height", which works there and is unaffected by
-      // this bug (no native header shown on Android for this screen).
-      style={[styles.container, Platform.OS === "ios" ? { paddingBottom: keyboardHeight } : null]}
-      behavior={Platform.OS === "ios" ? undefined : "height"}
+      // react-native-keyboard-controller moves the composer with the
+      // keyboard frame by frame (like WhatsApp) on both platforms and finds
+      // its own offset below the native header. Replaces the old
+      // hand-measured iOS lift and Android's "height" mode, which stopped
+      // working reliably once Android went edge-to-edge.
+      style={styles.container}
+      behavior="translate-with-padding"
+      automaticOffset
     >
       {listing ? (
         <Pressable
@@ -1307,16 +1256,6 @@ export default function ChatScreen() {
 
       <View
         ref={composerRef}
-        // Capture the composer's resting bottom edge only while nothing is
-        // lifting it — that's the stable reference the keyboard listener
-        // measures against. Layout re-fires whenever the lift returns to 0
-        // (keyboard dismissed, rotation, etc.), so it stays current.
-        onLayout={() => {
-          if (Platform.OS !== "ios" || keyboardHeightRef.current !== 0) return;
-          composerRef.current?.measureInWindow((_x, y, _w, h) => {
-            composerRestingBottomRef.current = y + h;
-          });
-        }}
         style={[styles.inputBar, { paddingBottom: keyboardVisible ? space.xs : Math.max(insets.bottom, space.md) }]}
       >
         <Pressable style={styles.attachButton} onPress={handleAttach} hitSlop={6}>

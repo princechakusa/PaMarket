@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { openExternalUrl } from "../lib/open-url";
 import {
   FlatList,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../lib/keyboard";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -386,8 +386,8 @@ export default function ReportProblemScreen() {
   return (
     <KeyboardAvoidingView key={kavResetKey}
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      behavior="padding"
+      automaticOffset
     >
       <FlatList
         ref={listRef}

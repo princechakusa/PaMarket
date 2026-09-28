@@ -3,7 +3,8 @@
 // "Phone verified" badge (profiles.phone_verified) and satisfies Admin →
 // General Settings → Require phone verification.
 import { useEffect, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView } from "../lib/keyboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
@@ -68,7 +69,8 @@ export default function VerifyPhoneScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding"
+      automaticOffset>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {verifiedPhone && !changing ? (
           <View style={styles.verifiedCard}>

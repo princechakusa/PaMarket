@@ -27,7 +27,7 @@ import {
   restoreAllPurchases,
 } from "../../lib/iap";
 import { SHOP_SUBSCRIPTION_PRODUCTS } from "../../lib/billing-products";
-import { deepLinkToSubscriptions } from "expo-iap";
+import { deepLinkToSubscriptions } from "../../lib/expo-iap-safe";
 import { PRIVACY_URL, TERMS_URL } from "../../lib/legal";
 
 const PLAN_ORDER = ["free", "starter", "pro", "premium"];

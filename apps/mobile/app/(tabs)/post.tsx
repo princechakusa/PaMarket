@@ -5,7 +5,6 @@ import {
   BackHandler,
   InteractionManager,
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -14,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -535,7 +535,8 @@ export default function PostScreen() {
     <KeyboardAvoidingView
       key={keyboardAvoidingKey}
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior="padding"
+      automaticOffset
     >
       {Platform.OS !== "ios" ? (
         <View style={[styles.topbar, { paddingTop: insets.top + 12 }]}>

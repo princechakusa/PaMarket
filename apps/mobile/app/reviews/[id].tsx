@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -12,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "../../lib/keyboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Polygon } from "react-native-svg";
@@ -249,7 +249,8 @@ export default function ReviewsScreen() {
             elsewhere — this isn't the chat screen's message-list case, so it
             doesn't need that custom keyboard-height tracking) is the one
             layer this needs. */}
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding"
+      automaticOffset>
           <View style={styles.modalBackdrop}>
             <View style={styles.modalCard}>
               <ScrollView keyboardShouldPersistTaps="handled" style={{ flexGrow: 0 }}>

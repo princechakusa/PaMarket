@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "../../lib/keyboard";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
@@ -492,7 +493,7 @@ export default function CvProfileScreen() {
           <ActivityIndicator color={color.brand} />
         </View>
       ) : (
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={{ padding: space.lg, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
         >
@@ -850,7 +851,7 @@ export default function CvProfileScreen() {
             }
             style={{ marginTop: space.md }}
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       )}
     </View>
   );
