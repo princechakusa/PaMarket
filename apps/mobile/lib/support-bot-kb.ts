@@ -20,7 +20,7 @@ export const KB: KbEntry[] = [
   },
   {
     tags: ['post','create listing','add listing','sell','post ad','how to post','new listing','list item','publish listing','upload item','add item'],
-    answer: 'To post a listing:\n1. Tap the orange + Post button at the bottom of the screen\n2. Choose the right category\n3. Add 3–5 clear photos, a title, description, and price\n4. Set your location and tap Publish\n\nListings go live within a few minutes after review. Clear photos and honest descriptions get up to 3x more responses.',
+    answer: 'To post a listing:\n1. Tap the orange + Post button at the bottom of the screen\n2. Choose the right category\n3. Add 3–5 clear photos, a title, description, and price\n4. Set your location and tap Publish\n\nMost listings go live straight away; some are checked by our team first. Clear photos and honest descriptions get up to 3x more responses.',
     chips: ['Edit a Listing', 'Mark as Sold', 'Get Verified'],
   },
   {
@@ -45,7 +45,7 @@ export const KB: KbEntry[] = [
   },
   {
     tags: ['payment','pay','ecocash','onemoney','bank transfer','mobile money','zipit','rtgs','how to pay','transaction','cash'],
-    answer: "PaMarket uses direct peer-to-peer payments between buyers and sellers.\n\nAccepted methods:\n• EcoCash — send to seller's registered number\n• OneMoney — same process\n• Bank transfer (ZIPIT / RTGS)\n• Cash on delivery (meet in person)\n\nPaMarket does NOT hold or process payments. Always inspect items before paying — never pay sight-unseen.",
+    answer: "PaMarket does not hold or process payments between buyers and sellers. You agree how to pay directly with the other person.\n\nSafe ways to pay:\n• Cash when you meet and have inspected the item\n• EcoCash, OneMoney or bank transfer (ZIPIT / RTGS) ONLY after you have seen the item in person\n\nNever pay a deposit or 'reservation fee' before seeing an item, and never share your EcoCash PIN or any code sent to your phone.",
     chips: ['Report a Scam', 'Ask Another Question'],
   },
   {
@@ -119,8 +119,8 @@ export const KB: KbEntry[] = [
     chips: ['Post a Listing', 'Edit a Listing', 'Submit a Bug Report'],
   },
   {
-    tags: ['renew','expired listing','30 days','listing expired','listing removed','disappeared','no longer showing','listing gone','expired'],
-    answer: 'Listings stay active for 30 days, then automatically archive.\n\nTo renew an expired listing:\n1. Go to My Listings\n2. Find the expired listing\n3. Tap "Post Again"\n\nThis re-publishes it free for another 30 days.\n\nIf your listing disappeared before 30 days, it may have been reported and removed. Check your notification inbox or contact us.',
+    tags: ['renew','expired listing','4 months','expire','listing expired','listing removed','disappeared','no longer showing','listing gone','expired'],
+    answer: 'Listings stay live for 4 months. You get a reminder 3 days before an ad expires.\n\nTo renew:\n1. Go to Account → My Listings\n2. Ads close to expiring show "Expires in N days" and a Renew button\n3. Tap Renew, it stays live for another 4 months, free\n\nAlready expired? It shows as "Expired" in My Listings. Tap Relist to put it back up for free.',
     chips: ['Edit a Listing', 'Post a Listing', 'Talk to a Human'],
   },
   {
@@ -228,7 +228,7 @@ export const CHIP_MAP: Record<string, string> = {
   'Report a User': 'report user bad seller harass',
   'Notification Issue': 'notification alert push not getting',
   'Edit Profile': 'profile photo bio city update',
-  'Renew a Listing': 'renew expired listing 30 days',
+  'Renew a Listing': 'renew expired listing expire',
   'Change Password': 'password change reset forgot',
   'Privacy Settings': 'privacy hide number personal data',
   'Business Profile': 'business shop local profile account',
@@ -242,21 +242,105 @@ export const CHIP_MAP: Record<string, string> = {
   'Billing Help': 'refund cancel subscription billing issue play billing manage',
 };
 
-// Mirrors www/js/help.js bestMatch(): count tag hits per KB entry, return the
-// entry with the most hits (ties keep the first found), or null if no hits.
-export function bestMatch(text: string): KbEntry | null {
-  const lower = text.toLowerCase();
-  let best: KbEntry | null = null;
-  let top = 0;
-  for (const entry of KB) {
-    let hits = 0;
-    for (const tag of entry.tags) {
-      if (lower.indexOf(tag) !== -1) hits++;
+// ── Matching ──────────────────────────────────────────────────────────────
+// Scores every topic against the question: whole-tag phrase hits count most,
+// then single-word hits, then near-misses (one typo) on longer words. Local
+// words (chiShona / isiNdebele / common slang) are mapped onto the English
+// tag vocabulary first, so "ndakakanganwa pasiwedhi" finds the sign-in topic.
+const SYNONYMS: Record<string, string> = {
+  // chiShona
+  pasiwedhi: "password", ndakakanganwa: "forgot", kupinda: "sign in", pinda: "sign in",
+  mari: "payment", kubhadhara: "pay", bhadhara: "pay", basa: "job", mabasa: "job",
+  kutengesa: "sell", tengesa: "sell", kutenga: "buy", shambadziro: "listing",
+  mbavha: "scam", kubirwa: "scam", nhema: "fake", meseji: "message", mameseji: "message",
+  akaundi: "account", kudzima: "delete", dzima: "delete", mufananidzo: "photo", mifananidzo: "photo",
+  // isiNdebele
+  iphasiwedi: "password", ngikhohlwe: "forgot", ngena: "sign in", imali: "payment",
+  bhadala: "pay", umsebenzi: "job", imisebenzi: "job", thengisa: "sell", ukuthengisa: "sell",
+  thenga: "buy", isikhangiso: "listing", isela: "scam", umlayezo: "message", imilayezo: "message",
+  "i-akhawunti": "account", susa: "delete", isithombe: "photo", izithombe: "photo",
+  // slang / typos seen in Zimbabwe support chats
+  pw: "password", pwd: "password", acc: "account", akkaunt: "account", ecocah: "ecocash",
+  cant: "cannot", couldnt: "cannot", doesnt: "not", hacked: "locked out", otp: "code",
+};
+
+function normalise(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((w) => (SYNONYMS[w] ?? w).split(" "));
+}
+
+function withinOneEdit(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
     }
-    if (hits > top) {
-      top = hits;
-      best = entry;
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else {
+      i++;
+      j++;
     }
   }
-  return top > 0 ? best : null;
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+export type ScoredEntry = { entry: KbEntry; score: number };
+
+export function rankMatches(text: string, entries: KbEntry[] = KB): ScoredEntry[] {
+  const words = normalise(text);
+  const joined = ` ${words.join(" ")} `;
+  const scored: ScoredEntry[] = [];
+  for (const entry of entries) {
+    let score = 0;
+    for (const tag of entry.tags) {
+      const tagWords = tag.toLowerCase().split(/\s+/);
+      if (tagWords.length > 1) {
+        if (joined.includes(` ${tagWords.join(" ")} `)) score += 3;
+        continue;
+      }
+      const t = tagWords[0];
+      if (words.includes(t)) score += 2;
+      else if (t.length >= 5 && words.some((w) => w.length >= 4 && withinOneEdit(w, t))) score += 1;
+    }
+    if (score > 0) scored.push({ entry, score });
+  }
+  return scored.sort((a, b) => b.score - a.score);
+}
+
+// A match is trusted when it scores well and clearly beats the runner-up;
+// otherwise the Help chat asks the AI assistant (grounded on the same KB).
+export function confidentMatch(ranked: ScoredEntry[]): KbEntry | null {
+  const [top, second] = ranked;
+  if (!top) return null;
+  if (top.score >= 4 && (!second || top.score - second.score >= 2)) return top.entry;
+  if (top.score >= 2 && !second) return top.entry;
+  return null;
+}
+
+// Kept for callers of the original API: best-scoring topic or null.
+export function bestMatch(text: string): KbEntry | null {
+  return rankMatches(text)[0]?.entry ?? null;
+}
+
+// First line of each answer, used as a short "Did you mean…" label.
+export function entryTitle(entry: KbEntry): string {
+  const first = entry.answer.split("\n")[0].replace(/:$/, "").trim();
+  return first.length > 48 ? first.slice(0, 45) + "…" : first;
+}
+
+// Plain-text dump of the KB for the AI assistant's grounding.
+export function kbAsText(entries: KbEntry[] = KB): string {
+  return entries.map((e) => `Topic: ${e.tags.slice(0, 4).join(", ")}\n${e.answer}`).join("\n\n");
 }

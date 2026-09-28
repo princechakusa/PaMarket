@@ -11,7 +11,6 @@ import { BrandSymbol, BrandWordmark } from "../components/BrandLogo";
 import { fetchPublicSettings, formatCopyrightYear, type CompanySettings } from "../lib/content";
 
 const SUPPORT_EMAIL = "support@pamarketzw.com";
-const SUPPORT_PHONE = "+971589772645";
 // openWhatsApp builds the wa.me URL itself, so this is just the number.
 const WHATSAPP_DIGITS = "971589772645";
 
@@ -66,6 +65,7 @@ export default function AboutScreen() {
   const color = resolvedScheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
 
   const [supportEmail, setSupportEmail] = useState(SUPPORT_EMAIL);
+  const [whatsappDigits, setWhatsappDigits] = useState(WHATSAPP_DIGITS);
   const [socialUrls, setSocialUrls] = useState<Record<string, string>>({});
   const [company, setCompany] = useState<CompanySettings | null>(null);
   useEffect(() => {
@@ -74,6 +74,8 @@ export default function AboutScreen() {
       .then((settings) => {
         if (cancelled || !settings) return;
         if (settings.supportEmail) setSupportEmail(settings.supportEmail);
+        const wa = (settings.whatsappNumber ?? "").replace(/[^0-9]/g, "");
+        if (wa.length >= 9) setWhatsappDigits(wa);
         const overrides: Record<string, string> = {};
         if (settings.socialLinks?.tiktok) overrides.tiktok = settings.socialLinks.tiktok;
         if (settings.socialLinks?.instagram) overrides.instagram = settings.socialLinks.instagram;
@@ -147,9 +149,9 @@ export default function AboutScreen() {
         <View style={styles.divider} />
         <LinkRow label="Email us" onPress={() => openExternalUrl(`mailto:${supportEmail}`, "No mail app is set up on this device.")} color={color} styles={styles} />
         <View style={styles.divider} />
-        <LinkRow label="WhatsApp" onPress={() => openWhatsApp(WHATSAPP_DIGITS)} color={color} styles={styles} />
+        <LinkRow label="WhatsApp" onPress={() => openWhatsApp(whatsappDigits)} color={color} styles={styles} />
         <View style={styles.divider} />
-        <LinkRow label="Call support" onPress={() => openPhone(SUPPORT_PHONE)} color={color} styles={styles} />
+        <LinkRow label="Call support" onPress={() => openPhone(`+${whatsappDigits}`)} color={color} styles={styles} />
       </Card>
 
       <Text style={styles.groupLabel}>Follow us</Text>

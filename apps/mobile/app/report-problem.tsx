@@ -14,16 +14,25 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { toast } from "../components/ui/Toast";
-import { bestMatch, CHIP_MAP, INIT_CHIPS } from "../lib/support-bot-kb";
+import { bestMatch, CHIP_MAP, confidentMatch, INIT_CHIPS, KB, kbAsText, rankMatches, type KbEntry } from "../lib/support-bot-kb";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../lib/auth";
+import { fetchFaqEntries, fetchPublicSettings } from "../lib/content";
+import { getLanguage } from "../lib/i18n";
 import { color, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { useIOSNativeHeader } from "../lib/useIOSNativeHeader";
 import { useKeyboardAvoidingReset } from "../lib/useKeyboardAvoidingReset";
 
 const HKEY = "pm_bot_h3";
-const WA = "https://wa.me/971589772645";
-const ML = "mailto:support@pamarketzw.com";
-const PH = "tel:+971589772645";
+// Fallbacks only — the live values come from Admin → Content → Contact &
+// Social (app_settings.settings.content), loaded on mount.
+const DEFAULT_WHATSAPP = "971589772645";
+const DEFAULT_EMAIL = "support@pamarketzw.com";
+
+function digitsOnly(v: string | null | undefined): string {
+  return (v ?? "").replace(/\D/g, "");
+}
 
 type ChatMessage = {
   id: string;
@@ -81,6 +90,31 @@ export default function ReportProblemScreen() {
   const [ticketVisible, setTicketVisible] = useState(false);
   const listRef = useRef<FlatList>(null);
   const historyRef = useRef<ChatMessage[]>([]);
+  const { session } = useAuth();
+  const [contact, setContact] = useState({ whatsapp: DEFAULT_WHATSAPP, email: DEFAULT_EMAIL });
+  // Published FAQ (Admin → Content) joins the bundled topics for matching.
+  const faqEntriesRef = useRef<KbEntry[]>([]);
+  const WA = `https://wa.me/${contact.whatsapp}`;
+  const ML = `mailto:${contact.email}`;
+  const PH = `tel:+${contact.whatsapp}`;
+
+  useEffect(() => {
+    fetchPublicSettings()
+      .then((s) => {
+        const wa = digitsOnly(s?.whatsappNumber);
+        setContact({ whatsapp: wa.length >= 9 ? wa : DEFAULT_WHATSAPP, email: s?.supportEmail || DEFAULT_EMAIL });
+      })
+      .catch(() => {});
+    fetchFaqEntries()
+      .then((items) => {
+        faqEntriesRef.current = (items ?? []).map((f) => ({
+          tags: [f.q.toLowerCase(), ...f.q.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length >= 4)],
+          answer: f.a,
+          chips: ["Ask Another Question", "Talk to a Human"],
+        }));
+      })
+      .catch(() => {});
+  }, []);
 
   useIOSNativeHeader({
     backgroundColor: color.brand,
@@ -95,7 +129,7 @@ export default function ReportProblemScreen() {
           <Text style={styles.headerTitle}>PaMarket Support</Text>
           <View style={styles.onlineRow}>
             <View style={styles.onlineDot} />
-            <Text style={styles.onlineText}>Online · Usually replies instantly</Text>
+            <Text style={styles.onlineText}>Online · Answers instantly</Text>
           </View>
         </View>
       </View>
@@ -124,7 +158,7 @@ export default function ReportProblemScreen() {
         const greeting: ChatMessage = {
           id: uid(),
           text:
-            "Hi! I am the PaMarket Support Bot.\n\nI can answer questions instantly across 37 topics. Tap a topic below or type your question.",
+            "Hi! I'm PaMarket Help.\n\nAsk me anything about buying, selling, jobs, rentals or your account, in English, chiShona or isiNdebele. Tap a topic below or type your question.",
           isUser: false,
           ts: timeStr(),
         };
@@ -163,24 +197,60 @@ export default function ReportProblemScreen() {
     scrollDown();
   }
 
-  function respond(query: string) {
-    setTyping(false);
-    const match = bestMatch(query);
-    if (match) {
-      pushMessage({ id: uid(), text: match.answer, isUser: false, ts: timeStr() });
-      const nextChips = [...match.chips];
-      if (!nextChips.includes("Ask Another Question")) nextChips.push("Ask Another Question");
-      setChips(nextChips);
-    } else {
-      pushMessage({
-        id: uid(),
-        text: "I could not find a specific answer for that. Let me connect you with our support team:",
-        isUser: false,
-        ts: timeStr(),
-      });
-      addContactCard();
-      setChips(["Submit a Bug Report", "Ask Another Question"]);
+  function answerWith(entry: KbEntry) {
+    pushMessage({ id: uid(), text: entry.answer, isUser: false, ts: timeStr() });
+    const nextChips = [...entry.chips];
+    if (!nextChips.includes("Ask Another Question")) nextChips.push("Ask Another Question");
+    setChips(nextChips);
+  }
+
+  function handOff(text = "I could not find a specific answer for that. Let me connect you with our support team:") {
+    pushMessage({ id: uid(), text, isUser: false, ts: timeStr() });
+    addContactCard();
+    setChips(["Talk to a Human", "Submit a Bug Report", "Ask Another Question"]);
+  }
+
+  // Topic chips go straight to their curated answer. Typed questions go to
+  // the local matcher first; when it isn't confident, the AI assistant
+  // (supabase/functions/support-assistant) answers from the same help
+  // content, and if that's unavailable we fall back to the best local topic
+  // or a human.
+  async function respond(query: string, fromChip: boolean) {
+    if (fromChip) {
+      setTyping(false);
+      const match = bestMatch(query);
+      if (match) answerWith(match);
+      else handOff();
+      return;
     }
+    const entries = [...faqEntriesRef.current, ...KB];
+    const ranked = rankMatches(query, entries);
+    const sure = confidentMatch(ranked);
+    if (sure) {
+      setTyping(false);
+      answerWith(sure);
+      return;
+    }
+    try {
+      const history = historyRef.current
+        .filter((m) => (m.kind ?? "text") === "text")
+        .slice(-7, -1)
+        .map((m) => ({ role: m.isUser ? "user" : "assistant", text: m.text }));
+      const { data, error } = await supabase.functions.invoke("support-assistant", {
+        body: { question: query, kb: kbAsText(entries), history, lang: getLanguage() },
+      });
+      setTyping(false);
+      const result = data as { answer?: string | null; handoff?: boolean } | null;
+      if (!error && result?.answer) {
+        pushMessage({ id: uid(), text: result.answer, isUser: false, ts: timeStr() });
+        setChips(result.handoff ? ["Talk to a Human", "Ask Another Question"] : ["Ask Another Question", "Talk to a Human"]);
+        return;
+      }
+    } catch {
+      setTyping(false);
+    }
+    if (ranked[0]) answerWith(ranked[0].entry);
+    else handOff();
   }
 
   function handleInput(text: string) {
@@ -225,10 +295,11 @@ export default function ReportProblemScreen() {
     }
 
     pushMessage({ id: uid(), text: trimmed, isUser: true, ts: timeStr() });
+    const fromChip = trimmed in CHIP_MAP;
     const query = CHIP_MAP[trimmed] || trimmed;
     setTyping(true);
     scrollDown();
-    setTimeout(() => respond(query), 680);
+    setTimeout(() => void respond(query, fromChip), fromChip ? 450 : 200);
   }
 
   function handleSend() {
@@ -251,16 +322,47 @@ export default function ReportProblemScreen() {
     }
   }
 
-  function submitTicket() {
+  async function submitTicket() {
     const desc = ticketText.trim();
     if (!desc) {
       toast("Please describe your issue first");
       return;
     }
+    if (!session?.user) {
+      toast("Please sign in so we can reply, or use WhatsApp or email below.", 4500, true);
+      addContactCard();
+      return;
+    }
     setTicketVisible(false);
+    const category = /crash|bug|error|not working|freeze|glitch/i.test(desc)
+      ? "bug"
+      : /pay|refund|charge|billing|subscription/i.test(desc)
+        ? "billing"
+        : "other";
+    const { data, error } = await supabase.rpc("submit_support_ticket", {
+      p_body: desc,
+      p_category: category,
+      p_contact: session.user.email ?? null,
+    });
+    const result = data as { ok?: boolean; code?: string } | null;
+    if (error || !result?.ok) {
+      pushMessage({
+        id: uid(),
+        text:
+          result?.code === "rate_limited"
+            ? "You've sent several messages today. Our team will reply to those first, or reach us on WhatsApp below."
+            : "We couldn't send that just now. Please reach us on WhatsApp or email below.",
+        isUser: false,
+        ts: timeStr(),
+      });
+      addContactCard();
+      setTicketVisible(true);
+      return;
+    }
+    setTicketText("");
     pushMessage({
       id: uid(),
-      text: "Message sent. We will follow up on WhatsApp or email.",
+      text: "Message received. Our support team will reply by email or WhatsApp, usually within one working day.",
       isUser: false,
       ts: timeStr(),
     });

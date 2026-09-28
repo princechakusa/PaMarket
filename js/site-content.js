@@ -90,6 +90,31 @@
     } catch (_) { return ''; }
   }
 
+  // Pages were built with the support WhatsApp number typed into the HTML
+  // (floating button, footer "WhatsApp Helpline", contact page). Once the
+  // admin-managed number (Admin → Content → Contact & Social) loads, point
+  // every wa.me / tel: link and visible copy of the old number at it.
+  var LEGACY_WA = '971589772645';
+  function applySupportNumber() {
+    fetchSiteSettings().then(function (content) {
+      var digits = String((content && content.whatsappNumber) || '').replace(/\D/g, '');
+      if (digits.length < 9 || digits === LEGACY_WA) return;
+      var pretty = '+' + digits;
+      document.querySelectorAll('a[href*="' + LEGACY_WA + '"]').forEach(function (a) {
+        a.setAttribute('href', a.getAttribute('href').split(LEGACY_WA).join(digits));
+        if (a.textContent.indexOf('971') !== -1) {
+          a.textContent = a.textContent.replace(/\+?971[\s\d]{9,14}\d/, pretty);
+        }
+      });
+    });
+  }
+  // Some pages include this file more than once; only wire it up once.
+  if (global.document && !global.__pmSupportNumberWired) {
+    global.__pmSupportNumberWired = true;
+    if (global.document.readyState === 'loading') global.document.addEventListener('DOMContentLoaded', applySupportNumber);
+    else applySupportNumber();
+  }
+
   global.PMContent = {
     fetchContentPage: fetchContentPage,
     fetchSiteSettings: fetchSiteSettings,

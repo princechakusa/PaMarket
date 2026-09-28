@@ -112,6 +112,7 @@ export default function HelpScreen() {
   // changing them later takes effect without a new app build.
   const [whatsappUrl, setWhatsappUrl] = useState(WHATSAPP_URL);
   const [emailUrl, setEmailUrl] = useState(EMAIL_URL);
+  const [phoneUrl, setPhoneUrl] = useState(PHONE_URL);
   const termsDoc = useLegalDocUpgrade("terms", TERMS);
   const privacyDoc = useLegalDocUpgrade("privacy", PRIVACY);
 
@@ -127,7 +128,11 @@ export default function HelpScreen() {
     fetchPublicSettings()
       .then((settings) => {
         if (cancelled || !settings) return;
-        if (settings.whatsappNumber) setWhatsappUrl(`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, "")}`);
+        if (settings.whatsappNumber) {
+          const digits = settings.whatsappNumber.replace(/[^0-9]/g, "");
+          setWhatsappUrl(`https://wa.me/${digits}`);
+          setPhoneUrl(`tel:+${digits}`);
+        }
         if (settings.supportEmail) setEmailUrl(`mailto:${settings.supportEmail}`);
       })
       .catch(() => {
@@ -243,7 +248,7 @@ export default function HelpScreen() {
           <Text style={styles.contactLabel}>Email</Text>
           <Text style={styles.contactValue}>Send details</Text>
         </Pressable>
-        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(PHONE_URL, "This device can't make calls.")}>
+        <Pressable style={styles.contactRow} onPress={() => openExternalUrl(phoneUrl, "This device can't make calls.")}>
           <Text style={styles.contactLabel}>Call</Text>
           <Text style={styles.contactValue}>Phone support</Text>
         </Pressable>
