@@ -1,8 +1,10 @@
 import { Platform } from "react-native";
 import * as Crypto from "expo-crypto";
-import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
-import { loadFirebaseMessaging } from "./native-optional";
+import { loadExpoNotifications, loadFirebaseMessaging } from "./native-optional";
+
+// Null in Expo Go on Android (see lib/native-optional.ts) — push is off there.
+const Notifications = loadExpoNotifications();
 import { supabase } from "./supabase";
 
 // PaMarket's backend push pipeline (supabase/functions/send-push,
@@ -16,7 +18,7 @@ const PUSH_DEVICE_ID_KEY = "pamarket.push-device-id";
 
 export type PushPermissionState = "granted" | "denied" | "undetermined";
 
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
@@ -27,7 +29,7 @@ Notifications.setNotificationHandler({
 });
 
 async function ensureAndroidChannel() {
-  if (Platform.OS !== "android") return;
+  if (Platform.OS !== "android" || !Notifications) return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
     name: "PaMarket",
     importance: Notifications.AndroidImportance.HIGH,
@@ -50,6 +52,7 @@ async function getPushDeviceId(): Promise<string> {
 }
 
 export async function getPushPermissionState(): Promise<PushPermissionState> {
+  if (!Notifications) return "undetermined";
   const permission = await Notifications.getPermissionsAsync();
   if (permission.granted) return "granted";
   return permission.canAskAgain ? "undetermined" : "denied";
@@ -87,6 +90,7 @@ export async function registerForPushNotifications(
   options: { requestIfUndetermined?: boolean } = { requestIfUndetermined: true }
 ): Promise<PushPermissionState> {
   try {
+    if (!Notifications) return "undetermined";
     await ensureAndroidChannel();
 
     let permission = await Notifications.getPermissionsAsync();

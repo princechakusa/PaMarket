@@ -12,10 +12,27 @@ import { isRunningInExpoGo } from "expo";
 export const IN_EXPO_GO = isRunningInExpoGo();
 
 type FirebaseMessaging = typeof import("@react-native-firebase/messaging");
+type ExpoNotifications = typeof import("expo-notifications");
 type ExpoIap = typeof import("expo-iap");
 
 let messagingModule: FirebaseMessaging | null | undefined;
 let iapModule: ExpoIap | null | undefined;
+let notificationsModule: ExpoNotifications | null | undefined;
+
+// expo-notifications throws at import time in Expo Go on Android (remote
+// push was removed from Expo Go in SDK 53), which crashed the whole app on
+// launch there. iOS Expo Go and all real builds load it normally.
+export function loadExpoNotifications(): ExpoNotifications | null {
+  if (notificationsModule !== undefined) return notificationsModule;
+  if (IN_EXPO_GO && Platform.OS === "android") return (notificationsModule = null);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    notificationsModule = require("expo-notifications") as ExpoNotifications;
+  } catch {
+    notificationsModule = null;
+  }
+  return notificationsModule;
+}
 
 export function loadFirebaseMessaging(): FirebaseMessaging | null {
   if (messagingModule !== undefined) return messagingModule;

@@ -2,8 +2,7 @@ import { useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as Notifications from "expo-notifications";
-import { loadFirebaseMessaging } from "../lib/native-optional";
+import { loadExpoNotifications, loadFirebaseMessaging } from "../lib/native-optional";
 import * as SplashScreen from "expo-splash-screen";
 import { Sentry } from "../lib/sentry";
 import { ErrorBoundary } from "../components/ErrorBoundary";
@@ -182,6 +181,9 @@ function usePushNotifications() {
     // router.push() synchronously here is a known source of "navigate
     // before mounting the Root Layout" crashes. Deferring to the next tick
     // lets the navigator finish mounting first.
+    // Null in Expo Go on Android (lib/native-optional.ts) — nothing to listen to.
+    const Notifications = loadExpoNotifications();
+    if (!Notifications) return;
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification.request.content.data;
       if (data) setTimeout(() => handleNotificationTap(data, "expo-cold-start"), 0);
