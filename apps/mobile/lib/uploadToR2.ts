@@ -135,3 +135,23 @@ export async function photoFingerprint(uri: string): Promise<string | null> {
     return null;
   }
 }
+
+// Uploads a listing photo plus a small (~480px) thumbnail for feed cards.
+// The thumbnail is best effort: if it fails the card simply uses the full
+// photo, so a thumbnail problem never blocks posting.
+const THUMB_DIMENSION = 480;
+
+export async function uploadListingPhotoWithThumb(uri: string, key: string): Promise<{ url: string; thumbUrl: string | null }> {
+  const url = await uploadImageUriToR2(uri, key);
+  try {
+    const { width, height } = await getImageSize(uri);
+    const resize = width >= height ? { width: THUMB_DIMENSION } : { height: THUMB_DIMENSION };
+    const rendered = await ImageManipulator.manipulate(uri).resize(resize).renderAsync();
+    const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.7 });
+    const blob = await (await fetch(saved.uri)).blob();
+    const thumbUrl = await uploadToR2(blob, key.replace(/\.jpg$/i, "_t.jpg"), "image/jpeg");
+    return { url, thumbUrl };
+  } catch {
+    return { url, thumbUrl: null };
+  }
+}

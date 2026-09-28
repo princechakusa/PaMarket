@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import type { Listing } from "../lib/listings";
-import { approxOtherCurrency, formatPrice, isFeatured, isNew, listingLocation } from "../lib/listings";
+import { approxOtherCurrency, formatPrice, listingThumb, isFeatured, isNew, listingLocation } from "../lib/listings";
 import { useAppSettings } from "../lib/app-settings";
 import { color, font, radius, shadow, space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
@@ -25,7 +25,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
 export function ListingRow({ listing, onPress, saved, onToggleSave }: ListingRowProps) {
   const styles = useThemedStyles(buildStyles);
   const approx = approxOtherCurrency(listing, useAppSettings().fxRate);
-  const photo = listing.photos?.[0];
+  const photo = listingThumb(listing);
   const featured = isFeatured(listing);
   const fresh = !featured && isNew(listing);
 

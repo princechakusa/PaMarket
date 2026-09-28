@@ -50,7 +50,7 @@ import { color, radius, space, type ColorPalette } from "../../lib/theme";
 import { useThemedStyles } from "../../lib/theme-provider";
 
 const LISTING_COLUMNS =
-  "id,seller_id,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,business_id,created_at";
+  "id,seller_id,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,business_id,created_at,thumbs:attributes->_thumbs";
 const BUSINESS_COLUMNS =
   "id,owner_user_id,name,logo,photos,category,province,city,status,verification_level";
 

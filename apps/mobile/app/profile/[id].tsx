@@ -278,7 +278,7 @@ export default function UserProfileScreen() {
       fetchSellerRatingSummary(id),
       supabase
         .from("listings")
-        .select("id,seller_id,seller_name,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,created_at")
+        .select("id,seller_id,seller_name,title,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,created_at,thumbs:attributes->_thumbs")
         .eq("seller_id", id)
         .eq("status", "active")
         .or(publicListingExpiryFilter())

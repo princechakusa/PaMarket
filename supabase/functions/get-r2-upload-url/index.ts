@@ -81,8 +81,8 @@ const EXT_BY_CONTENT_TYPE: Record<string, string> = {
 // and _shared/amos-rate-limit.ts) rather than inventing new architecture —
 // backed by the existing generic amos_manual_trigger_log table, which has
 // no AMOS-specific constraint on fn_name.
-const BURST_LIMIT = { windowMinutes: 1, maxCalls: 20 }
-const DAILY_QUOTA  = { windowMinutes: 24 * 60, maxCalls: 150 }
+const BURST_LIMIT = { windowMinutes: 1, maxCalls: 40 } // photo + thumbnail per listing photo
+const DAILY_QUOTA  = { windowMinutes: 24 * 60, maxCalls: 300 }
 const ADMIN_ROLES = new Set(['admin', 'super_admin'])
 
 function publicErrorMessage(message: string): { message: string; status: number } {

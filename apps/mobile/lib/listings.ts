@@ -26,9 +26,20 @@ export type Listing = {
   created_at: string;
   updated_at?: string | null;
   attributes?: Record<string, unknown> | null;
+  // Small card-size copies of photos (select "thumbs:attributes->_thumbs").
+  thumbs?: string[] | null;
   condition?: string | null;
   is_orderable?: boolean | null;
 };
+
+// Card image: the ~480px thumbnail when the listing has one (uploaded with
+// the photo since v1.30), else the full photo. Saves most of the mobile data
+// spent scrolling feeds.
+export function listingThumb(listing: Pick<Listing, "photos" | "thumbs" | "attributes">): string | undefined {
+  const fromAttrs = listing.attributes?._thumbs;
+  const thumbs = listing.thumbs ?? (Array.isArray(fromAttrs) ? (fromAttrs as string[]) : null);
+  return (typeof thumbs?.[0] === "string" && thumbs[0]) || listing.photos?.[0] || undefined;
+}
 
 // Keep public feed queries aligned with the database RLS rule. The database
 // remains authoritative (its clock decides access); this client-side clause is

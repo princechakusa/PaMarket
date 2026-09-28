@@ -5,13 +5,14 @@ import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { publicListingExpiryFilter, type Listing } from "../lib/listings";
 import { fetchSavedListingIds, toggleSave } from "../lib/saves";
+import { loadCache, saveCache } from "../lib/offlineCache";
 import { space, type ColorPalette } from "../lib/theme";
 import { useThemedStyles } from "../lib/theme-provider";
 import { ListingRow } from "../components/ListingRow";
 import { EmptyState, ErrorState, ListSkeleton } from "../components/ui";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,created_at,updated_at,thumbs:attributes->_thumbs";
 
 // Real backend-backed favourites — reads from user_saves (see lib/saves.ts),
 // replacing the earlier client-only stub that always showed empty.
@@ -27,24 +28,37 @@ export default function FavouritesScreen() {
   const load = useCallback(async () => {
     if (!session?.user) return;
     setError(null);
-    const ids = await fetchSavedListingIds(session.user.id);
-    setSavedIds(ids);
-    if (!ids.size) {
-      setListings([]);
-      return;
+    // The last good list is kept on the device, so saved ads still show
+    // with no signal (common on the road or when data runs out).
+    const cacheKey = `favourites-${session.user.id}`;
+    try {
+      const ids = await fetchSavedListingIds(session.user.id);
+      setSavedIds(ids);
+      if (!ids.size) {
+        setListings([]);
+        saveCache(cacheKey, [] as Listing[]).catch(() => {});
+        return;
+      }
+      const { data, error: queryError } = await supabase
+        .from("listings")
+        .select(LISTING_COLUMNS)
+        .eq("status", "active")
+        .or(publicListingExpiryFilter())
+        .in("id", Array.from(ids));
+      if (queryError) throw queryError;
+      const rows = (data as Listing[]) ?? [];
+      setListings(rows);
+      saveCache(cacheKey, rows).catch(() => {});
+    } catch {
+      const cached = await loadCache<Listing[]>(cacheKey);
+      if (cached) {
+        setListings(cached);
+        setSavedIds(new Set(cached.map((l) => l.id)));
+      } else {
+        setError("We couldn't load your saved ads. Check your connection and try again.");
+        setListings([]);
+      }
     }
-    const { data, error: queryError } = await supabase
-      .from("listings")
-      .select(LISTING_COLUMNS)
-      .eq("status", "active")
-      .or(publicListingExpiryFilter())
-      .in("id", Array.from(ids));
-    if (queryError) {
-      setError(queryError.message);
-      setListings([]);
-      return;
-    }
-    setListings((data as Listing[]) ?? []);
   }, [session]);
 
   useEffect(() => {

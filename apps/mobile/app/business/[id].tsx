@@ -34,7 +34,7 @@ import { resolveListingCoords } from "../../lib/location-fallback";
 import { LocationMap } from "../../components/listing/LocationMap";
 
 const LISTING_COLUMNS =
-  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,is_orderable,created_at,updated_at";
+  "id,seller_id,seller_name,seller_phone,title,description,price,currency,category,province,city,suburb,photos,status,boost,featured_until,expires_at,views,business_id,is_orderable,created_at,updated_at,thumbs:attributes->_thumbs";
 
 export default function BusinessShopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
