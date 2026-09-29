@@ -25,6 +25,10 @@ jobs:
         run: |
           folder=$(git diff --name-only HEAD~1 HEAD -- motion-studio/queue | head -1 | sed -E 's#^(motion-studio/queue/[^/]+)/.*#\1#')
           if [ -z "$folder" ]; then echo "No queue folder found in this push — nothing to ingest."; exit 0; fi
+          if ! ls "$folder"/*.mp4 >/dev/null 2>&1; then
+            echo "No rendered .mp4 in $folder yet — this push only updated script/metadata, skipping ingest until the video lands."
+            exit 0
+          fi
           echo "folder=$folder" >> "$GITHUB_OUTPUT"
 
       - name: Read caption, topic, notes and submit
