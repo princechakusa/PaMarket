@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PaMarket — For Sellers</title>
+<title>PaMarket — Your Stall, Online</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
@@ -79,6 +79,33 @@ html,body{height:100%;background:#e9e9e6;overflow:hidden}
 .ck-b{width:38px;height:38px;border-radius:50%;border:2px solid #d4d4cf;display:grid;place-items:center;flex:none;position:relative}
 .ck-b .mi{font-size:26px;color:#fff;position:relative;z-index:1}
 .ck-b i{position:absolute;inset:-2px;border-radius:50%;background:var(--blue)}
+.lc-top{display:flex;align-items:center;gap:4px}
+.photo.sm{width:124px;height:110px;flex:none}
+.photo.sm .mi{font-size:76px}
+.pg{margin-top:14px;border-radius:14px;background:var(--blue-soft);padding:12px 16px}
+.pg-l{font-size:14px;color:var(--blue);font-weight:700;letter-spacing:.06em}
+.pg-r{font-weight:700;font-size:34px;letter-spacing:-.035em;margin-top:2px}
+.pg-s{font-size:15px;color:#6f6f6a;margin-top:2px}
+.ck-h{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:.08em;padding:10px 0 4px}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:4px;font-size:17px;font-weight:700;margin:2px 0 12px 4px}
+.seg span{padding:6px 18px;border-radius:999px;color:var(--mute)}
+.seg span.on{background:var(--blue);color:#fff}
+.map{position:relative;height:270px;border-radius:16px;background-color:#f6f6f3;background-image:radial-gradient(#d9d9d4 1.2px,transparent 1.5px);background-size:12px 12px;overflow:hidden}
+.map .roads{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;background:var(--ink);color:#fff;border-radius:999px;padding:6px 13px;font-weight:700;font-size:19px;letter-spacing:-.01em;white-space:nowrap;transform-origin:50% 130%}
+.pin:after{content:'';position:absolute;left:50%;bottom:-7px;margin-left:-7px;border:7px solid transparent;border-bottom:0;border-top-color:inherit;border-top-color:var(--ink)}
+.pin.me{background:var(--blue);font-size:22px;padding:9px 18px}
+.pin.me:after{border-top-color:var(--blue)}
+.msg{width:470px;padding:20px 24px}
+.msg-t{font-size:23px;letter-spacing:-.015em;line-height:1.3}
+.msg-t b{font-weight:700}
+.msg-u{margin-top:10px;font-size:18px;color:var(--blue);font-weight:700}
+.msg-f{display:flex;align-items:center;gap:14px;margin-top:16px}
+.msg-w{font-size:15px;color:var(--mute)}
+.sp{display:flex;align-items:center;gap:16px;height:74px;font-weight:600;font-size:27px;letter-spacing:-.025em;border-bottom:1.5px solid var(--line);white-space:nowrap}
+.sp:last-child{border-bottom:0}
+.sp .mi{font-size:34px;color:var(--blue);width:38px;text-align:center}
+.sp small{display:block;font-size:15px;color:var(--mute);font-weight:400;letter-spacing:0;margin-top:2px}
 .langs{display:flex;gap:14px}
 .lg{position:relative;border:1.5px solid var(--line);border-radius:999px;padding:14px 28px;font-weight:600;font-size:30px;letter-spacing:-.02em;background:#fff;white-space:nowrap}
 .lg.on{border-color:var(--blue);color:#fff;background:var(--blue)}
@@ -118,40 +145,51 @@ body.render #ui{display:none}
   <div id="urlR" class="mono">pamarketzw.com</div>
   <div id="blocks"></div>
 
-  <!-- 02 · listing card -->
-  <div id="cList" class="ui" style="left:560px;top:640px;width:440px">
-    <div class="photo"><span class="mi">chair</span><div class="wash" id="cListWash"></div></div>
-    <div class="chip fill live" id="cLive"><i></i>LIVE</div>
-    <div class="lc-b">
-      <div class="lc-t">Armchair, grey</div>
-      <div class="lc-l mono">Harare · Avondale</div>
+  <!-- 02 · listing + price guide -->
+  <div id="cList" class="ui" style="left:540px;top:650px;width:500px">
+    <div class="lc-top"><div class="photo sm"><span class="mi">checkroom</span><div class="wash" id="cListWash"></div></div><div><div class="lc-t">Denim jacket</div><div class="lc-l mono">Harare · Mbare</div></div></div>
+    <div class="lc-b" style="padding-top:0">
+      <div class="pg" id="cPg" style="margin-top:0"><div class="pg-l mono">PRICE GUIDE</div><div class="pg-r" id="cPgR">US$ 12 – 18</div><div class="pg-s">Similar ads in Harare are priced in this range</div></div>
       <div class="lc-row"><div class="lc-p" id="cPrice">US$ 0</div><div class="chip" id="cZig">ZiG 0</div></div>
     </div>
   </div>
 
-  <!-- 03 · offers -->
-  <div id="cOf1" class="ui nt" style="left:520px;top:660px"><div class="ic mi">local_offer</div><div><b>Offer · US$ 150</b><small class="mono">from Rudo · just now</small></div></div>
-  <div id="cOf2" class="ui nt" style="left:520px;top:790px"><div class="ic mi" id="cOf2i">local_offer</div><div><b>Offer · US$ 165</b><small class="mono" id="cOf2s">from Farai · just now</small></div><div class="acc" id="cOf2a">Accept</div></div>
-
-  <!-- 04 · status -->
-  <div id="cSc" class="ui sc" style="left:640px;top:585px">
-    <div class="sc-bar"><i id="cScBar"></i></div>
-    <div class="sc-top"><div class="sc-av">T</div><div>My status<small>Just now</small></div></div>
-    <div class="sc-tile"><div class="photo"><span class="mi">chair</span></div><div class="sc-t">Armchair, grey<b>US$ 165</b></div></div>
-    <div class="sc-cta mono">↑ view on PaMarket</div>
-  </div>
-  <div id="cInv" class="ui pill" style="left:960px;top:930px"><span class="mi">group_add</span>Invite a friend</div>
-
-  <!-- 05 · trust -->
-  <div id="cCk" class="ui ck" style="left:560px;top:650px">
-    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Scam warnings</div>
-    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Reply-time badges</div>
-    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Duplicate-photo checks</div>
-    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Safe meet-up spots</div>
+  <!-- 03 · delivery -->
+  <div id="cDel" class="ui ck" style="left:560px;top:680px">
+    <div class="ck-h mono">DELIVERY</div>
+    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Collection</div>
+    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Delivery in my city</div>
+    <div class="ck-r"><div class="ck-b"><i></i><span class="mi">check</span></div>Delivery nationwide</div>
   </div>
 
-  <!-- 06 · language -->
-  <div id="cLang" class="ui langs" style="left:150px;top:720px;border:0;box-shadow:none;background:transparent"><div class="lg">English</div><div class="lg">chiShona</div><div class="lg">isiNdebele</div></div>
+  <!-- 04 · map view -->
+  <div id="cMap" class="ui" style="left:540px;top:650px;width:480px;padding:14px">
+    <div class="seg mono"><span>List</span><span class="on">Map</span></div>
+    <div class="map" id="cMapA">
+      <svg class="roads" viewBox="0 0 452 270" fill="none"><path d="M-10 190 C 90 170, 160 120, 250 128 S 400 90, 470 60" stroke="#e2e2dc" stroke-width="16" stroke-linecap="round"/><path d="M120 -10 C 140 80, 150 170, 200 290" stroke="#e2e2dc" stroke-width="11" stroke-linecap="round"/><path d="M300 -10 C 290 90, 330 190, 360 290" stroke="#ecece7" stroke-width="8" stroke-linecap="round"/></svg>
+      <div class="pin" style="left:52px;top:52px">$8</div>
+      <div class="pin" style="left:330px;top:34px">$40</div>
+      <div class="pin" style="left:250px;top:190px">$120</div>
+      <div class="pin" style="left:44px;top:196px">$25</div>
+      <div class="pin me" style="left:170px;top:96px">US$ 15 · Denim jacket</div>
+    </div>
+  </div>
+
+  <!-- 05 · shop link -->
+  <div id="cShare" class="ui pill" style="left:560px;top:700px"><span class="mi">share</span>Share Shop Link</div>
+  <div id="cMsg" class="ui msg" style="left:600px;top:800px">
+    <div class="msg-t">Shop with <b>Tendai's Threads</b> on PaMarket:</div>
+    <div class="msg-u mono">pamarketzw.com/b/tendais-threads-…</div>
+    <div class="msg-f"><span class="chip fill" id="cSent"><i></i>SENT</span><span class="mono msg-w">WhatsApp · bio</span></div>
+  </div>
+
+  <!-- 06 · meet safely -->
+  <div id="cSafe" class="ui ck" style="left:560px;top:640px">
+    <div class="ck-h mono">MEET SAFELY IN HARARE</div>
+    <div class="sp"><span class="mi">location_on</span><div>Eastgate Mall<small class="mono">City Centre</small></div></div>
+    <div class="sp"><span class="mi">location_on</span><div>Sam Levy's Village<small class="mono">Borrowdale</small></div></div>
+    <div class="sp"><span class="mi">location_on</span><div>Joina City<small class="mono">City Centre</small></div></div>
+  </div>
 
   <!-- 07 · get it -->
   <div id="cGet" class="ui" style="left:150px;top:690px;border:0;box-shadow:none;background:transparent">
@@ -173,40 +211,42 @@ body.render #ui{display:none}
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
 
 /* =====================================================================
-   PaMarket · "Got something to sell?" — 30s, 1920×1080, 30fps.
+   PaMarket · "Your stall, online" (Harare traders) — 30s, 1920×1080, 30fps.
    Everything is a pure function of t, so preview == render.
    ===================================================================== */
 const DUR = 30, FPS = 30;
 const V = new URLSearchParams(location.search).get('format') === '9x16'; // vertical layout
 if (V) document.body.classList.add('v');
 const SW = V ? 1080 : 1920, SH = V ? 1920 : 1080;
-const ZIG_RATE = 26.6294; // live ZiG-per-USD from app_settings.fxRate / open.er-api.com, 2026-09-28
+const ZIG_RATE = 26.847; // live ZiG-per-USD from open.er-api.com (rates.ZWG), updated 2026-09-29 00:02 UTC
+const SLUG = 'stall-online';
 
 // Voice-over clips (one per line) and when each starts. Missing files → silent + procedural lip-sync.
 const VO = [
-  { src: 'vo/01.mp3', at: 0.3, text: 'Got something to sell?' },
-  { src: 'vo/02.mp3', at: 1.7, text: 'Put it on PaMarket.' },
-  { src: 'vo/03.mp3', at: 4.2,  text: "Snap a photo, set your price in US dollars or Zigi, and you're live in seconds." },
-  { src: 'vo/04.mp3', at: 9.85, text: 'Buyers send offers right in the app. Accept the one you like.' },
-  { src: 'vo/05.mp3', at: 13.85, text: 'Share it straight to your WhatsApp Status, and invite your friends.' },
-  { src: 'vo/06.mp3', at: 17.95, text: 'Scam warnings, reply-time badges and safe meet-up spots keep you protected.' },
-  { src: 'vo/07.mp3', at: 23.25, text: 'Now in chiShona and isiNdebele.' },
-  { src: 'vo/08.mp3', at: 25.9, text: 'PaMarket. Buy, sell, rent, hire.' },
+  { src: 'vo/01.mp3', at: 0.3,   text: 'Trading in Harare?' },
+  { src: 'vo/02.mp3', at: 1.75,  text: 'Take your stall online, with PaMarket.' },
+  { src: 'vo/03.mp3', at: 4.8,   text: 'Not sure what to charge? The price guide shows what similar ads are asking.' },
+  { src: 'vo/04.mp3', at: 9.85,  text: 'Offer collection, delivery in your city, or nationwide.' },
+  { src: 'vo/05.mp3', at: 14.15, text: 'Buyers nearby find you on the map.' },
+  { src: 'vo/06.mp3', at: 17.45, text: 'Share your shop link on WhatsApp, and in your bio.' },
+  { src: 'vo/07.mp3', at: 21.3,  text: "And meet safely at busy spots, like Eastgate or Sam Levy's." },
+  { src: 'vo/08.mp3', at: 26.2,  text: 'PaMarket. Buy, sell, rent, hire.' },
 ];
 // Sound design (real-time seconds) + music bed. Missing files are skipped.
 const SFX = [
-  ['whoosh', 3.88], ['whoosh', 9.48], ['whoosh', 13.48], ['whoosh', 17.58], ['whoosh', 22.88], ['whoosh', 25.48],
-  ['shutter', 4.95], ['tap', 5.99], ['tap', 6.44], ['tap', 7.0], ['pop', 7.82],
-  ['ping', 9.96], ['ping', 10.8], ['tap', 11.6], ['pop', 11.7],
-  ['tap', 14.3], ['whoosh', 14.45], ['pop', 16.06],
-  ['tick', 18.53], ['tick', 19.58], ['tick', 20.52], ['tick', 21.34],
-  ['pop', 23.27], ['pop', 24.24], ['pop', 26.78],
+  ['whoosh', 4.38], ['whoosh', 9.48], ['whoosh', 13.78], ['whoosh', 17.08], ['whoosh', 20.88], ['whoosh', 25.78],
+  ['pop', 5.05], ['pop', 6.6], ['tap', 7.5], ['tap', 7.85], ['tap', 8.15], ['pop', 8.1],
+  ['tap', 10.35], ['tick', 10.37], ['tap', 11.5], ['tick', 11.52], ['tap', 12.55], ['tick', 12.57],
+  ['tick', 14.5], ['tick', 14.65], ['tick', 14.8], ['tick', 14.95], ['ping', 15.3],
+  ['tap', 18.1], ['whoosh', 18.3], ['ping', 19.3],
+  ['pop', 22.0], ['pop', 23.25], ['pop', 24.3],
+  ['pop', 26.9],
 ].map(([n, at]) => ({ src: 'sfx/' + n + '.wav', at, gain: n === 'whoosh' ? .55 : .8 }));
 const MUSIC = { src: 'music.mp3', at: 0, gain: .2 };
 const AUDIO = [...VO.map(v => ({ ...v, gain: 1 })), ...SFX, MUSIC];
-const FALLBACK_LEN = [1.06, 1.76, 5.31, 3.6, 3.68, 4.91, 2.24, 2.81];
-// Choreography was authored on the ORIG scene grid; WARP maps real time → choreography time so each scene fits its VO line.
-const ORIG = [0, 5, 10.5, 15.5, 20, 24.8, 27.2, 30], REAL = [0, 4.0, 9.6, 13.6, 17.7, 23.0, 25.6, 30];
+const FALLBACK_LEN = [1.23, 2.49, 4.16, 3.4, 2.33, 2.77, 4.0, 2.94];
+// Choreography is authored directly on the real timeline this time, so WARP is the identity (kept for re-timing later).
+const ORIG = [0, 4.5, 9.6, 13.9, 17.2, 21.0, 25.9, 30], REAL = ORIG.slice();
 const warp = t => { for (let i = 1; i < REAL.length; i++) if (t <= REAL[i]) return ORIG[i - 1] + (t - REAL[i - 1]) / (REAL[i] - REAL[i - 1]) * (ORIG[i] - ORIG[i - 1]); return t; };
 
 // ---------- math ----------
@@ -258,13 +298,13 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
    HEADLINE BLOCKS
    ===================================================================== */
 const SC = [
-  { s: 0,    tag: '01 — hook',     lab: '// for sellers',              l1: 'Got something', lead: 'to',    scr: 'sell?' },
-  { s: 5,    tag: '02 — list it',  lab: '// snap · price · post',      l1: 'Post it in',    lead: 'just',  scr: 'seconds.' },
-  { s: 10.5, tag: '03 — offers',   lab: '// buyers come to you',       l1: 'Offers come',   lead: 'right', scr: 'to you.' },
-  { s: 15.5, tag: '04 — share',    lab: '// one tap to whatsapp',      l1: 'Share it to',   lead: 'your',  scr: 'Status.' },
-  { s: 20,   tag: '05 — trust',    lab: '// safety, built in',         l1: 'Deal with',     lead: 'full',  scr: 'confidence.', size: 128 },
-  { s: 24.8, tag: '06 — language', lab: '// chishona · isindebele',    l1: 'Mhoro.',        lead: '',      scr: 'Salibonani.', scrAt: 1.05 },
-  { s: 27.2, tag: '07 — get it',   lab: '// app store · google play',  l1: 'PaMarket.',     lead: '',      scr: 'buy, sell, rent, hire.', scrSize: .9, size: 132 },
+  { s: 0,    tag: '01 — hook',        lab: '// for harare traders',            l1: 'Your stall,',  lead: 'now',     scr: 'online.' },
+  { s: 4.5,  tag: '02 — price guide', lab: '// see what similar ads ask',      l1: 'Price it',     lead: 'just',    scr: 'right.' },
+  { s: 9.6,  tag: '03 — delivery',    lab: '// collection · city · nationwide', l1: 'Collect or',   lead: '',        scr: 'deliver.' },
+  { s: 13.9, tag: '04 — map view',    lab: '// buyers near you',               l1: 'Get found',    lead: 'on the',  scr: 'map.' },
+  { s: 17.2, tag: '05 — shop link',   lab: '// whatsapp · bio',                l1: 'One link',     lead: 'for your', scr: 'shop.' },
+  { s: 21.0, tag: '06 — meet safely', lab: '// busy, public places',           l1: 'Meet up',      lead: '',        scr: 'safely.' },
+  { s: 25.9, tag: '07 — get it',      lab: '// app store · google play',       l1: 'PaMarket.',    lead: '',        scr: 'buy, sell, rent, hire.', scrSize: .9, size: 132 },
 ];
 if (V) SC.forEach(d => { d.size = Math.round((d.size || 150) * .85); if (d.scrSize) d.scrSize = .72; });
 SC.forEach((d, i) => { d.e = i < SC.length - 1 ? SC[i + 1].s : DUR + 1; });
@@ -319,7 +359,7 @@ function renderText(t) {
 /* =====================================================================
    UI CARDS — the app doing the work
    ===================================================================== */
-const ckRows = $$('#cCk .ck-b'), langs = $$('#cLang .lg');
+const delRows = $$('#cDel .ck-b'), pins = $$('#cMap .pin'), spots = $$('#cSafe .sp');
 function card(el, t, a, b, o = {}) {
   const kin = P(t, a, .7, o.ease || E.outExpo), kout = P(t, b, .35, E.inCubic);
   const vis = t > a - .01 && t < b + .4;
@@ -328,45 +368,43 @@ function card(el, t, a, b, o = {}) {
   return kin;
 }
 function renderCards(t) {
-  // 02 listing: photo snapped at 5.95 → card builds
-  card($('cList'), t, 6.05, 10.05, { fx: 160, fy: 40, fs: .9, fr: 4, r: -1.5, sway: .6 });
-  $('cListWash').style.opacity = 1 - P(t, 6.1, .6, E.outCubic);
-  $('cPrice').textContent = 'US$ ' + Math.round(180 * P(t, 7.0, .7, E.outCubic));
-  $('cZig').textContent = 'ZiG ' + Math.round(180 * ZIG_RATE * P(t, 7.55, .7, E.outCubic)).toLocaleString('en-US');
-  tf($('cZig'), { s: L(.6, 1, P(t, 7.5, .5, E.outBack)), o: P(t, 7.5, .15, E.lin) });
-  tf($('cLive'), { s: L(.3, 1, P(t, 8.75, .5, E.outBack)) + .06 * bump(t, 9.2, .3), o: P(t, 8.75, .1, E.lin) });
+  // 02 listing: card builds, price guide lands on "price guide", then he types the price
+  card($('cList'), t, 5.0, 9.15, { fx: 160, fy: 40, fs: .9, fr: 4, r: -1.5, sway: .6 });
+  $('cListWash').style.opacity = 1 - P(t, 5.1, .6, E.outCubic);
+  const kg = P(t, 6.6, .55, E.outBack);
+  tf($('cPg'), { s: L(.85, 1, kg), o: P(t, 6.6, .15, E.lin) });
+  $('cPgR').style.opacity = P(t, 6.75, .2, E.lin);
+  $('cPrice').textContent = 'US$ ' + Math.round(15 * P(t, 7.5, .7, E.outCubic));
+  $('cZig').textContent = 'ZiG ' + Math.round(15 * ZIG_RATE * P(t, 8.1, .6, E.outCubic)).toLocaleString('en-US');
+  tf($('cZig'), { s: L(.6, 1, P(t, 8.05, .5, E.outBack)), o: P(t, 8.05, .15, E.lin) });
 
-  // 03 offers: phone buzzes → offers slide out of it; second one accepted
-  card($('cOf1'), t, 10.95, 15.05, { fx: 260, fy: 20, fs: .9, ease: E.outBackSoft, r: -1 });
-  const k2 = card($('cOf2'), t, 12.0, 15.05, { fx: 260, fy: 20, fs: .9, ease: E.outBackSoft, r: 1 });
-  $('cOf1').style.opacity = Math.min(+$('cOf1').style.opacity, 1 - .55 * P(t, 13.7, .4, E.lin));
-  const acc = t >= 13.62;
-  $('cOf2').classList.toggle('ok', acc);
-  $('cOf2i').textContent = acc ? 'check' : 'local_offer';
-  $('cOf2s').textContent = acc ? 'deal agreed' : 'from Farai · just now';
-  $('cOf2a').textContent = acc ? 'Accepted' : 'Accept';
-  if (k2) tf($('cOf2a'), { s: 1 - .12 * bump(t, 13.5, .22) });
+  // 03 delivery: a single-choice selector that moves with the VO — collection → my city → nationwide
+  card($('cDel'), t, 9.9, 13.45, { fy: 60, r: -1, sway: .4 });
+  const DS = [10.35, 11.5, 12.55];
+  delRows.forEach((b, i) => {
+    const kOn = P(t, DS[i], .45, E.outBack), kOff = i < 2 ? P(t, DS[i + 1], .25, E.inCubic) : 0, k = kOn * (1 - kOff);
+    tf(b.querySelector('i'), { s: k }); tf(b.querySelector('.mi'), { s: k, o: k });
+    tf(b.parentElement, { x: 8 * bump(t, DS[i], .3) });
+  });
 
-  // 04 status: flicked out of the phone
-  const ks = P(t, 16.45, .85, E.outBackSoft), vis4 = t > 16.44 && t < 20.4, kout4 = P(t, 19.6, .35, E.inCubic);
-  $('cSc').style.display = vis4 ? '' : 'none';
-  if (vis4) tf($('cSc'), { x: L(560, 0, ks), y: L(200, 0, ks) + Math.sin(t * 1.5) * 5 + L(0, -30, kout4), s: L(.2, 1, ks), r: L(24, -5, ks) + Math.sin(t * 1.2), o: Math.min(P(t, 16.45, .1, E.lin), 1 - kout4) });
-  $('cScBar').style.width = (P(t, 16.9, 2.6, E.lin) * 100).toFixed(1) + '%';
-  card($('cInv'), t, 18.2, 19.7, { fy: 30, fs: .5, ease: E.outBack, r: -3 });
+  // 04 map: price pins drop in, then "you" pops on "find you"
+  card($('cMap'), t, 14.1, 16.85, { fx: 120, fy: 30, fs: .92, r: 1, sway: .4 });
+  pins.forEach((p, i) => { const s0 = i < 4 ? 14.5 + i * .15 : 15.3, k = P(t, s0, .5, E.outBack); tf(p, { s: k * (1 + (i === 4 ? .08 * bump(t, 16.0, .35) : 0)), y: L(-16, 0, k), o: P(t, s0, .08, E.lin) }); });
 
-  // 05 trust checklist ticks in time with the VO
-  card($('cCk'), t, 20.35, 24.35, { fx: 0, fy: 60, r: -1, sway: .4 });
-  [20.75, 21.7, 22.55, 23.3].forEach((s, i) => { const k = P(t, s, .45, E.outBack); tf(ckRows[i].querySelector('i'), { s: k }); tf(ckRows[i].querySelector('.mi'), { s: k, o: P(t, s, .1, E.lin) }); });
+  // 05 shop link: tap the button, the message flicks out of the phone, "sent"
+  card($('cShare'), t, 17.5, 20.55, { fy: 30, fs: .6, ease: E.outBack, r: -2 });
+  if (t > 17.5) tf($('cShare'), { r: -2, s: 1 - .1 * bump(t, 18.0, .25), o: Math.min(P(t, 17.5, .25, E.lin), 1 - P(t, 20.55, .35, E.inCubic)), y: L(30, 0, P(t, 17.5, .7, E.outBack)) + L(0, -30, P(t, 20.55, .35, E.inCubic)) });
+  const km = P(t, 18.4, .85, E.outBackSoft), vism = t > 18.39 && t < 20.95, koutm = P(t, 20.55, .35, E.inCubic);
+  $('cMsg').style.display = vism ? '' : 'none';
+  if (vism) tf($('cMsg'), { x: L(520, 0, km), y: L(160, 0, km) + Math.sin(t * 1.5) * 4 + L(0, -30, koutm), s: L(.2, 1, km), r: L(22, 2, km) + Math.sin(t * 1.2) * .6, o: Math.min(P(t, 18.4, .1, E.lin), 1 - koutm) });
+  tf($('cSent'), { s: L(.3, 1, P(t, 19.3, .5, E.outBack)), o: P(t, 19.3, .1, E.lin) });
 
-  // 06 languages
-  card($('cLang'), t, 25.0, 26.85, { fy: 30 });
-  langs.forEach((g, i) => { g.classList.toggle('on', (i === 1 && t >= 25.05 && t < 25.95) || (i === 2 && t >= 25.95)); tf(g, { y: L(40, 0, P(t, 25.0 + i * .07, .7)), s: 1 + .06 * bump(t, i === 1 ? 25.05 : i === 2 ? 25.95 : 99, .3) }); });
+  // 06 meet safely: spots appear as they're named
+  card($('cSafe'), t, 21.4, 25.45, { fy: 60, r: 1, sway: .4 });
+  [22.0, 23.25, 24.3].forEach((s0, i) => { const k = P(t, s0, .55, E.outBack); tf(spots[i], { x: L(-30, 0, k), o: P(t, s0, .15, E.lin) }); tf(spots[i].querySelector('.mi'), { s: L(.2, 1, k) * (1 + .15 * bump(t, s0 + .1, .3)) }); });
 
   // 07 get it
-  card($('cGet'), t, 27.95, 99, { fy: 40 });
-
-  // camera flash when he snaps the photo
-  $('flash').style.opacity = (t > 5.93 ? .95 * (1 - P(t, 5.93, .5, E.outCubic)) : 0).toFixed(3);
+  card($('cGet'), t, 26.9, 99, { fy: 40 });
 }
 
 /* =====================================================================
@@ -375,7 +413,7 @@ function renderCards(t) {
 const GW = V ? 1080 : 1000, GH = V ? 1160 : 1080;
 if (V) { const gl = $('gl'); gl.width = GW; gl.height = GH; }
 // vertical: cards sit in the band between headline and character
-if (V) Object.entries({ cList: [80, 640], cOf1: [70, 700], cOf2: [70, 830], cSc: [110, 660], cInv: [360, 1180], cCk: [80, 680], cLang: [80, 640], cGet: [80, 620] }).forEach(([id, [x, y]]) => { $(id).style.left = x + 'px'; $(id).style.top = y + 'px'; });
+if (V) Object.entries({ cList: [80, 595], cDel: [80, 590], cMap: [70, 575], cShare: [80, 615], cMsg: [120, 715], cSafe: [80, 580], cGet: [80, 620] }).forEach(([id, [x, y]]) => { $(id).style.left = x + 'px'; $(id).style.top = y + 'px'; });
 const renderer = new THREE.WebGLRenderer({ canvas: $('gl'), antialias: false, alpha: false, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1); renderer.setSize(GW, GH, false);
 const rt = new THREE.WebGLRenderTarget(GW, GH, { samples: 4 });
@@ -463,18 +501,18 @@ const LP = {
   pump:  { sx: -.3, sz: 2.35, ex: -.3, ez: 1.05 },
   chest: { sx: -.55, sz: -.35, ex: -1.95, ez: 0 },
 };
-const rKeys = [[0, RP.rest], [3.3, RP.rest], [4.1, RP.hold], [5.15, RP.hold], [5.6, RP.photo], [6.2, RP.photo], [6.7, RP.hold], [16.2, RP.hold], [16.45, RP.flick], [16.9, RP.flick], [17.5, RP.hold], [20.2, RP.hold], [20.9, RP.rest], [30, RP.rest]];
-const lKeys = [[0, LP.rest], [.55, LP.wave], [2.1, LP.wave], [2.7, LP.rest], [6.5, LP.rest], [6.85, LP.tap], [8.35, LP.tap], [8.75, LP.rest], [13.1, LP.rest], [13.4, LP.tap], [13.75, LP.tap], [14.05, LP.pump], [14.9, LP.pump], [15.35, LP.rest], [15.65, LP.rest], [15.9, LP.tap], [16.25, LP.tap], [16.55, LP.rest], [20.7, LP.rest], [21.1, LP.chest], [23.9, LP.chest], [24.4, LP.rest], [27.3, LP.rest], [27.8, LP.wave], [30, LP.wave]];
-const waveW = [[0, 0], [.55, 1], [2.1, 1], [2.6, 0], [27.3, 0], [27.8, 1], [30, 1]];
-const pumpW = [[0, 0], [14.05, 0], [14.2, 1], [14.9, 1], [15.1, 0], [30, 0]];
-const TAPS = [6.95, 7.4, 7.95, 13.5, 16.0];
-const headX = [[0, 0], [4.1, 0], [4.4, .1], [5.1, -.04], [5.5, 0], [6.6, 0], [6.95, .3], [8.55, .3], [8.95, -.02], [10.75, -.02], [11.05, .3], [13.85, .3], [14.15, -.06], [15.7, 0], [15.95, .3], [16.4, .3], [16.75, -.03], [20.8, 0], [21.0, .13], [21.3, -.03], [22.3, 0], [22.5, .13], [22.8, -.02], [30, 0]];
-const headY = [[0, .25], [.9, 0], [6.6, 0], [6.95, -.32], [8.55, -.32], [8.95, .05], [10.75, 0], [11.05, -.32], [13.85, -.32], [14.15, .05], [15.7, 0], [15.95, -.32], [16.4, -.3], [16.75, -.18], [17.4, .06], [30, 0]];
-const headZ = [[0, 0], [.8, .12], [1.6, -.04], [2.6, .06], [3.4, 0], [8.9, 0], [9.3, .1], [10.2, 0], [14.1, 0], [14.4, -.08], [15.2, 0], [27.2, 0], [27.6, .12], [30, .1]];
-const browK = [[0, 0], [.35, 1], [1.5, 1], [1.9, 0], [11.9, 0], [12.05, 1], [12.7, 1], [13.1, 0], [24.95, 0], [25.15, .7], [26.1, .7], [26.4, 0], [30, 0]];
-const smileK = [[0, 1], [8.8, 1], [9.0, 1.4], [10.1, 1.4], [10.4, 1], [13.9, 1], [14.1, 1.45], [15.2, 1.45], [15.5, 1], [27.2, 1], [27.5, 1.45], [30, 1.45]];
-const BLINKS = [1.95, 4.7, 7.85, 10.25, 12.95, 15.3, 18.35, 21.85, 24.6, 26.95, 29.2];
-const buzz = t => (bump(t, 10.8, .35) + bump(t, 11.85, .35)) * Math.sin(t * 95) * .12;
+const rKeys = [[0, RP.rest], [3.6, RP.rest], [4.3, RP.hold], [18.0, RP.hold], [18.25, RP.flick], [18.7, RP.flick], [19.3, RP.hold], [20.9, RP.hold], [21.6, RP.rest], [30, RP.rest]];
+const lKeys = [[0, LP.rest], [.55, LP.wave], [2.1, LP.wave], [2.7, LP.rest], [7.1, LP.rest], [7.4, LP.tap], [8.3, LP.tap], [8.7, LP.rest], [10.0, LP.rest], [10.25, LP.tap], [12.75, LP.tap], [13.1, LP.rest], [15.0, LP.rest], [15.25, LP.pump], [16.0, LP.pump], [16.4, LP.rest], [17.7, LP.rest], [17.95, LP.tap], [18.25, LP.tap], [18.5, LP.rest], [21.5, LP.rest], [21.9, LP.chest], [24.9, LP.chest], [25.4, LP.rest], [26.0, LP.rest], [26.5, LP.wave], [30, LP.wave]];
+const waveW = [[0, 0], [.55, 1], [2.1, 1], [2.6, 0], [26.0, 0], [26.5, 1], [30, 1]];
+const pumpW = [[0, 0], [15.25, 0], [15.4, 1], [16.0, 1], [16.2, 0], [30, 0]];
+const TAPS = [7.5, 7.85, 8.15, 10.35, 11.5, 12.55, 18.1];
+const headX = [[0, 0], [4.2, 0], [4.5, .1], [5.0, -.03], [5.4, 0], [7.2, 0], [7.45, .3], [8.35, .3], [8.75, -.02], [10.1, -.02], [10.35, .28], [12.8, .28], [13.15, -.03], [15.1, 0], [15.35, -.06], [16.0, 0], [17.8, 0], [18.0, .3], [18.3, .3], [18.6, -.03], [21.8, 0], [22.0, .13], [22.3, -.03], [23.2, 0], [23.4, .12], [23.7, -.02], [24.2, 0], [24.4, .12], [24.7, -.02], [30, 0]];
+const headY = [[0, .25], [.9, 0], [7.2, 0], [7.45, -.32], [8.35, -.32], [8.75, .05], [10.1, 0], [10.35, -.32], [12.8, -.32], [13.15, .05], [14.0, 0], [17.8, 0], [18.0, -.32], [18.3, -.3], [18.6, -.18], [19.3, .06], [21.0, 0], [30, 0]];
+const headZ = [[0, 0], [.8, .12], [1.6, -.04], [2.6, .06], [3.4, 0], [8.8, 0], [9.2, .1], [9.9, 0], [15.3, 0], [15.6, -.08], [16.3, 0], [26.0, 0], [26.4, .12], [30, .1]];
+const browK = [[0, 0], [.35, 1], [1.5, 1], [1.9, 0], [4.8, 0], [4.95, 1], [6.0, 1], [6.4, 0], [14.2, 0], [14.35, .8], [15.2, .8], [15.5, 0], [30, 0]];
+const smileK = [[0, 1], [8.7, 1], [8.9, 1.4], [9.7, 1.4], [10.0, 1], [15.3, 1], [15.5, 1.45], [16.4, 1.45], [16.7, 1], [19.2, 1], [19.4, 1.4], [20.4, 1.4], [20.7, 1], [26.0, 1], [26.3, 1.45], [30, 1.45]];
+const BLINKS = [1.95, 4.3, 6.9, 9.4, 12.1, 14.0, 17.0, 20.5, 23.0, 25.6, 28.2];
+const buzz = t => 0; // no phone buzz beat in this script
 
 // lip-sync envelope: from decoded VO when available, else procedural
 let ENV = null, TREAL = 0; // Float32Array @ 60Hz over 30s
@@ -491,8 +529,8 @@ function renderCharacter(t) {
   const pk = IX.now - IX.poke, pw2 = pk >= 0 && pk < 2.2 ? Math.sin(Math.PI * cl(pk / 2.2)) : 0;
   const enter = P(t, 0, 1.0, E.outBackSoft);
   root.position.y = L(-6, 0, enter);
-  body.position.y = Math.sin(t * 2.1) * .035 + .06 * bump(t, 14.1, .3) - .04 * bump(t, 5.9, .25);
-  body.rotation.y = Math.sin(t * .6) * .06 + kf(t, [[0, 0], [16.2, 0], [16.45, -.18], [16.9, -.18], [17.4, 0], [30, 0]]);
+  body.position.y = Math.sin(t * 2.1) * .035 + .06 * bump(t, 15.4, .3) - .04 * bump(t, 18.3, .25);
+  body.rotation.y = Math.sin(t * .6) * .06 + kf(t, [[0, 0], [18.0, 0], [18.25, -.18], [18.7, -.18], [19.2, 0], [30, 0]]);
   body.rotation.z = Math.sin(t * .8 + 1) * .015;
 
   headPivot.rotation.x = kf(t, headX) + Math.sin(t * 1.3) * .015 + IX.ly * .25;
@@ -510,7 +548,7 @@ function renderCharacter(t) {
 
   // face
   const bl = BLINKS.reduce((a, s) => a + bump(t, s, .15), 0);
-  const look = kf(t, [[0, 0], [6.9, 0], [7.0, 1], [8.5, 1], [8.9, 0], [11.0, 0], [11.1, 1], [13.8, 1], [14.1, 0], [15.9, 0], [16.0, 1], [16.5, 1], [16.7, 0], [30, 0]]);
+  const look = kf(t, [[0, 0], [7.4, 0], [7.5, 1], [8.3, 1], [8.7, 0], [10.25, 0], [10.35, 1], [12.75, 1], [13.1, 0], [17.95, 0], [18.05, 1], [18.3, 1], [18.5, 0], [30, 0]]);
   eyes.forEach((e, i) => { const sx = i ? 1 : -1; e.scale.y = .215 * (1 - .9 * bl) * (1 + .1 * kf(t, browK)); e.position.set(...onHead(sx * .35 - look * .04 + IX.lx * .06, .1 - look * .05 - IX.ly * .05, -.03)); });
   hi.forEach(({ m, sx }, i) => { const p = eyes[i].position; m.position.set(p.x + .04, p.y + .06, p.z + .07); m.visible = bl < .5; });
   const bk = kf(t, browK);
@@ -587,10 +625,11 @@ async function loadVO() {
 const RENDER = new URLSearchParams(location.search).has('render');
 window.__seek = t => render(t);
 window.__vo = AUDIO;
+window.__slug = SLUG;
 window.__ready = Promise.all([
   document.fonts.load('600 100px "Inter Tight"'), document.fonts.load('700 100px "Inter Tight"'),
   document.fonts.load('700 100px Caveat'), document.fonts.load('400 20px "JetBrains Mono"'), document.fonts.load('700 20px "JetBrains Mono"'),
-  document.fonts.load('48px "Material Symbols Rounded"', 'chair'),
+  document.fonts.load('48px "Material Symbols Rounded"', 'checkroom'),
   ...[...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })),
   loadVO(),
 ]).then(() => document.fonts.ready).then(() => { layoutUnderlines(); render(0); return true; });

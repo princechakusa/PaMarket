@@ -1,6 +1,6 @@
 // Frame-accurate export: seeks the composition to every frame, screenshots it,
 // then encodes an MP4 (with the voice-over clips mixed in) using ffmpeg.
-//   node render.mjs                 → out/pamarket-for-sellers.mp4 (1080p30)
+//   node render.mjs                 → out/pamarket-<slug>.mp4 (1080p30; slug = SLUG in index.html)
 //   node render.mjs --snap 2 6.5 9  → shots/t2.00.png … (half-size stills for review)
 import { chromium } from 'playwright';
 import { spawnSync } from 'node:child_process';
@@ -18,9 +18,15 @@ const [VW, VH] = vert ? [1080, 1920] : [1920, 1080];
 const url = (await serve(5179)) + '?render=1' + (vert ? '&format=9x16' : '');
 
 let browser;
-try { browser = await chromium.launch({ channel: 'chrome' }); } catch { browser = await chromium.launch(); }
+try { browser = await chromium.launch({ channel: 'chrome' }); } catch { browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}); }
 const page = await browser.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: snap ? 0.5 : 1 });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
+// Behind a TLS-re-terminating proxy (cloud sandboxes) Chromium may not trust the proxy CA;
+// fetch external assets (CDN, fonts) from Node instead, which honours NODE_EXTRA_CA_CERTS.
+if (process.env.HTTPS_PROXY) await page.route(/^https:/, async route => {
+  try { const r = await fetch(route.request().url()); route.fulfill({ status: r.status, headers: Object.fromEntries(r.headers), body: Buffer.from(await r.arrayBuffer()) }); }
+  catch (e) { console.log('[route]', route.request().url(), e.message); route.abort(); }
+});
 page.on('console', m => m.type() === 'error' && console.log('[console]', m.text()));
 await page.goto(url);
 await page.evaluate(() => window.__ready);
@@ -37,6 +43,7 @@ if (snap) {
 }
 
 const vo = await page.evaluate(() => window.__vo.map(v => ({ src: v.src, at: v.at, gain: v.gain ?? 1 })));
+const slug = await page.evaluate(() => window.__slug || 'for-sellers');
 const frames = path.join(dir, 'frames');
 rmSync(frames, { recursive: true, force: true });
 mkdirSync(frames, { recursive: true });
@@ -51,7 +58,7 @@ await browser.close();
 
 let ffmpeg = 'ffmpeg';
 try { ffmpeg = (await import('ffmpeg-static')).default || ffmpeg; } catch {}
-const out = path.join(dir, 'out', vert ? 'pamarket-for-sellers-9x16.mp4' : 'pamarket-for-sellers.mp4');
+const out = path.join(dir, 'out', `pamarket-${slug}${vert ? '-9x16' : ''}.mp4`);
 const clips = vo.filter(v => existsSync(path.join(dir, v.src)));
 console.log(`mixing ${clips.length} audio clips`);
 const ff = ['-y', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.jpg')];
