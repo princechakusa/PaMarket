@@ -40,18 +40,19 @@ export async function getAmosCounts(): Promise<QueryResult<AmosCounts>> {
   };
 }
 
-export type DraftRow = { id: string; channel: string | null; draft_type: string | null; body: string | null; status: string | null; created_at: string | null; relevance_score: number | null; brand_alignment_score: number | null; seo_value_score: number | null };
+export type DraftMedia = { url: string | null; asset_type: 'image' | 'video' | null; format: string | null };
+export type DraftRow = { id: string; channel: string | null; draft_type: string | null; body: string | null; status: string | null; created_at: string | null; relevance_score: number | null; brand_alignment_score: number | null; seo_value_score: number | null; media: DraftMedia | null };
 export async function listPendingDrafts(): Promise<QueryResult<DraftRow[]>> {
   const client = getSupabaseClient();
   if (!client) return unavailable();
   const { data, error } = await client
     .from('amos_content_drafts')
-    .select('id, channel, draft_type, body, status, created_at, relevance_score, brand_alignment_score, seo_value_score')
+    .select('id, channel, draft_type, body, status, created_at, relevance_score, brand_alignment_score, seo_value_score, media:media_asset_id(url, asset_type, format)')
     .eq('status', 'draft')
     .order('created_at', { ascending: false })
     .limit(50);
   if (error) return { data: null, error: normalizeError(error) };
-  return { data: data ?? [], error: null };
+  return { data: (data ?? []) as unknown as DraftRow[], error: null };
 }
 
 /** This is the real, existing AMOS approval workflow (reviewed_by/

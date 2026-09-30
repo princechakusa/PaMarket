@@ -28,6 +28,10 @@ export function AmosDashboardPage() {
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Media must be reviewed before approval: videos watched to the end, images opened.
+  const [preview, setPreview] = useState<DraftRow | null>(null);
+  const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
+  const markReviewed = (id: string) => setReviewed((r) => ({ ...r, [id]: true }));
 
   const load = useCallback(async () => {
     if (auth.mode !== 'live') { setPhase('ready'); return; }
@@ -77,13 +81,41 @@ export function AmosDashboardPage() {
 
     {tab === 'approvals' && phase !== 'error' && <section className="directory-ledger">
       <header><span>{drafts.length} pending draft(s)</span></header>
-      <div className="directory-table-scroll"><table aria-label="Pending AMOS drafts"><thead><tr><th>Channel</th><th>Type</th><th>Body</th><th>Relevance</th><th>Brand fit</th><th>Created</th><th>Action</th></tr></thead>
-        <tbody>{drafts.map((d) => <tr key={d.id}><td>{d.channel ?? '—'}</td><td>{d.draft_type ?? '—'}</td><td style={{ maxWidth: 300 }}>{(d.body ?? '').slice(0, 120)}{(d.body?.length ?? 0) > 120 ? '…' : ''}</td><td>{d.relevance_score ?? '—'}</td><td>{d.brand_alignment_score ?? '—'}</td><td>{fmtDate(d.created_at)}</td>
-          <td><div className="jobs-actions"><button onClick={() => void decide(d.id, 'approved')}>Approve</button><button onClick={() => void decide(d.id, 'rejected')}>Reject</button></div></td>
-        </tr>)}</tbody></table>
+      <div className="directory-table-scroll"><table aria-label="Pending AMOS drafts"><thead><tr><th>Channel</th><th>Type</th><th>Media</th><th>Body</th><th>Relevance</th><th>Brand fit</th><th>Created</th><th>Action</th></tr></thead>
+        <tbody>{drafts.map((d) => {
+          const hasMedia = !!d.media?.url;
+          const locked = hasMedia && !reviewed[d.id];
+          return <tr key={d.id}><td>{d.channel ?? '—'}</td><td>{d.draft_type ?? '—'}</td>
+            <td>{hasMedia
+              ? <button onClick={() => { setPreview(d); if (d.media?.asset_type !== 'video') markReviewed(d.id); }}>
+                  <Icon name={d.media?.asset_type === 'video' ? 'play_circle' : 'image'} /> {d.media?.asset_type === 'video' ? 'Watch video' : 'View image'}{reviewed[d.id] ? ' ✓' : ''}
+                </button>
+              : '—'}</td>
+            <td style={{ maxWidth: 300 }}>{(d.body ?? '').slice(0, 120)}{(d.body?.length ?? 0) > 120 ? '…' : ''}</td><td>{d.relevance_score ?? '—'}</td><td>{d.brand_alignment_score ?? '—'}</td><td>{fmtDate(d.created_at)}</td>
+            <td><div className="jobs-actions">
+              <button disabled={locked} title={locked ? 'Watch the video to the end before approving' : undefined} onClick={() => void decide(d.id, 'approved')}>Approve</button>
+              <button onClick={() => void decide(d.id, 'rejected')}>Reject</button>
+            </div>{locked && <small>Watch first to approve</small>}</td>
+          </tr>;
+        })}</tbody></table>
         {drafts.length === 0 && <div className="directory-empty" role="status">No drafts pending review.</div>}
       </div>
       {message && <p role="status">{message}</p>}
+      {preview?.media?.url && <div role="dialog" aria-modal="true" aria-label="Draft media preview" onClick={() => setPreview(null)}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.78)', display: 'grid', placeItems: 'center', zIndex: 1000, padding: 24 }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: '#111', borderRadius: 16, padding: 16, maxWidth: 'min(1100px, 96vw)', maxHeight: '94vh', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
+            <b>{preview.channel ?? 'Draft'} · {preview.media.asset_type}{preview.media.format ? ` · ${preview.media.format}` : ''}</b>
+            <button onClick={() => setPreview(null)} aria-label="Close preview"><Icon name="close" /></button>
+          </div>
+          {preview.media.asset_type === 'video'
+            ? <video src={preview.media.url} controls autoPlay playsInline onEnded={() => markReviewed(preview.id)}
+                style={{ maxWidth: '100%', maxHeight: '72vh', borderRadius: 10, background: '#000' }} />
+            : <img src={preview.media.url} alt="Draft media" style={{ maxWidth: '100%', maxHeight: '72vh', borderRadius: 10 }} />}
+          <p style={{ color: '#ddd', margin: 0, whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto' }}>{preview.body}</p>
+          <small style={{ color: '#aaa' }}>{reviewed[preview.id] ? 'Reviewed — you can approve this draft.' : 'Approve unlocks once the video has played to the end.'}</small>
+        </div>
+      </div>}
     </section>}
 
     {tab === 'intelligence' && phase !== 'error' && <section className="directory-ledger">

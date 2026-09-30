@@ -247,6 +247,12 @@ export type Database = {
         Update: { is_active?: boolean | null; name?: string | null; description?: string | null; icon?: string | null; color?: string | null; sort_order?: number | null; updated_by?: string | null; updated_at?: string | null };
         Relationships: [];
       };
+      safe_meeting_spots: {
+        Row: { id: string; city: string; name: string; area: string | null; note: string | null; is_active: boolean; sort_order: number; created_at: string; updated_at: string };
+        Insert: { id?: string; city: string; name: string; area?: string | null; note?: string | null; is_active?: boolean; sort_order?: number; updated_at?: string };
+        Update: { city?: string; name?: string; area?: string | null; note?: string | null; is_active?: boolean; sort_order?: number; updated_at?: string };
+        Relationships: [];
+      };
       // Institutions Phase 2: first Admin-side consumption of provinces/
       // cities -- these tables already existed (Stage 4 taxonomy) but were
       // never read from Admin before now. Read-only here; province/city
