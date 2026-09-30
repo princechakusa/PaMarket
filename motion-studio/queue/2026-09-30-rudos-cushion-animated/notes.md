@@ -1,0 +1,5 @@
+- Format: animated cast skit (bendable puppet rigs, lip-sync, depth-parallax backgrounds). Source: motion-studio/scenes/cast-best/index.html
+- Cast: Rudo, Tariro, Sekuru Tadiwa, Nyasha. Voices: Rudo (Chulu, SA), Sekuru (Dr Samuel Rosso, SA), tagline (Harare Presenter) from ElevenLabs; Tariro (af_heart, American) and Nyasha (bf_emma, British) from local Kokoro TTS because ElevenLabs disabled the free tier on 2026-09-30.
+- ZiG rate: 26.847 per US$ (open.er-api.com, 2026-09-29). Prices shown: US$12 cushion (ZiG 322), offer US$10 (ZiG 268), price guide US$8–15.
+- Features shown are real: listings, in-app offers, price guides, safe meet-up spots, scam warnings, reply-time badges.
+- Location: the AMOS publisher tags every video post with a Zimbabwe/Harare place automatically.
