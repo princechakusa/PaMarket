@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { serve } from './serve.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
-const url = await serve(5178);
+const url = await serve(5178, process.argv[2] || 'index.html');
 const args = ['--start-maximized', '--autoplay-policy=no-user-gesture-required'];
 
 let browser;

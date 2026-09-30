@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "soundFile": "C:\\Projects\\PaMarket\\motion-studio\\scenes\\next-owner\\vo\\06-chipo.wav",
+    "duration": 1.73
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.02, "value": "X" },
+    { "start": 0.02, "end": 0.10, "value": "A" },
+    { "start": 0.10, "end": 0.17, "value": "C" },
+    { "start": 0.17, "end": 0.23, "value": "B" },
+    { "start": 0.23, "end": 0.37, "value": "G" },
+    { "start": 0.37, "end": 0.44, "value": "C" },
+    { "start": 0.44, "end": 0.93, "value": "B" },
+    { "start": 0.93, "end": 1.00, "value": "G" },
+    { "start": 1.00, "end": 1.14, "value": "B" },
+    { "start": 1.14, "end": 1.22, "value": "A" },
+    { "start": 1.22, "end": 1.49, "value": "D" },
+    { "start": 1.49, "end": 1.56, "value": "C" },
+    { "start": 1.56, "end": 1.63, "value": "B" },
+    { "start": 1.63, "end": 1.73, "value": "X" }
+  ]
+}

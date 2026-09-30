@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaMarket — Everything has a next owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+<style>
+:root{--ink:#111;--mute:#9a9a95;--line:#e6e6e1;--blue:#2466e8;--blue-soft:#eaf1ff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0e0e0e;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:#000;color:var(--ink);transform-origin:0 0;font-family:'Inter Tight',system-ui,sans-serif}
+body.v #stage{width:1080px;height:1920px}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.mi{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;line-height:1;display:inline-block;white-space:nowrap;font-feature-settings:'liga';font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 48}
+#cv{position:absolute;left:0;top:0}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 75% at 50% 45%,rgba(0,0,0,0) 58%,rgba(0,0,0,.32) 100%)}
+#grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:overlay;opacity:.05}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.chr{position:absolute;font-size:21px;color:rgba(255,255,255,.9);white-space:pre;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+#tagL{left:52px;top:44px}#tcR{right:52px;top:44px}#cnt{left:52px;bottom:44px;font-size:19px}#urlR{right:52px;bottom:44px;font-size:19px}
+body.v #tagL,body.v #cnt{left:44px}body.v #tcR,body.v #urlR{right:44px}
+#stage.light .chr{color:var(--mute);text-shadow:none}
+#lt{position:absolute;display:flex;opacity:0;white-space:nowrap}
+#lt b{background:var(--blue);color:#fff;font-weight:700;font-size:30px;letter-spacing:-.02em;padding:14px 22px;border-radius:14px 0 0 14px}
+#lt span{background:#fff;color:var(--ink);font-size:21px;padding:0 22px;display:flex;align-items:center;border-radius:0 14px 14px 0}
+#cap{position:absolute;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none}
+#cap .who{display:inline-block;font-size:17px;letter-spacing:.08em;color:#fff;background:rgba(17,17,17,.72);padding:6px 12px;border-radius:8px;margin-bottom:10px}
+#cap .txt{background:rgba(17,17,17,.8);color:#fff;font-weight:600;font-size:44px;letter-spacing:-.02em;line-height:1.18;padding:14px 26px 16px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone;display:inline}
+body.v #cap .txt{font-size:50px}
+#cap .w{opacity:.3}#cap .w.on{opacity:1}#cap .w.now{color:#8fb3ff}
+.ui{position:absolute;background:#fff;border:1.5px solid var(--line);border-radius:24px;box-shadow:0 34px 70px -30px rgba(0,0,0,.5);opacity:0;color:var(--ink)}
+.photo{height:210px;border-radius:16px;margin:14px;position:relative;overflow:hidden;background:#eee center/cover no-repeat}
+.lc-b{padding:2px 26px 24px}
+.lc-t{font-weight:600;font-size:32px;letter-spacing:-.03em}
+.lc-l{font-size:17px;color:var(--mute);margin-top:4px}
+.lc-row{display:flex;align-items:center;gap:14px;margin-top:14px}
+.lc-p{font-weight:700;font-size:46px;letter-spacing:-.04em}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--blue);color:var(--blue);border-radius:999px;padding:6px 14px;font-size:19px;font-weight:700;white-space:nowrap;background:#fff}
+.chip.fill{background:var(--blue);color:#fff}
+.chip i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.live{position:absolute;right:26px;top:28px}
+.nt{display:flex;align-items:center;gap:18px;padding:18px 22px;width:520px}
+.nt .ic{width:58px;height:58px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:30px;flex:none}
+.nt b{font-weight:600;font-size:27px;letter-spacing:-.025em;display:block;white-space:nowrap}
+.nt small{font-size:16px;color:var(--mute)}
+.nt .acc{margin-left:auto;background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;font-size:18px;white-space:nowrap}
+.nt.ok{background:var(--blue);border-color:var(--blue);color:#fff}
+.nt.ok .ic{background:rgba(255,255,255,.18);color:#fff}
+.nt.ok small{color:rgba(255,255,255,.78)}
+.nt.ok .acc{background:#fff;color:var(--blue)}
+.nt.warn .ic{background:#fff1e6;color:#d9661f}
+#end{position:absolute;inset:0;background:#fff;opacity:0}
+#endHl{position:absolute;font-weight:700;letter-spacing:-.05em;line-height:.98;color:var(--ink);white-space:nowrap}
+#endHl .scr{font-family:Caveat,cursive;color:var(--blue);font-size:1.3em;letter-spacing:-.01em;position:relative;display:inline-block}
+#endHl svg{position:absolute;left:0;bottom:-.08em;overflow:visible}
+#endSub{position:absolute;display:flex;flex-direction:column;gap:22px}
+#endSub .url{font-size:32px;font-weight:600;letter-spacing:-.02em}
+#endSub .url b{color:var(--blue)}
+.stores{display:flex;gap:18px;align-items:center}
+.stores img{height:72px;display:block}
+#logo{position:absolute;width:86px;height:86px;border-radius:22px}
+.cut{position:absolute;transform-origin:50% 100%;filter:drop-shadow(0 30px 30px rgba(0,0,0,.18))}
+#ui{position:fixed;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;gap:18px;padding:0 22px;background:#111;font:500 14px 'JetBrains Mono',monospace;color:#bbb;user-select:none}
+#ui button{height:38px;padding:0 14px;border-radius:9px;border:0;background:var(--blue);color:#fff;font:700 14px 'JetBrains Mono',monospace;cursor:pointer}
+#scrub{position:relative;flex:1;height:30px;cursor:pointer}
+#scrub .track{position:absolute;left:0;right:0;top:13px;height:4px;border-radius:2px;background:#333}
+#scrubFill{position:absolute;left:0;top:13px;height:4px;border-radius:2px;background:var(--blue)}
+body.render #ui{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="vig"></div>
+
+  <div id="cList" class="ui" style="width:440px">
+    <div class="photo" id="cListPh"></div>
+    <div class="chip fill live" id="cLive"><i></i>LIVE</div>
+    <div class="lc-b">
+      <div class="lc-t">Black roadster bicycle</div>
+      <div class="lc-l mono">Harare · Highfield</div>
+      <div class="lc-row"><div class="lc-p">US$ 35</div><div class="chip" id="cZig">ZiG 0</div></div>
+    </div>
+  </div>
+  <div id="cOffer" class="ui nt"><div class="ic mi" id="cOfI">local_offer</div><div><b id="cOfB">Offer · US$ 30</b><small class="mono" id="cOfS">from Chipo · just now</small></div><div class="acc" id="cOfA">Send</div></div>
+  <div id="cMeet" class="ui nt"><div class="ic mi">storefront</div><div><b>Meet at the shops</b><small class="mono">Busy · public · daytime</small></div></div>
+  <div id="cCheck" class="ui nt warn"><div class="ic mi">gpp_maybe</div><div><b>Check it, then pay</b><small class="mono">PaMarket scam warning</small></div></div>
+  <div id="flash"></div>
+
+  <div id="end">
+    <img id="logo" src="../../../img/icon-512.png" alt="">
+    <div id="endHl"><div>Everything has a</div><div><span class="scr" id="endScr">next owner.<svg id="endUl" height="30"><path id="endUlP" fill="none" stroke="#2466e8" stroke-width="7" stroke-linecap="round"/></svg></span></div></div>
+    <div id="endSub"><div class="url mono">pamarket<b>zw</b>.com</div><div class="stores"><img src="../../../img/app-store-badge.svg" alt=""><img src="../../../img/google-play-badge.png" alt=""></div></div>
+    <img class="cut" id="cutRide" src="cut/ride.png" alt="">
+    <img class="cut" id="cutHug" src="cut/hug.png" alt="">
+    <div style="position:absolute;left:0;right:0;bottom:0;height:170px;background:linear-gradient(rgba(255,255,255,0),#fff 70%)"></div>
+  </div>
+
+  <div id="lt"><b id="ltB"></b><span class="mono" id="ltS"></span></div>
+  <div id="cap"><div class="who mono" id="capWho"></div><div><span class="txt" id="capTxt"></span></div></div>
+  <div id="tagL" class="chr mono"></div>
+  <div id="tcR" class="chr mono"></div>
+  <div id="cnt" class="chr mono"></div>
+  <div id="urlR" class="chr mono">pamarketzw.com</div>
+  <canvas id="grain"></canvas>
+</div>
+<div id="ui"><button id="play">PAUSE</button><span id="tc">00.00 / 30.00</span><div id="scrub"><div class="track"></div><div id="scrubFill"></div></div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const Q = new URLSearchParams(location.search);
+const V = Q.get('format') === '9x16';
+if (V) document.body.classList.add('v');
+const SW = V ? 1080 : 1920, SH = V ? 1920 : 1080, DUR = 30, FPS = 30;
+const P = (h, v) => V ? v : h;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const L = (a, b, k) => a + (b - a) * k;
+const R = (t, a, b) => clamp((t - a) / (b - a));
+const eo = x => 1 - Math.pow(1 - x, 3);
+const eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { const c = 1.9, c3 = c + 1; return 1 + c3 * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const bump = (t, a, b) => Math.sin(Math.PI * R(t, a, b));
+const ZIG_RATE = 26.847; // open.er-api.com rates.ZWG, 2026-09-29
+const zig = u => Math.round(u * ZIG_RATE);
+const cv = $('cv'); cv.width = SW; cv.height = SH; const ctx = cv.getContext('2d');
+
+// ---------- shots ----------
+// img: source still (+ .depth.png). Camera: zoom z0->z1, centre (cx,cy) in image uv (x also used for the 9:16 crop),
+// parallax offset ox0->ox1 / oy0->oy1 (uv units, background moves, subject at depth 'focus' stays put). fx: overlay effect.
+const SHOTS = [
+  { id: 'a-yard',   img: 'a-yard',  a: 0.00,  b: 4.60,  z0: 1.02, z1: 1.16, cx: .40, cy: .52, ox0: -.022, ox1: .018, oy0: .006, oy1: -.004, focus: .72, fx: 'dust' },
+  { id: 'b-photo',  img: 'b-photo', a: 4.60,  b: 8.60,  z0: 1.06, z1: 1.14, cx: .55, cy: .45, ox0: .02, ox1: -.02, oy0: 0, oy1: 0, focus: .8, fx: 'dust' },
+  { id: 'c-chipo',  img: 'c-chipo', a: 8.60,  b: 10.90, z0: 1.02, z1: 1.14, cx: .48, cy: .45, ox0: -.012, ox1: .012, oy0: .01, oy1: -.008, focus: .8, fx: 'petals' },
+  { id: 'd-accept', img: 'b-photo', a: 10.90, b: 13.70, z0: 1.55, z1: 1.75, cx: .42, cy: .33, ox0: -.01, ox1: .012, oy0: 0, oy1: 0, focus: .85, fx: 'dust' },
+  { id: 'e-meet',   img: 'e-meet',  a: 13.70, b: 18.20, z0: 1.05, z1: 1.12, cx: .52, cy: .5, ox0: .024, ox1: -.024, oy0: 0, oy1: 0, focus: .78, fx: 'petals' },
+  { id: 'f-ride',   img: 'f-ride',  a: 18.20, b: 21.00, z0: 1.08, z1: 1.12, cx: .58, cy: .5, ox0: -.04, ox1: .04, oy0: 0, oy1: 0, focus: .82, fx: 'petals' },
+  { id: 'g-shoes',  img: 'g-shoes', a: 21.00, b: 23.20, z0: 1.03, z1: 1.15, cx: .45, cy: .5, ox0: -.014, ox1: .014, oy0: 0, oy1: 0, focus: .78, fx: 'dust' },
+  { id: 'h-hug',    img: 'h-hug',   a: 23.20, b: 25.75, z0: 1.05, z1: 1.18, cx: .45, cy: .45, ox0: .012, ox1: -.012, oy0: .004, oy1: -.004, focus: .8, fx: 'sparkle' },
+];
+const XF = .24; // crossfade length
+let MAN = {};
+
+// WebGL depth-parallax renderer (offscreen), copied into the 2D canvas
+const glc = document.createElement('canvas'); glc.width = SW; glc.height = SH;
+const gl = glc.getContext('webgl', { preserveDrawingBuffer: true, premultipliedAlpha: false });
+const prog = (() => {
+  const vs = `attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+  const fs = `precision highp float;varying vec2 v;uniform sampler2D img,dep;uniform vec4 crop;uniform vec2 off;uniform float focus;
+  void main(){vec2 uv=crop.xy+vec2(v.x,1.-v.y)*crop.zw;vec2 q=uv;
+  for(int i=0;i<5;i++){float d=texture2D(dep,q).r;q=uv-off*(d-focus);}
+  q=clamp(q,vec2(.001),vec2(.999));gl_FragColor=texture2D(img,q);}`;
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform1i(gl.getUniformLocation(pr, 'img'), 0); gl.uniform1i(gl.getUniformLocation(pr, 'dep'), 1);
+  return pr;
+})();
+const U = n => gl.getUniformLocation(prog, n);
+const TEX = {};
+function loadImg(src) { return new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; }); }
+function tex(im) { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im); return t; }
+async function loadShots() {
+  const names = [...new Set(SHOTS.map(s => s.img))];
+  await Promise.all(names.map(async n => {
+    const [im, dp] = await Promise.all([loadImg(`gen/${n}.png`), loadImg(`gen/${n}.depth.png`)]);
+    TEX[n] = { img: tex(im), dep: tex(dp), w: im.width, h: im.height };
+  }));
+}
+// animated clip frames (from prep.py) win over the depth-parallax still
+const FCACHE = new Map();
+function clipFrame(s, t) {
+  const m = MAN[s.id]; if (!m) return null;
+  const n = clamp(Math.floor((t - s.a + XF / 2) * m.fps) + 1, 1, m.count);
+  const key = `clips/${s.id}/${String(n).padStart(4, '0')}.jpg`;
+  let im = FCACHE.get(key);
+  if (!im) { im = new Image(); im.src = key; FCACHE.set(key, im); if (FCACHE.size > 90) FCACHE.delete(FCACHE.keys().next().value); }
+  return im;
+}
+function drawClip(s, t, alpha, im) {
+  const iw = im.naturalWidth, ih = im.naturalHeight, z = 1 + .04 * eio(R(t, s.a, s.b));
+  let sw, sh; if (SW / SH > iw / ih) { sw = iw / z; sh = sw * SH / SW; } else { sh = ih / z; sw = sh * SW / SH; }
+  const sx = V ? clamp(iw * s.cx - sw / 2, 0, iw - sw) : (iw - sw) / 2, sy = (ih - sh) / 2;
+  ctx.globalAlpha = alpha; ctx.drawImage(im, sx, sy, sw, sh, 0, 0, SW, SH); ctx.globalAlpha = 1;
+  overlay(s, t, alpha);
+}
+function drawShot(s, t, alpha) {
+  const im = clipFrame(s, t);
+  if (im && im.complete && im.naturalWidth) return drawClip(s, t, alpha, im);
+  const T = TEX[s.img]; if (!T) return;
+  const k = eio(R(t, s.a - XF / 2, s.b + XF / 2)), z = L(s.z0, s.z1, k);
+  const ia = T.w / T.h, sa = SW / SH;
+  let cw, ch; if (sa > ia) { cw = 1 / z; ch = cw * ia / sa; } else { ch = 1 / z; cw = ch * sa / ia; }
+  const cx = clamp(s.cx - cw / 2, 0, 1 - cw), cy = clamp(s.cy - ch / 2, 0, 1 - ch);
+  gl.viewport(0, 0, SW, SH);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, T.img);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, T.dep);
+  gl.uniform4f(U('crop'), cx, cy, cw, ch);
+  gl.uniform2f(U('off'), L(s.ox0, s.ox1, k) * (V ? .7 : 1), L(s.oy0, s.oy1, k));
+  gl.uniform1f(U('focus'), s.focus);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  ctx.globalAlpha = alpha; ctx.drawImage(glc, 0, 0); ctx.globalAlpha = 1;
+  overlay(s, t, alpha);
+}
+// atmosphere overlays: drifting jacaranda petals / sunlit dust / sparkles (deterministic)
+const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+function overlay(s, t, alpha) {
+  const lt = t - s.a + 5;
+  ctx.save(); ctx.globalAlpha = alpha;
+  if (s.fx === 'petals') {
+    for (let i = 0; i < 46; i++) {
+      const sp = 60 + hash(i) * 90, x = ((hash(i + 3) * SW + Math.sin(lt * .9 + i) * 50 - lt * (s.id === 'f-ride' ? 260 : 30)) % SW + SW) % SW;
+      const y = ((hash(i + 7) * SH + lt * sp) % (SH + 60)) - 30, r = (5 + hash(i + 11) * 8) * (V ? 1.2 : 1);
+      ctx.fillStyle = i % 3 ? 'rgba(181,138,230,.9)' : 'rgba(213,184,245,.9)';
+      ctx.beginPath(); ctx.ellipse(x, y, r, r * .6, lt * (1 + hash(i)) + i, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (s.fx === 'dust' || s.fx === 'sparkle') {
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < 40; i++) {
+      const x = ((hash(i + 1) * SW + Math.sin(lt * .4 + i) * 40 + lt * 12) % SW + SW) % SW, y = ((hash(i + 5) * SH - lt * (8 + hash(i) * 16)) % SH + SH) % SH;
+      const tw = .5 + .5 * Math.sin(lt * 2.3 + i * 1.7), r = s.fx === 'sparkle' ? 2 + hash(i + 2) * 4 : 1.5 + hash(i + 2) * 3;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4); g.addColorStop(0, `rgba(255,236,190,${.55 * tw})`); g.addColorStop(1, 'rgba(255,236,190,0)');
+      ctx.fillStyle = g; ctx.fillRect(x - r * 4, y - r * 4, r * 8, r * 8);
+    }
+    // soft sun glow from the top corner
+    const sx = s.id === 'h-hug' || s.id === 'g-shoes' ? SW * .95 : SW * .75, gg = ctx.createRadialGradient(sx, -SH * .1, 0, sx, -SH * .1, SH * 1.1);
+    gg.addColorStop(0, 'rgba(255,214,150,.22)'); gg.addColorStop(1, 'rgba(255,214,150,0)'); ctx.fillStyle = gg; ctx.fillRect(0, 0, SW, SH);
+  }
+  ctx.restore();
+}
+async function ensure(t) {
+  const ims = SHOTS.filter(s => t >= s.a - XF && t < s.b + XF).map(s => clipFrame(s, t)).filter(Boolean);
+  await Promise.all(ims.map(im => im.decode ? im.decode().catch(() => {}) : 0));
+}
+
+// ---------- voice ----------
+const VO = [
+  { id: '01-narr',   who: 'NARRATOR',    at: .30,  text: 'In Zimbabwe, every good thing has a next owner.' },
+  { id: '02-tendai', who: 'BABA TENDAI', at: 4.75, text: 'This old bicycle? On PaMarket — thirty-five dollars.' },
+  { id: '03-chipo',  who: 'CHIPO',       at: 8.70, text: "Thirty-five? I'll offer thirty!" },
+  { id: '04-tendai', who: 'BABA TENDAI', at: 11.00, text: 'Deal! See you at the shops.' },
+  { id: '05-narr',   who: 'NARRATOR',    at: 13.85, text: 'Meet somewhere busy, in daylight. Check it — then pay.' },
+  { id: '06-chipo',  who: 'CHIPO',       at: 18.35, text: 'My first delivery bike!' },
+  { id: '07-narr',   who: 'NARRATOR',    at: 21.10, text: 'And for Baba Tendai… new school shoes.' },
+  { id: '09-tag',    who: 'NARRATOR',    at: 25.85, text: 'PaMarket. Everything has a next owner.' },
+];
+const SFX = [
+  ['whoosh', 4.5], ['shutter', 6.1], ['pop', 6.85], ['tick', 7.3], ['whoosh', 8.5],
+  ['tap', 9.7], ['pop', 9.85], ['whoosh', 10.6], ['tap', 11.1], ['ping', 11.22], ['pop', 12.3],
+  ['whoosh', 13.6], ['pop', 15.9], ['whoosh', 18.1], ['ping', 19.0], ['whoosh', 20.9], ['ping', 23.4],
+  ['whoosh', 25.6], ['ping', 27.2],
+].map(([n, at]) => ({ src: 'sfx/' + n + '.wav', at, gain: n === 'whoosh' ? .45 : .7 }));
+const MUSIC = { src: 'music.mp3', at: 0, gain: .16 };
+
+VO.forEach(v => { v.el = document.createElement('span'); v.words = v.text.split(' ').map(w => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w + ' '; v.el.appendChild(s); return { w, s }; }); });
+function timeWords(v) {
+  const act = (v.cues || []).filter(c => c.value !== 'X');
+  const t0 = act.length ? act[0].start : .05, t1 = act.length ? act[act.length - 1].end : v.dur - .1;
+  const tot = v.words.reduce((a, w) => a + w.w.length + 1.5, 0); let acc = 0;
+  v.words.forEach(w => { w.st = v.at + t0 + acc / tot * (t1 - t0); acc += w.w.length + 1.5; });
+}
+const LT = [[4.9, 8.3, 'BABA TENDAI', 'Highfield'], [8.75, 10.8, 'CHIPO', 'student · Harare'], [21.2, 23.1, 'RUFARO', 'his daughter']];
+const TAGS = ['// 01 — highfield · morning', '// 02 — listed', '// 03 — harare cbd', '// 04 — deal', '// 05 — meet safely', '// 06 — the next owner', '// 07 — back home', '// 08 — back home', '// 09 — pamarket'];
+
+// ---------- render ----------
+function card(el, x, y, op, sc = 1, rot = 0) { el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = op; el.style.display = op <= .001 ? 'none' : ''; el.style.transform = `scale(${sc}) rotate(${rot}deg)`; }
+const popIn = (t, t0, d = .45) => { const k = R(t, t0, t0 + d); return { op: clamp(k * 3), sc: L(.82, 1, back(k)) }; };
+
+function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, SW, SH);
+  let tag = SHOTS.length;
+  SHOTS.forEach((s, i) => {
+    if (t >= s.a && t < s.b) tag = i;
+    const aIn = i === 0 ? 1 : R(t, s.a - XF / 2, s.a + XF / 2), aOut = 1 - R(t, s.b - XF / 2, s.b + XF / 2);
+    const a = Math.min(aIn, i === SHOTS.length - 1 ? 1 : aOut);
+    if (a > 0 && t > s.a - XF && t < s.b + XF) drawShot(s, t, a);
+  });
+  uiCards(t); captions(t); chrome(t, tag); endCard(t); grain(Math.round(t * FPS));
+}
+
+function uiCards(t) {
+  { const p = popIn(t, 6.85), mv = eio(R(t, 8.5, 8.9));
+    card($('cList'), L(P(1380, 90), P(1380, 90), mv), L(P(170, 150), P(170, 150), mv), p.op * (1 - R(t, 10.5, 10.75)), p.sc * (1 - .05 * mv));
+    $('cLive').style.opacity = R(t, 7.3, 7.4);
+    $('cZig').textContent = 'ZiG ' + zig(35 * eo(R(t, 7.0, 7.7))); }
+  { const p = popIn(t, 9.85), fly = eio(R(t, 10.6, 11.1)), ok = t >= 11.22;
+    const x = L(P(1380, 90), P(SW / 2 - 260, 280), fly), y = L(P(640, 700), P(170, 200), fly) - Math.sin(Math.PI * fly) * 90;
+    card($('cOffer'), x, y, p.op * (1 - R(t, 13.45, 13.65)), p.sc * (1 + .05 * bump(t, 11.1, 11.3)));
+    $('cOffer').classList.toggle('ok', ok);
+    $('cOfI').textContent = ok ? 'check_circle' : 'local_offer';
+    $('cOfB').textContent = ok ? 'Offer accepted' : 'Offer · US$ 30';
+    $('cOfS').textContent = ok ? 'Baba Tendai · ZiG ' + zig(30) : 'from Chipo · just now';
+    $('cOfA').textContent = ok ? 'Chat' : (t < 10.6 ? 'Send' : 'Accept'); }
+  { const p = popIn(t, 12.3); card($('cMeet'), P(SW / 2 - 260, 280), P(300, 330), p.op * (1 - R(t, 13.45, 13.65)), p.sc); }
+  { const p = popIn(t, 15.9); card($('cCheck'), P(80, 280), P(150, 170), p.op * (1 - R(t, 17.9, 18.15)), p.sc); }
+  $('flash').style.opacity = t > 6.1 ? .55 * (1 - R(t, 6.1, 6.32)) : 0;
+}
+function captions(t) {
+  const v = VO.find(v => v.id !== '09-tag' && t >= v.at - .05 && t < v.at + (v.dur || 3) + .3), capEl = $('cap');
+  if (v) {
+    if ($('capTxt').firstChild !== v.el) { $('capTxt').innerHTML = ''; $('capTxt').appendChild(v.el); }
+    $('capWho').textContent = v.who;
+    let last = null; v.words.forEach(w => { const on = t >= w.st; w.s.classList.toggle('on', on); w.s.classList.remove('now'); if (on) last = w; });
+    if (last) last.s.classList.add('now');
+    capEl.style.opacity = R(t, v.at - .05, v.at + .15) * (1 - R(t, v.at + v.dur + .1, v.at + v.dur + .3));
+    capEl.style.display = 'block';
+    capEl.style.bottom = (t > 25.6 ? P(96, 1010) : P(96, 250)) + 'px'; capEl.style.width = P(1640, 960) + 'px';
+  } else capEl.style.display = 'none';
+  const lt = LT.find(l => t >= l[0] && t < l[1]), el = $('lt');
+  if (lt) { $('ltB').textContent = lt[2]; $('ltS').textContent = lt[3]; const k = eo(R(t, lt[0], lt[0] + .35)) * (1 - R(t, lt[1] - .3, lt[1])); el.style.opacity = k; el.style.left = P(52, 44) + 'px'; el.style.top = '110px'; el.style.transform = `translateX(${(1 - k) * -30}px)`; el.style.display = 'flex'; }
+  else el.style.display = 'none';
+}
+function chrome(t, tag) {
+  $('tagL').textContent = TAGS[tag];
+  $('cnt').textContent = TAGS.map((_, i) => i <= tag ? '■' : '□').join('');
+  const s = Math.floor(t), fr = Math.floor((t - s) * FPS);
+  $('tcR').textContent = `PAMARKET   00:00:${String(s).padStart(2, '0')}:${String(fr).padStart(2, '0')}`;
+}
+function endCard(t) {
+  const on = t >= 25.6, k = eio(R(t, 25.6, 25.95));
+  const E = $('end'); E.style.display = on ? 'block' : 'none'; E.style.opacity = k;
+  E.style.clipPath = `circle(${k * 130}% at 50% 50%)`;
+  $('stage').classList.toggle('light', t >= 25.8); $('vig').style.opacity = t >= 25.8 ? 0 : 1;
+  if (!on) return;
+  if (!window.__ulLen) layoutUnderline();
+  const hl = $('endHl'), hk = eo(R(t, 25.95, 26.45));
+  hl.style.left = P(150, 80) + 'px'; hl.style.top = P(210, 250) + 'px'; hl.style.fontSize = P(118, 104) + 'px';
+  hl.style.opacity = hk; hl.style.transform = `translateY(${(1 - hk) * 40}px)`;
+  $('endUlP').style.strokeDashoffset = (window.__ulLen || 0) * (1 - eio(R(t, 26.9, 27.4)));
+  const sb = $('endSub'), sk = eo(R(t, 27.3, 27.8)); sb.style.left = P(156, 86) + 'px'; sb.style.top = P(560, 600) + 'px'; sb.style.opacity = sk; sb.style.transform = `translateY(${(1 - sk) * 30}px)`;
+  const lg = $('logo'); lg.style.left = P(156, 86) + 'px'; lg.style.top = P(100, 136) + 'px'; lg.style.opacity = eo(R(t, 25.8, 26.2));
+  // cut-out characters: Chipo rides in, Tendai + Rufaro pop up
+  const ride = $('cutRide'), hug = $('cutHug');
+  const rk = eo(R(t, 26.1, 27.0)), hkk = R(t, 26.5, 27.1);
+  const rh = P(580, 640), hh = P(640, 680);
+  ride.style.height = rh + 'px'; hug.style.height = hh + 'px';
+  ride.style.left = L(P(-700, -800), P(880, 20), rk) + 'px'; ride.style.top = P(1080, 1920) - rh + 'px';
+  ride.style.transform = `translateY(${Math.sin(t * 9) * 3}px)`;
+  hug.style.left = P(1420, 470) + 'px'; hug.style.top = P(1080, 1920) - hh + 'px';
+  hug.style.opacity = clamp(hkk * 3); hug.style.transform = `scale(${L(.85, 1, back(hkk))})`;
+}
+function layoutUnderline() {
+  const w = $('endScr').getBoundingClientRect().width / (window.__scale || 1);
+  if (!w) return;
+  const ul = $('endUl'); ul.setAttribute('width', w); ul.style.width = w + 'px';
+  $('endUlP').setAttribute('d', `M4 18 C ${w * .3} 6, ${w * .7} 8, ${w - 6} 14`);
+  window.__ulLen = $('endUlP').getTotalLength(); $('endUlP').style.strokeDasharray = window.__ulLen;
+}
+const gr = $('grain'); gr.width = SW / 4; gr.height = SH / 4; const gx = gr.getContext('2d'); const gimg = gx.createImageData(gr.width, gr.height);
+function grain(f) { let s = f * 7919 + 13; const d = gimg.data; for (let i = 0; i < d.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = (s >> 16) & 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } gx.putImageData(gimg, 0, 0); }
+// listing photo = the real bicycle from the yard shot
+$('cListPh').style.backgroundImage = 'url(gen/b-photo.png)'; $('cListPh').style.backgroundPosition = '85% 70%'; $('cListPh').style.backgroundSize = '190%';
+
+// ---------- boot ----------
+const RENDER = Q.has('render');
+const AUDIO = [...VO.map(v => ({ src: 'scenes/next-owner/vo/' + v.id + '.wav', at: v.at, gain: 1 })), ...SFX, MUSIC];
+window.__vo = AUDIO;
+window.__seek = async t => { await ensure(t); render(t); };
+window.__ready = Promise.all([
+  document.fonts.load('600 100px "Inter Tight"'), document.fonts.load('700 100px "Inter Tight"'),
+  document.fonts.load('700 100px Caveat'), document.fonts.load('400 20px "JetBrains Mono"'),
+  document.fonts.load('48px "Material Symbols Rounded"', 'local_offer storefront gpp_maybe check_circle'),
+  loadShots(),
+  fetch('clips/manifest.json').then(r => r.ok ? r.json() : {}).then(m => { MAN = m; }).catch(() => {}),
+  ...VO.map(v => fetch(`vo/${v.id}.lips.json`).then(r => r.json()).then(j => { v.cues = j.mouthCues; v.dur = j.metadata.duration; timeWords(v); })),
+  ...[...document.images].map(i => i.decode ? i.decode().catch(() => {}) : 0),
+]).then(() => document.fonts.ready).then(() => ensure(0)).then(() => { render(0); return true; });
+
+if (RENDER) document.body.classList.add('render');
+else {
+  const stage = $('stage');
+  const fit = () => { const W = innerWidth, H = innerHeight - 64, s = Math.min(W / SW, H / SH); window.__scale = s; stage.style.transform = `translate(${(W - SW * s) / 2}px,${(H - SH * s) / 2}px) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+  const auds = AUDIO.map(v => { const a = new Audio('../../' + v.src); a.preload = 'auto'; a.volume = Math.min(1, v.gain); a.onloadedmetadata = () => { v.dur = a.duration; }; return a; });
+  let cur = 0, playing = true, last = performance.now(), drag = false;
+  const setPlay = p => { playing = p; $('play').textContent = p ? 'PAUSE' : 'PLAY'; };
+  $('play').onclick = () => setPlay(!playing);
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); setPlay(!playing); } });
+  const scrub = $('scrub'), seekX = e => { const r = scrub.getBoundingClientRect(); cur = clamp((e.clientX - r.left) / r.width) * (DUR - .01); };
+  scrub.onmousedown = e => { drag = true; seekX(e); }; addEventListener('mousemove', e => drag && seekX(e)); addEventListener('mouseup', () => drag = false);
+  window.__ready.then(() => (function loop(now) {
+    if (playing && !drag) { cur += Math.min(.1, (now - last) / 1000); if (cur >= DUR) cur = 0; }
+    last = now; render(cur);
+    AUDIO.forEach((v, i) => { const a = auds[i], lt = cur - v.at, inside = playing && !drag && lt >= 0 && lt < (v.dur || .5);
+      if (inside) { if (a.paused) { a.currentTime = lt; a.play().catch(() => {}); } else if (Math.abs(a.currentTime - lt) > .2) a.currentTime = lt; } else if (!a.paused) a.pause(); });
+    $('tc').textContent = `${cur.toFixed(2).padStart(5, '0')} / 30.00`; $('scrubFill').style.width = (cur / DUR * 100) + '%';
+    requestAnimationFrame(loop);
+  })(performance.now()));
+}
+</script>
+</body>
+</html>

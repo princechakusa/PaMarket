@@ -2,6 +2,7 @@
 // then encodes an MP4 (with the voice-over clips mixed in) using ffmpeg.
 //   node render.mjs                 → out/pamarket-for-sellers.mp4 (1080p30)
 //   node render.mjs --snap 2 6.5 9  → shots/t2.00.png … (half-size stills for review)
+//   --page sample/index.html --slug cast-sample   render another composition
 import { chromium } from 'playwright';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
@@ -13,9 +14,11 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const FPS = 30, DUR = 30;
 const args = process.argv.slice(2);
 const vert = args.includes('--9x16'); if (vert) args.splice(args.indexOf('--9x16'), 1);
+const opt = (name, def) => { const i = args.indexOf(name); if (i < 0) return def; const v = args[i + 1]; args.splice(i, 2); return v; };
+const pageFile = opt('--page', 'index.html'), slug = opt('--slug', 'for-sellers');
 const snap = args[0] === '--snap';
 const [VW, VH] = vert ? [1080, 1920] : [1920, 1080];
-const url = (await serve(5179)) + '?render=1' + (vert ? '&format=9x16' : '');
+const url = (await serve(5179, pageFile)) + '?render=1' + (vert ? '&format=9x16' : '');
 
 let browser;
 try { browser = await chromium.launch({ channel: 'chrome' }); } catch { browser = await chromium.launch(); }
@@ -51,7 +54,7 @@ await browser.close();
 
 let ffmpeg = 'ffmpeg';
 try { ffmpeg = (await import('ffmpeg-static')).default || ffmpeg; } catch {}
-const out = path.join(dir, 'out', vert ? 'pamarket-for-sellers-9x16.mp4' : 'pamarket-for-sellers.mp4');
+const out = path.join(dir, 'out', `pamarket-${slug}${vert ? '-9x16' : ''}.mp4`);
 const clips = vo.filter(v => existsSync(path.join(dir, v.src)));
 console.log(`mixing ${clips.length} audio clips`);
 const ff = ['-y', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.jpg')];

@@ -1,0 +1,236 @@
+{
+  "_readme": "PaMarket video cast. Pick 2-4 characters whose 'fits' match the video topic. Poses are transparent cut-outs made by cutout.py from sheet.png. 'mouth' drives lip-sync in the composition: [x, lipLineY, width] in pose pixels, 'jaw' = feathered lower-face ellipse [cx, cy, rx, ry], 'drop' = max jaw drop in pose pixels. Poses without 'mouth' can appear but not speak. Voices must be usable on the FREE ElevenLabs tier. Many professional library voices fail with 'You need to be on the creator tier', so reuse the ids below. ACCENTS: Southern African, British or American only, never West African.",
+  "characters": {
+    "rudo": {
+      "name": "Rudo",
+      "role": "Artisan tailor with a stall in Mbare",
+      "personality": "Warm, proud of her craft, quick to laugh",
+      "fits": [
+        "sellers",
+        "posting a listing",
+        "offers",
+        "small business",
+        "crafts"
+      ],
+      "voice": {
+        "id": "Bn5h1jUGRkTAdBGY2icT",
+        "name": "Chulu - Soft Spoken Conversational",
+        "tempo": 1.12
+      },
+      "poses": {
+        "pose-1.webp": {
+          "view": "left profile, woven bag"
+        },
+        "pose-2.webp": {
+          "view": "front, sketchbook + bag",
+          "mouth": [
+            648,
+            483,
+            96
+          ],
+          "jaw": [
+            648,
+            530,
+            165,
+            88
+          ],
+          "drop": 22
+        },
+        "pose-3.webp": {
+          "view": "excited, holding up a cushion (cushion also works as a listing photo: crop x700 y20 w540 h560)",
+          "mouth": [
+            364,
+            455,
+            92
+          ],
+          "jaw": [
+            372,
+            505,
+            128,
+            82
+          ],
+          "drop": 20
+        }
+      }
+    },
+    "tariro": {
+      "name": "Tariro",
+      "role": "Young shopper in Harare",
+      "personality": "Excitable, deal-hunter, always on her phone",
+      "fits": [
+        "buyers",
+        "offers",
+        "deals",
+        "sharing to WhatsApp Status",
+        "invite a friend"
+      ],
+      "voice": {
+        "id": null,
+        "note": "Previous voice was Nigerian-accented; the founder rejected it. Use a Southern African, British or American voice only."
+      },
+      "poses": {
+        "pose-1.webp": {
+          "view": "front, crossbody bag"
+        },
+        "pose-2.webp": {
+          "view": "3/4 facing screen-right (don't mirror: hoodie text flips)",
+          "mouth": [
+            448,
+            588,
+            104
+          ],
+          "jaw": [
+            440,
+            625,
+            125,
+            72
+          ],
+          "drop": 18
+        },
+        "pose-3.webp": {
+          "view": "dynamic pose + back view merged. AVOID: phone screen and shopping bags carry garbled AI text"
+        }
+      }
+    },
+    "sekuru-tadiwa": {
+      "name": "Sekuru Tadiwa",
+      "role": "Wise market elder and retail advisor",
+      "personality": "Kind, tech-savvy, wise; calls people 'my child'",
+      "fits": [
+        "price guides",
+        "ZiG/USD",
+        "fair prices",
+        "trust",
+        "tips"
+      ],
+      "voice": {
+        "id": "L5zW3PqYZoWAeS4J1qMV",
+        "name": "Dr Samuel Rosso",
+        "tempo": 1.06
+      },
+      "poses": {
+        "pose-1.webp": {
+          "view": "front, tablet at hip. Tablet top text is garbled: cover it with the 'patch' used in sample/index.html (CAST.sek1)",
+          "mouth": [
+            565,
+            428,
+            118
+          ],
+          "jaw": [
+            565,
+            515,
+            168,
+            112
+          ],
+          "drop": 20
+        },
+        "pose-2.webp": {
+          "view": "side profile, tablet"
+        },
+        "pose-3.webp": {
+          "view": "back view"
+        }
+      }
+    },
+    "nyasha": {
+      "name": "Nyasha",
+      "role": "Friendly helper with a headset (customer support)",
+      "personality": "Calm, reassuring, clear",
+      "fits": [
+        "safety",
+        "scam warnings",
+        "safe meet-up spots",
+        "reply-time badges",
+        "AI help assistant",
+        "languages"
+      ],
+      "voice": {
+        "id": null,
+        "note": "Previous voice was Nigerian-accented; the founder rejected it. Use a Southern African, British or American voice only."
+      },
+      "poses": {
+        "pose-1.webp": {
+          "view": "front, hands clasped",
+          "mouth": [
+            405,
+            468,
+            118
+          ],
+          "jaw": [
+            408,
+            518,
+            165,
+            88
+          ],
+          "drop": 20
+        },
+        "pose-2.webp": {
+          "view": "side profile, headset"
+        },
+        "pose-3.webp": {
+          "view": "thumbs up + phone with green check"
+        },
+        "pose-4.webp": {
+          "view": "back view"
+        }
+      }
+    },
+    "farai": {
+      "name": "Farai",
+      "role": "Delivery runner",
+      "personality": "Energetic, always moving",
+      "fits": [
+        "sellers' own delivery details on a listing"
+      ],
+      "caution": "PaMarket has no courier service of its own. Only show Farai delivering for a seller, never as a PaMarket courier. The jacket logo reads 'ZNLDOETGS' (garbled), so keep him small or regenerate the sheet.",
+      "voice": null,
+      "poses": {
+        "pose-1.webp": {
+          "view": "side"
+        },
+        "pose-2.webp": {
+          "view": "front, phone + parcel"
+        },
+        "pose-3.webp": {
+          "view": "running hero pose"
+        }
+      }
+    },
+    "character-3": {
+      "name": null,
+      "role": "Young woman, print bomber jacket, holds a phone (name not given yet; ask the founder)",
+      "fits": [
+        "app users",
+        "buyers"
+      ],
+      "caution": "Sheet includes grey sketch expression heads (pose-5..7) and the phone screen text is garbled.",
+      "voice": null,
+      "poses": {
+        "pose-2.webp": {
+          "view": "hero, holding phone up"
+        },
+        "pose-1.webp": {
+          "view": "front"
+        },
+        "pose-3.webp": {
+          "view": "side"
+        },
+        "pose-4.webp": {
+          "view": "back"
+        }
+      }
+    }
+  },
+  "presenter": {
+    "voice": {
+      "id": "UqVoYflBV54bEWmZcrK6",
+      "name": "PaMarket — Harare Presenter",
+      "tempo": 1.06
+    },
+    "use": "closing tagline / narrator only"
+  },
+  "backgrounds": {
+    "../sample/bg/market.jpg": "Pixar-style tailoring stall in Mbare market, no people/text",
+    "../sample/bg/street.jpg": "Pixar-style Harare street, jacaranda in bloom, shopping centre with benches (left side works as a 'safe spot'), no people/text"
+  }
+}
