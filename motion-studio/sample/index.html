@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaMarket — Cast Sample</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Caveat:wght@700&family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+<style>
+:root{--ink:#111;--paper:#fff;--mute:#9a9a95;--line:#e6e6e1;--blue:#2466e8;--blue-soft:#eaf1ff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0e0e0e;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:#000;color:var(--ink);transform-origin:0 0;font-family:'Inter Tight',system-ui,sans-serif}
+body.v #stage{width:1080px;height:1920px}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.mi{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;line-height:1;display:inline-block;white-space:nowrap;font-feature-settings:'liga';font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 48}
+.layer{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
+.bg{position:absolute;left:0;top:0;transform-origin:0 0;display:block}
+.acts{position:absolute;inset:0;transform-origin:50% 100%}
+.actor{position:absolute;left:0;top:0;transform-origin:50% 100%}
+.fig{position:absolute;left:0;top:0;transform-origin:0 0}
+.fig>img,.jaw,.patch{position:absolute;left:0;top:0}
+.jaw{background-repeat:no-repeat}
+.mouth{position:absolute;border-radius:48%;background:radial-gradient(ellipse at 50% 30%,#7a2a1f 0%,#3a0e0a 55%,#1d0504 100%)}
+.shadow{position:absolute;border-radius:50%;background:radial-gradient(ellipse at center,rgba(20,10,0,.5) 0%,rgba(20,10,0,0) 70%)}
+
+/* grade + grain */
+#grade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,200,140,.07),rgba(40,20,80,.06));mix-blend-mode:soft-light}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 50% 48%,rgba(0,0,0,0) 55%,rgba(0,0,0,.38) 100%)}
+#grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:overlay;opacity:.09}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+
+/* chrome */
+.chr{position:absolute;font-size:21px;color:rgba(255,255,255,.88);white-space:pre;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+#tagL{left:52px;top:44px}#tcR{right:52px;top:44px}#cnt{left:52px;bottom:44px;font-size:19px}#urlR{right:52px;bottom:44px;font-size:19px}
+body.v #tagL,body.v #cnt{left:44px}body.v #tcR,body.v #urlR{right:44px}
+#stage.light .chr{color:var(--mute);text-shadow:none}
+
+/* lower third + captions */
+#lt{position:absolute;display:flex;align-items:stretch;opacity:0;white-space:nowrap}
+#lt b{background:var(--blue);color:#fff;font-weight:700;font-size:30px;letter-spacing:-.02em;padding:14px 22px;border-radius:14px 0 0 14px}
+#lt span{background:#fff;color:var(--ink);font-size:21px;padding:0 22px;display:flex;align-items:center;border-radius:0 14px 14px 0}
+#cap{position:absolute;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none}
+#cap .who{display:inline-block;font-size:17px;letter-spacing:.08em;color:#fff;background:rgba(17,17,17,.72);padding:6px 12px;border-radius:8px;margin-bottom:10px}
+#cap .txt{background:rgba(17,17,17,.78);color:#fff;font-weight:600;font-size:44px;letter-spacing:-.02em;line-height:1.18;padding:14px 26px 16px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone;display:inline}
+body.v #cap .txt{font-size:50px}
+#cap .w{opacity:.28;transition:none}
+#cap .w.on{opacity:1}
+#cap .w.now{color:#8fb3ff}
+
+/* cards */
+.ui{position:absolute;background:#fff;border:1.5px solid var(--line);border-radius:24px;box-shadow:0 34px 70px -30px rgba(0,0,0,.45);opacity:0;color:var(--ink);transform-origin:50% 50%}
+.photo{height:210px;border-radius:16px;margin:14px;position:relative;overflow:hidden;background:#f3efe8}
+.photo .img{position:absolute;inset:0;background-repeat:no-repeat}
+.lc-b{padding:2px 26px 24px}
+.lc-t{font-weight:600;font-size:32px;letter-spacing:-.03em}
+.lc-l{font-size:17px;color:var(--mute);margin-top:4px}
+.lc-row{display:flex;align-items:center;gap:14px;margin-top:14px}
+.lc-p{font-weight:700;font-size:46px;letter-spacing:-.04em}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--blue);color:var(--blue);border-radius:999px;padding:6px 14px;font-size:19px;font-weight:700;white-space:nowrap;background:#fff}
+.chip.fill{background:var(--blue);color:#fff}
+.chip i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.live{position:absolute;right:26px;top:28px}
+.btn{margin-top:16px;background:var(--ink);color:#fff;border-radius:14px;padding:14px;text-align:center;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn .mi{font-size:26px}
+.nt{display:flex;align-items:center;gap:18px;padding:18px 22px;width:500px}
+.nt .ic{width:58px;height:58px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:30px;flex:none}
+.nt b{font-weight:600;font-size:27px;letter-spacing:-.025em;display:block;white-space:nowrap}
+.nt small{font-size:16px;color:var(--mute)}
+.nt .acc{margin-left:auto;background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;font-size:18px;white-space:nowrap}
+.nt.ok{background:var(--blue);border-color:var(--blue);color:#fff}
+.nt.ok .ic{background:rgba(255,255,255,.18);color:#fff}
+.nt.ok small{color:rgba(255,255,255,.78)}
+.nt.ok .acc{background:#fff;color:var(--blue)}
+.nt.warn .ic{background:#fff1e6;color:#d9661f}
+/* price guide */
+.pg{width:640px;padding:26px 30px 30px}
+.pg-h{display:flex;align-items:center;justify-content:space-between}
+.pg-h b{font-weight:700;font-size:34px;letter-spacing:-.03em}
+.tog{display:flex;border:1.5px solid var(--line);border-radius:999px;padding:4px;gap:4px;position:relative}
+.tog span{position:relative;z-index:1;font-weight:700;font-size:18px;padding:7px 16px;border-radius:999px;width:78px;text-align:center}
+.tog i{position:absolute;top:4px;left:4px;width:78px;height:calc(100% - 8px);border-radius:999px;background:var(--blue)}
+.pg-s{font-size:17px;color:var(--mute);margin-top:6px}
+.bar{position:relative;height:18px;border-radius:9px;margin:74px 6px 0;background:linear-gradient(90deg,#dfe8fb,#2466e8 50%,#dfe8fb)}
+.bar .cover{position:absolute;inset:-2px;border-radius:9px;background:#fff;transform-origin:100% 50%}
+.mk{position:absolute;top:-62px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
+.mk .chip{font-size:18px}
+.mk .pin{width:4px;height:30px;background:var(--ink);margin-top:6px;border-radius:2px}
+.ends{display:flex;justify-content:space-between;margin-top:16px;font-weight:600;font-size:24px;letter-spacing:-.02em}
+.ends small{display:block;font-size:14px;color:var(--mute);font-weight:500}
+/* map */
+.map{width:560px;padding:14px}
+.map-a{height:250px;border-radius:16px;position:relative;overflow:hidden;background:#eef1ea}
+.map-b{padding:14px 12px 6px}
+.map-b b{font-weight:700;font-size:28px;letter-spacing:-.025em;display:block}
+.map-b small{font-size:16px;color:var(--mute)}
+.pinm{position:absolute;transform:translate(-50%,-100%);color:var(--blue);font-size:64px}
+.pulse{position:absolute;border-radius:50%;border:3px solid var(--blue);transform:translate(-50%,-50%)}
+/* end card */
+#end{position:absolute;inset:0;background:#fff;opacity:0}
+#endHl{position:absolute;font-weight:700;letter-spacing:-.05em;line-height:.98;color:var(--ink);white-space:nowrap}
+#endHl .scr{font-family:Caveat,cursive;color:var(--blue);font-size:1.3em;letter-spacing:-.01em;position:relative;display:inline-block}
+#endHl svg{position:absolute;left:0;bottom:-.08em;overflow:visible}
+#endSub{position:absolute;display:flex;flex-direction:column;gap:22px}
+#endSub .url{font-size:32px;font-weight:600;letter-spacing:-.02em}
+#endSub .url b{color:var(--blue)}
+.stores{display:flex;gap:18px;align-items:center}
+.stores img{height:72px;display:block}
+#logo{position:absolute;width:86px;height:86px;border-radius:22px}
+#iris{position:absolute;border-radius:50%;background:#fff;transform:translate(-50%,-50%);width:0;height:0}
+#confetti{position:absolute;inset:0;pointer-events:none}
+.divider{position:absolute;inset:0;pointer-events:none}
+
+/* preview UI */
+#ui{position:fixed;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;gap:18px;padding:0 22px;background:#111;font:500 14px 'JetBrains Mono',monospace;color:#bbb;user-select:none}
+#ui button{height:38px;padding:0 14px;border-radius:9px;border:0;background:var(--blue);color:#fff;font:700 14px 'JetBrains Mono',monospace;cursor:pointer}
+#scrub{position:relative;flex:1;height:30px;cursor:pointer}
+#scrub .track{position:absolute;left:0;right:0;top:13px;height:4px;border-radius:2px;background:#333}
+#scrubFill{position:absolute;left:0;top:13px;height:4px;border-radius:2px;background:var(--blue)}
+body.render #ui{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="world" class="layer"></div>
+  <div id="grade"></div>
+  <div id="vig"></div>
+
+  <!-- UI cards (screen space: they survive camera whips) -->
+  <div id="cList" class="ui" style="width:440px">
+    <div class="photo"><div class="img" id="cListImg"></div></div>
+    <div class="chip fill live" id="cLive"><i></i>LIVE</div>
+    <div class="lc-b">
+      <div class="lc-t">Hand-sewn cushion</div>
+      <div class="lc-l mono">Harare · Mbare</div>
+      <div class="lc-row"><div class="lc-p" id="cPrice">US$ 12</div><div class="chip" id="cZig">ZiG 0</div></div>
+      <div class="btn" id="cMake"><span class="mi">local_offer</span>Make offer</div>
+    </div>
+  </div>
+  <div id="cOffer" class="ui nt"><div class="ic mi" id="cOfI">local_offer</div><div><b id="cOfB">Offer · US$ 10</b><small class="mono" id="cOfS">from Tariro · just now</small></div><div class="acc" id="cOfA">Accept</div></div>
+
+  <div id="cPG" class="ui pg">
+    <div class="pg-h"><b>Price guide</b><div class="tog"><i id="togI"></i><span id="togU">US$</span><span id="togZ">ZiG</span></div></div>
+    <div class="pg-s mono">Cushions · Harare · recent listings</div>
+    <div class="bar"><div class="cover" id="pgFill"></div>
+      <div class="mk" id="pgMk"><div class="chip fill" id="pgChip">✓ Fair · US$ 10</div><div class="pin"></div></div>
+    </div>
+    <div class="ends"><div id="pgLo">US$ 8<small>low</small></div><div id="pgHi" style="text-align:right">US$ 15<small>high</small></div></div>
+  </div>
+
+  <div id="cMap" class="ui map">
+    <div class="map-a" id="mapA">
+      <svg width="532" height="250" viewBox="0 0 532 250" style="position:absolute;inset:0">
+        <rect x="300" y="18" width="190" height="110" rx="14" fill="#d6ead0"/>
+        <rect x="40" y="150" width="150" height="80" rx="12" fill="#e4e0d6"/>
+        <path d="M-10 120 L540 96" fill="none" stroke="#fff" stroke-width="26"/>
+        <path d="M230 -10 L262 260" fill="none" stroke="#fff" stroke-width="22"/>
+        <path d="M-10 212 C140 190 330 236 540 200" fill="none" stroke="#fff" stroke-width="14"/>
+        <path d="M410 -10 L396 260" fill="none" stroke="#fff" stroke-width="12"/>
+      </svg>
+      <div class="pulse" id="pul1"></div><div class="pulse" id="pul2"></div>
+      <div class="pinm mi" style="left:250px;top:112px">location_on</div>
+    </div>
+    <div class="map-b"><b>Safe meet-up spot</b><small class="mono">Busy · public · daytime</small></div>
+  </div>
+  <div id="cScam" class="ui nt warn"><div class="ic mi">gpp_maybe</div><div><b>Scam warning</b><small class="mono">Never pay before you see it</small></div></div>
+  <div id="cReply" class="ui nt"><div class="ic mi">bolt</div><div><b>Replies in ~5 min</b><small class="mono">Rudo · reply-time badge</small></div></div>
+
+  <canvas id="confetti"></canvas>
+  <div id="flash"></div>
+
+  <div id="end">
+    <img id="logo" src="../../img/icon-512.png" alt="">
+    <div id="endHl"><div>Buy &amp; sell,</div><div><span class="scr" id="endScr">safely.<svg id="endUl" height="30"><path id="endUlP" fill="none" stroke="#2466e8" stroke-width="7" stroke-linecap="round"/></svg></span></div></div>
+    <div id="endSub"><div class="url mono">pamarket<b>zw</b>.com</div><div class="stores"><img src="../../img/app-store-badge.svg" alt=""><img src="../../img/google-play-badge.png" alt=""></div></div>
+    <div id="endActs" class="layer" style="overflow:visible"></div>
+  </div>
+  <div id="iris"></div>
+
+  <div id="lt"><b id="ltB"></b><span class="mono" id="ltS"></span></div>
+  <div id="cap"><div class="who mono" id="capWho"></div><div><span class="txt" id="capTxt"></span></div></div>
+
+  <div id="tagL" class="chr mono"></div>
+  <div id="tcR" class="chr mono"></div>
+  <div id="cnt" class="chr mono"></div>
+  <div id="urlR" class="chr mono">pamarketzw.com</div>
+  <canvas id="grain"></canvas>
+</div>
+<div id="ui"><button id="play">PAUSE</button><span id="tc">00.00 / 30.00</span><div id="scrub"><div class="track"></div><div id="scrubFill"></div></div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const Q = new URLSearchParams(location.search);
+const V = Q.get('format') === '9x16';
+if (V) document.body.classList.add('v');
+const SW = V ? 1080 : 1920, SH = V ? 1920 : 1080, DUR = 30, FPS = 30;
+const P = (h, v) => V ? v : h;
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const L = (a, b, k) => a + (b - a) * k;
+const R = (t, a, b) => cl((t - a) / (b - a));
+const eo = x => 1 - Math.pow(1 - x, 3);
+const eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { const c = 1.9, c3 = c + 1; return 1 + c3 * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const bump = (t, a, b) => Math.sin(Math.PI * R(t, a, b));
+const ZIG_RATE = 26.847; // open.er-api.com rates.ZWG, 2026-09-29
+const zig = u => Math.round(u * ZIG_RATE);
+
+// ---------- cast ----------
+// m = mouth [x, lipLineY, width]; jaw = feathered lower-face ellipse [cx, cy, rx, ry]; drop = max jaw drop (image px)
+const CAST = {
+  rudo2:  { src: '../cast/rudo/pose-2.webp', w: 1246, h: 2875, m: [648, 483, 96], jaw: [648, 530, 165, 88], drop: 22 },
+  rudo3:  { src: '../cast/rudo/pose-3.webp', w: 1265, h: 2710, m: [364, 455, 92], jaw: [372, 505, 128, 82], drop: 20 },
+  sek1:   { src: '../cast/sekuru-tadiwa/pose-1.webp', w: 1189, h: 3467, m: [565, 428, 118], jaw: [565, 515, 168, 112], drop: 20,
+            patch: '<div class="patch" style="left:0;top:0;width:1189px;height:3467px;clip-path:polygon(768px 1604px,1001px 1600px,1001px 1690px,952px 1712px,948px 1735px,775px 1742px)"><div style="position:absolute;left:760px;top:1596px;width:250px;height:150px;background:#fff"></div><div style="position:absolute;left:782px;top:1616px;width:150px;height:30px;border-radius:15px;background:#2466e8"></div><div style="position:absolute;left:782px;top:1662px;width:100px;height:14px;border-radius:7px;background:#c9d6f4"></div><div style="position:absolute;left:782px;top:1690px;width:130px;height:14px;border-radius:7px;background:#dde5f7"></div></div>' },
+  tar:    { src: '../cast/tariro/pose-2.webp', w: 749, h: 2778, m: [448, 588, 104], jaw: [440, 625, 125, 72], drop: 18 },
+  tarEnd: { src: '../cast/tariro/pose-1.webp', w: 816, h: 2818 },
+  nya1:   { src: '../cast/nyasha/pose-1.webp', w: 818, h: 2921, m: [405, 468, 118], jaw: [408, 518, 165, 88], drop: 20 },
+  nya3:   { src: '../cast/nyasha/pose-3.webp', w: 1005, h: 2920 },
+};
+
+function makeActor(parent, key) {
+  const c = CAST[key], a = document.createElement('div');
+  a.className = 'actor';
+  const mask = `radial-gradient(ellipse ${c.jaw ? c.jaw[2] : 1}px ${c.jaw ? c.jaw[3] : 1}px at ${c.jaw ? c.jaw[0] : 0}px ${c.jaw ? c.jaw[1] : 0}px,#000 55%,transparent 100%)`;
+  a.innerHTML = `<div class="shadow"></div><div class="fig" style="width:${c.w}px;height:${c.h}px"><img src="${c.src}" width="${c.w}" height="${c.h}" alt="">` +
+    (c.m ? `<div class="mouth"></div><div class="jaw" style="width:${c.w}px;height:${c.h}px;background-image:url(${c.src});background-size:${c.w}px ${c.h}px;clip-path:inset(${c.m[1]}px 0 0 0);-webkit-mask-image:${mask};mask-image:${mask}"></div>` : '') +
+    (c.patch || '') + `</div>`;
+  parent.appendChild(a);
+  a.c = c; a.fig = a.querySelector('.fig'); a.mouthEl = a.querySelector('.mouth'); a.jawEl = a.querySelector('.jaw'); a.sh = a.querySelector('.shadow');
+  return a;
+}
+function pose(a, o) {
+  const { x, y, h, op = 1, rot = 0, sx = 1, sy = 1, flip = false, open = 0, round = 0, shadow = 1 } = o;
+  const c = a.c, s = h / c.h, w = c.w * s;
+  a.style.display = op <= .001 ? 'none' : 'block';
+  if (op <= .001) return;
+  a.style.opacity = op;
+  a.style.width = w + 'px'; a.style.height = h + 'px';
+  a.style.transform = `translate(${x - w / 2}px,${y - h}px) rotate(${rot}deg) scale(${(flip ? -1 : 1) * sx},${sy})`;
+  a.fig.style.transform = `scale(${s})`;
+  if (c.m) {
+    const d = open * c.drop, mw = c.m[2] * (1 - .38 * round);
+    a.jawEl.style.transform = `translateY(${d}px)`;
+    a.mouthEl.style.cssText = `left:${c.m[0] - mw / 2}px;top:${c.m[1] - 5}px;width:${mw}px;height:${d + 10}px;opacity:${open > .03 ? 1 : 0}`;
+  }
+  a.sh.style.cssText = `left:${-w * .15}px;top:${h - h * .03}px;width:${w * 1.3}px;height:${h * .06}px;opacity:${shadow}`;
+}
+
+// ---------- voice ----------
+const VO = [
+  { id: '01-rudo',      who: 'RUDO',          at: .45,  text: "Mhoro! I'm Rudo. I sew cushions in Mbare — and I post them on PaMarket in one minute." },
+  { id: '02-tariro',    who: 'TARIRO',        at: 6.05, text: "Ooh, that cushion is gorgeous! Let me make an offer… ten dollars?" },
+  { id: '03-rudo',      who: 'RUDO',          at: 11.1, text: "Deal! Offer accepted." },
+  { id: '04-sekuru',    who: 'SEKURU TADIWA', at: 14.05, text: "Not sure what's fair, my child? Check the price guide — in US dollars, and in ZiG." },
+  { id: '05-nyasha',    who: 'NYASHA',        at: 20.4, text: "And meet at a safe spot. PaMarket warns you about scams — and shows how fast sellers reply." },
+  { id: '06-presenter', who: 'PAMARKET',      at: 26.2, text: "PaMarket. Buy and sell, safely — right here in Zimbabwe." },
+];
+const VIS = { X: 0, A: 0, B: .32, C: .62, D: 1, E: .58, F: .3, G: .22, H: .46 };
+const RND = { E: .6, F: 1 };
+function lip(v, t) {
+  if (!v || !v.cues) return { open: 0, round: 0 };
+  const lt = t - v.at;
+  if (lt < 0 || lt > v.dur) return { open: 0, round: 0 };
+  const i = v.cues.findIndex(c => lt >= c.start && lt < c.end);
+  if (i < 0) return { open: 0, round: 0 };
+  const c = v.cues[i], n = v.cues[i + 1];
+  let o = VIS[c.value] ?? 0, rd = RND[c.value] || 0;
+  if (n) { const k = cl((lt - (c.end - .045)) / .045); o = L(o, VIS[n.value] ?? 0, k); rd = L(rd, RND[n.value] || 0, k); }
+  return { open: o, round: rd };
+}
+const SFX = [
+  ['shutter', 3.22], ['pop', 3.45], ['tick', 3.95], ['whoosh', 5.78],
+  ['tap', 8.45], ['pop', 8.62], ['tick', 9.9], ['whoosh', 10.42],
+  ['tap', 11.6], ['ping', 11.72], ['whoosh', 13.78],
+  ['pop', 16.95], ['tick', 17.6], ['tick', 19.35], ['whoosh', 20.05],
+  ['pop', 21.35], ['pop', 23.0], ['pop', 24.85], ['whoosh', 25.92],
+  ['pop', 26.45], ['pop', 26.6], ['pop', 26.75], ['pop', 26.9], ['ping', 27.35],
+].map(([n, at]) => ({ src: 'sfx/' + n + '.wav', at, gain: n === 'whoosh' ? .5 : .7 }));
+const MUSIC = { src: 'music.mp3', at: 0, gain: .15 };
+
+// ---------- build ----------
+const world = $('world');
+const BW = 3840, BH = 2143;
+function makeScene(bg) {
+  const el = document.createElement('div'); el.className = 'layer';
+  el.innerHTML = `<img class="bg" src="bg/${bg}.jpg" width="${BW}" height="${BH}" alt=""><div class="acts"></div>`;
+  world.appendChild(el);
+  return { el, bg: el.querySelector('.bg'), acts: el.querySelector('.acts') };
+}
+function cam(sc, z, fx, fy, blur = 0, z0 = z) {
+  const cover = Math.max(SW / BW, SH / BH), s = cover * z, W = BW * s, H = BH * s;
+  const x = cl(SW / 2 - fx * W, SW - W, 0), y = cl(SH / 2 - fy * H, SH - H, 0);
+  sc.bg.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  sc.bg.style.filter = blur > .05 ? `blur(${blur}px)` : 'none';
+  sc.acts.style.transform = `scale(${1 + (z - z0) * .8})`;
+}
+function show(sc, on, dx = 0, blur = 0) {
+  sc.el.style.display = on ? 'block' : 'none';
+  sc.el.style.transform = dx ? `translateX(${dx}px)` : 'none';
+  sc.el.style.filter = blur > .1 ? `blur(${blur}px)` : 'none';
+}
+const S = { A: makeScene('market'), B: makeScene('street'), C: makeScene('market'), D: makeScene('street'), E: makeScene('street') };
+const A = {
+  rudo: makeActor(S.A.acts, 'rudo2'),
+  tar: makeActor(S.B.acts, 'tar'),
+  rudoC: makeActor(S.C.acts, 'rudo3'),
+  sek: makeActor(S.D.acts, 'sek1'),
+  nya: makeActor(S.E.acts, 'nya1'),
+};
+const endActs = $('endActs');
+const EA = [makeActor(endActs, 'rudo3'), makeActor(endActs, 'tarEnd'), makeActor(endActs, 'sek1'), makeActor(endActs, 'nya3')];
+
+// listing photo = Rudo's own cushion from pose-3
+(() => {
+  const ph = { w: 440 - 28, h: 210 }, src = { x: 700, y: 20, w: 540, h: 560 }, k = ph.w / src.w;
+  const im = $('cListImg');
+  im.style.backgroundImage = `url(${CAST.rudo3.src})`;
+  im.style.backgroundSize = `${CAST.rudo3.w * k}px ${CAST.rudo3.h * k}px`;
+  im.style.backgroundPosition = `${-src.x * k}px ${-(src.y + src.h / 2) * k + ph.h / 2}px`;
+})();
+
+// captions
+VO.forEach(v => {
+  v.el = document.createElement('span');
+  v.words = v.text.split(' ').map(w => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w + ' '; v.el.appendChild(s); return { w, s }; });
+});
+function timeWords(v) {
+  const act = (v.cues || []).filter(c => c.value !== 'X');
+  const t0 = act.length ? act[0].start : .05, t1 = act.length ? act[act.length - 1].end : v.dur - .1;
+  const tot = v.words.reduce((a, w) => a + w.w.length + 1.5, 0);
+  let acc = 0;
+  v.words.forEach(w => { w.st = v.at + t0 + acc / tot * (t1 - t0); acc += w.w.length + 1.5; });
+}
+
+// confetti (deterministic)
+const cf = $('confetti'); cf.width = SW; cf.height = SH; const cx = cf.getContext('2d');
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const CONF = (() => { const r = rng(7); return Array.from({ length: 110 }, () => ({ a: r() * Math.PI * 2, v: 500 + r() * 900, spin: (r() - .5) * 14, w: 10 + r() * 12, h: 6 + r() * 8, c: ['#2466e8', '#8fb3ff', '#ffd23f', '#ff7a59', '#23b26d', '#ffffff'][Math.floor(r() * 6)] })); })();
+function confetti(t, t0, ox, oy) {
+  cx.clearRect(0, 0, SW, SH);
+  const lt = t - t0; if (lt < 0 || lt > 2.2) return;
+  CONF.forEach(p => {
+    const x = ox + Math.cos(p.a) * p.v * lt * .75, y = oy + Math.sin(p.a) * p.v * lt * .55 + 900 * lt * lt;
+    cx.save(); cx.globalAlpha = cl(1 - (lt - 1.4) / .8); cx.translate(x, y); cx.rotate(p.spin * lt); cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.spin * lt * .7))); cx.restore();
+  });
+}
+// grain
+const gr = $('grain'); gr.width = SW / 4; gr.height = SH / 4; const gx = gr.getContext('2d'); const gimg = gx.createImageData(gr.width, gr.height);
+function grain(f) { const r = rng(f * 7919 + 13); const d = gimg.data; for (let i = 0; i < d.length; i += 4) { const v = r() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } gx.putImageData(gimg, 0, 0); }
+
+function card(el, x, y, op, sc = 1, rot = 0) {
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = op;
+  el.style.display = op <= .001 ? 'none' : '';
+  el.style.transform = `scale(${sc}) rotate(${rot}deg)`;
+}
+function popIn(t, t0, d = .45) { const k = R(t, t0, t0 + d); return { op: cl(k * 3), sc: L(.82, 1, back(k)) }; }
+
+// underline path for "safely."
+function layoutUnderline() {
+  const w = $('endScr').getBoundingClientRect().width / (window.__scale || 1);
+  const ul = $('endUl'); ul.setAttribute('width', w); ul.style.width = w + 'px';
+  $('endUlP').setAttribute('d', `M4 18 C ${w * .3} 6, ${w * .7} 8, ${w - 6} 14`);
+  const len = $('endUlP').getTotalLength(); $('endUlP').style.strokeDasharray = len; window.__ulLen = len;
+}
+
+const TAGS = [[0, '// 01 — rudo’s stall · mbare'], [5.95, '// 02 — tariro · harare'], [11.0, '// 03 — the deal'], [13.95, '// 04 — sekuru’s tip'], [20.2, '// 05 — stay safe'], [26.1, '// 06 — pamarket']];
+const LT = [[.9, 4.6, 'RUDO', 'tailor · Mbare'], [6.3, 9.4, 'TARIRO', 'shopper · Harare'], [14.4, 17.4, 'SEKURU TADIWA', 'market elder'], [20.7, 23.6, 'NYASHA', 'here to help']];
+
+// ---------- render(t): everything is a pure function of t ----------
+function render(t) {
+  const f = Math.round(t * FPS);
+  // --- scene visibility + whips
+  const wAB = R(t, 5.78, 6.08), wCD = R(t, 13.78, 14.08), wDE = R(t, 20.05, 20.35);
+  const whipX = k => eio(k) * SW * 1.15, whipB = k => Math.sin(Math.PI * k) * 26;
+  show(S.A, t < 6.08, t > 5.78 ? -whipX(wAB) : 0, t > 5.78 ? whipB(wAB) : 0);
+  show(S.B, t >= 5.78 && t < 14.08, t < 6.08 ? SW * 1.15 - whipX(wAB) : (t > 13.78 ? -whipX(wCD) : 0), t < 6.08 ? whipB(wAB) : (t > 13.78 ? whipB(wCD) : 0));
+  show(S.C, t >= 10.95 && t < 14.08, t > 13.78 ? -whipX(wCD) : 0, t > 13.78 ? whipB(wCD) : 0);
+  show(S.D, t >= 13.78 && t < 20.35, t < 14.08 ? SW * 1.15 - whipX(wCD) : (t > 20.05 ? -whipX(wDE) : 0), t < 14.08 ? whipB(wCD) : (t > 20.05 ? whipB(wDE) : 0));
+  show(S.E, t >= 20.05 && t < 26.4, t < 20.35 ? SW * 1.15 - whipX(wDE) : 0, t < 20.35 ? whipB(wDE) : 0);
+
+  // split screen for scene C (market pane slides over the street)
+  const sp = eo(R(t, 10.95, 11.35));
+  if (V) { const e = L(SH + 120, SH / 2, sp); S.C.el.style.clipPath = `polygon(0 ${e + 40}px,${SW}px ${e - 40}px,${SW}px ${SH}px,0 ${SH}px)`; }
+  else { const e = L(SW + 120, SW / 2, sp); S.C.el.style.clipPath = `polygon(${e + 50}px 0,${SW}px 0,${SW}px ${SH}px,${e - 50}px ${SH}px)`; }
+
+  // --- A: Rudo's stall
+  cam(S.A, L(1.04, 1.13, eio(R(t, 0, 6))), P(.44, .5), .62, 1.4, 1.04);
+  { const k = R(t, .1, .7), lp = lip(VO[0], t);
+    pose(A.rudo, { x: P(640, 540), y: P(1105, 1905), h: P(1000, 1230), op: cl(k * 2.5), sy: L(.9, 1, back(k)) * (1 + .006 * Math.sin(t * 2.3)), sx: L(1.06, 1, back(k)),
+      rot: Math.sin(t * 4.1) * .7 * cl(lp.open * 2) + bump(t, 3.15, 3.7) * -1.5, ...lp }); }
+
+  // --- B: Tariro on the jacaranda street
+  { const land = R(t, 6.0, 6.5), bz = t < 11.35 ? L(1.12, 1.18, eio(R(t, 6, 11))) : 1.2;
+    cam(S.B, bz, L(P(.46, .5), P(.4, .5), sp), .62, 1.6, 1.12);
+    const lp = lip(VO[1], t), hop = bump(t, 11.75, 12.25);
+    const xB = L(P(560, 540), P(470, 540), sp);
+    const yB = L(P(1105, 1905), P(1105, SH / 2 + 30), sp), hB = L(P(990, 1240), P(990, 880), sp);
+    pose(A.tar, { x: xB, y: yB - hop * 70, h: hB, sy: (1 - .08 * (1 - back(land)) * (t > 6 ? 1 : 0)) * (1 + .006 * Math.sin(t * 2.5 + 1)) * (1 + hop * .03),
+      rot: -2 * bump(t, 6.1, 7.2) + Math.sin(t * 4.4) * .7 * cl(lp.open * 2) + hop * 3, ...lp }); }
+
+  // --- C: the deal (Rudo pane)
+  cam(S.C, 1.22, P(.5, .38), P(.6, .62), 1.5);
+  { const lp = lip(VO[2], t), cheer = bump(t, 11.1, 11.7);
+    pose(A.rudoC, { x: P(1450, 540), y: P(1105, 1905), h: P(1000, 880), sy: 1 + .01 * Math.sin(t * 3) + cheer * .03, rot: cheer * -2 + Math.sin(t * 4) * .6 * cl(lp.open * 2), ...lp }); }
+
+  // --- D: Sekuru
+  cam(S.D, L(1.32, 1.38, R(t, 14, 20.3)), P(.8, .78), .62, 1.9, 1.32);
+  { const k = eo(R(t, 14.0, 14.6)), lp = lip(VO[3], t);
+    pose(A.sek, { x: P(560, 540) - (1 - k) * 60, y: P(1105, 1905), h: P(1010, 1230), sy: 1 + .005 * Math.sin(t * 2), rot: Math.sin(t * 3.4) * .6 * cl(lp.open * 2) - 1.2 * bump(t, 17.0, 18.0), ...lp }); }
+
+  // --- E: Nyasha at the shopping centre
+  cam(S.E, L(1.28, 1.34, R(t, 20.2, 26.3)), P(.2, .24), .6, 1.8, 1.28);
+  { const lp = lip(VO[4], t);
+    pose(A.nya, { x: P(1420, 540), y: P(1105, 1905), h: P(1000, 1150), sy: 1 + .005 * Math.sin(t * 2.2), rot: Math.sin(t * 3.9) * .6 * cl(lp.open * 2), ...lp }); }
+
+  // --- UI: listing card (A → B)
+  { const p = popIn(t, 3.4), mv = eio(R(t, 5.78, 6.2)), out = R(t, 8.35, 8.75);
+    const ax = P(1150, 90), ay = P(230, 170), bx = P(1260, 90), by = P(170, 170);
+    let x = L(ax, bx, mv), y = L(ay, by, mv) - (V ? out * 60 : 0);
+    const op = p.op * (V ? 1 - out : 1) * (1 - R(t, 10.4, 10.7));
+    card($('cList'), x, y, op, p.sc * (1 - .04 * bump(t, 8.4, 8.6)), L(0, -2, mv) + (V ? 0 : 0));
+    $('cLive').style.opacity = R(t, 3.95, 4.05);
+    $('cZig').textContent = 'ZiG ' + zig(12 * eo(R(t, 3.6, 4.4)));
+    $('cMake').style.transform = `scale(${1 - .06 * bump(t, 8.4, 8.6)})`;
+    $('cMake').style.background = t > 8.45 && t < 8.7 ? '#2466e8' : '';
+    $('flash').style.opacity = .55 * (1 - R(t, 3.22, 3.4)) * (t > 3.22 ? 1 : 0); }
+
+  // --- UI: offer card (B → C)
+  { const p = popIn(t, 8.62), fly = eio(R(t, 10.42, 11.25));
+    const bx = P(700, 90), by = P(640, 250), cxp = SW / 2 - 250, cyp = P(160, SH / 2 - 60);
+    const x = L(bx, cxp, fly), y = L(by, cyp, fly) - Math.sin(Math.PI * fly) * 120;
+    const ok = t >= 11.68;
+    card($('cOffer'), x, y, p.op * (1 - R(t, 13.7, 13.9)), p.sc * (1 + .05 * bump(t, 11.6, 11.85)), Math.sin(Math.PI * fly) * -6);
+    $('cOffer').classList.toggle('ok', ok);
+    $('cOfI').textContent = ok ? 'check_circle' : 'local_offer';
+    const typed = R(t, 9.75, 10.05);
+    $('cOfB').textContent = ok ? 'Offer accepted' : (typed > 0 ? 'Offer · US$ 10' : 'Offer · US$ …');
+    $('cOfS').textContent = ok ? 'Rudo · US$ 10 · ZiG ' + zig(10) : 'from Tariro · just now';
+    $('cOfA').textContent = ok ? 'Chat' : (t < 10.42 ? 'Send' : 'Accept');
+    $('cOfA').style.transform = `scale(${1 - .1 * bump(t, 11.55, 11.7)})`; }
+  confetti(t, 11.72, P(SW / 2, SW / 2), P(230, SH / 2));
+
+  // --- UI: price guide (D)
+  { const p = popIn(t, 16.95), z = eio(R(t, 19.35, 19.65)), mk = eo(R(t, 17.3, 18.1));
+    card($('cPG'), P(1060, 90), P(220, 170), p.op * (1 - R(t, 20.0, 20.2)), p.sc);
+    $('cPG').style.width = P(640, 900) + 'px';
+    $('togI').style.transform = `translateX(${z * 82}px)`;
+    $('togU').style.color = z < .5 ? '#fff' : 'var(--ink)'; $('togZ').style.color = z >= .5 ? '#fff' : 'var(--ink)';
+    const cur = (u) => z < .5 ? `US$ ${u}` : `ZiG ${Math.round(L(u, zig(u), eo(R(t, 19.4, 19.9))))}`;
+    $('pgLo').firstChild.textContent = cur(8); $('pgHi').firstChild.textContent = cur(15);
+    $('pgChip').textContent = '✓ Fair · ' + cur(10);
+    $('pgFill').style.transform = `scaleX(${1 - eo(R(t, 17.05, 17.7))})`;
+    $('pgMk').style.left = L(0, (10 - 8) / (15 - 8) * 100, mk) + '%'; $('pgMk').style.opacity = cl(mk * 3); }
+
+  // --- UI: safety cards (E)
+  { const lx = P(150, 90), gone = 1 - R(t, 25.9, 26.1);
+    const m = popIn(t, 21.35), s = popIn(t, 23.0), rp = popIn(t, 24.85);
+    card($('cMap'), lx, P(150, 150), m.op * gone, m.sc); $('cMap').style.width = P(560, 900) + 'px';
+    card($('cScam'), lx, P(535, 590), s.op * gone, s.sc); $('cScam').style.width = P(560, 900) + 'px';
+    card($('cReply'), lx, P(655, 710), rp.op * gone, rp.sc); $('cReply').style.width = P(560, 900) + 'px';
+    const mw = P(532, 872);
+    $('mapA').style.height = P(250, 300) + 'px';
+    [['pul1', 0], ['pul2', .7]].forEach(([id, o]) => { const ph = ((t - 21.4 + o) % 1.4 + 1.4) % 1.4 / 1.4, e = $(id); e.style.left = '250px'; e.style.top = '100px'; e.style.width = e.style.height = (20 + ph * 160) + 'px'; e.style.opacity = t > 21.4 ? 1 - ph : 0; }); }
+
+  // --- F: end card
+  { const ir = eio(R(t, 25.92, 26.35)), on = t >= 25.92;
+    const irisD = Math.hypot(SW, SH) * 2.2 * ir;
+    const ic = $('iris'); ic.style.left = P(1420, 540) + 'px'; ic.style.top = P(560, 1300) + 'px'; ic.style.width = ic.style.height = irisD + 'px'; ic.style.display = on && t < 26.4 ? 'block' : 'none';
+    const E = $('end'); E.style.opacity = t >= 26.33 ? 1 : 0; E.style.display = t >= 26.3 ? 'block' : 'none';
+    $('stage').classList.toggle('light', t >= 26.33);
+    const hl = $('endHl'); hl.style.left = P(150, 80) + 'px'; hl.style.top = P(230, 250) + 'px'; hl.style.fontSize = P(132, 138) + 'px';
+    if (t >= 26.3 && !window.__ulLen) layoutUnderline();
+    const hk = eo(R(t, 26.4, 26.9)); hl.style.opacity = hk; hl.style.transform = `translateY(${(1 - hk) * 40}px)`;
+    $('endUlP').style.strokeDashoffset = (window.__ulLen || 0) * (1 - eio(R(t, 27.3, 27.8)));
+    const sb = $('endSub'); sb.style.left = P(156, 86) + 'px'; sb.style.top = P(640, 640) + 'px'; const sk = eo(R(t, 27.6, 28.1)); sb.style.opacity = sk; sb.style.transform = `translateY(${(1 - sk) * 30}px)`;
+    const lg = $('logo'); lg.style.left = P(156, 86) + 'px'; lg.style.top = P(118, 136) + 'px'; lg.style.opacity = eo(R(t, 26.35, 26.7));
+    const slots = V ? [[175, 700], [415, 720], [665, 760], [905, 720]] : [[1090, 700], [1330, 720], [1560, 780], [1790, 730]];
+    EA.forEach((a, i) => { const k = R(t, 26.45 + i * .15, 26.95 + i * .15); pose(a, { x: slots[i][0], y: P(1085, 1900) + (1 - back(k)) * 60, h: slots[i][1], op: cl(k * 3), sy: L(.85, 1, back(k)) * (1 + .006 * Math.sin(t * 2.4 + i)), shadow: .6 }); }); }
+
+  // --- captions + lower thirds
+  const v = VO.find(v => t >= v.at - .05 && t < v.at + (v.dur || 3) + .35);
+  const capEl = $('cap');
+  if (v) {
+    if ($('capTxt').firstChild !== v.el) { $('capTxt').innerHTML = ''; $('capTxt').appendChild(v.el); }
+    $('capWho').textContent = v.who;
+    let last = null; v.words.forEach(w => { const on = t >= w.st; w.s.classList.toggle('on', on); w.s.classList.remove('now'); if (on) last = w; });
+    if (last) last.s.classList.add('now');
+    const k = R(t, v.at - .05, v.at + .15) * (1 - R(t, v.at + v.dur + .15, v.at + v.dur + .35));
+    capEl.style.opacity = k; capEl.style.display = 'block';
+    capEl.style.bottom = (V && v.id === '06-presenter' ? 1010 : P(96, 250)) + 'px'; capEl.style.width = P(1640, 960) + 'px';
+    capEl.style.top = 'auto';
+  } else capEl.style.display = 'none';
+  const lt = LT.find(l => t >= l[0] && t < l[1]);
+  const ltEl = $('lt');
+  if (lt) {
+    $('ltB').textContent = lt[2]; $('ltS').textContent = lt[3];
+    const k = eo(R(t, lt[0], lt[0] + .35)) * (1 - R(t, lt[1] - .3, lt[1]));
+    ltEl.style.opacity = k; ltEl.style.left = P(52, 44) + 'px'; ltEl.style.top = P(110, 110) + 'px'; ltEl.style.transform = `translateX(${(1 - k) * -30}px)`; ltEl.style.display = 'flex';
+  } else ltEl.style.display = 'none';
+
+  // --- chrome
+  const tag = [...TAGS].reverse().find(x => t >= x[0]);
+  $('tagL').textContent = tag[1];
+  const si = TAGS.indexOf(tag);
+  $('cnt').textContent = TAGS.map((_, i) => i <= si ? '■' : '□').join('');
+  const s = Math.floor(t), fr = Math.floor((t - s) * FPS);
+  $('tcR').textContent = `PAMARKET   00:00:${String(s).padStart(2, '0')}:${String(fr).padStart(2, '0')}`;
+  grain(f);
+}
+
+// ---------- boot ----------
+const RENDER = Q.has('render');
+const AUDIO = [...VO.map(v => ({ src: 'sample/vo/' + v.id + '.wav', at: v.at, gain: 1 })), ...SFX, MUSIC];
+window.__vo = AUDIO;
+window.__seek = t => render(t);
+window.__ready = Promise.all([
+  document.fonts.load('600 100px "Inter Tight"'), document.fonts.load('700 100px "Inter Tight"'),
+  document.fonts.load('700 100px Caveat'), document.fonts.load('400 20px "JetBrains Mono"'), document.fonts.load('700 20px "JetBrains Mono"'),
+  document.fonts.load('48px "Material Symbols Rounded"', 'local_offer bolt gpp_maybe location_on check_circle'),
+  ...VO.map(v => fetch(`vo/${v.id}.lips.json`).then(r => r.json()).then(j => { v.cues = j.mouthCues; v.dur = j.metadata.duration; timeWords(v); })),
+  ...[...document.images].map(i => i.decode ? i.decode().catch(() => {}) : 0),
+]).then(() => document.fonts.ready).then(() => { render(0); return true; });
+
+if (RENDER) document.body.classList.add('render');
+else {
+  const stage = $('stage');
+  const fit = () => { const W = innerWidth, H = innerHeight - 64, s = Math.min(W / SW, H / SH); window.__scale = s; stage.style.transform = `translate(${(W - SW * s) / 2}px,${(H - SH * s) / 2}px) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+  const auds = AUDIO.map(v => { const a = new Audio('../' + v.src); a.preload = 'auto'; a.volume = Math.min(1, v.gain); a.onloadedmetadata = () => { v.dur = a.duration; }; return a; });
+  let cur = 0, playing = true, last = performance.now(), drag = false;
+  const setPlay = p => { playing = p; $('play').textContent = p ? 'PAUSE' : 'PLAY'; };
+  $('play').onclick = () => setPlay(!playing);
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); setPlay(!playing); } if (e.code === 'ArrowRight') cur = cl(cur + .5, 0, DUR - .01); if (e.code === 'ArrowLeft') cur = cl(cur - .5, 0, DUR - .01); });
+  const scrub = $('scrub'), seekX = e => { const r = scrub.getBoundingClientRect(); cur = cl((e.clientX - r.left) / r.width) * (DUR - .01); };
+  scrub.onmousedown = e => { drag = true; seekX(e); }; addEventListener('mousemove', e => drag && seekX(e)); addEventListener('mouseup', () => drag = false);
+  window.__ready.then(() => (function loop(now) {
+    if (playing && !drag) { cur += Math.min(.1, (now - last) / 1000); if (cur >= DUR) cur = 0; }
+    last = now; render(cur);
+    AUDIO.forEach((v, i) => { const a = auds[i], lt = cur - v.at, inside = playing && !drag && lt >= 0 && lt < (v.dur || .5);
+      if (inside) { if (a.paused) { a.currentTime = lt; a.play().catch(() => {}); } else if (Math.abs(a.currentTime - lt) > .2) a.currentTime = lt; } else if (!a.paused) a.pause(); });
+    $('tc').textContent = `${cur.toFixed(2).padStart(5, '0')} / 30.00`; $('scrubFill').style.width = (cur / DUR * 100) + '%';
+    requestAnimationFrame(loop);
+  })(performance.now()));
+}
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 // then encodes an MP4 (with the voice-over clips mixed in) using ffmpeg.
 //   node render.mjs                 → out/pamarket-<slug>.mp4 (1080p30; slug = SLUG in index.html)
 //   node render.mjs --snap 2 6.5 9  → shots/t2.00.png … (half-size stills for review)
+//   --page sample/index.html --slug cast-sample   render another composition
 import { chromium } from 'playwright';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
@@ -13,9 +14,11 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const FPS = 30, DUR = 30;
 const args = process.argv.slice(2);
 const vert = args.includes('--9x16'); if (vert) args.splice(args.indexOf('--9x16'), 1);
+const opt = (name, def) => { const i = args.indexOf(name); if (i < 0) return def; const v = args[i + 1]; args.splice(i, 2); return v; };
+const pageFile = opt('--page', 'index.html'), slug = opt('--slug', 'for-sellers');
 const snap = args[0] === '--snap';
 const [VW, VH] = vert ? [1080, 1920] : [1920, 1080];
-const url = (await serve(5179)) + '?render=1' + (vert ? '&format=9x16' : '');
+const url = (await serve(5179, pageFile)) + '?render=1' + (vert ? '&format=9x16' : '');
 
 let browser;
 try { browser = await chromium.launch({ channel: 'chrome' }); } catch { browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}); }

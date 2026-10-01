@@ -13,3 +13,7 @@ render.log
 render9.log
 vo/raw/
 voice-previews/
+cast/*/sheet@4x.png
+render-*.log
+scenes/*/clips/
+__pycache__/

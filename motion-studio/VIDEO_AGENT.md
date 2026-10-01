@@ -1,9 +1,16 @@
 # PaMarket video agent — brief for the recurring build
 
-You are creating a new 30-second PaMarket marketing video, in the exact
-style approved by the founder on 2026-09-28. This file is self-contained —
-you have no memory of earlier conversations, so read it fully before doing
-anything.
+You are creating a new 30-second PaMarket marketing video. This file is
+self-contained. You have no memory of earlier conversations, so read it
+fully before doing anything.
+
+**What changed on 2026-09-29:** the founder no longer wants every video to
+use the single dithered 3D bust in the same white layout ("same type of
+videos", "not interactive"). Videos now use a **cast of characters** who
+talk to each other and to the viewer, **picked per topic**, with a
+**different format each time**. The reference build is `sample/index.html`
+(the "Rudo's cushion" cast sample). Read it before writing anything.
+`index.html` (the old dithered-bust video) is kept only as a fallback.
 
 ## What PaMarket is
 
@@ -16,156 +23,178 @@ offers in-app, sharing a listing to WhatsApp Status, invite-a-friend,
 scam warnings / reply-time badges / duplicate-photo checks / safe
 meet-up spots, chiShona and isiNdebele language support, the AI help
 assistant, job hiring pipeline, car rentals, price guides, map view, CV
-as PDF.
+as PDF, sellers listing their own delivery details.
 
-## The visual style (do not deviate)
+## The cast
 
-Reference: `index.html` in this folder is the last shipped video
-("Got something to sell?" — for sellers). Read it before writing
-anything. Keep:
+`cast/cast.json` lists every character: role, personality, which topics
+they fit, their free-tier ElevenLabs voice, and each pose's mouth/jaw
+coordinates for lip-sync. `cast/<name>/pose-N.png` are transparent
+cut-outs. The founder adds new characters over time: a new
+`cast/<name>/sheet.png` with no `pose-*.png` next to it means "cut this
+one out" (see **Tools** below), then add it to `cast.json`.
 
-- **Layout**: white (`#ffffff`) editorial background, 1920×1080 (and a
-  1080×1920 vertical mode, `?format=9x16`, already built into the file —
-  reuse the same `V` flag pattern, don't rebuild it).
-- **Chrome**: top-left `// NN — scene name` in JetBrains Mono, top-right
-  `PAMARKET   HH:MM:SS:FF` timecode, bottom-left a `■■■□□` scene-progress
-  counter, bottom-right `pamarketzw.com`.
-- **Headline type**: Inter Tight 600, ~150px, black, with one accent line
-  set in Caveat (script font) coloured `#2466e8` and hand-drawn SVG
-  underline.
-- **Character**: the halftone/dithered 3D bust (Three.js + Bayer-dither
-  shader, see the `THREE.*` block and the `postMat` fragment shader) —
-  reuse it exactly as built, only retime his gestures (arm/head keyframe
-  arrays) to match the new script's beats. Do not redesign the character.
-- **UI cards**: white cards with a 1.5px border, generous radius,
-  `#2466e8` accent chips — same visual language as the listing card /
-  offer card / status card in the current file. Build new cards for
-  whatever the new topic needs (e.g. a rental car card, a job posting
-  card), following the same `.card`/`.ui` CSS patterns already defined.
-- **Everything is a pure function of time `t`** (see the `render(t)`
-  function) so the preview and the frame-by-frame export always match.
-  Keep this architecture. Don't introduce CSS animations/transitions that
-  aren't driven by `t`.
+- Pick **2–4 characters** whose `fits` match the topic. Rotate: don't lead
+  with the same character two videos in a row (check `queue/*/notes.md`).
+- Characters must **interact**: an offer card flies from one to the other,
+  a split screen for the two sides of a deal, one character hands the
+  story to the next, reactions (hop, lean, cheer). Don't make a slideshow
+  of monologues.
+- Respect each character's `caution` notes (garbled AI text on props,
+  no invented PaMarket courier service, and don't mirror a pose whose
+  clothing has text).
+
+## Formats — rotate, never repeat the last one
+
+Pick one, note which in `notes.md`, and don't reuse the previous video's:
+
+1. **Skit**: 2–3 characters play out a real flow (the sample: list → offer
+   → accept → price guide → safe meet-up).
+2. **Sekuru explains**: one wise-elder tip, with big kinetic numbers
+   (price guides, ZiG vs USD).
+3. **Phone POV**: the app screen fills the frame, and characters pop in
+   from the edges to react.
+4. **Street vox-pop**: 3–4 characters each say one line to camera
+   ("What I sold this week…"), with fast whip-pans between them.
+5. **Editorial**: the older white layout with type, but a cast character
+   replaces the dithered bust.
+
+## The look (keep across formats)
+
+- Pixar-style background plates behind sharp cut-out characters, with a
+  soft depth-of-field blur on the background, a slow camera push, whip-pan
+  or split-screen transitions, a warm grade, a vignette and light film grain.
+- PaMarket UI cards (white, 1.5px border, `#2466e8` accent chips) living
+  in **screen space**, so they survive camera moves and travel between
+  scenes.
+- **Burned-in captions** with the current word highlighted and a speaker
+  label, plus a lower-third name tag the first time each character appears.
+- Brand chrome: top-left `// NN — scene`, top-right `PAMARKET` timecode,
+  bottom-right `pamarketzw.com`.
+- End on a white card: logo, headline with one Caveat script word in blue
+  with a drawn underline, `pamarketzw.com`, store badges, and the cast lined up.
+- 1920×1080 and 1080×1920 from one file (`?format=9x16`, `P(h, v)` helper).
+- **Everything is a pure function of `t`** (`render(t)`) so the preview
+  and the frame-by-frame export match. No CSS transitions or animations.
+
+## Backgrounds
+
+Reuse `sample/bg/*.jpg` when they fit. For a new setting (car-rental
+lot, campus, office, kombi rank), generate **one** plate with the
+ElevenLabs MCP `creative_generate_image`, model `gemini-3.1-flash-image`,
+16:9, `generations_count: 1` (~406 credits each). The prompt should ask for
+a Pixar/Disney 3D render style, a Harare/Zimbabwe setting, empty floor
+space for characters, and **no people, no text, no signs, no logos, no
+number plates**. Upscale (see **Tools**) and save it as
+`sample/bg/<name>.jpg` at 3840 px wide.
+
+## Voice
+
+**Free ElevenLabs tier only — never anything that needs payment.** Use
+each character's `voice.id` from `cast.json` (model `eleven_v3`,
+`generations_count: 1`, bracketed direction tags like `[warmly]` are
+fine). If a new character needs a voice, try library voices with
+`creative_generate_speech` until one doesn't return the "creator tier"
+error; don't design new voices without the founder. The closing tagline
+uses the Harare Presenter voice.
+
+- **ZiG is spoken "Zigi"** (hard G). On-screen text and captions still say "ZiG".
+- Keep the total dialogue at about 27 s so it fits 30 s: 6–8 short lines.
+- Trim, compress pauses, then speed up by the voice's `tempo`:
+  ```
+  ffmpeg -i raw.mp3 -af "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03,areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08,areverse,silenceremove=stop_periods=-1:stop_duration=0.22:stop_threshold=-42dB:stop_silence=0.18,atempo=1.12" -ar 44100 vo/01-name.wav
+  ```
+- Lip-sync: run Rhubarb on each line with its script as dialog text:
+  `rhubarb -q -f json -d 01-name.txt -o 01-name.lips.json 01-name.wav`.
+  The composition reads `vo/<id>.lips.json` and drives each speaking
+  character's jaw from it.
+- Reuse `../music.mp3` as the bed unless the topic really needs a new
+  mood (`eleven_music_v2`, ~30 s, no vocals). SFX come from `../sfx/`
+  (`sh sfx/make-sfx.sh` regenerates them).
+
+Look up today's ZiG-per-USD rate (`https://open.er-api.com/v6/latest/USD`,
+field `rates.ZWG`) and set `ZIG_RATE`. If it's unreachable, keep the old
+value and flag it in `notes.md`.
 
 ## Picking a topic
 
-The founder wants these tied to what's actually happening in Zimbabwe
-that week, not a topic picked in a vacuum — check real news before you
-default to a generic rotation.
+The founder wants topics tied to what's actually happening in Zimbabwe
+that week:
 
-1. **Check what Zimbabweans are actually talking about right now.**
-   Use whatever search/fetch tools you have to look at a couple of real,
-   public Zimbabwean sources — e.g. Google News for Zimbabwe
-   (`https://news.google.com/rss?hl=en-ZW&gl=ZW&ceid=ZW:en`), Pindula
-   News (pindula.co.zw), NewsDay Zimbabwe, Techzim. You're looking for
-   something a 30-second ad could genuinely connect to — a fuel or
-   ZiG/USD pricing story, a jobs/retrenchment story, back-to-school or
-   salary-day timing, a public holiday, a load-shedding story, and so
-   on. Read a handful of real headlines; don't fabricate a trend you
-   didn't actually see.
-2. **Only connect it to a real PaMarket feature.** A trend is a reason
-   to lead with a particular *angle* on a real feature (e.g. a
-   fuel-price story → lead with car rentals or price guides; a jobs
-   story → lead with the hiring pipeline) — never invent a capability
-   the app doesn't have just because it fits a headline.
-3. **If nothing genuinely connects**, that's fine and normal — say so in
-   `notes.md` and fall back to the rotation: list `queue/*/topic.txt` in
-   this folder (create `queue/` if absent), pick a real shipped feature
-   not already used. Good options: job hiring / CV as PDF, car rentals,
-   safe meet-up + trust features (if not already the focus), price
-   guides + map view, the AI help assistant, institutions/campus
-   listings.
-4. Write one clear sentence of what the video is about, and (if you used
-   a real news angle) one line in `notes.md` naming the story and source
-   you based it on, before starting.
+1. Check real, public Zimbabwean news (Google News ZW RSS
+   `https://news.google.com/rss?hl=en-ZW&gl=ZW&ceid=ZW:en`, Pindula,
+   NewsDay, Techzim) for something a 30-second ad could genuinely connect
+   to: fuel or ZiG pricing, jobs, back-to-school, salary day, a holiday,
+   load-shedding. Don't fabricate a trend you didn't see.
+2. Connect it only to a **real** PaMarket feature, and pick the cast to match.
+3. If nothing connects, say so in `notes.md` and rotate to a feature not
+   covered recently (`queue/*/topic.txt`).
 
-## The voiceover
+## Building it
 
-Reuse the saved ElevenLabs voice **"PaMarket — Harare Presenter"**,
-`voice_id: UqVoYflBV54bEWmZcrK6` (Zimbabwean, warm, upbeat) — do not
-design a new voice. Use the ElevenLabs MCP tools available to you
-(`creative_generate_speech`, model `eleven_v3`) for 7–9 short lines
-matching your new script's scenes, then `eleven_music_v2` for a ~30s
-instrumental bed (same style as before: bright, warm, Afro-pop-ish,
-sparse enough to sit under narration, no vocals).
+Copy `sample/` to a new folder `scenes/<slug>/` (keep `sample/` intact as
+the reference). Edit `CAST`, the `VO` lines, `SFX`, the cards and the scene
+timings in `render(t)`. Adding a speaking pose: copy its `mouth`/`jaw`/`drop`
+from `cast.json`. For a pose not yet measured, run
+`python cast/facegrid.py <name> <pose> 0.22`, read the lip line off the
+grid, and save the values to `cast.json`.
 
-**Pronunciation rule**: the currency ZiG is spoken **"Zigi"** (hard G,
-like ga-ge-gi-go-gu) in any voiceover — never "zig" or "ziji". The
-on-screen text still reads "ZiG".
-
-After generating each line, download the audio, then trim silence with:
+Preview: `node preview.mjs scenes/<slug>/index.html`. Spot-check stills
+before the full render:
 ```
-ffmpeg -i raw.mp3 -af "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03,areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08,areverse" -c:a libmp3lame -q:a 2 vo/01.mp3
+node render.mjs --page scenes/<slug>/index.html --snap 1.5 6 12 18 24 28.5
+node render.mjs --page scenes/<slug>/index.html --9x16 --snap 3 12 25 28.5
 ```
-Save trimmed lines to `vo/01.mp3`, `vo/02.mp3`, etc. and the music to
-`music.mp3`. Regenerate the small UI sound library (shutter/tap/ping/
-pop/whoosh/tick) with `sh sfx/make-sfx.sh` — don't hand-author these,
-the script already exists.
-
-If a live source is reachable, look up today's real ZiG-per-USD rate
-(the app fetches it from `https://open.er-api.com/v6/latest/USD`,
-field `rates.ZWG`) and set it as `ZIG_RATE` near the top of the script.
-If not reachable, keep whatever rate is already in the file and note in
-your final summary that it's a placeholder needing a refresh.
-
-## Editing the composition
-
-Edit `index.html` in place (same file, same engine) — change the `SC`
-scene-copy array, the UI card markup/positions, the character pose
-keyframe arrays (`rKeys`/`lKeys`/`headX`/etc.), and the `VO` array's
-`.text` and `.at` timings to match your new script. Keep the file
-structure (the math helpers, the Three.js rig, the dither shader, the
-render loop, the preview player) untouched unless something is actually
-broken.
-
-## Rendering
-
+Look at every still. Check for cropped heads, cards covering faces or
+captions, and garbled text on props. Then render:
 ```
-cd motion-studio
-npm install   # if node_modules isn't already present
-npx playwright install --with-deps chromium   # if not already installed
-node render.mjs            # 1920×1080 → out/pamarket-<slug>.mp4
-node render.mjs --9x16      # 1080×1920 → out/pamarket-<slug>-9x16.mp4
+node render.mjs --page scenes/<slug>/index.html --slug <slug>
+node render.mjs --page scenes/<slug>/index.html --slug <slug> --9x16
 ```
-Use `node render.mjs --snap 1.2 8 15 22 28` first to spot-check a few
-frames (`shots/*.png`) before committing to the full 900-frame render —
-it's much cheaper to catch a layout mistake early.
+
+## Tools
+
+Local Windows machine: everything is installed in `../.video-tools/bin/`
+(Rhubarb, Real-ESRGAN) and via pip (`rembg`, `scipy`). In a fresh Linux
+sandbox:
+```
+pip install "rembg[cpu,cli]" scipy
+curl -sSL -o rh.zip https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.14.0/Rhubarb-Lip-Sync-1.14.0-Linux.zip && unzip -q rh.zip
+```
+- Cut out a new sheet: `python cast/cutout.py <name>`. It needs
+  `sheet@4x.png` first. With Real-ESRGAN:
+  `realesrgan-ncnn-vulkan -i sheet.png -o sheet@4x.png -n realesrgan-x4plus -s 4`.
+  If there's no GPU/Vulkan in the sandbox, make it with a Lanczos 4× resize
+  in PIL instead.
+- The first rembg run downloads its models (~1.1 GB).
 
 ## Handing off the finished video
 
 You do **not** have credentials to publish or to write into the AMOS
-database directly — don't attempt either. Your job ends at: a finished,
+database directly — don't attempt either. Your job ends at a finished,
 reviewed pair of MP4s, a caption, and a clear written summary.
 
-1. Create a folder `queue/<YYYY-MM-DD>-<topic-slug>/` containing:
+1. Create `queue/<YYYY-MM-DD>-<topic-slug>/` containing:
    - `pamarket-<slug>.mp4` (16:9) and `pamarket-<slug>-9x16.mp4` (9:16)
-   - `topic.txt` — one line naming the topic (so the next run doesn't repeat it)
-   - `caption.md` — the finished social caption + hashtags, written for
-     Facebook/Instagram, matching the tone of prior posts (see git log
-     for the caption used on the last video if useful context)
-   - `notes.md` — anything the human reviewer should know: the ZiG rate
-     used and whether it's live or placeholder, any content you're
-     unsure about, anything you couldn't verify
-2. `git add -f queue/<...>/*.mp4` (the repo's `.gitignore` blocks `*.mp4`
-   deliberately for the working engine — force-add only inside `queue/`)
-   plus the other new files in that folder, and your `index.html` edits.
-3. Commit on branch `amos-video-queue` (create it from the default
-   branch if it doesn't exist yet; if it does, branch again from the
-   default branch's current tip each run rather than stacking on the
-   previous run's commit, so each run's diff is easy to review alone).
-   Push it.
-4. End your final message with: the topic you chose, the caption, the
-   branch/folder path, and every fact in `notes.md`. This is what the
-   founder or a follow-up session will read to move it into the AMOS
-   approval queue — the video does not go live on its own.
+   - `topic.txt`: one line naming the topic
+   - `caption.md`: the social caption + hashtags for Facebook/Instagram
+   - `notes.md`: the format used, the cast used, the ZiG rate (live or
+     placeholder), and anything you're unsure about or couldn't verify
+2. `git add -f queue/<...>/*.mp4` (`.gitignore` blocks `*.mp4`, so force-add
+   only inside `queue/`), plus the other new files and your
+   `scenes/<slug>/` folder.
+3. Commit on branch `amos-video-queue`. Branch fresh from the default
+   branch's tip each run, and commit the text files **and** the MP4s in the
+   **same commit**. The ingest workflow skips pushes that have no `.mp4`
+   yet. Push it.
+4. End your final message with the topic, format, cast, caption,
+   branch/folder path, and every fact in `notes.md`.
 
 ## Rules to respect
 
-- **Zimbabwe/Harare only.** Every video is about the Zimbabwean market;
-  never depict or reference another country's market as the setting.
-- **No invented product capabilities.** Only show features that
-  genuinely exist in the shipped app (check `git log`/`docs/` — don't
-  guess).
-- **No phone/WhatsApp sign-in messaging** — that flow is deliberately
-  soft-launched, not a marketing point yet.
-- Keep the whole video to 30 seconds, both aspect ratios.
+- **Zimbabwe/Harare only.** Never depict another country's market.
+- **No invented product capabilities.** Only show shipped features.
+- **No phone/WhatsApp sign-in messaging.** That flow is soft-launched.
+- **Free services only.** No paid ElevenLabs tier, no paid APIs.
+- **Accents: Southern African, British or American only.** Never West African voices.
+- 30 seconds, both aspect ratios.

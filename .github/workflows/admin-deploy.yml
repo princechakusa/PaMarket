@@ -1,0 +1,66 @@
+name: Deploy admin
+
+# Builds the React admin (admin/) and uploads it to the Cloudflare Pages
+# project "pamarket-admin-react" (production branch: master) whenever admin
+# code changes. The Pages project is direct-upload, so Cloudflare cannot build
+# it from Git by itself: this workflow is what keeps it in sync.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'admin/**'
+      - '.github/workflows/admin-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: admin-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Check deploy credentials
+        id: creds
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SB_URL: ${{ secrets.ADMIN_VITE_SUPABASE_URL }}
+          SB_KEY: ${{ secrets.ADMIN_VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SB_URL" ] || [ -z "$SB_KEY" ]; then
+            echo "::error::ADMIN_VITE_SUPABASE_URL / ADMIN_VITE_SUPABASE_PUBLISHABLE_KEY secrets are missing — refusing to build an admin with no backend."
+            exit 1
+          fi
+          if [ -z "$CF_TOKEN" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN secret is not set yet — build will run but nothing is deployed."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm ci
+
+      - name: Build (typecheck + vite, live mode)
+        env:
+          VITE_ADMIN_MODE: live
+          VITE_SUPABASE_URL: ${{ secrets.ADMIN_VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.ADMIN_VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.creds.outputs.deploy == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: fd7206521a372182acde8eb882794ecf
+        run: npx --yes wrangler@4 pages deploy dist --project-name pamarket-admin-react --branch master --commit-hash "$GITHUB_SHA" --commit-message "$(git log -1 --format=%s | cut -c1-200)"
