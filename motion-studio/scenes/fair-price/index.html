@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaMarket — Know what's fair</title>
+<!-- fonts are self-hosted (fonts/fonts.css) so the render never depends on a CDN -->
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+:root{--ink:#111;--paper:#fff;--mute:#9a9a95;--line:#e6e6e1;--blue:#2466e8;--blue-soft:#eaf1ff;--alt:#f4f4f1}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0e0e0e;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:#000;color:var(--ink);transform-origin:0 0;font-family:'Inter Tight',system-ui,sans-serif}
+body.v #stage{width:1080px;height:1920px}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.mi{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;line-height:1;display:inline-block;white-space:nowrap;font-feature-settings:'liga';font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 48}
+.layer{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
+.bg{position:absolute;left:0;top:0;transform-origin:0 0;display:block}
+.acts{position:absolute;inset:0;transform-origin:50% 100%}
+.actor{position:absolute;left:0;top:0;transform-origin:50% 100%}
+.fig{position:absolute;left:0;top:0;transform-origin:0 0}
+.fig>img,.jaw,.patch{position:absolute;left:0;top:0}
+.jaw{background-repeat:no-repeat}
+.mouth{position:absolute;border-radius:48%;background:radial-gradient(ellipse at 50% 30%,#7a2a1f 0%,#3a0e0a 55%,#1d0504 100%)}
+.shadow{position:absolute;border-radius:50%;background:radial-gradient(ellipse at center,rgba(20,10,0,.5) 0%,rgba(20,10,0,0) 70%)}
+.seam{position:absolute;inset:0;pointer-events:none}
+
+/* grade + grain */
+#grade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,200,140,.07),rgba(40,20,80,.06));mix-blend-mode:soft-light}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 50% 48%,rgba(0,0,0,0) 55%,rgba(0,0,0,.38) 100%)}
+#grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:overlay;opacity:.09}
+
+/* chrome */
+.chr{position:absolute;font-size:21px;color:rgba(255,255,255,.88);white-space:pre;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+#tagL{left:52px;top:44px}#tcR{right:52px;top:44px}#cnt{left:52px;bottom:44px;font-size:19px}#urlR{right:52px;bottom:44px;font-size:19px}
+body.v #tagL,body.v #cnt{left:44px}body.v #tcR,body.v #urlR{right:44px}
+#stage.light .chr{color:var(--mute);text-shadow:none}
+
+/* lower third + captions */
+#lt{position:absolute;display:flex;align-items:stretch;opacity:0;white-space:nowrap}
+#lt b{background:var(--blue);color:#fff;font-weight:700;font-size:30px;letter-spacing:-.02em;padding:14px 22px;border-radius:14px 0 0 14px}
+#lt span{background:#fff;color:var(--ink);font-size:21px;padding:0 22px;display:flex;align-items:center;border-radius:0 14px 14px 0}
+#cap{position:absolute;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none}
+#cap .who{display:inline-block;font-size:17px;letter-spacing:.08em;color:#fff;background:rgba(17,17,17,.72);padding:6px 12px;border-radius:8px;margin-bottom:10px}
+#cap>div:last-child{text-wrap:balance}
+#cap .txt{background:rgba(17,17,17,.78);color:#fff;font-weight:600;font-size:44px;letter-spacing:-.02em;line-height:1.18;padding:14px 26px 16px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone;display:inline}
+body.v #cap .txt{font-size:50px}
+#cap .w{opacity:.28}
+#cap .w.on{opacity:1}
+#cap .w.now{color:#8fb3ff}
+
+/* cards */
+.ui{position:absolute;background:#fff;border:1.5px solid var(--line);border-radius:24px;box-shadow:0 34px 70px -30px rgba(0,0,0,.45);opacity:0;color:var(--ink);transform-origin:50% 50%}
+.photo{height:230px;border-radius:16px;margin:14px;position:relative;overflow:hidden;background:linear-gradient(160deg,#f6efe4,#e9dcc8)}
+.photo svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.lc-b{padding:2px 26px 24px}
+.lc-t{font-weight:600;font-size:32px;letter-spacing:-.03em}
+.lc-l{font-size:17px;color:var(--mute);margin-top:4px}
+.lc-row{display:flex;align-items:center;gap:14px;margin-top:14px}
+.lc-p{font-weight:700;font-size:48px;letter-spacing:-.04em}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--blue);color:var(--blue);border-radius:999px;padding:6px 14px;font-size:19px;font-weight:700;white-space:nowrap;background:#fff}
+.chip.fill{background:var(--blue);color:#fff}
+.chip i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.btn{margin-top:16px;background:var(--ink);color:#fff;border-radius:14px;padding:14px;text-align:center;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn .mi{font-size:26px}
+.nt{display:flex;align-items:center;gap:18px;padding:18px 22px;width:520px}
+.nt .ic{width:58px;height:58px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:30px;flex:none}
+.nt b{font-weight:600;font-size:27px;letter-spacing:-.025em;display:block;white-space:nowrap}
+.nt small{font-size:16px;color:var(--mute)}
+.nt .acc{margin-left:auto;background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;font-size:18px;white-space:nowrap}
+.nt.ok{background:var(--blue);border-color:var(--blue);color:#fff}
+.nt.ok .ic{background:rgba(255,255,255,.18);color:#fff}
+.nt.ok small{color:rgba(255,255,255,.78)}
+.nt.ok .acc{background:#fff;color:var(--blue)}
+.bubble{position:absolute;width:96px;height:96px;border-radius:50%;background:#fff;border:1.5px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:60px;color:var(--blue);opacity:0;box-shadow:0 20px 40px -20px rgba(0,0,0,.5)}
+
+/* kinetic panel (Sekuru's opener) */
+.kin{padding:30px 40px 36px;overflow:hidden}
+.kin-h{font-size:19px;color:var(--mute);letter-spacing:.04em}
+.krow{display:flex;align-items:center;gap:22px;margin-top:16px;padding:10px 22px;border-radius:20px;position:relative}
+.krow .cur{font-weight:700;font-size:64px;letter-spacing:-.04em;width:150px}
+.krow .num{font-weight:800;font-size:132px;letter-spacing:-.05em;line-height:1;display:inline-block;min-width:330px;font-variant-numeric:tabular-nums}
+.krow .arr{font-size:84px;margin-left:auto}
+.krow.hi{background:var(--blue);color:#fff}
+#kFair{position:absolute;left:40px;right:40px;top:76px;font-weight:700;letter-spacing:-.045em;line-height:1.02;font-size:104px;opacity:0}
+.scr{font-family:Caveat,cursive;color:var(--blue);font-size:1.45em;letter-spacing:-.01em;position:relative;display:inline-block}
+.scr svg{position:absolute;left:0;bottom:-.02em;overflow:visible}
+
+/* price guide (listing page: "TYPICAL PRICE") */
+.pg{padding:30px 36px 34px}
+.pg-lab{font-size:19px;color:var(--mute);letter-spacing:.06em}
+.pg-rng{font-weight:700;font-size:78px;letter-spacing:-.045em;margin-top:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pg-sub{font-size:23px;color:#55554f;margin-top:4px}
+.bar{position:relative;height:20px;border-radius:10px;margin:92px 8px 0;background:linear-gradient(90deg,#dfe8fb,#2466e8 50%,#dfe8fb)}
+.bar .cover{position:absolute;inset:-2px;border-radius:10px;background:#fff;transform-origin:100% 50%}
+.mk{position:absolute;top:-72px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center}
+.mk .chip{font-size:21px}
+.mk .pin{width:4px;height:34px;background:var(--ink);margin-top:6px;border-radius:2px}
+.ends{display:flex;justify-content:space-between;margin-top:14px;font-weight:600;font-size:22px;color:#55554f}
+/* big ZiG plate */
+#kZ{position:absolute;display:flex;align-items:baseline;gap:22px;white-space:nowrap;opacity:0;background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:14px 30px 18px;box-shadow:0 34px 70px -30px rgba(0,0,0,.45)}
+#kZ .lab{font-size:17px;color:var(--mute);letter-spacing:.06em;align-self:center;width:118px;line-height:1.25}
+#kZ .u{font-weight:700;font-size:76px;letter-spacing:-.04em}
+#kZ .eq{font-weight:600;font-size:60px;color:var(--mute)}
+#kZ .z{font-weight:800;font-size:76px;letter-spacing:-.04em;color:#fff;background:var(--blue);border-radius:18px;padding:0 20px 4px;font-variant-numeric:tabular-nums}
+
+/* post-an-ad card (seller side: "PRICE GUIDE") */
+.post{padding:26px 30px 28px}
+.post-h{display:flex;align-items:center;justify-content:space-between}
+.post-h b{font-weight:700;font-size:34px;letter-spacing:-.03em}
+.post-row{display:flex;gap:18px;align-items:center;margin-top:18px}
+.thumb{width:96px;height:96px;border-radius:14px;background:linear-gradient(160deg,#f6efe4,#e9dcc8);position:relative;overflow:hidden;flex:none}
+.thumb svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.fld{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:10px 16px}
+.fld small{display:block;font-size:15px;color:var(--mute)}
+.fld span{font-weight:600;font-size:28px;letter-spacing:-.02em}
+.fld.price{margin-top:14px}
+.fld.price span{font-weight:700;font-size:40px}
+.caret{display:inline-block;width:3px;height:36px;background:var(--blue);vertical-align:-4px;margin-left:3px}
+.guide{margin-top:14px;background:var(--alt);border-radius:16px;padding:16px 18px;border:2px solid transparent}
+.guide small{font-size:15px;color:var(--mute);letter-spacing:.06em}
+.guide b{display:block;font-weight:700;font-size:38px;letter-spacing:-.03em;margin-top:2px}
+.guide p{font-size:19px;color:#55554f;margin-top:2px}
+.live{position:absolute;right:28px;top:28px}
+
+/* end card */
+#end{position:absolute;inset:0;background:#fff;opacity:0}
+#endHl{position:absolute;font-weight:700;letter-spacing:-.05em;line-height:.98;color:var(--ink);white-space:nowrap}
+#endHl .scr{font-size:1.3em}
+#endSub{position:absolute;display:flex;flex-direction:column;gap:22px}
+#endSub .url{font-size:32px;font-weight:600;letter-spacing:-.02em}
+#endSub .url b{color:var(--blue)}
+.stores{display:flex;gap:18px;align-items:center}
+.stores img{height:72px;display:block}
+#logo{position:absolute;width:86px;height:86px;border-radius:22px}
+#iris{position:absolute;border-radius:50%;background:#fff;transform:translate(-50%,-50%);width:0;height:0}
+#confetti{position:absolute;inset:0;pointer-events:none}
+
+/* preview UI */
+#ui{position:fixed;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;gap:18px;padding:0 22px;background:#111;font:500 14px 'JetBrains Mono',monospace;color:#bbb;user-select:none}
+#ui button{height:38px;padding:0 14px;border-radius:9px;border:0;background:var(--blue);color:#fff;font:700 14px 'JetBrains Mono',monospace;cursor:pointer}
+#scrub{position:relative;flex:1;height:30px;cursor:pointer}
+#scrub .track{position:absolute;left:0;right:0;top:13px;height:4px;border-radius:2px;background:#333}
+#scrubFill{position:absolute;left:0;top:13px;height:4px;border-radius:2px;background:var(--blue)}
+body.render #ui{display:none}
+</style>
+</head>
+<body>
+<!-- the jacket "listing photo": drawn, so no garbled AI text can sneak in -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="jacket">
+      <path d="M-62 -78 L-118 -60 L-150 60 L-122 70 L-96 -6 L-94 96 L94 96 L96 -6 L122 70 L150 60 L118 -60 L62 -78 Z" fill="#3f6eb5"/>
+      <path d="M-150 60 L-122 70 L-118 84 L-152 74 Z M150 60 L122 70 L118 84 L152 74 Z" fill="#2f5896"/>
+      <path d="M-94 80 L94 80 L94 96 L-94 96 Z" fill="#2f5896"/>
+      <path d="M-62 -78 L-30 -40 L0 -70 L30 -40 L62 -78 L36 -86 L0 -60 L-36 -86 Z" fill="#2c548f"/>
+      <path d="M-30 -40 L-6 96 M30 -40 L6 96" stroke="#2c548f" stroke-width="5" fill="none"/>
+      <path d="M0 -58 L0 94" stroke="#f2c46d" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <rect x="-80" y="-8" width="48" height="36" rx="6" fill="none" stroke="#f2c46d" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <rect x="32" y="-8" width="48" height="36" rx="6" fill="none" stroke="#f2c46d" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <circle cx="0" cy="-20" r="5" fill="#e3b04f"/><circle cx="0" cy="18" r="5" fill="#e3b04f"/><circle cx="0" cy="56" r="5" fill="#e3b04f"/>
+      <circle cx="-56" cy="-4" r="4" fill="#e3b04f"/><circle cx="56" cy="-4" r="4" fill="#e3b04f"/>
+    </g>
+  </defs>
+</svg>
+<div id="stage">
+  <div id="world" class="layer"></div>
+  <div id="grade"></div>
+  <div id="vig"></div>
+  <svg id="seam" class="seam"><path id="seamP" fill="none" stroke="#fff" stroke-width="6"/></svg>
+
+  <!-- UI (screen space: survives camera whips) -->
+  <div id="k1" class="ui kin">
+    <div class="kin-h mono" id="k1h">// prices keep moving</div>
+    <div class="krow" id="kU"><span class="cur">US$</span><span class="num" id="kUn">25</span><span class="mi arr" id="kUa">trending_up</span></div>
+    <div class="krow" id="kZr"><span class="cur">ZiG</span><span class="num" id="kZn">670</span><span class="mi arr" id="kZa">trending_down</span></div>
+    <div id="kFair"><div>So, what’s</div><div><span class="scr" id="fairScr">fair?<svg id="fairUl" height="30"><path id="fairUlP" fill="none" stroke="#2466e8" stroke-width="7" stroke-linecap="round"/></svg></span></div></div>
+  </div>
+
+  <div id="cList" class="ui" style="width:450px">
+    <div class="photo"><svg width="330" height="230" viewBox="-165 -115 330 230"><use href="#jacket"/></svg></div>
+    <div class="lc-b">
+      <div class="lc-t">Denim jacket</div>
+      <div class="lc-l mono">Harare · Mbare · seller: Rudo</div>
+      <div class="lc-row"><div class="lc-p" id="cPrice">US$ 25</div><div class="chip" id="cZig">≈ ZiG 0</div></div>
+      <div class="btn"><span class="mi">local_offer</span>Make offer</div>
+    </div>
+  </div>
+  <div id="qm" class="bubble">?</div>
+
+  <div id="cPG" class="ui pg">
+    <div class="pg-lab mono">TYPICAL PRICE</div>
+    <div class="pg-rng" id="pgR">US$ 18 – US$ 30</div>
+    <div class="pg-sub">Most similar ads in Harare are priced in this range.</div>
+    <div class="bar"><div class="cover" id="pgFill"></div>
+      <div class="mk" id="pgMk"><div class="chip fill">✓ This jacket · US$ 25</div><div class="pin"></div></div>
+    </div>
+    <div class="ends mono"><span>US$ 18</span><span>US$ 30</span></div>
+  </div>
+  <div id="kZ"><span class="lab mono">ON THE<br>LISTING</span><span class="u">US$ 25</span><span class="eq">≈</span><span class="z" id="kZz">ZiG 0</span></div>
+
+  <div id="cPost" class="ui post">
+    <div class="post-h"><b>Post an ad</b></div>
+    <div class="chip fill live" id="pLive"><i></i>LIVE</div>
+    <div class="post-row"><div class="thumb"><svg width="96" height="96" viewBox="-165 -165 330 330"><use href="#jacket"/></svg></div>
+      <div class="fld"><small>Title</small><span>Denim jacket</span></div></div>
+    <div class="fld price"><small>Price</small><span id="pPrice">US$</span><span class="caret" id="pCaret"></span></div>
+    <div class="guide" id="pGuide"><small class="mono">PRICE GUIDE</small><b>US$ 18 – US$ 30</b><p>Similar ads in Harare are priced in this range.</p></div>
+    <div class="btn" id="pBtn"><span class="mi" id="pBtnI">storefront</span><span id="pBtnT">Post ad</span></div>
+  </div>
+
+  <div id="cOffer" class="ui nt"><div class="ic mi" id="cOfI">local_offer</div><div><b id="cOfB">Offer · US$ 25</b><small class="mono" id="cOfS">to Rudo · denim jacket</small></div><div class="acc" id="cOfA">Send</div></div>
+
+  <canvas id="confetti"></canvas>
+
+  <div id="end">
+    <img id="logo" src="../../../img/icon-512.png" alt="">
+    <div id="endHl"><div>Know what’s</div><div><span class="scr" id="endScr">fair.<svg id="endUl" height="30"><path id="endUlP" fill="none" stroke="#2466e8" stroke-width="7" stroke-linecap="round"/></svg></span></div></div>
+    <div id="endSub"><div class="url mono">pamarket<b>zw</b>.com</div><div class="stores"><img src="../../../img/app-store-badge.svg" alt=""><img src="../../../img/google-play-badge.png" alt=""></div></div>
+    <div id="endActs" class="layer" style="overflow:visible"></div>
+  </div>
+  <div id="iris"></div>
+
+  <div id="lt"><b id="ltB"></b><span class="mono" id="ltS"></span></div>
+  <div id="cap"><div class="who mono" id="capWho"></div><div><span class="txt" id="capTxt"></span></div></div>
+
+  <div id="tagL" class="chr mono"></div>
+  <div id="tcR" class="chr mono"></div>
+  <div id="cnt" class="chr mono"></div>
+  <div id="urlR" class="chr mono">pamarketzw.com</div>
+  <canvas id="grain"></canvas>
+</div>
+<div id="ui"><button id="play">PAUSE</button><span id="tc">00.00 / 30.00</span><div id="scrub"><div class="track"></div><div id="scrubFill"></div></div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const Q = new URLSearchParams(location.search);
+const V = Q.get('format') === '9x16';
+if (V) document.body.classList.add('v');
+const SW = V ? 1080 : 1920, SH = V ? 1920 : 1080, DUR = 30, FPS = 30;
+const P = (h, v) => V ? v : h;
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const L = (a, b, k) => a + (b - a) * k;
+const R = (t, a, b) => cl((t - a) / (b - a));
+const eo = x => 1 - Math.pow(1 - x, 3);
+const eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { const c = 1.9, c3 = c + 1; return 1 + c3 * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const bump = (t, a, b) => Math.sin(Math.PI * R(t, a, b));
+const ZIG_RATE = 26.7965; // open.er-api.com rates.ZWG, updated Thu 1 Oct 2026 00:02 UTC
+const zig = u => Math.round(u * ZIG_RATE);
+const fmt = n => n.toLocaleString('en-US');
+
+// ---------- cast ----------
+// m = mouth [x, lipLineY, width]; jaw = feathered lower-face ellipse [cx, cy, rx, ry]; drop = max jaw drop (image px)
+const CAST = {
+  sek1:   { src: '../../cast/sekuru-tadiwa/pose-1.webp', w: 1189, h: 3467, m: [565, 428, 118], jaw: [565, 515, 168, 112], drop: 20,
+            patch: '<div class="patch" style="left:0;top:0;width:1189px;height:3467px;clip-path:polygon(768px 1604px,1001px 1600px,1001px 1690px,952px 1712px,948px 1735px,775px 1742px)"><div style="position:absolute;left:760px;top:1596px;width:250px;height:150px;background:#fff"></div><div style="position:absolute;left:782px;top:1616px;width:150px;height:30px;border-radius:15px;background:#2466e8"></div><div style="position:absolute;left:782px;top:1662px;width:100px;height:14px;border-radius:7px;background:#c9d6f4"></div><div style="position:absolute;left:782px;top:1690px;width:130px;height:14px;border-radius:7px;background:#dde5f7"></div></div>' },
+  tar:    { src: '../../cast/tariro/pose-2.webp', w: 749, h: 2778, m: [448, 588, 104], jaw: [440, 625, 125, 72], drop: 18 },
+  tarEnd: { src: '../../cast/tariro/pose-1.webp', w: 816, h: 2818 },
+  rudo2:  { src: '../../cast/rudo/pose-2.webp', w: 1246, h: 2875, m: [648, 483, 96], jaw: [648, 530, 165, 88], drop: 22 },
+  rudo3:  { src: '../../cast/rudo/pose-3.webp', w: 1265, h: 2710 },
+};
+
+function makeActor(parent, key) {
+  const c = CAST[key], a = document.createElement('div');
+  a.className = 'actor';
+  const mask = `radial-gradient(ellipse ${c.jaw ? c.jaw[2] : 1}px ${c.jaw ? c.jaw[3] : 1}px at ${c.jaw ? c.jaw[0] : 0}px ${c.jaw ? c.jaw[1] : 0}px,#000 55%,transparent 100%)`;
+  a.innerHTML = `<div class="shadow"></div><div class="fig" style="width:${c.w}px;height:${c.h}px"><img src="${c.src}" width="${c.w}" height="${c.h}" alt="">` +
+    (c.m ? `<div class="mouth"></div><div class="jaw" style="width:${c.w}px;height:${c.h}px;background-image:url(${c.src});background-size:${c.w}px ${c.h}px;clip-path:inset(${c.m[1]}px 0 0 0);-webkit-mask-image:${mask};mask-image:${mask}"></div>` : '') +
+    (c.patch || '') + `</div>`;
+  parent.appendChild(a);
+  a.c = c; a.fig = a.querySelector('.fig'); a.mouthEl = a.querySelector('.mouth'); a.jawEl = a.querySelector('.jaw'); a.sh = a.querySelector('.shadow');
+  return a;
+}
+function pose(a, o) {
+  const { x, y, h, op = 1, rot = 0, sx = 1, sy = 1, open = 0, round = 0, shadow = 1 } = o;
+  const c = a.c, s = h / c.h, w = c.w * s;
+  a.style.display = op <= .001 ? 'none' : 'block';
+  if (op <= .001) return;
+  a.style.opacity = op;
+  a.style.width = w + 'px'; a.style.height = h + 'px';
+  a.style.transform = `translate(${x - w / 2}px,${y - h}px) rotate(${rot}deg) scale(${sx},${sy})`;
+  a.fig.style.transform = `scale(${s})`;
+  if (c.m) {
+    const d = open * c.drop, mw = c.m[2] * (1 - .38 * round);
+    a.jawEl.style.transform = `translateY(${d}px)`;
+    a.mouthEl.style.cssText = `left:${c.m[0] - mw / 2}px;top:${c.m[1] - 5}px;width:${mw}px;height:${d + 10}px;opacity:${open > .03 ? 1 : 0}`;
+  }
+  a.sh.style.cssText = `left:${-w * .15}px;top:${h - h * .03}px;width:${w * 1.3}px;height:${h * .06}px;opacity:${shadow}`;
+}
+
+// ---------- voice ----------
+// marks = [wordIndex, seconds into the clip] anchors from silence detection, so captions land on the phrase
+const VO = [
+  { id: '01-sekuru',    who: 'SEKURU TADIWA', at: .35,  text: "My child, prices keep moving, in US dollars and in ZiG. So how do you know what's fair?",
+    marks: [[0, .08], [2, .99], [5, 2.59], [8, 3.75], [11, 4.82], [18, 6.45]] },
+  { id: '02-tariro',    who: 'TARIRO',        at: 7.2,  text: "Sekuru! This jacket is twenty-five dollars. Is that too much?",
+    marks: [[0, .03], [1, .78], [6, 2.84], [10, 3.75]] },
+  { id: '03-sekuru',    who: 'SEKURU TADIWA', at: 11.25, text: "Check the price guide. Similar jackets in Harare: $18 to $30. And the ZiG price sits right beside it.",
+    marks: [[0, .02], [4, 1.35], [8, 3.0], [10, 3.79], [11, 4.79], [19, 6.94]] },
+  { id: '04-rudo',      who: 'RUDO',          at: 18.65, text: "That's my jacket! I checked the guide before I posted, so I priced it right.",
+    marks: [[0, .03], [3, 1.16], [15, 4.08]] },
+  { id: '05-presenter', who: 'PAMARKET',      at: 25.75, text: "PaMarket. Know what's fair, in US dollars and in ZiG.",
+    marks: [[0, .03], [1, .78], [4, 1.8], [7, 2.93], [10, 3.9]] },
+];
+const VIS = { X: 0, A: 0, B: .32, C: .62, D: 1, E: .58, F: .3, G: .22, H: .46 };
+const RND = { E: .6, F: 1 };
+function lip(v, t) {
+  if (!v || !v.cues) return { open: 0, round: 0 };
+  const lt = t - v.at;
+  if (lt < 0 || lt > v.dur) return { open: 0, round: 0 };
+  const i = v.cues.findIndex(c => lt >= c.start && lt < c.end);
+  if (i < 0) return { open: 0, round: 0 };
+  const c = v.cues[i], n = v.cues[i + 1];
+  let o = VIS[c.value] ?? 0, rd = RND[c.value] || 0;
+  if (n) { const k = cl((lt - (c.end - .045)) / .045); o = L(o, VIS[n.value] ?? 0, k); rd = L(rd, RND[n.value] || 0, k); }
+  return { open: o, round: rd };
+}
+const TICKS = []; for (let s = 1.34; s < 5.05; s += .3) TICKS.push(['tick', s]);
+const SFX = [
+  ...TICKS, ['pop', 2.95], ['pop', 4.1], ['whoosh', 5.05], ['tick', 6.15],
+  ['whoosh', 6.82], ['pop', 7.55], ['tick', 8.1], ['pop', 10.0],
+  ['whoosh', 10.92], ['whoosh', 12.42], ['pop', 12.7], ['tick', 14.25], ['tick', 15.04], ['pop', 15.5], ['pop', 16.35], ['tick', 16.9],
+  ['whoosh', 18.28], ['pop', 18.85], ['tap', 19.2], ['tap', 19.42], ['tick', 19.85], ['tap', 21.6], ['ping', 21.72],
+  ['whoosh', 22.78], ['pop', 23.0], ['tap', 23.45], ['whoosh', 23.55], ['tap', 24.35], ['ping', 24.45],
+  ['whoosh', 25.32], ['pop', 25.95], ['pop', 26.1], ['pop', 26.25], ['ping', 26.9],
+].map(([n, at]) => ({ src: 'sfx/' + n + '.wav', at, gain: n === 'whoosh' ? .5 : n === 'tick' ? .45 : .7 }));
+const MUSIC = { src: 'scenes/fair-price/music.mp3', at: 0, gain: .17 };
+
+// ---------- build ----------
+const world = $('world');
+const BW = 3840, BH = 2143;
+function makeScene(bg) {
+  const el = document.createElement('div'); el.className = 'layer';
+  el.innerHTML = `<img class="bg" src="../../sample/bg/${bg}.jpg" width="${BW}" height="${BH}" alt=""><div class="acts"></div>`;
+  world.appendChild(el);
+  return { el, bg: el.querySelector('.bg'), acts: el.querySelector('.acts') };
+}
+function cam(sc, z, fx, fy, blur = 0, z0 = z) {
+  const cover = Math.max(SW / BW, SH / BH), s = cover * z, W = BW * s, H = BH * s;
+  const x = cl(SW / 2 - fx * W, SW - W, 0), y = cl(SH / 2 - fy * H, SH - H, 0);
+  sc.bg.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  sc.bg.style.filter = blur > .05 ? `blur(${blur}px)` : 'none';
+  sc.acts.style.transform = `scale(${1 + (z - z0) * .8})`;
+}
+function show(sc, on, dx = 0, blur = 0) {
+  sc.el.style.display = on ? 'block' : 'none';
+  sc.el.style.transform = dx ? `translateX(${dx}px)` : 'none';
+  sc.el.style.filter = blur > .1 ? `blur(${blur}px)` : 'none';
+}
+// diagonal split: pane keeps the side beyond edge e (side = 'after' → right/bottom, 'before' → left/top)
+function clipPane(sc, e, side) {
+  if (e === null) { sc.el.style.clipPath = 'none'; return; }
+  if (V) sc.el.style.clipPath = side === 'after' ? `polygon(0 ${e + 40}px,${SW}px ${e - 40}px,${SW}px ${SH}px,0 ${SH}px)` : `polygon(0 0,${SW}px 0,${SW}px ${e - 40}px,0 ${e + 40}px)`;
+  else sc.el.style.clipPath = side === 'after' ? `polygon(${e + 50}px 0,${SW}px 0,${SW}px ${SH}px,${e - 50}px ${SH}px)` : `polygon(0 0,${e + 50}px 0,${e - 50}px ${SH}px,0 ${SH}px)`;
+}
+function seam(e, on) {
+  const p = $('seamP'); $('seam').style.display = on ? 'block' : 'none'; if (!on) return;
+  $('seam').setAttribute('width', SW); $('seam').setAttribute('height', SH);
+  p.setAttribute('d', V ? `M0 ${e + 40} L${SW} ${e - 40}` : `M${e + 50} 0 L${e - 50} ${SH}`);
+}
+const S = { A: makeScene('street'), B: makeScene('market'), C: makeScene('street'), D: makeScene('market'), E: makeScene('street') };
+const A = {
+  sek: makeActor(S.A.acts, 'sek1'),
+  tar: makeActor(S.B.acts, 'tar'),
+  sekC: makeActor(S.C.acts, 'sek1'),
+  rudo: makeActor(S.D.acts, 'rudo2'),
+  tarE: makeActor(S.E.acts, 'tar'),
+};
+const endActs = $('endActs');
+const EA = [makeActor(endActs, 'sek1'), makeActor(endActs, 'tarEnd'), makeActor(endActs, 'rudo3')];
+
+// captions
+VO.forEach(v => {
+  v.el = document.createElement('span');
+  v.words = v.text.split(' ').map(w => { const s = document.createElement('span'); s.className = 'w'; s.textContent = w + ' '; v.el.appendChild(s); return { w, s }; });
+});
+function timeWords(v) {
+  // between two anchors, spread the words by character count
+  const m = v.marks;
+  for (let k = 0; k < m.length - 1; k++) {
+    const [i0, t0] = m[k], [i1, t1] = m[k + 1], ws = v.words.slice(i0, i1);
+    const tot = ws.reduce((a, w) => a + w.w.length + 1.5, 0); let acc = 0;
+    ws.forEach(w => { w.st = v.at + t0 + acc / tot * (t1 - t0); acc += w.w.length + 1.5; });
+  }
+}
+
+// confetti (deterministic)
+const cf = $('confetti'); cf.width = SW; cf.height = SH; const cx = cf.getContext('2d');
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const CONF = (() => { const r = rng(11); return Array.from({ length: 110 }, () => ({ a: r() * Math.PI * 2, v: 500 + r() * 900, spin: (r() - .5) * 14, w: 10 + r() * 12, h: 6 + r() * 8, c: ['#2466e8', '#8fb3ff', '#ffd23f', '#ff7a59', '#23b26d', '#ffffff'][Math.floor(r() * 6)] })); })();
+function confetti(t, t0, ox, oy) {
+  cx.clearRect(0, 0, SW, SH);
+  const lt = t - t0; if (lt < 0 || lt > 2.2) return;
+  CONF.forEach(p => {
+    const x = ox + Math.cos(p.a) * p.v * lt * .75, y = oy + Math.sin(p.a) * p.v * lt * .55 + 900 * lt * lt;
+    cx.save(); cx.globalAlpha = cl(1 - (lt - 1.4) / .8); cx.translate(x, y); cx.rotate(p.spin * lt); cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.spin * lt * .7))); cx.restore();
+  });
+}
+// grain
+const gr = $('grain'); gr.width = SW / 4; gr.height = SH / 4; const gx = gr.getContext('2d'); const gimg = gx.createImageData(gr.width, gr.height);
+function grain(f) { const r = rng(f * 7919 + 13); const d = gimg.data; for (let i = 0; i < d.length; i += 4) { const v = r() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } gx.putImageData(gimg, 0, 0); }
+
+function card(el, x, y, op, sc = 1, rot = 0) {
+  el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.opacity = op;
+  el.style.display = op <= .001 ? 'none' : '';
+  el.style.transform = `scale(${sc}) rotate(${rot}deg)`;
+}
+function popIn(t, t0, d = .45) { const k = R(t, t0, t0 + d); return { op: cl(k * 3), sc: L(.82, 1, back(k)) }; }
+
+// hand-drawn underline under a Caveat word
+function underline(scrId, svgId, pathId) {
+  const w = $(scrId).offsetWidth; if (!w) return 0;
+  const ul = $(svgId); ul.setAttribute('width', w); ul.style.width = w + 'px';
+  $(pathId).setAttribute('d', `M4 18 C ${w * .3} 6, ${w * .7} 8, ${w - 6} 14`);
+  const len = $(pathId).getTotalLength(); $(pathId).style.strokeDasharray = len; return len;
+}
+const UL = {};
+
+// rolling prices for the opener: a new US$ value every .3 s, ZiG always at today's rate
+const USD_SEQ = [25, 27, 24, 28, 26, 29, 25, 27, 23, 26, 28, 24, 27];
+
+const TAGS = [[0, '// 01 — sekuru’s tip'], [7.0, '// 02 — tariro · mbare'], [12.45, '// 03 — the price guide'], [18.45, '// 04 — rudo · posting'], [22.8, '// 05 — the offer'], [25.35, '// 06 — pamarket']];
+const LT = [[.7, 4.5, 'SEKURU TADIWA', 'market elder'], [7.4, 10.6, 'TARIRO', 'shopper · Harare'], [18.8, 21.9, 'RUDO', 'tailor · Mbare']];
+
+// ---------- render(t): everything is a pure function of t ----------
+function render(t) {
+  const f = Math.round(t * FPS);
+  const whipX = k => eio(k) * SW, whipB = k => Math.sin(Math.PI * k) * 26;
+  const wAB = R(t, 6.82, 7.12), wCD = R(t, 18.28, 18.58);
+  // split 1: Sekuru's pane slides in over Tariro (10.92), then takes the whole frame (12.42)
+  const sIn = eo(R(t, 10.92, 11.32)), sFull = eio(R(t, 12.42, 12.85));
+  const eC = V ? (t < 12.42 ? L(SH + 120, SH / 2, sIn) : L(SH / 2, -160, sFull)) : (t < 12.42 ? L(SW + 120, SW / 2, sIn) : L(SW / 2, -160, sFull));
+  // split 2: Tariro's pane slides in over Rudo (22.78) for the offer
+  const s2 = eo(R(t, 22.78, 23.18));
+  const eE = V ? L(-120, SH / 2, s2) : L(-120, SW / 2, s2);
+
+  show(S.A, t < 7.12, t > 6.82 ? -whipX(wAB) : 0, t > 6.82 ? whipB(wAB) : 0);
+  show(S.B, t >= 6.82 && t < 12.85, t < 7.12 ? SW - whipX(wAB) : (V ? 0 : -sFull * SW * .3), t < 7.12 ? whipB(wAB) : 0);
+  show(S.C, t >= 10.92 && t < 18.58, t > 18.28 ? -whipX(wCD) : 0, t > 18.28 ? whipB(wCD) : 0);
+  clipPane(S.C, t < 12.85 ? eC : null, 'after');
+  show(S.D, t >= 18.28 && t < 25.6, t < 18.58 ? SW - whipX(wCD) : 0, t < 18.58 ? whipB(wCD) : 0);
+  show(S.E, t >= 22.78 && t < 25.6, 0, 0);
+  clipPane(S.E, eE, 'before');
+  seam(t < 12.42 ? eC : t < 12.85 ? eC : eE, (t >= 10.92 && t < 12.85) || (t >= 22.78 && t < 25.6));
+
+  // --- A: Sekuru's opener on the jacaranda street
+  cam(S.A, L(1.06, 1.14, eio(R(t, 0, 7))), P(.6, .5), .6, 2.4, 1.06);
+  { const k = R(t, .05, .6), lp = lip(VO[0], t);
+    pose(A.sek, { x: P(470, 540), y: P(1110, 1905), h: P(1020, 1140), op: cl(k * 2.5), sy: L(.9, 1, back(k)) * (1 + .005 * Math.sin(t * 2.1)), sx: L(1.05, 1, back(k)),
+      rot: Math.sin(t * 3.4) * .6 * cl(lp.open * 2) - 1.4 * bump(t, 5.1, 6.0), ...lp }); }
+
+  // --- B: Tariro at Rudo's stall
+  { const bz = L(1.12, 1.18, eio(R(t, 6.9, 12.4)));
+    cam(S.B, bz, P(.6, .62), .62, 1.8, 1.12);
+    const land = R(t, 7.0, 7.5), lp = lip(VO[1], t), tilt = bump(t, 9.9, 10.9);
+    const split = sIn * (t < 12.42 ? 1 : 1);
+    const x = L(P(560, 540), P(470, 300), split), y = L(P(1110, 1905), P(1110, SH / 2 + 30), split), h = L(P(1000, 1240), P(1000, 860), split);
+    pose(A.tar, { x, y, h, sy: (1 - .08 * (1 - back(land)) * (t > 7 ? 1 : 0)) * (1 + .006 * Math.sin(t * 2.5 + 1)), rot: -2 * bump(t, 7.1, 8.0) + tilt * -4 + Math.sin(t * 4.4) * .7 * cl(lp.open * 2), ...lp });
+    const q = popIn(t, 9.95, .4);
+    card($('qm'), P(760, 720), P(250, 640) - 10 * Math.sin(t * 3), q.op * (1 - R(t, 11.2, 11.5)), q.sc, Math.sin(t * 2.6) * 6); }
+
+  // --- C: Sekuru explains the price guide
+  { cam(S.C, L(1.24, 1.32, R(t, 11, 18.5)), P(.38, .5), P(.6, .62), 2.2, 1.24);
+    const lp = lip(VO[2], t), nod = bump(t, 15.0, 15.6) + bump(t, 16.4, 17.0);
+    const x = t < 12.42 ? P(1450, 540) : L(P(1450, 540), P(1500, 540), sFull);
+    const h = V ? (t < 12.42 ? 880 : L(880, 1010, sFull)) : 1020;
+    pose(A.sekC, { x, y: P(1110, 1905), h, sy: 1 + .005 * Math.sin(t * 2) - .012 * nod, rot: Math.sin(t * 3.4) * .6 * cl(lp.open * 2) - 1.2 * bump(t, 12.6, 13.6), ...lp }); }
+
+  // --- D: Rudo posting her jacket (and her pane in the offer split)
+  { cam(S.D, L(1.26, 1.32, R(t, 18.3, 25.5)), P(.3, .3), .62, 1.9, 1.26);
+    const lp = lip(VO[3], t), k = eo(R(t, 18.3, 18.9)), cheer = bump(t, 24.45, 25.05), proud = bump(t, 21.55, 22.2);
+    const h = V ? L(1200, 880, s2) : 1010;
+    pose(A.rudo, { x: P(1400, 540) + (1 - k) * 60, y: P(1110, 1905), h, sy: 1 + .006 * Math.sin(t * 2.2) + cheer * .03 + proud * .015,
+      rot: Math.sin(t * 4) * .6 * cl(lp.open * 2) - cheer * 2.5 + proud * -1.2, ...lp }); }
+
+  // --- E: Tariro sends her offer (left/top pane)
+  { cam(S.E, 1.3, P(.3, .3), .62, 2, 1.3);
+    const hop = bump(t, 24.5, 25.0);
+    pose(A.tarE, { x: P(300, 540) + (1 - s2) * -260, y: P(1110, SH / 2 + 30) - hop * 70, h: P(1000, 860), sy: 1 + .006 * Math.sin(t * 2.5) + hop * .03, rot: hop * 3 + bump(t, 23.3, 23.7) * -2 }); }
+
+  // --- UI: opener kinetic panel
+  { const p = popIn(t, 1.15, .5), gone = 1 - R(t, 6.75, 6.95);
+    const el = $('k1');
+    card(el, P(900, 70), P(190, 200), p.op * gone, p.sc);
+    el.style.width = P(900, 940) + 'px'; el.style.height = P(420, 430) + 'px';
+    const step = Math.max(0, Math.floor((t - 1.34) / .3)), i = Math.min(step, USD_SEQ.length - 1), fr = (t - 1.34) / .3 - step;
+    const frozen = t >= 5.0;
+    const usd = frozen ? 25 : USD_SEQ[i], zg = zig(usd);
+    const roll = frozen || t < 1.34 ? 0 : (1 - eo(cl(fr * 3.5)));
+    $('kUn').textContent = usd; $('kZn').textContent = fmt(zg);
+    $('kUn').style.transform = `translateY(${-roll * 34}px)`; $('kUn').style.opacity = 1 - roll * .6;
+    $('kZn').style.transform = `translateY(${-roll * 34}px)`; $('kZn').style.opacity = 1 - roll * .6;
+    const up = i % 2 === 0;
+    $('kUa').textContent = up ? 'trending_up' : 'trending_down'; $('kUa').style.color = $('kU').classList.contains('hi') ? '#fff' : (up ? '#23b26d' : '#d9661f');
+    $('kZa').textContent = !up ? 'trending_up' : 'trending_down'; $('kZa').style.color = $('kZr').classList.contains('hi') ? '#fff' : (!up ? '#23b26d' : '#d9661f');
+    $('kU').classList.toggle('hi', t >= 2.95 && t < 4.1);
+    $('kZr').classList.toggle('hi', t >= 4.1 && t < 5.05);
+    const out = eio(R(t, 5.05, 5.4)), fin = eo(R(t, 5.2, 5.7));
+    $('kU').style.transform = `translateX(${-out * 1000}px)`; $('kZr').style.transform = `translateX(${-out * 1000}px)`;
+    $('k1h').style.opacity = 1 - out;
+    $('kFair').style.opacity = fin; $('kFair').style.transform = `translateY(${(1 - fin) * 60}px)`;
+    $('kFair').style.fontSize = P(104, 110) + 'px';
+    if (t >= 5.2 && !UL.fair) UL.fair = underline('fairScr', 'fairUl', 'fairUlP');
+    $('fairUlP').style.strokeDashoffset = (UL.fair || 0) * (1 - eio(R(t, 6.05, 6.5))); }
+
+  // --- UI: listing card (B → seam → hands over to the price guide)
+  { const p = popIn(t, 7.55), mv = eio(R(t, 10.92, 11.4)), out = R(t, 12.5, 12.8);
+    const ax = P(1250, 315), ay = P(150, 170), bx = P(SW / 2 - 225, 560), by = P(150, 150);
+    const x = L(ax, bx, mv) - (V ? 0 : 0), y = L(ay, by, mv);
+    card($('cList'), x, y, p.op * (1 - out), p.sc * L(1, P(.92, .82), mv) * (1 + .05 * bump(t, 10.0, 10.35)), L(0, -2, mv));
+    $('cZig').textContent = '≈ ZiG ' + fmt(zig(25 * eo(R(t, 7.9, 8.7))));
+    $('cPrice').style.color = t > 9.95 && t < 11 ? '#d9661f' : ''; }
+
+  // --- UI: price guide (TYPICAL PRICE on the listing page)
+  { const p = popIn(t, 12.7, .5), gone = 1 - R(t, 18.2, 18.4);
+    const el = $('cPG'); el.style.width = P(840, 900) + 'px';
+    card(el, P(120, 90), P(150, 170), p.op * gone, p.sc);
+    const a = Math.round(L(0, 18, eo(R(t, 14.2, 14.75)))), b = Math.round(L(0, 30, eo(R(t, 15.0, 15.5))));
+    $('pgR').textContent = `US$ ${t < 14.2 ? '—' : a} – US$ ${t < 15.0 ? '—' : b}`;
+    $('pgFill').style.transform = `scaleX(${1 - eo(R(t, 12.95, 13.9))})`;
+    const mk = eo(R(t, 15.5, 16.0));
+    $('pgMk').style.left = L(0, (25 - 18) / (30 - 18) * 100, mk) + '%'; $('pgMk').style.opacity = cl(mk * 3); }
+  // --- big ZiG plate beside the US$ price
+  { const p = popIn(t, 16.3, .5), gone = 1 - R(t, 18.2, 18.4);
+    card($('kZ'), P(120, 90), P(655, 690), p.op * gone, p.sc);
+    $('kZz').textContent = 'ZiG ' + fmt(zig(25 * eo(R(t, 16.4, 17.1))));
+    $('kZz').style.transform = `scale(${1 + .06 * bump(t, 17.05, 17.35)})`; }
+
+  // --- UI: post-an-ad card (Rudo)
+  { const p = popIn(t, 18.85, .5), gone = 1 - R(t, 22.7, 22.95);
+    const el = $('cPost'); el.style.width = P(640, 900) + 'px';
+    card(el, P(170, 90), P(180, 170), p.op * gone, p.sc);
+    const typed = t < 19.2 ? 'US$' : t < 19.42 ? 'US$ 2' : 'US$ 25';
+    $('pPrice').textContent = typed; $('pCaret').style.opacity = t < 21.5 && Math.floor(t * 2.2) % 2 === 0 ? 1 : 0;
+    const g = bump(t, 19.8, 21.4);
+    $('pGuide').style.borderColor = g > .05 ? `rgba(36,102,232,${cl(g * 1.5)})` : 'transparent';
+    $('pGuide').style.transform = `scale(${1 + .03 * g})`;
+    const posted = t >= 21.65;
+    $('pBtn').style.background = posted ? 'var(--blue)' : ''; $('pBtn').style.transform = `scale(${1 - .06 * bump(t, 21.5, 21.7)})`;
+    $('pBtnI').textContent = posted ? 'check_circle' : 'storefront'; $('pBtnT').textContent = posted ? 'Posted' : 'Post ad';
+    $('pLive').style.opacity = R(t, 21.7, 21.85); }
+
+  // --- UI: offer card (Tariro → Rudo)
+  { const p = popIn(t, 23.0), fly = eio(R(t, 23.55, 24.2));
+    const ax = P(420, 40), ay = P(400, 560), bx = P(1100, 40), by = P(800, SH / 2 + 540);
+    const x = L(ax, bx, fly), y = L(ay, by, fly) - Math.sin(Math.PI * fly) * 120;
+    const ok = t >= 24.42;
+    card($('cOffer'), x, y, p.op * (1 - R(t, 25.25, 25.4)), P(1, .85) * p.sc * (1 + .05 * bump(t, 24.35, 24.6)), Math.sin(Math.PI * fly) * -6);
+    $('cOffer').classList.toggle('ok', ok);
+    $('cOfI').textContent = ok ? 'check_circle' : 'local_offer';
+    $('cOfB').textContent = ok ? 'Offer accepted' : 'Offer · US$ 25';
+    $('cOfS').textContent = ok ? 'Rudo · US$ 25 · ≈ ZiG ' + fmt(zig(25)) : (t < 23.55 ? 'to Rudo · denim jacket' : 'from Tariro · just now');
+    $('cOfA').textContent = ok ? 'Chat' : (t < 23.55 ? 'Send' : 'Accept');
+    $('cOfA').style.transform = `scale(${1 - .1 * (bump(t, 23.4, 23.55) + bump(t, 24.3, 24.45))})`; }
+  confetti(t, 24.45, P(1360, 540), P(840, SH / 2 + 580));
+
+  // --- F: end card
+  { const ir = eio(R(t, 25.32, 25.75)), on = t >= 25.32;
+    const irisD = Math.hypot(SW, SH) * 2.2 * ir;
+    const ic = $('iris'); ic.style.left = P(SW / 2, 540) + 'px'; ic.style.top = P(500, SH / 2) + 'px'; ic.style.width = ic.style.height = irisD + 'px'; ic.style.display = on && t < 25.8 ? 'block' : 'none';
+    const E = $('end'); E.style.opacity = t >= 25.73 ? 1 : 0; E.style.display = t >= 25.7 ? 'block' : 'none';
+    $('stage').classList.toggle('light', t >= 25.73);
+    const hl = $('endHl'); hl.style.left = P(150, 80) + 'px'; hl.style.top = P(230, 250) + 'px'; hl.style.fontSize = P(132, 138) + 'px';
+    if (t >= 25.7 && !UL.end) UL.end = underline('endScr', 'endUl', 'endUlP');
+    const hk = eo(R(t, 25.8, 26.3)); hl.style.opacity = hk; hl.style.transform = `translateY(${(1 - hk) * 40}px)`;
+    $('endUlP').style.strokeDashoffset = (UL.end || 0) * (1 - eio(R(t, 26.7, 27.2)));
+    const sb = $('endSub'); sb.style.left = P(156, 86) + 'px'; sb.style.top = P(640, 640) + 'px'; const sk = eo(R(t, 27.0, 27.5)); sb.style.opacity = sk; sb.style.transform = `translateY(${(1 - sk) * 30}px)`;
+    const lg = $('logo'); lg.style.left = P(156, 86) + 'px'; lg.style.top = P(118, 136) + 'px'; lg.style.opacity = eo(R(t, 25.75, 26.1));
+    const slots = V ? [[230, 760], [540, 720], [850, 700]] : [[1290, 740], [1535, 700], [1755, 680]];
+    EA.forEach((a, i) => { const k = R(t, 25.9 + i * .15, 26.4 + i * .15); pose(a, { x: slots[i][0], y: P(1085, 1900) + (1 - back(k)) * 60, h: slots[i][1], op: cl(k * 3), sy: L(.85, 1, back(k)) * (1 + .006 * Math.sin(t * 2.4 + i)), shadow: .6 }); }); }
+
+  // --- captions + lower thirds
+  const v = VO.find(v => t >= v.at - .05 && t < v.at + (v.dur || 3) + .35);
+  const capEl = $('cap');
+  if (v) {
+    if ($('capTxt').firstChild !== v.el) { $('capTxt').innerHTML = ''; $('capTxt').appendChild(v.el); }
+    $('capWho').textContent = v.who;
+    let last = null; v.words.forEach(w => { const on = t >= w.st; w.s.classList.toggle('on', on); w.s.classList.remove('now'); if (on) last = w; });
+    if (last) last.s.classList.add('now');
+    const k = R(t, v.at - .05, v.at + .15) * (1 - R(t, v.at + v.dur + .15, v.at + v.dur + .35));
+    capEl.style.opacity = k; capEl.style.display = 'block';
+    const endCap = v.id === '05-presenter';
+    capEl.style.bottom = (endCap ? P(105, 800) : P(96, 250)) + 'px'; capEl.style.width = (endCap && !V ? 1000 : P(1640, 960)) + 'px';
+    capEl.style.left = endCap && !V ? '156px' : '50%'; capEl.style.transform = endCap && !V ? 'none' : 'translateX(-50%)'; capEl.style.textAlign = endCap && !V ? 'left' : 'center';
+  } else capEl.style.display = 'none';
+  const lt = LT.find(l => t >= l[0] && t < l[1]);
+  const ltEl = $('lt');
+  if (lt) {
+    $('ltB').textContent = lt[2]; $('ltS').textContent = lt[3];
+    const k = eo(R(t, lt[0], lt[0] + .35)) * (1 - R(t, lt[1] - .3, lt[1]));
+    ltEl.style.opacity = k; ltEl.style.left = P(52, 44) + 'px'; ltEl.style.top = P(750, 1330) + 'px'; ltEl.style.transform = `translateX(${(1 - k) * -30}px)`; ltEl.style.display = 'flex';
+  } else ltEl.style.display = 'none';
+
+  // --- chrome
+  const tag = [...TAGS].reverse().find(x => t >= x[0]);
+  $('tagL').textContent = tag[1];
+  const si = TAGS.indexOf(tag);
+  $('cnt').textContent = TAGS.map((_, i) => i <= si ? '■' : '□').join('');
+  const s = Math.floor(t), fr = Math.floor((t - s) * FPS);
+  $('tcR').textContent = `PAMARKET   00:00:${String(s).padStart(2, '0')}:${String(fr).padStart(2, '0')}`;
+  grain(f);
+}
+
+// ---------- boot ----------
+const RENDER = Q.has('render');
+const AUDIO = [...VO.map(v => ({ src: 'scenes/fair-price/vo/' + v.id + '.wav', at: v.at, gain: 1 })), ...SFX, MUSIC];
+window.__vo = AUDIO;
+window.__seek = t => render(t);
+window.__ready = Promise.all([
+  document.fonts.load('600 100px "Inter Tight"'), document.fonts.load('700 100px "Inter Tight"'), document.fonts.load('800 100px "Inter Tight"'),
+  document.fonts.load('700 100px Caveat'), document.fonts.load('400 20px "JetBrains Mono"'), document.fonts.load('700 20px "JetBrains Mono"'),
+  document.fonts.load('48px "Material Symbols Rounded"', 'local_offer check_circle storefront trending_up trending_down'),
+  ...VO.map(v => fetch(`vo/${v.id}.lips.json`).then(r => r.json()).then(j => { v.cues = j.mouthCues; v.dur = j.metadata.duration; timeWords(v); })),
+  ...[...document.images].map(i => i.decode ? i.decode().catch(() => {}) : 0),
+]).then(() => document.fonts.ready).then(() => { render(0); return true; });
+
+if (RENDER) document.body.classList.add('render');
+else {
+  const stage = $('stage');
+  const fit = () => { const W = innerWidth, H = innerHeight - 64, s = Math.min(W / SW, H / SH); stage.style.transform = `translate(${(W - SW * s) / 2}px,${(H - SH * s) / 2}px) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+  const auds = AUDIO.map(v => { const a = new Audio('../../' + v.src); a.preload = 'auto'; a.volume = Math.min(1, v.gain); a.onloadedmetadata = () => { v.dur = a.duration; }; return a; });
+  let cur = 0, playing = true, last = performance.now(), drag = false;
+  const setPlay = p => { playing = p; $('play').textContent = p ? 'PAUSE' : 'PLAY'; };
+  $('play').onclick = () => setPlay(!playing);
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); setPlay(!playing); } if (e.code === 'ArrowRight') cur = cl(cur + .5, 0, DUR - .01); if (e.code === 'ArrowLeft') cur = cl(cur - .5, 0, DUR - .01); });
+  const scrub = $('scrub'), seekX = e => { const r = scrub.getBoundingClientRect(); cur = cl((e.clientX - r.left) / r.width) * (DUR - .01); };
+  scrub.onmousedown = e => { drag = true; seekX(e); }; addEventListener('mousemove', e => drag && seekX(e)); addEventListener('mouseup', () => drag = false);
+  window.__ready.then(() => (function loop(now) {
+    if (playing && !drag) { cur += Math.min(.1, (now - last) / 1000); if (cur >= DUR) cur = 0; }
+    last = now; render(cur);
+    AUDIO.forEach((v, i) => { const a = auds[i], lt = cur - v.at, inside = playing && !drag && lt >= 0 && lt < (v.dur || .5);
+      if (inside) { if (a.paused) { a.currentTime = lt; a.play().catch(() => {}); } else if (Math.abs(a.currentTime - lt) > .2) a.currentTime = lt; } else if (!a.paused) a.pause(); });
+    $('tc').textContent = `${cur.toFixed(2).padStart(5, '0')} / 30.00`; $('scrubFill').style.width = (cur / DUR * 100) + '%';
+    requestAnimationFrame(loop);
+  })(performance.now()));
+}
+</script>
+</body>
+</html>

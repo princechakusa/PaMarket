@@ -65,8 +65,10 @@
         "invite a friend"
       ],
       "voice": {
-        "id": null,
-        "note": "Previous voice was Nigerian-accented; the founder rejected it. Use a Southern African, British or American voice only."
+        "id": "FGY2WhTYpPnrIDTdsKH5",
+        "name": "Laura - Enthusiast, Quirky Attitude (ElevenLabs premade, American)",
+        "tempo": 1.08,
+        "note": "Used 2026-10-01. Stacy, AVA and Kim (South African library voices) returned the creator-tier error."
       },
       "poses": {
         "pose-1.webp": {
